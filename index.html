@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rey Automata | Instrumentación & Control Industrial</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0A0E13;--surface:#1C2330;--surface2:#141924;--border:#2A3547;
+      --amber:#E8A923;--amber-d:#B8821A;--amber-l:rgba(232,169,35,0.12);
+      --text:#CBD5E0;--text-hi:#EDF2F7;--muted:#64748B;
+      --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;}
+
+    /* ═══════════════════════════════════════
+       TOPBAR + MEGAMENU
+    ═══════════════════════════════════════ */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:300;
+      background:rgba(10,14,19,0.97);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      padding:0 48px;display:flex;align-items:center;
+      justify-content:space-between;height:60px;
+    }
+    .topbar-logo{
+      font-family:var(--mono);font-size:14px;font-weight:700;
+      color:var(--amber);letter-spacing:0.06em;text-decoration:none;
+      display:flex;align-items:center;gap:10px;flex-shrink:0;
+    }
+    .logo-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--amber);display:inline-block;
+      animation:pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+    .topbar-nav{display:flex;gap:0;list-style:none;height:100%;align-items:stretch;}
+    .topbar-nav>li{position:relative;display:flex;align-items:center;}
+    .topbar-nav>li>a,.topbar-nav>li>button{
+      display:flex;align-items:center;gap:5px;padding:0 14px;height:60px;
+      font-family:var(--mono);font-size:11px;font-weight:500;
+      letter-spacing:0.08em;text-transform:uppercase;
+      color:var(--muted);text-decoration:none;background:none;
+      border:none;border-bottom:2px solid transparent;
+      cursor:pointer;white-space:nowrap;
+      transition:color 0.15s,background 0.15s;
+    }
+    .topbar-nav>li>a:hover,.topbar-nav>li>button:hover,
+    .topbar-nav>li:hover>a,.topbar-nav>li:hover>button{
+      color:var(--text-hi);background:rgba(255,255,255,0.03);
+    }
+    .topbar-nav>li.active>a,.topbar-nav>li.active>button{
+      color:var(--amber);border-bottom-color:var(--amber);
+    }
+    .nav-arrow{
+      display:inline-block;width:0;height:0;
+      border-left:4px solid transparent;border-right:4px solid transparent;
+      border-top:5px solid currentColor;opacity:0.5;
+      transition:transform 0.2s,opacity 0.2s;flex-shrink:0;
+    }
+    .topbar-nav>li:hover .nav-arrow{transform:rotate(180deg);opacity:1;}
+
+    /* MEGAMENU */
+    .megamenu{
+      position:absolute;top:calc(100% + 1px);left:0;
+      background:#0f1520;border:1px solid var(--border);
+      border-top:2px solid var(--amber);
+      border-radius:0 0 12px 12px;padding:24px;
+      opacity:0;visibility:hidden;transform:translateY(-8px);
+      transition:opacity 0.18s ease,transform 0.18s ease,visibility 0.18s;
+      box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:400;
+      min-width:700px;
+    }
+    .topbar-nav>li:hover .megamenu{
+      opacity:1;visibility:visible;transform:translateY(0);
+    }
+    .megamenu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+    .megamenu-col{padding:0 20px;}
+    .megamenu-col:not(:last-child){border-right:1px solid var(--border);}
+    .megamenu-col-title{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.2em;
+      text-transform:uppercase;color:var(--amber);
+      margin-bottom:12px;padding-bottom:8px;
+      border-bottom:1px solid var(--border);
+    }
+    .megamenu-col a{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 0;text-decoration:none;
+      border-bottom:1px solid rgba(42,53,71,0.5);
+      transition:background 0.15s;
+    }
+    .megamenu-col a:last-child{border-bottom:none;}
+    .megamenu-col a:hover .mm-title{color:var(--amber);}
+    .mm-icon{
+      width:26px;height:26px;border-radius:5px;
+      background:var(--surface);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;flex-shrink:0;
+    }
+    .mm-text{display:flex;flex-direction:column;gap:1px;}
+    .mm-title{font-size:12px;font-weight:500;color:var(--text-hi);line-height:1.2;}
+    .mm-sub{font-size:10px;color:var(--muted);line-height:1.3;}
+    .mm-badge{
+      margin-left:auto;font-family:var(--mono);font-size:8px;
+      letter-spacing:0.1em;text-transform:uppercase;
+      background:var(--amber-l);border:1px solid rgba(232,169,35,0.3);
+      color:var(--amber);border-radius:3px;padding:2px 5px;
+      white-space:nowrap;flex-shrink:0;
+    }
+    .mm-badge-new{
+      background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#4ade80;
+    }
+
+    /* SIMPLE DROPDOWN */
+    .tb-dropdown{
+      position:absolute;top:calc(100% + 1px);left:0;min-width:240px;
+      background:#0f1520;border:1px solid var(--border);
+      border-top:2px solid var(--amber);
+      border-radius:0 0 10px 10px;padding:8px 0;
+      opacity:0;visibility:hidden;transform:translateY(-6px);
+      transition:opacity 0.18s ease,transform 0.18s ease,visibility 0.18s;
+      box-shadow:0 16px 40px rgba(0,0,0,0.5);z-index:400;
+    }
+    .topbar-nav>li:hover .tb-dropdown{
+      opacity:1;visibility:visible;transform:translateY(0);
+    }
+    .tb-dropdown a{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:9px 16px;text-decoration:none;transition:background 0.15s;
+    }
+    .tb-dropdown a:hover{background:rgba(232,169,35,0.06);}
+    .dd-icon{
+      width:26px;height:26px;border-radius:5px;background:var(--surface);
+      border:1px solid var(--border);display:flex;align-items:center;
+      justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;
+    }
+    .dd-text{display:flex;flex-direction:column;gap:2px;}
+    .dd-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-hi);letter-spacing:0.03em;}
+    .dd-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+    .dd-divider{height:1px;background:var(--border);margin:5px 16px;}
+
+    .topbar-cta{
+      background:var(--amber);color:var(--bg);border:none;border-radius:5px;
+      padding:8px 18px;font-family:var(--mono);font-size:11px;font-weight:700;
+      cursor:pointer;letter-spacing:0.06em;text-decoration:none;
+      transition:background 0.2s,transform 0.15s;flex-shrink:0;white-space:nowrap;
+    }
+    .topbar-cta:hover{background:var(--amber-d);transform:translateY(-1px);}
+
+    .nav-mobile-btn{
+      display:none;background:none;border:1px solid var(--border);
+      border-radius:6px;padding:6px 10px;color:var(--muted);
+      cursor:pointer;font-size:13px;font-family:var(--mono);
+    }
+    .mobile-nav{
+      display:none;position:fixed;top:60px;left:0;right:0;
+      background:#0d1117;border-bottom:1px solid var(--border);
+      padding:12px 0 24px;z-index:299;
+      max-height:calc(100vh - 60px);overflow-y:auto;
+    }
+    .mobile-nav.open{display:block;}
+    .mob-section{padding:10px 20px 6px;}
+    .mob-section-label{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.18em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:6px;
+    }
+    .mob-link{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 12px;border-radius:6px;text-decoration:none;
+      color:var(--text);font-size:13px;transition:background 0.15s;
+    }
+    .mob-link:hover{background:rgba(255,255,255,0.04);}
+
+    @media(max-width:900px){
+      .topbar{padding:0 20px;}
+      .topbar-nav{display:none;}
+      .topbar-cta{display:none;}
+      .nav-mobile-btn{display:flex;align-items:center;gap:6px;}
+    }
+
+    /* ═══════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════ */
+    .hero{
+      min-height:100vh;display:flex;align-items:center;
+      padding:100px 48px 80px;position:relative;overflow:hidden;
+    }
+    .hero-grid-bg{
+      position:absolute;inset:0;pointer-events:none;
+      background-image:
+        linear-gradient(var(--border) 1px,transparent 1px),
+        linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:56px 56px;opacity:0.18;
+    }
+    .hero-vignette{
+      position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 30%,var(--bg) 100%);
+    }
+    .hero-inner{
+      max-width:1200px;margin:0 auto;width:100%;
+      display:grid;grid-template-columns:1fr 480px;
+      gap:60px;align-items:center;position:relative;z-index:2;
+    }
+    .hero-eyebrow{
+      font-family:var(--mono);font-size:11px;letter-spacing:0.2em;
+      color:var(--amber);text-transform:uppercase;
+      margin-bottom:20px;display:flex;align-items:center;gap:10px;
+    }
+    .hero-eyebrow::before{
+      content:'';display:block;width:28px;height:1px;background:var(--amber);
+    }
+    .hero-h1{
+      font-size:clamp(2rem,4.5vw,3.6rem);font-weight:600;
+      color:var(--text-hi);letter-spacing:-0.025em;
+      line-height:1.06;margin-bottom:20px;
+    }
+    .hero-h1 em{font-style:normal;color:var(--amber);}
+    .hero-sub{
+      font-size:15px;color:var(--muted);line-height:1.8;
+      max-width:480px;margin-bottom:36px;
+    }
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;}
+    .btn-primary{
+      background:var(--amber);color:var(--bg);border:none;border-radius:6px;
+      padding:13px 26px;font-family:var(--mono);font-size:12px;font-weight:700;
+      cursor:pointer;text-decoration:none;letter-spacing:0.04em;
+      transition:background 0.2s,transform 0.15s;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .btn-primary:hover{background:var(--amber-d);transform:translateY(-1px);}
+    .btn-ghost{
+      background:transparent;color:var(--text);border:1px solid var(--border);
+      border-radius:6px;padding:13px 26px;font-family:var(--mono);font-size:12px;
+      cursor:pointer;text-decoration:none;letter-spacing:0.04em;
+      transition:border-color 0.2s,color 0.2s;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+
+    /* Hero right: stats + quick links */
+    .hero-right{display:flex;flex-direction:column;gap:16px;}
+    .hero-stat-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    }
+    .hstat{
+      background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:16px;text-align:center;
+    }
+    .hstat-num{
+      font-family:var(--mono);font-size:1.6rem;font-weight:700;
+      color:var(--amber);display:block;line-height:1;margin-bottom:4px;
+    }
+    .hstat-lbl{font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+    .hero-quick{
+      background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:0;
+    }
+    .hq-title{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.18em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:10px;
+    }
+    .hq-link{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 0;border-bottom:1px solid var(--border);
+      text-decoration:none;transition:background 0.15s;
+      color:var(--text);font-size:13px;
+    }
+    .hq-link:last-child{border-bottom:none;padding-bottom:0;}
+    .hq-link:hover{color:var(--amber);}
+    .hq-icon{font-size:14px;flex-shrink:0;}
+    .hq-arr{margin-left:auto;color:var(--muted);font-size:12px;transition:transform 0.15s;}
+    .hq-link:hover .hq-arr{transform:translateX(3px);color:var(--amber);}
+
+    /* ═══════════════════════════════════════
+       SHARED SECTION STYLES
+    ═══════════════════════════════════════ */
+    .section{max-width:1200px;margin:0 auto;padding:80px 48px;}
+    .sec-divider{border:none;border-top:1px solid var(--border);}
+    .eyebrow{
+      font-family:var(--mono);font-size:10px;letter-spacing:0.2em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:10px;
+    }
+    .sec-h2{
+      font-size:clamp(1.6rem,2.5vw,2.1rem);font-weight:600;
+      color:var(--text-hi);margin-bottom:10px;letter-spacing:-0.02em;
+    }
+    .sec-lead{
+      font-size:14px;color:var(--muted);max-width:580px;
+      line-height:1.75;margin-bottom:44px;
+    }
+    .sec-header-row{
+      display:flex;align-items:flex-end;justify-content:space-between;
+      flex-wrap:wrap;gap:16px;margin-bottom:44px;
+    }
+    .sec-header-row .eyebrow{margin-bottom:6px;}
+    .sec-header-row .sec-lead{margin-bottom:0;}
+    .see-all{
+      font-family:var(--mono);font-size:11px;letter-spacing:0.08em;
+      text-transform:uppercase;color:var(--amber);text-decoration:none;
+      display:flex;align-items:center;gap:6px;white-space:nowrap;
+      transition:gap 0.15s;flex-shrink:0;
+    }
+    .see-all:hover{gap:10px;}
+
+    /* ═══════════════════════════════════════
+       CURSOS SECTION
+    ═══════════════════════════════════════ */
+    .cursos-cols{
+      display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;
+    }
+    .curso-col-title{
+      font-family:var(--mono);font-size:10px;letter-spacing:0.16em;
+      text-transform:uppercase;color:var(--amber);
+      padding-bottom:10px;border-bottom:1px solid var(--border);
+      margin-bottom:14px;
+    }
+    .curso-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;
+      text-decoration:none;color:inherit;display:block;
+      transition:border-color 0.2s,transform 0.2s;
+    }
+    .curso-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .curso-card-img{
+      height:110px;overflow:hidden;position:relative;
+    }
+    .curso-card-img img{
+      width:100%;height:100%;object-fit:cover;
+      filter:saturate(0.35) brightness(0.5);display:block;
+      transition:filter 0.3s;
+    }
+    .curso-card:hover .curso-card-img img{filter:saturate(0.55) brightness(0.65);}
+    .curso-card-body{padding:14px 16px;}
+    .curso-card-tag{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:5px;
+    }
+    .curso-card-title{
+      font-size:13px;font-weight:600;color:var(--text-hi);
+      line-height:1.3;margin-bottom:5px;
+    }
+    .curso-card-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+    .curso-coming{
+      background:var(--surface2);border:1px dashed var(--border);
+      border-radius:8px;padding:16px;
+      display:flex;align-items:center;gap:12px;
+      opacity:0.7;
+    }
+    .curso-coming-icon{font-size:18px;flex-shrink:0;}
+    .curso-coming-title{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:2px;}
+    .curso-badge{
+      margin-left:auto;font-family:var(--mono);font-size:9px;
+      letter-spacing:0.1em;text-transform:uppercase;
+      background:var(--amber-l);border:1px solid rgba(232,169,35,0.3);
+      color:var(--amber);border-radius:3px;padding:2px 6px;
+      white-space:nowrap;flex-shrink:0;
+    }
+
+    /* ═══════════════════════════════════════
+       BLOG PREVIEW SECTION
+    ═══════════════════════════════════════ */
+    #blog-preview-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+    }
+    .blog-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;
+      text-decoration:none;color:inherit;display:block;
+      transition:border-color 0.2s,transform 0.2s;cursor:pointer;
+    }
+    .blog-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .blog-card-img{height:130px;overflow:hidden;}
+    .blog-card-img img{
+      width:100%;height:100%;object-fit:cover;display:block;
+      filter:saturate(0.4) brightness(0.55);
+      transition:filter 0.3s;
+    }
+    .blog-card:hover .blog-card-img img{filter:saturate(0.6) brightness(0.7);}
+    .blog-card-body{padding:16px;}
+    .blog-card-cat{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:6px;
+    }
+    .blog-card-title{
+      font-size:13px;font-weight:600;color:var(--text-hi);
+      line-height:1.35;margin-bottom:6px;
+    }
+    .blog-card-excerpt{font-size:11px;color:var(--muted);line-height:1.55;}
+    .blog-card-date{
+      font-family:var(--mono);font-size:10px;color:var(--muted);
+      margin-top:10px;display:block;
+    }
+
+    /* ═══════════════════════════════════════
+       CONSULTORIA SECTION
+    ═══════════════════════════════════════ */
+    .consul-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+    }
+    .consul-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:24px;
+      transition:border-color 0.2s,transform 0.2s;
+    }
+    .consul-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .consul-icon{font-size:26px;margin-bottom:14px;}
+    .consul-title{
+      font-size:15px;font-weight:600;color:var(--text-hi);margin-bottom:8px;
+    }
+    .consul-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+    .consul-link{
+      font-family:var(--mono);font-size:10px;letter-spacing:0.1em;
+      text-transform:uppercase;color:var(--amber);text-decoration:none;
+    }
+
+    /* ═══════════════════════════════════════
+       RECURSOS SECTION
+    ═══════════════════════════════════════ */
+    .recursos-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;
+    }
+    .rec-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:18px 20px;
+      display:flex;align-items:flex-start;gap:14px;
+      transition:border-color 0.2s,transform 0.2s;
+      text-decoration:none;color:inherit;
+    }
+    .rec-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .rec-icon{
+      width:36px;height:36px;border-radius:7px;
+      background:var(--amber-l);border:1px solid rgba(232,169,35,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;flex-shrink:0;
+    }
+    .rec-body{}
+    .rec-title{font-size:13px;font-weight:600;color:var(--text-hi);margin-bottom:3px;}
+    .rec-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+    .rec-badge{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.1em;
+      text-transform:uppercase;background:var(--amber-l);
+      border:1px solid rgba(232,169,35,0.3);color:var(--amber);
+      border-radius:3px;padding:1px 5px;margin-top:5px;display:inline-block;
+    }
+
+    /* ═══════════════════════════════════════
+       HERRAMIENTAS SECTION
+    ═══════════════════════════════════════ */
+    .tools-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;
+    }
+    .tool-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;
+      transition:border-color 0.2s,transform 0.2s;
+    }
+    .tool-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .tool-header{
+      background:var(--surface2);padding:14px 18px;
+      border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px;
+    }
+    .tool-icon{font-size:20px;}
+    .tool-name{
+      font-family:var(--mono);font-size:12px;font-weight:600;
+      color:var(--text-hi);letter-spacing:0.04em;
+    }
+    .tool-tag{
+      margin-left:auto;font-family:var(--mono);font-size:9px;
+      letter-spacing:0.1em;text-transform:uppercase;
+      background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);
+      color:#4ade80;border-radius:3px;padding:2px 6px;
+    }
+    .tool-body{padding:14px 18px;}
+    .tool-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+    .tool-btn{
+      display:inline-flex;align-items:center;gap:6px;
+      font-family:var(--mono);font-size:10px;letter-spacing:0.08em;
+      text-transform:uppercase;color:var(--amber);text-decoration:none;
+    }
+
+    /* ═══════════════════════════════════════
+       PROYECTOS SECTION
+    ═══════════════════════════════════════ */
+    .proy-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;
+    }
+    .proy-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;
+      transition:border-color 0.2s,transform 0.2s;
+    }
+    .proy-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .proy-img{height:140px;overflow:hidden;}
+    .proy-img img{
+      width:100%;height:100%;object-fit:cover;display:block;
+      filter:saturate(0.3) brightness(0.5);transition:filter 0.3s;
+    }
+    .proy-card:hover .proy-img img{filter:saturate(0.5) brightness(0.65);}
+    .proy-body{padding:16px 18px;}
+    .proy-cat{
+      font-family:var(--mono);font-size:9px;letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:5px;
+    }
+    .proy-title{
+      font-size:14px;font-weight:600;color:var(--text-hi);
+      line-height:1.3;margin-bottom:6px;
+    }
+    .proy-desc{font-size:12px;color:var(--muted);line-height:1.55;}
+
+    /* ═══════════════════════════════════════
+       SOBRE MÍ / CTA FINAL
+    ═══════════════════════════════════════ */
+    .about-band{
+      background:var(--surface2);border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);padding:64px 48px;
+    }
+    .about-inner{
+      max-width:1200px;margin:0 auto;
+      display:grid;grid-template-columns:1fr 360px;gap:48px;align-items:center;
+    }
+    .about-text .eyebrow{margin-bottom:10px;}
+    .about-h2{
+      font-size:clamp(1.4rem,2.5vw,2rem);font-weight:600;
+      color:var(--text-hi);letter-spacing:-0.02em;margin-bottom:14px;
+    }
+    .about-p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:20px;}
+    .about-actions{display:flex;gap:12px;flex-wrap:wrap;}
+    .about-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:10px;padding:24px;text-align:center;
+    }
+    .about-avatar{
+      width:80px;height:80px;border-radius:50%;
+      background:var(--amber-l);border:2px solid var(--amber);
+      margin:0 auto 14px;display:flex;align-items:center;
+      justify-content:center;font-family:var(--mono);
+      font-size:1.6rem;font-weight:700;color:var(--amber);
+    }
+    .about-name{font-weight:600;font-size:16px;color:var(--text-hi);margin-bottom:4px;}
+    .about-role{
+      font-family:var(--mono);font-size:10px;color:var(--amber);
+      letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;
+    }
+    .about-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;}
+    .atag{
+      background:var(--surface2);border:1px solid var(--border);
+      border-radius:4px;padding:2px 8px;
+      font-family:var(--mono);font-size:10px;color:var(--muted);
+    }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    .site-footer{
+      border-top:1px solid var(--border);
+      padding:40px 48px 28px;
+    }
+    .footer-inner{
+      max-width:1200px;margin:0 auto;
+    }
+    .footer-grid{
+      display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;
+      margin-bottom:36px;padding-bottom:36px;
+      border-bottom:1px solid var(--border);
+    }
+    .footer-brand-col .footer-logo{
+      font-family:var(--mono);font-size:14px;font-weight:700;
+      color:var(--amber);letter-spacing:0.06em;
+      text-decoration:none;margin-bottom:12px;display:block;
+    }
+    .footer-brand-col p{font-size:12px;color:var(--muted);line-height:1.7;max-width:260px;}
+    .footer-col-title{
+      font-family:var(--mono);font-size:10px;letter-spacing:0.16em;
+      text-transform:uppercase;color:var(--amber);margin-bottom:12px;
+    }
+    .footer-col a{
+      display:block;font-size:12px;color:var(--muted);
+      text-decoration:none;padding:3px 0;
+      transition:color 0.15s;
+    }
+    .footer-col a:hover{color:var(--text-hi);}
+    .footer-bottom{
+      display:flex;align-items:center;justify-content:space-between;
+      flex-wrap:wrap;gap:12px;
+    }
+    .footer-copy{font-size:11px;color:var(--muted);}
+    .footer-made{
+      font-family:var(--mono);font-size:10px;color:var(--muted);
+      letter-spacing:0.06em;
+    }
+
+    @media(max-width:1000px){
+      .hero-inner{grid-template-columns:1fr;}
+      .hero-right{display:none;}
+      .cursos-cols{grid-template-columns:1fr;}
+      .about-inner{grid-template-columns:1fr;}
+      .about-card{display:none;}
+      .footer-grid{grid-template-columns:1fr 1fr;}
+    }
+    @media(max-width:700px){
+      .hero{padding:90px 20px 60px;}
+      .section{padding:56px 20px;}
+      .about-band{padding:48px 20px;}
+      .site-footer{padding:32px 20px 20px;}
+      #blog-preview-grid{grid-template-columns:1fr;}
+      .consul-grid{grid-template-columns:1fr;}
+      .tools-grid{grid-template-columns:1fr;}
+      .proy-grid{grid-template-columns:1fr;}
+      .footer-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<nav class="topbar">
+  <a class="topbar-logo" href="index.html">
+    <span class="logo-dot"></span>REY AUTOMATA
+  </a>
+
+  <ul class="topbar-nav">
+    <li class="active"><a href="index.html">Inicio</a></li>
+
+    <!-- CURSOS — MEGAMENU 3 COLUMNAS -->
+    <li>
+      <button>Cursos <span class="nav-arrow"></span></button>
+      <div class="megamenu">
+        <div class="megamenu-grid">
+
+          <!-- COL 1: Instrumentación -->
+          <div class="megamenu-col">
+            <div class="megamenu-col-title">Instrumentación</div>
+            <a href="curso-ic.html">
+              <div class="mm-icon">⚙️</div>
+              <div class="mm-text">
+                <span class="mm-title">Proyectista I&amp;C</span>
+                <span class="mm-sub">P&ID, lazos ISA, documentación</span>
+              </div>
+            </a>
+            <a href="#">
+              <div class="mm-icon">🌡️</div>
+              <div class="mm-text">
+                <span class="mm-title">Medición de variables</span>
+                <span class="mm-sub">T, P, F, L — sensores y transmisores</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">🔧</div>
+              <div class="mm-text">
+                <span class="mm-title">Montaje e instalación</span>
+                <span class="mm-sub">Criterios de terreno y canalizaciones</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">⚗️</div>
+              <div class="mm-text">
+                <span class="mm-title">Instrumentación en flotación</span>
+                <span class="mm-sub">Celdas rougher, scavenger, cleaner</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+          </div>
+
+          <!-- COL 2: Control & Redes -->
+          <div class="megamenu-col">
+            <div class="megamenu-col-title">Control &amp; Redes</div>
+            <a href="#">
+              <div class="mm-icon">🖥️</div>
+              <div class="mm-text">
+                <span class="mm-title">PLC — Básico a avanzado</span>
+                <span class="mm-sub">Lógica, programación, diagnóstico</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">🏭</div>
+              <div class="mm-text">
+                <span class="mm-title">Sistemas DCS</span>
+                <span class="mm-sub">Arquitectura, ingeniería y operación</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">📡</div>
+              <div class="mm-text">
+                <span class="mm-title">Redes industriales</span>
+                <span class="mm-sub">Profibus, Modbus, FF, Ethernet IP</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">⚡</div>
+              <div class="mm-text">
+                <span class="mm-title">Ingeniería Eléctrica BT</span>
+                <span class="mm-sub">Diseño eléctrico industrial</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+          </div>
+
+          <!-- COL 3: Software & BIM -->
+          <div class="megamenu-col">
+            <div class="megamenu-col-title">Software &amp; BIM</div>
+            <a href="#">
+              <div class="mm-icon">📐</div>
+              <div class="mm-text">
+                <span class="mm-title">AutoCAD Electrical I&amp;C</span>
+                <span class="mm-sub">Producción profesional de planos</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">🏗️</div>
+              <div class="mm-text">
+                <span class="mm-title">BIM — Revit MEP</span>
+                <span class="mm-sub">Modelado multidisciplinario I&amp;C</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">🔭</div>
+              <div class="mm-text">
+                <span class="mm-title">Navisworks 3D</span>
+                <span class="mm-sub">Coordinación e interferencias en planta</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+            <a href="#">
+              <div class="mm-icon">📊</div>
+              <div class="mm-text">
+                <span class="mm-title">Excel avanzado I&amp;C</span>
+                <span class="mm-sub">Tag lists, I/O lists, MTO automatizados</span>
+              </div>
+              <span class="mm-badge">Pronto</span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </li>
+
+    <li><a href="blog.html">Blog</a></li>
+
+    <!-- CONSULTORÍA -->
+    <li>
+      <button>Consultoría <span class="nav-arrow"></span></button>
+      <div class="tb-dropdown">
+        <a href="nosotros.html#contacto">
+          <div class="dd-icon">🏭</div>
+          <div class="dd-text"><span class="dd-title">Ingeniería de proyectos</span><span class="dd-sub">Conceptual, básica y de detalle</span></div>
+        </a>
+        <a href="nosotros.html#contacto">
+          <div class="dd-icon">🔍</div>
+          <div class="dd-text"><span class="dd-title">Consultoría I&amp;C</span><span class="dd-sub">Revisión técnica y asesoría en terreno</span></div>
+        </a>
+        <a href="nosotros.html#contacto">
+          <div class="dd-icon">📋</div>
+          <div class="dd-text"><span class="dd-title">Documentación técnica</span><span class="dd-sub">P&amp;ID, Tag list, I/O list, MTO</span></div>
+        </a>
+      </div>
+    </li>
+
+    <!-- NOSOTROS -->
+    <li>
+      <button>Nosotros <span class="nav-arrow"></span></button>
+      <div class="tb-dropdown">
+        <a href="nosotros.html">
+          <div class="dd-icon">👤</div>
+          <div class="dd-text"><span class="dd-title">Sobre mí</span><span class="dd-sub">Alberto Ahumada — Proyectista Sr. I&amp;C</span></div>
+        </a>
+        <a href="nosotros.html#portafolio">
+          <div class="dd-icon">🗂️</div>
+          <div class="dd-text"><span class="dd-title">Portafolio</span><span class="dd-sub">Proyectos mineros e industriales</span></div>
+        </a>
+        <div class="dd-divider"></div>
+        <a href="nosotros.html#contacto">
+          <div class="dd-icon">✉️</div>
+          <div class="dd-text"><span class="dd-title">Contacto</span><span class="dd-sub">Proyectos, cursos e inscripciones</span></div>
+        </a>
+      </div>
+    </li>
+  </ul>
+
+  <a href="curso-ic.html" class="topbar-cta">Ver cursos →</a>
+  <button class="nav-mobile-btn" onclick="toggleMobileNav(this)">☰ Menú</button>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobile-nav">
+  <div class="mob-section">
+    <div class="mob-section-label">Cursos</div>
+    <a class="mob-link" href="curso-ic.html"><span>⚙️</span> Proyectista I&amp;C</a>
+    <a class="mob-link" href="#cursos"><span>🖥️</span> PLC y DCS</a>
+    <a class="mob-link" href="#cursos"><span>📡</span> Redes industriales</a>
+    <a class="mob-link" href="#cursos"><span>📐</span> AutoCAD &amp; BIM</a>
+  </div>
+  <div class="mob-section">
+    <div class="mob-section-label">Contenido</div>
+    <a class="mob-link" href="blog.html"><span>✍️</span> Blog técnico</a>
+    <a class="mob-link" href="#recursos"><span>📥</span> Recursos</a>
+    <a class="mob-link" href="#herramientas"><span>🔧</span> Herramientas</a>
+  </div>
+  <div class="mob-section">
+    <div class="mob-section-label">Nosotros</div>
+    <a class="mob-link" href="nosotros.html"><span>👤</span> Sobre mí</a>
+    <a class="mob-link" href="nosotros.html#portafolio"><span>🗂️</span> Portafolio</a>
+    <a class="mob-link" href="nosotros.html#contacto"><span>✉️</span> Contacto</a>
+  </div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-vignette"></div>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Instrumentación &amp; Control Industrial</div>
+      <h1 class="hero-h1">
+        Formación técnica<br>
+        para <em>proyectistas I&C</em><br>
+        de nivel industrial.
+      </h1>
+      <p class="hero-sub">
+        Cursos, consultoría, recursos y herramientas para ingenieros y técnicos que trabajan en proyectos reales de minería e industria de proceso en Chile.
+      </p>
+      <div class="hero-actions">
+        <a href="curso-ic.html" class="btn-primary">Explorar cursos →</a>
+        <a href="blog.html" class="btn-ghost">Blog técnico</a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat-grid">
+        <div class="hstat"><span class="hstat-num">15+</span><span class="hstat-lbl">Años I&amp;C</span></div>
+        <div class="hstat"><span class="hstat-num">ISA</span><span class="hstat-lbl">5.1·5.2·5.4</span></div>
+        <div class="hstat"><span class="hstat-num">Gran</span><span class="hstat-lbl">Minería</span></div>
+        <div class="hstat"><span class="hstat-num">BIM</span><span class="hstat-lbl">Certificado</span></div>
+      </div>
+      <div class="hero-quick">
+        <div class="hq-title">Acceso rápido</div>
+        <a class="hq-link" href="curso-ic.html"><span class="hq-icon">⚙️</span> Curso Proyectista I&amp;C<span class="hq-arr">→</span></a>
+        <a class="hq-link" href="blog.html"><span class="hq-icon">✍️</span> Blog técnico I&amp;C<span class="hq-arr">→</span></a>
+        <a class="hq-link" href="#herramientas"><span class="hq-icon">🔧</span> Calculadoras online<span class="hq-arr">→</span></a>
+        <a class="hq-link" href="#recursos"><span class="hq-icon">📥</span> Recursos descargables<span class="hq-arr">→</span></a>
+        <a class="hq-link" href="nosotros.html#contacto"><span class="hq-icon">✉️</span> Consultoría técnica<span class="hq-arr">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ CURSOS ═══ -->
+<section class="section" id="cursos">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Formación profesional</div>
+      <h2 class="sec-h2">Cursos técnicos</h2>
+      <p class="sec-lead">Programa estructurado en tres áreas: instrumentación, control &amp; redes, y software BIM. Contenido basado en proyectos reales de la industria minera chilena.</p>
+    </div>
+    <a href="curso-ic.html" class="see-all">Ver todos los cursos →</a>
+  </div>
+
+  <div class="cursos-cols">
+    <!-- COL 1 -->
+    <div>
+      <div class="curso-col-title">Instrumentación</div>
+      <a href="curso-ic.html" class="curso-card" style="margin-bottom:10px;">
+        <div class="curso-card-img">
+          <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=70&auto=format&fit=crop" alt="Proyectista I&C" loading="lazy"/>
+        </div>
+        <div class="curso-card-body">
+          <div class="curso-card-tag">Disponible</div>
+          <div class="curso-card-title">Proyectista en Instrumentación y Control</div>
+          <div class="curso-card-desc">P&ID, lazos ISA, documentación técnica completa para proyectos mineros.</div>
+        </div>
+      </a>
+      <div class="curso-coming">
+        <div class="curso-coming-icon">🌡️</div>
+        <div><div class="curso-coming-title">Medición de variables de proceso</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+    </div>
+    <!-- COL 2 -->
+    <div>
+      <div class="curso-col-title">Control &amp; Redes</div>
+      <div class="curso-coming" style="margin-bottom:10px;">
+        <div class="curso-coming-icon">🖥️</div>
+        <div><div class="curso-coming-title">PLC — Básico a avanzado</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+      <div class="curso-coming" style="margin-bottom:10px;">
+        <div class="curso-coming-icon">🏭</div>
+        <div><div class="curso-coming-title">Sistemas DCS industriales</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+      <div class="curso-coming">
+        <div class="curso-coming-icon">📡</div>
+        <div><div class="curso-coming-title">Redes industriales</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+    </div>
+    <!-- COL 3 -->
+    <div>
+      <div class="curso-col-title">Software &amp; BIM</div>
+      <div class="curso-coming" style="margin-bottom:10px;">
+        <div class="curso-coming-icon">📐</div>
+        <div><div class="curso-coming-title">AutoCAD Electrical I&amp;C</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+      <div class="curso-coming" style="margin-bottom:10px;">
+        <div class="curso-coming-icon">🏗️</div>
+        <div><div class="curso-coming-title">BIM — Revit MEP &amp; Navisworks</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+      <div class="curso-coming">
+        <div class="curso-coming-icon">📊</div>
+        <div><div class="curso-coming-title">Excel avanzado I&amp;C</div></div>
+        <span class="curso-badge">Pronto</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ BLOG PREVIEW ═══ -->
+<section class="section" id="blog">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Contenido técnico</div>
+      <h2 class="sec-h2">Últimos artículos</h2>
+      <p class="sec-lead">Artículos sobre instrumentación, redes industriales, documentación y proyectos. Contenido de aplicación real en planta.</p>
+    </div>
+    <a href="blog.html" class="see-all">Ver blog completo →</a>
+  </div>
+  <div id="blog-preview-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--muted);font-family:var(--mono);font-size:12px;">
+      Cargando artículos...
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ CONSULTORÍA ═══ -->
+<section class="section" id="consultoria">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Servicios profesionales</div>
+      <h2 class="sec-h2">Consultoría I&amp;C</h2>
+      <p class="sec-lead">Servicios de ingeniería aplicados a proyectos reales. 15 años de experiencia en gran minería y procesos industriales.</p>
+    </div>
+    <a href="nosotros.html#contacto" class="see-all">Solicitar consultoría →</a>
+  </div>
+  <div class="consul-grid">
+    <div class="consul-card">
+      <div class="consul-icon">🏭</div>
+      <div class="consul-title">Ingeniería de proyectos</div>
+      <div class="consul-desc">Desarrollo de ingeniería conceptual, básica y de detalle en I&amp;C para minería e industria de proceso. P&ID, arquitecturas, lazos, lógicos y documentación completa.</div>
+      <a href="nosotros.html#contacto" class="consul-link">Consultar →</a>
+    </div>
+    <div class="consul-card">
+      <div class="consul-icon">🔍</div>
+      <div class="consul-title">Revisión técnica y auditoría</div>
+      <div class="consul-desc">Revisión de documentación de ingeniería existente, verificación de cumplimiento normativo ISA, detección de errores y propuesta de correcciones para proyectos en ejecución.</div>
+      <a href="nosotros.html#contacto" class="consul-link">Consultar →</a>
+    </div>
+    <div class="consul-card">
+      <div class="consul-icon">📋</div>
+      <div class="consul-title">Documentación técnica</div>
+      <div class="consul-desc">Elaboración de Tag list, I/O list, MTO, especificaciones técnicas, memorias descriptivas y planos de montaje para proyectos industriales y mineros.</div>
+      <a href="nosotros.html#contacto" class="consul-link">Consultar →</a>
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ RECURSOS ═══ -->
+<section class="section" id="recursos">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Descargables gratuitos</div>
+      <h2 class="sec-h2">Recursos técnicos</h2>
+      <p class="sec-lead">Plantillas, formatos y referencias para proyectos I&amp;C. Listos para usar directamente en tus proyectos.</p>
+    </div>
+  </div>
+  <div class="recursos-grid">
+    <a href="#" class="rec-card">
+      <div class="rec-icon">📋</div>
+      <div class="rec-body">
+        <div class="rec-title">Plantilla Tag List</div>
+        <div class="rec-desc">Formato Excel con columnas estándar para listado de instrumentos</div>
+        <span class="rec-badge">Excel</span>
+      </div>
+    </a>
+    <a href="#" class="rec-card">
+      <div class="rec-icon">📊</div>
+      <div class="rec-body">
+        <div class="rec-title">Plantilla I/O List</div>
+        <div class="rec-desc">Formato para listado de señales PLC/DCS con columnas de rack, slot y canal</div>
+        <span class="rec-badge">Excel</span>
+      </div>
+    </a>
+    <a href="#" class="rec-card">
+      <div class="rec-icon">📐</div>
+      <div class="rec-body">
+        <div class="rec-title">Bloques ISA AutoCAD</div>
+        <div class="rec-desc">Biblioteca de bloques de instrumentos según norma ISA 5.1 para AutoCAD</div>
+        <span class="rec-badge">DWG</span>
+      </div>
+    </a>
+    <a href="#" class="rec-card">
+      <div class="rec-icon">📄</div>
+      <div class="rec-body">
+        <div class="rec-title">Plantilla MTO</div>
+        <div class="rec-desc">Listado de materiales para canalizaciones e instrumentos en proyectos I&amp;C</div>
+        <span class="rec-badge">Excel</span>
+      </div>
+    </a>
+    <a href="#" class="rec-card">
+      <div class="rec-icon">🗺️</div>
+      <div class="rec-body">
+        <div class="rec-title">Plantilla Loop Diagram</div>
+        <div class="rec-desc">Formato de diagrama de lazo según ISA 5.4 listo para AutoCAD Electrical</div>
+        <span class="rec-badge">DWT</span>
+      </div>
+    </a>
+    <a href="#" class="rec-card">
+      <div class="rec-icon">📖</div>
+      <div class="rec-body">
+        <div class="rec-title">Guía rápida ISA 5.1</div>
+        <div class="rec-desc">Resumen de simbología P&ID con los 40 símbolos más usados en proyectos</div>
+        <span class="rec-badge">PDF</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ HERRAMIENTAS ═══ -->
+<section class="section" id="herramientas">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Herramientas online</div>
+      <h2 class="sec-h2">Calculadoras I&amp;C</h2>
+      <p class="sec-lead">Herramientas de cálculo para ingeniería de instrumentación y control. Úsalas directamente desde el navegador, sin instalar nada.</p>
+    </div>
+  </div>
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">🔌</div>
+        <div class="tool-name">Calculadora 4-20 mA</div>
+        <span class="tool-tag">Online</span>
+      </div>
+      <div class="tool-body">
+        <div class="tool-desc">Convierte entre valor de proceso y corriente de lazo. Calcula porcentaje de escala, corriente y valor de variable para cualquier rango configurado.</div>
+        <a href="#" class="tool-btn">Abrir herramienta →</a>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">📡</div>
+        <div class="tool-name">Balance segmento FF</div>
+        <span class="tool-tag">Online</span>
+      </div>
+      <div class="tool-body">
+        <div class="tool-desc">Calcula consumo de corriente y verifica la viabilidad de un segmento Foundation Fieldbus H1 según número y tipo de dispositivos conectados.</div>
+        <a href="#" class="tool-btn">Abrir herramienta →</a>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">📏</div>
+        <div class="tool-name">Caída de tensión en lazo</div>
+        <span class="tool-tag">Online</span>
+      </div>
+      <div class="tool-body">
+        <div class="tool-desc">Verifica la caída de tensión en un lazo 4-20 mA según resistencia de cable, distancia y carga del receptor. Indica si el transmisor puede operar correctamente.</div>
+        <a href="#" class="tool-btn">Abrir herramienta →</a>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">🌡️</div>
+        <div class="tool-name">Conversor RTD / Termopar</div>
+        <span class="tool-tag">Online</span>
+      </div>
+      <div class="tool-body">
+        <div class="tool-desc">Convierte temperatura a resistencia PT100/PT1000 y a tensión de termopar tipo J, K, T y E. Referencia rápida para calibración en terreno.</div>
+        <a href="#" class="tool-btn">Abrir herramienta →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ PROYECTOS ═══ -->
+<section class="section" id="proyectos">
+  <div class="sec-header-row">
+    <div>
+      <div class="eyebrow">Trayectoria</div>
+      <h2 class="sec-h2">Proyectos destacados</h2>
+      <p class="sec-lead">Proyectos representativos en ingeniería I&amp;C para gran minería e industria de proceso en Chile.</p>
+    </div>
+    <a href="nosotros.html#portafolio" class="see-all">Ver portafolio completo →</a>
+  </div>
+  <div class="proy-grid">
+    <div class="proy-card">
+      <div class="proy-img"><img src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=600&q=70&auto=format&fit=crop" alt="Correa transportadora" loading="lazy"/></div>
+      <div class="proy-body">
+        <div class="proy-cat">Gran minería · Correas</div>
+        <div class="proy-title">Sistema I&amp;C — Correa transportadora</div>
+        <div class="proy-desc">Ingeniería de detalle: P&ID, lazos, arquitectura Profibus DP, sensores de desalineamiento, RTD y take-up automático.</div>
+      </div>
+    </div>
+    <div class="proy-card">
+      <div class="proy-img"><img src="https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=600&q=70&auto=format&fit=crop" alt="Sala eléctrica DCS" loading="lazy"/></div>
+      <div class="proy-body">
+        <div class="proy-cat">Sala eléctrica · DCS</div>
+        <div class="proy-title">Sala de control con arquitectura DCS</div>
+        <div class="proy-desc">Diseño con DCS Profibus PA/DP, diagramas de conexión, lógicos ISA 5.2 y coordinación BIM con Revit MEP + Navisworks.</div>
+      </div>
+    </div>
+    <div class="proy-card">
+      <div class="proy-img"><img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=70&auto=format&fit=crop" alt="Flotación minera" loading="lazy"/></div>
+      <div class="proy-body">
+        <div class="proy-cat">Área húmeda · Flotación</div>
+        <div class="proy-title">Instrumentación celdas de flotación</div>
+        <div class="proy-desc">Control de lazo en celdas rougher, scavenger y cleaner. Nivel de pulpa, densidad, flujo de reactivos y pH.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sec-divider">
+
+<!-- ═══ SOBRE MÍ / CTA ═══ -->
+<div class="about-band">
+  <div class="about-inner">
+    <div class="about-text">
+      <div class="eyebrow">El profesional detrás del proyecto</div>
+      <h2 class="about-h2">Ingeniero I&amp;C con 15 años<br>en gran minería chilena.</h2>
+      <p class="about-p">Ingeniero en Automatización y Control e Ingeniero Civil en Electricidad (USACH). Experiencia en correas transportadoras, chancado, flotación, salas eléctricas y coordinación BIM. El contenido de este sitio refleja lo que se hace hoy en terreno, no teoría de manual.</p>
+      <div class="about-actions">
+        <a href="nosotros.html" class="btn-primary">Conocer más →</a>
+        <a href="nosotros.html#contacto" class="btn-ghost">Contacto</a>
+      </div>
+    </div>
+    <div class="about-card">
+      <div class="about-avatar">AA</div>
+      <div class="about-name">Alberto Ahumada</div>
+      <div class="about-role">Proyectista Sr. I&amp;C · USACH</div>
+      <div class="about-tags">
+        <span class="atag">ISA 5.1</span><span class="atag">ISA 5.4</span>
+        <span class="atag">PLC/DCS</span><span class="atag">Profibus</span>
+        <span class="atag">AutoCAD</span><span class="atag">Navisworks</span>
+        <span class="atag">BIM</span><span class="atag">Minería</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand-col">
+        <a href="index.html" class="footer-logo">REY AUTOMATA</a>
+        <p>Formación, consultoría y recursos para ingenieros y técnicos en Instrumentación &amp; Control Industrial. Basado en experiencia real de gran minería chilena.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Cursos</div>
+        <a href="curso-ic.html">Proyectista I&amp;C</a>
+        <a href="#">PLC y DCS</a>
+        <a href="#">Redes industriales</a>
+        <a href="#">AutoCAD Electrical</a>
+        <a href="#">BIM y Navisworks</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contenido</div>
+        <a href="blog.html">Blog técnico</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#herramientas">Calculadoras</a>
+        <a href="#proyectos">Proyectos</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Nosotros</div>
+        <a href="nosotros.html">Sobre mí</a>
+        <a href="nosotros.html#portafolio">Portafolio</a>
+        <a href="nosotros.html#contacto">Consultoría</a>
+        <a href="nosotros.html#contacto">Contacto</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Alberto Ahumada · reyautomata.cl · Santiago, Chile</span>
+      <span class="footer-made">Instrumentación &amp; Control Industrial</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Mobile nav
+function toggleMobileNav(btn) {
+  const nav = document.getElementById('mobile-nav');
+  const open = nav.classList.toggle('open');
+  btn.textContent = open ? '✕ Cerrar' : '☰ Menú';
+}
+document.addEventListener('click', function(e) {
+  const mn = document.getElementById('mobile-nav');
+  const btn = document.querySelector('.nav-mobile-btn');
+  if (mn && btn && !mn.contains(e.target) && !btn.contains(e.target)) {
+    mn.classList.remove('open');
+    btn.textContent = '☰ Menú';
+  }
+});
+
+// Load blog preview from posts.json
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+fetch('posts.json')
+  .then(r => r.json())
+  .then(posts => {
+    const latest = posts.sort((a,b) => b.fecha.localeCompare(a.fecha)).slice(0,3);
+    document.getElementById('blog-preview-grid').innerHTML = latest.map(p => `
+      <a class="blog-card" href="blog.html">
+        <div class="blog-card-img">
+          <img src="${p.imagen||'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70&auto=format&fit=crop'}"
+               alt="${p.titulo}" loading="lazy"/>
+        </div>
+        <div class="blog-card-body">
+          <div class="blog-card-cat">${p.categoria}</div>
+          <div class="blog-card-title">${p.titulo}</div>
+          <div class="blog-card-excerpt">${p.resumen.substring(0,100)}...</div>
+          <span class="blog-card-date">${formatDate(p.fecha)}</span>
+        </div>
+      </a>`).join('');
+  })
+  .catch(() => {
+    document.getElementById('blog-preview-grid').innerHTML =
+      '<a class="blog-card" href="blog.html" style="grid-column:1/-1;padding:20px;text-align:center;"><div class="blog-card-body"><div class="blog-card-title">Ver todos los artículos en el blog →</div></div></a>';
+  });
+</script>
+</body>
+</html>
