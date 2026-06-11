@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog Técnico | Rey Automata</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#0A0E13;--surface:#1C2330;--surface2:#141924;--border:#2A3547;
+      --amber:#E8A923;--amber-d:#B8821A;--amber-l:rgba(232,169,35,0.12);
+      --text:#CBD5E0;--text-hi:#EDF2F7;--muted:#64748B;
+      --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;min-height:100vh;display:flex;flex-direction:column;}
+
+    /* ── TOPBAR ── */
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(10,14,19,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:58px;}
+    .topbar-logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);letter-spacing:0.06em;text-decoration:none;flex-shrink:0;}
+    .topbar-nav{display:flex;gap:0;list-style:none;height:100%;align-items:stretch;}
+    .topbar-nav>li{position:relative;display:flex;align-items:center;}
+    .topbar-nav>li>a,.topbar-nav>li>button{display:flex;align-items:center;gap:5px;padding:0 16px;height:58px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,background 0.15s;}
+    .topbar-nav>li>a:hover,.topbar-nav>li>button:hover,.topbar-nav>li:hover>a,.topbar-nav>li:hover>button{color:var(--text-hi);background:rgba(255,255,255,0.03);}
+    .topbar-nav>li.active>a{color:var(--amber);border-bottom-color:var(--amber);}
+    .nav-arrow{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;opacity:0.5;transition:transform 0.2s,opacity 0.2s;flex-shrink:0;}
+    .topbar-nav>li:hover .nav-arrow{transform:rotate(180deg);opacity:1;}
+    .tb-dropdown{position:absolute;top:calc(100% + 1px);left:0;min-width:260px;background:#111620;border:1px solid var(--border);border-top:2px solid var(--amber);border-radius:0 0 10px 10px;padding:8px 0;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity 0.18s ease,transform 0.18s ease,visibility 0.18s;box-shadow:0 16px 40px rgba(0,0,0,0.5);z-index:400;}
+    .topbar-nav>li:hover .tb-dropdown{opacity:1;visibility:visible;transform:translateY(0);}
+    .tb-dropdown a{display:flex;align-items:flex-start;gap:12px;padding:10px 20px;text-decoration:none;transition:background 0.15s;}
+    .tb-dropdown a:hover{background:rgba(232,169,35,0.07);}
+    .dd-icon{width:28px;height:28px;border-radius:6px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;}
+    .dd-text{display:flex;flex-direction:column;gap:2px;}
+    .dd-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-hi);letter-spacing:0.04em;}
+    .dd-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+    .dd-divider{height:1px;background:var(--border);margin:6px 20px;}
+    .dd-badge{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:var(--amber-l);border:1px solid rgba(232,169,35,0.3);color:var(--amber);border-radius:3px;padding:2px 6px;white-space:nowrap;flex-shrink:0;}
+    .topbar-cta{background:var(--amber);color:var(--bg);border:none;border-radius:5px;padding:8px 18px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.06em;text-decoration:none;transition:background 0.2s,transform 0.15s;flex-shrink:0;white-space:nowrap;}
+    .topbar-cta:hover{background:var(--amber-d);transform:translateY(-1px);}
+    .nav-mobile-btn{display:none;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);cursor:pointer;font-size:13px;font-family:var(--mono);}
+    .mobile-nav{display:none;position:fixed;top:58px;left:0;right:0;background:#0d1117;border-bottom:1px solid var(--border);padding:12px 0 20px;z-index:299;max-height:calc(100vh - 58px);overflow-y:auto;}
+    .mobile-nav.open{display:block;}
+    .mob-section{padding:10px 20px 4px;}
+    .mob-section-label{font-family:var(--mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
+    .mob-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:background 0.15s;}
+    .mob-link:hover{background:rgba(255,255,255,0.04);}
+    .mob-link .dd-icon{width:24px;height:24px;font-size:11px;}
+    @media(max-width:860px){.topbar{padding:0 20px;}.topbar-nav{display:none;}.topbar-cta{display:none;}.nav-mobile-btn{display:flex;align-items:center;gap:6px;}}
+
+    /* ── PAGE ── */
+    .page-wrap{max-width:1100px;margin:0 auto;padding:100px 40px 80px;flex:1;}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;margin-bottom:36px;transition:color 0.2s;}
+    .back-btn:hover{color:var(--amber);}
+
+    /* ── BLOG HEADER ── */
+    .blog-header{margin-bottom:48px;}
+    .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+    .blog-h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:600;color:var(--text-hi);letter-spacing:-0.025em;margin-bottom:12px;line-height:1.1;}
+    .blog-lead{font-size:14px;color:var(--muted);line-height:1.75;max-width:560px;}
+
+    /* ── FILTER BAR ── */
+    .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px;align-items:center;}
+    .filter-label{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-right:4px;}
+    .filter-btn{background:transparent;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+    .filter-btn:hover,.filter-btn.active{border-color:var(--amber);color:var(--amber);background:var(--amber-l);}
+
+    /* ── POST GRID (list view) ── */
+    #posts-grid{display:flex;flex-direction:column;gap:0;}
+
+    /* ── POST CARD ── */
+    .post-card{display:grid;grid-template-columns:280px 1fr;gap:0;border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;text-decoration:none;color:inherit;}
+    .post-card:first-child{border-top:1px solid var(--border);}
+    .post-card:hover{background:rgba(255,255,255,0.02);}
+    .post-img-wrap{overflow:hidden;height:180px;position:relative;}
+    .post-img-wrap img{width:100%;height:100%;object-fit:cover;filter:saturate(0.4) brightness(0.6);transition:filter 0.3s;}
+    .post-card:hover .post-img-wrap img{filter:saturate(0.6) brightness(0.75);}
+    .post-body{padding:28px 32px;display:flex;flex-direction:column;justify-content:center;}
+    .post-meta{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+    .post-cat{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;border:1px solid;}
+    .cat-amber{color:var(--amber);border-color:rgba(232,169,35,0.4);background:var(--amber-l);}
+    .cat-blue{color:#60a5fa;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08);}
+    .cat-green{color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.08);}
+    .cat-coral{color:#f87171;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.08);}
+    .post-date{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.06em;}
+    .post-title{font-size:17px;font-weight:600;color:var(--text-hi);margin-bottom:8px;line-height:1.3;letter-spacing:-0.01em;}
+    .post-summary{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;}
+    .post-readmore{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);}
+
+    /* ── ARTICLE VIEW ── */
+    #article-view{display:none;}
+    .article-hero{position:relative;height:320px;overflow:hidden;border-radius:10px;margin-bottom:36px;}
+    .article-hero img{width:100%;height:100%;object-fit:cover;filter:saturate(0.45) brightness(0.55);}
+    .article-hero-overlay{position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(10,14,19,0.9));}
+    .article-hero-body{position:absolute;bottom:0;left:0;right:0;padding:28px 32px;}
+    .article-title{font-size:clamp(1.4rem,3vw,2rem);font-weight:600;color:var(--text-hi);letter-spacing:-0.02em;line-height:1.2;margin-bottom:12px;}
+    .article-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .article-content{max-width:720px;}
+    .article-content p{font-size:15px;color:var(--text);line-height:1.85;margin-bottom:20px;}
+    .article-content h3{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--amber);margin:32px 0 12px;}
+
+    /* ── EMPTY STATE ── */
+    .empty-state{text-align:center;padding:60px 20px;}
+    .empty-icon{font-size:48px;margin-bottom:16px;opacity:0.4;}
+    .empty-msg{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:0.08em;}
+
+    /* ── ADMIN PANEL ── */
+    .admin-toggle{position:fixed;bottom:28px;right:28px;z-index:500;}
+    .admin-btn{background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    .admin-btn:hover{border-color:var(--amber);color:var(--amber);}
+    .admin-panel{position:fixed;bottom:80px;right:28px;z-index:500;width:360px;background:#111620;border:1px solid var(--border);border-top:2px solid var(--amber);border-radius:10px;padding:20px;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+    .admin-panel.open{display:block;}
+    .admin-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-bottom:16px;}
+    .admin-note{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;padding:10px 12px;background:rgba(232,169,35,0.06);border:1px solid rgba(232,169,35,0.15);border-radius:6px;}
+    .admin-note code{font-family:var(--mono);font-size:11px;color:var(--amber);}
+    .admin-step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+    .admin-step-num{width:20px;height:20px;border-radius:50%;background:var(--amber-l);border:1px solid var(--amber);font-family:var(--mono);font-size:10px;color:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .admin-step-text{font-size:12px;color:var(--muted);line-height:1.5;}
+    .admin-step-text strong{color:var(--text-hi);font-weight:600;}
+    .admin-close{width:100%;margin-top:12px;background:none;border:1px solid var(--border);border-radius:5px;padding:8px;font-family:var(--mono);font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.15s;}
+    .admin-close:hover{border-color:var(--amber);color:var(--amber);}
+
+    /* ── FOOTER ── */
+    .site-footer{border-top:1px solid var(--border);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+    .footer-brand{font-family:var(--mono);font-size:12px;color:var(--amber);font-weight:700;}
+    .footer-copy{font-size:11px;color:var(--muted);}
+    .footer-links{display:flex;gap:16px;}
+    .footer-links a{font-size:11px;color:var(--muted);text-decoration:none;}
+    .footer-links a:hover{color:var(--text-hi);}
+
+    @media(max-width:700px){
+      .post-card{grid-template-columns:1fr;}
+      .post-img-wrap{height:140px;}
+      .post-body{padding:16px 20px;}
+      .page-wrap{padding:90px 20px 60px;}
+      .admin-panel{width:calc(100vw - 40px);right:20px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topbar">
+  <a class="topbar-logo" href="index.html">REY AUTOMATA</a>
+  <ul class="topbar-nav">
+    <li><a href="index.html">Inicio</a></li>
+    <li>
+      <button>Cursos <span class="nav-arrow"></span></button>
+      <div class="tb-dropdown">
+        <a href="curso-ic.html"><div class="dd-icon">⚙️</div><div class="dd-text"><span class="dd-title">Proyectista I&amp;C</span><span class="dd-sub">P&amp;ID, lazos, redes y documentación</span></div></a>
+        <a href="#"><div class="dd-icon">⚡</div><div class="dd-text"><span class="dd-title">Ingeniería Eléctrica BT</span><span class="dd-sub">Diseño eléctrico industrial</span></div><span class="dd-badge">Pronto</span></a>
+        <a href="#"><div class="dd-icon">📐</div><div class="dd-text"><span class="dd-title">AutoCAD Electrical I&amp;C</span><span class="dd-sub">Producción profesional de planos</span></div><span class="dd-badge">Pronto</span></a>
+        <a href="#"><div class="dd-icon">🏗️</div><div class="dd-text"><span class="dd-title">BIM &amp; Navisworks</span><span class="dd-sub">Coordinación 3D multidisciplinaria</span></div><span class="dd-badge">Pronto</span></a>
+      </div>
+    </li>
+    <li class="active"><a href="blog.html">Blog técnico</a></li>
+    <li>
+      <button>Nosotros <span class="nav-arrow"></span></button>
+      <div class="tb-dropdown">
+        <a href="nosotros.html"><div class="dd-icon">👤</div><div class="dd-text"><span class="dd-title">Sobre mí</span><span class="dd-sub">Alberto Ahumada — Proyectista Sr. I&amp;C</span></div></a>
+        <a href="nosotros.html#portafolio"><div class="dd-icon">🗂️</div><div class="dd-text"><span class="dd-title">Portafolio</span><span class="dd-sub">Proyectos mineros e industriales</span></div></a>
+        <div class="dd-divider"></div>
+        <a href="nosotros.html#contacto"><div class="dd-icon">✉️</div><div class="dd-text"><span class="dd-title">Contacto</span><span class="dd-sub">Consultas, proyectos e inscripciones</span></div></a>
+      </div>
+    </li>
+  </ul>
+  <a href="curso-ic.html#contacto" class="topbar-cta">Inscríbete →</a>
+  <button class="nav-mobile-btn" onclick="toggleMobileNav(this)">☰ Menú</button>
+</nav>
+
+<div class="mobile-nav" id="mobile-nav">
+  <div class="mob-section"><div class="mob-section-label">Páginas</div>
+    <a class="mob-link" href="index.html"><div class="dd-icon">🏠</div> Inicio</a>
+    <a class="mob-link" href="curso-ic.html"><div class="dd-icon">⚙️</div> Proyectista I&amp;C</a>
+    <a class="mob-link" href="blog.html"><div class="dd-icon">✍️</div> Blog técnico</a>
+    <a class="mob-link" href="nosotros.html"><div class="dd-icon">👤</div> Nosotros</a>
+  </div>
+</div>
+
+<!-- BLOG LIST VIEW -->
+<div class="page-wrap" id="blog-view">
+  <a href="index.html" class="back-btn">← Inicio</a>
+
+  <div class="blog-header">
+    <div class="eyebrow">Contenido técnico</div>
+    <h1 class="blog-h1">Blog de Instrumentación<br>&amp; Control Industrial</h1>
+    <p class="blog-lead">Artículos técnicos sobre I&amp;C, automatización, redes industriales y proyectos mineros. Contenido basado en experiencia real de campo.</p>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filtrar:</span>
+    <button class="filter-btn active" onclick="filterPosts('all', this)">Todos</button>
+    <button class="filter-btn" onclick="filterPosts('P&ID', this)">P&amp;ID</button>
+    <button class="filter-btn" onclick="filterPosts('Redes industriales', this)">Redes</button>
+    <button class="filter-btn" onclick="filterPosts('Documentación', this)">Documentación</button>
+    <button class="filter-btn" onclick="filterPosts('Automatización', this)">Automatización</button>
+  </div>
+
+  <div id="posts-grid">
+    <div class="empty-state">
+      <div class="empty-icon">📡</div>
+      <div class="empty-msg">Cargando artículos...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE VIEW -->
+<div class="page-wrap" id="article-view">
+  <a href="#" class="back-btn" id="back-to-blog" onclick="showBlog()">← Volver al blog</a>
+  <div id="article-content"></div>
+</div>
+
+<!-- ADMIN TOGGLE -->
+<div class="admin-toggle">
+  <button class="admin-btn" onclick="toggleAdmin()">
+    ✏️ Publicar artículo
+  </button>
+</div>
+
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-title">📝 Cómo publicar un nuevo artículo</div>
+  <div class="admin-note">
+    El blog lee el archivo <code>posts.json</code> de tu repositorio en GitHub. Para publicar, solo editas ese archivo.
+  </div>
+  <div class="admin-step">
+    <div class="admin-step-num">1</div>
+    <div class="admin-step-text">Abre <strong>github.com/reyautomata/reyautomata.github.io</strong> y haz click en <strong>posts.json</strong></div>
+  </div>
+  <div class="admin-step">
+    <div class="admin-step-num">2</div>
+    <div class="admin-step-text">Click en el ícono <strong>lápiz</strong> (editar) y copia un bloque existente como plantilla</div>
+  </div>
+  <div class="admin-step">
+    <div class="admin-step-num">3</div>
+    <div class="admin-step-text">Cambia <strong>id, titulo, resumen, fecha, categoria, contenido</strong> con tu nuevo artículo</div>
+  </div>
+  <div class="admin-step">
+    <div class="admin-step-num">4</div>
+    <div class="admin-step-text">Click en <strong>Commit changes</strong> — el artículo aparece en el blog en segundos</div>
+  </div>
+  <button class="admin-close" onclick="toggleAdmin()">Cerrar</button>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <span class="footer-brand">REY AUTOMATA</span>
+  <span class="footer-copy">© 2026 Alberto Ahumada · Blog técnico I&amp;C</span>
+  <div class="footer-links">
+    <a href="index.html">Inicio</a>
+    <a href="curso-ic.html">Cursos</a>
+    <a href="nosotros.html">Nosotros</a>
+  </div>
+</footer>
+
+<script>
+const POSTS_URL = 'posts.json';
+let allPosts = [];
+let currentFilter = 'all';
+
+const CAT_CLASS = {
+  'P&ID':'cat-amber','Redes industriales':'cat-blue',
+  'Documentación':'cat-green','Automatización':'cat-coral'
+};
+
+function catClass(cat) { return CAT_CLASS[cat] || 'cat-amber'; }
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function renderList(posts) {
+  const grid = document.getElementById('posts-grid');
+  if (!posts.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-msg">No hay artículos en esta categoría aún</div></div>';
+    return;
+  }
+  grid.innerHTML = posts.map(p => `
+    <a class="post-card" href="#" onclick="showArticle('${p.id}'); return false;">
+      <div class="post-img-wrap">
+        <img src="${p.imagen || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=70&auto=format&fit=crop'}" alt="${p.titulo}" loading="lazy" />
+      </div>
+      <div class="post-body">
+        <div class="post-meta">
+          <span class="post-cat ${catClass(p.categoria)}">${p.categoria}</span>
+          <span class="post-date">${formatDate(p.fecha)}</span>
+        </div>
+        <div class="post-title">${p.titulo}</div>
+        <div class="post-summary">${p.resumen}</div>
+        <div class="post-readmore">Leer artículo →</div>
+      </div>
+    </a>`).join('');
+}
+
+function filterPosts(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = cat === 'all' ? allPosts : allPosts.filter(p => p.categoria === cat);
+  renderList(filtered);
+}
+
+function showArticle(id) {
+  const p = allPosts.find(x => x.id === id);
+  if (!p) return;
+  const paragraphs = p.contenido.split('\n\n').map(t => `<p>${t}</p>`).join('');
+  document.getElementById('article-content').innerHTML = `
+    <div class="article-hero">
+      <img src="${p.imagen || ''}" alt="${p.titulo}" />
+      <div class="article-hero-overlay"></div>
+      <div class="article-hero-body">
+        <div class="post-meta" style="margin-bottom:10px;">
+          <span class="post-cat ${catClass(p.categoria)}">${p.categoria}</span>
+          <span class="post-date">${formatDate(p.fecha)}</span>
+        </div>
+        <h1 class="article-title">${p.titulo}</h1>
+      </div>
+    </div>
+    <div class="article-content">${paragraphs}</div>`;
+  document.getElementById('blog-view').style.display = 'none';
+  document.getElementById('article-view').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showBlog() {
+  document.getElementById('article-view').style.display = 'none';
+  document.getElementById('blog-view').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return false;
+}
+
+function toggleAdmin() {
+  document.getElementById('admin-panel').classList.toggle('open');
+}
+
+function toggleMobileNav(btn) {
+  const nav = document.getElementById('mobile-nav');
+  const open = nav.classList.toggle('open');
+  btn.textContent = open ? '✕ Cerrar' : '☰ Menú';
+}
+document.addEventListener('click', function(e) {
+  const mn = document.getElementById('mobile-nav');
+  const btn = document.querySelector('.nav-mobile-btn');
+  if (mn && btn && !mn.contains(e.target) && !btn.contains(e.target)) {
+    mn.classList.remove('open');
+    btn.textContent = '☰ Menú';
+  }
+  const ap = document.getElementById('admin-panel');
+  const ab = document.querySelector('.admin-btn');
+  if (ap && ab && !ap.contains(e.target) && !ab.contains(e.target)) {
+    ap.classList.remove('open');
+  }
+});
+
+// Load posts from JSON
+fetch(POSTS_URL)
+  .then(r => r.json())
+  .then(data => {
+    allPosts = data.sort((a,b) => b.fecha.localeCompare(a.fecha));
+    renderList(allPosts);
+  })
+  .catch(() => {
+    document.getElementById('posts-grid').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-msg">No se pudo cargar posts.json — asegúrate de que el archivo esté en el mismo directorio</div></div>';
+  });
+</script>
+</body>
+</html>

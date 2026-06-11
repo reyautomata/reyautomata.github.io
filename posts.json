@@ -1,0 +1,32 @@
+[
+  {
+    "id": "pid-isa-51",
+    "titulo": "Cómo leer un P&ID según norma ISA 5.1",
+    "resumen": "Guía práctica para interpretar diagramas de tuberías e instrumentación. Simbología, lazos de control, válvulas y transmisores explicados desde la experiencia en terreno.",
+    "fecha": "2026-06-01",
+    "categoria": "P&ID",
+    "tag_color": "amber",
+    "imagen": "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=70&auto=format&fit=crop",
+    "contenido": "Un P&ID (Piping and Instrumentation Diagram) es el documento técnico más importante en instrumentación industrial. Bajo la norma ISA 5.1, cada instrumento tiene un símbolo único: un círculo representa un instrumento de campo, un círculo con línea horizontal es un instrumento instalado en tablero, y un cuadrado indica un controlador lógico.\n\nLos lazos de control se identifican con la letra de la variable medida (T=temperatura, P=presión, F=flujo, L=nivel) seguida de la función (T=transmisor, I=indicador, C=controlador, V=válvula). Así, un FIC-101 es un controlador indicador de flujo, tag 101.\n\nEn terreno minero, los P&ID deben incluir además las condiciones de proceso: rango de operación, temperatura máxima, material del cuerpo del instrumento y clasificación de área ATEX cuando aplica."
+  },
+  {
+    "id": "profibus-vs-modbus",
+    "titulo": "Profibus DP vs Modbus RTU: cuándo usar cada uno",
+    "resumen": "Comparación técnica entre los dos buses de campo más usados en minería chilena. Velocidad, distancia, topología y criterios de selección para proyectos I&C reales.",
+    "fecha": "2026-05-18",
+    "categoria": "Redes industriales",
+    "tag_color": "blue",
+    "imagen": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=70&auto=format&fit=crop",
+    "contenido": "Profibus DP opera a velocidades de hasta 12 Mbit/s y soporta hasta 126 nodos por segmento. Su topología es maestro-esclavo y es ideal para grandes instalaciones con muchos dispositivos de campo. Requiere terminadores de bus y cable específico (tipo A: 150Ω).\n\nModbus RTU es más simple: velocidades típicas de 9600 a 115200 bps, máximo 247 esclavos, cable de par trenzado estándar. Su principal ventaja es la facilidad de implementación y la amplia compatibilidad con equipos legacy.\n\nEn minería, Profibus DP domina en áreas de proceso nuevas con sistemas DCS modernos. Modbus RTU sigue siendo frecuente en salas eléctricas, medidores de energía y equipos de fabricantes locales. La tendencia actual es migrar hacia Profinet e Industrial Ethernet para velocidades mayores y diagnóstico avanzado."
+  },
+  {
+    "id": "loop-diagram-basico",
+    "titulo": "Diagrama de lazo: estructura y criterios de diseño",
+    "resumen": "Qué debe incluir un loop diagram bajo ISA 5.4, cómo se organiza la información de campo a sala de control, y los errores más comunes en la documentación de proyectos.",
+    "fecha": "2026-04-30",
+    "categoria": "Documentación",
+    "tag_color": "green",
+    "imagen": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=70&auto=format&fit=crop",
+    "contenido": "El diagrama de lazo (loop diagram) según ISA 5.4 documenta la trayectoria completa de una señal: desde el instrumento de campo hasta el sistema de control, incluyendo bornes, cables, canalizaciones y módulos de I/O.\n\nUn loop diagram bien construido debe mostrar: el instrumento de campo con su tag y especificación, el tipo de señal (4-20 mA, HART, digital), los bornes intermedios en junction box y en el marshalling panel, el número de cable y par, y la dirección I/O en el PLC o DCS con su número de tarjeta y canal.\n\nEl error más frecuente en proyectos es omitir los bornes de tierra de instrumentación y no indicar la fuente de alimentación del transmisor (loop powered vs. externally powered). Ambos datos son críticos para el montaje y la puesta en marcha."
+  }
+]
