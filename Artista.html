@@ -143,22 +143,16 @@
     /* ── MAIN CONTENT ── */
     .main {
       min-width: 0;
-      /* Deja espacio para el sidebar fijo (220px) y limita el ancho util.
-         El contenido nunca se estira mas alla de 1400px. */
       max-width: 1400px;
       margin-left: 220px;
       margin-right: auto;
     }
 
-    /* En monitores muy anchos, centra el bloque (sidebar + contenido)
-       repartiendo el espacio sobrante a ambos lados. */
     @media (min-width: 1840px) {
       .main {
         margin-left: max(220px, calc((100vw - 1400px) / 2 + 110px));
       }
     }
-
-    /* (sin reglas de calc; el ancho lo controla .main directamente) */
 
     /* ── SECTIONS ── */
     section {
@@ -167,8 +161,6 @@
       border-bottom: 1px solid var(--border);
       position: relative;
     }
-
-    /* (ancho controlado a nivel de .main) */
 
     /* ── HERO ── */
     #inicio {
@@ -364,7 +356,6 @@
       cursor: pointer;
     }
 
-    /* Imagen dentro del cuadro: llena el espacio sin deformarse */
     .gallery-item img {
       width: 100%;
       height: 100%;
@@ -374,8 +365,6 @@
       filter: grayscale(20%) brightness(0.92);
     }
 
-    /* Si la imagen aun no existe, el cuadro queda con fondo limpio
-       (sin icono de imagen rota) gracias al onerror del HTML */
     .gallery-item img.missing {
       visibility: hidden;
     }
@@ -839,7 +828,6 @@
       transform: scale(1);
     }
 
-    /* Lado izquierdo: la imagen */
     .lightbox-image {
       background: #060608;
       display: flex;
@@ -857,7 +845,6 @@
       display: block;
     }
 
-    /* Lado derecho: la informacion */
     .lightbox-info {
       padding: 2.5rem 2rem;
       display: flex;
@@ -866,7 +853,6 @@
       min-height: 0;
     }
 
-    /* Barra de scroll visible en el panel de texto */
     .lightbox-info::-webkit-scrollbar { width: 6px; }
     .lightbox-info::-webkit-scrollbar-track { background: transparent; }
     .lightbox-info::-webkit-scrollbar-thumb {
@@ -900,7 +886,6 @@
       padding-top: 1.5rem;
     }
 
-    /* Cada parrafo dentro de la descripcion, con espacio entre ellos */
     .lightbox-desc .desc-parrafo {
       display: block;
     }
@@ -908,7 +893,6 @@
       margin-top: 1.1rem;
     }
 
-    /* Boton de cerrar */
     .lightbox-close {
       position: absolute;
       top: 1.5rem;
@@ -951,11 +935,172 @@
       .lightbox-title { font-size: 1.5rem; }
     }
 
+    /* ── REPRODUCTOR DE MUSICA ── */
+    .music-player {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 0.4rem 0.6rem;
+      transition: border-color 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .music-player:hover {
+      border-color: var(--copper);
+    }
+
+    /* Boton principal de play/pausa */
+    .music-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: var(--copper);
+      color: var(--bg);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+      line-height: 1;
+    }
+
+    .music-btn:hover {
+      transform: scale(1.06);
+    }
+
+    /* Botones de anterior / siguiente */
+    .music-nav {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      line-height: 1;
+      max-width: 0;
+      opacity: 0;
+      padding: 0;
+      border-width: 0;
+      overflow: hidden;
+    }
+
+    .music-player:hover .music-nav,
+    .music-player.playing .music-nav {
+      max-width: 30px;
+      opacity: 1;
+      border-width: 1px;
+    }
+
+    .music-nav:hover {
+      border-color: var(--copper);
+      color: var(--copper);
+    }
+
+    /* Texto: nombre de la cancion / estado */
+    .music-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      max-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-width 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    }
+
+    .music-player:hover .music-label,
+    .music-player.playing .music-label {
+      max-width: 180px;
+      opacity: 1;
+      margin: 0 0.7rem;
+    }
+
+    /* Barras animadas del ecualizador */
+    .music-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 16px;
+      max-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-width 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    }
+
+    .music-player.playing .music-bars {
+      max-width: 30px;
+      opacity: 1;
+      margin: 0 0.4rem 0 0.2rem;
+    }
+
+    .music-bars span {
+      width: 3px;
+      background: var(--copper);
+      border-radius: 2px;
+      animation: equalize 0.9s ease-in-out infinite;
+    }
+
+    .music-bars span:nth-child(1) { height: 40%; animation-delay: 0s; }
+    .music-bars span:nth-child(2) { height: 90%; animation-delay: 0.2s; }
+    .music-bars span:nth-child(3) { height: 60%; animation-delay: 0.4s; }
+
+    @keyframes equalize {
+      0%, 100% { transform: scaleY(0.4); }
+      50%      { transform: scaleY(1); }
+    }
+
+    @media (max-width: 760px) {
+      .music-player { bottom: 1rem; right: 1rem; }
+      .music-btn { width: 44px; height: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .music-bars span { animation: none; }
+    }
+
   </style>
 </head>
 <body>
 
 <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menú">☰</button>
+
+<!-- ── REPRODUCTOR DE MUSICA (playlist con anterior/siguiente) ── -->
+<!--
+  COMO AGREGAR TUS CANCIONES:
+  1. Sube tus archivos MP3 a una carpeta "audio" en el repositorio.
+     Nombralos sin tildes ni espacios, por ejemplo:
+     cancion1.mp3, cancion2.mp3, cancion3.mp3, etc.
+  2. Mas abajo, en el bloque <script>, busca la lista "playlist"
+     y escribe ahi el nombre de archivo y el titulo de cada cancion.
+-->
+<div class="music-player" id="music-player">
+  <button class="music-nav" id="music-prev" aria-label="Canción anterior">◄</button>
+  <button class="music-btn" id="music-btn" aria-label="Reproducir música">▶</button>
+  <div class="music-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+  <span class="music-label" id="music-label">Reproducir música</span>
+  <button class="music-nav" id="music-next" aria-label="Canción siguiente">►</button>
+</div>
+
+<audio id="bg-music" preload="none"></audio>
 
 <div class="layout">
 
@@ -989,7 +1134,7 @@
     </ul>
 
     <div class="sidebar-footer">
-      <a href="https://www.instagram.com" target="reyautomata">
+      <a href="https://instagram.com/reyautomata" target="_blank">
         <span>◈</span> Instagram
       </a>
       <a href="https://github.com" target="_blank">
@@ -1014,7 +1159,7 @@
         <a href="#dibujos" class="btn btn-primary">Ver dibujos</a>
         <a href="#poesia" class="btn btn-ghost">Leer poesía</a>
         <a href="#biblioteca" class="btn btn-ghost">Biblioteca</a>
-        <a href="https://www.instagram.com" target="reyautomata" class="btn btn-ghost">Instagram</a>
+        <a href="https://instagram.com/reyautomata" target="_blank" class="btn btn-ghost">Instagram</a>
       </div>
     </section>
 
@@ -1048,12 +1193,9 @@
         <!--  4. Edita los DATOS (data-meta): tecnica, año...       -->
         <!--  5. Edita la DESCRIPCION (data-desc): tu texto largo   -->
         <!--                                                        -->
-        <!--  Al hacer CLIC en el dibujo se abre la ventana grande  -->
-        <!--  con la imagen y, al lado derecho, el titulo, datos y  -->
-        <!--  tu texto descriptivo.                                 -->
-        <!--                                                        -->
-        <!--  Para mas dibujos: copia un bloque completo            -->
-        <!--  (de <article ...> hasta </article>) y pegalo aqui.    -->
+        <!--  Saltos en el texto:                                   -->
+        <!--    |   = salto de linea simple                         -->
+        <!--    ||  = salto de parrafo (renglon en blanco)          -->
         <!-- ===================================================== -->
 
         <!-- DIBUJO 1 -->
@@ -1061,17 +1203,8 @@
                  data-img="img/dibujos/dibujo1.jpg"
                  data-title="Sobre una roca"
                  data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Reconozco hoy que he fallado; solo me sorprende, a veces, no haber previsto que fallaría. ||¿Qué había en mí que pronosticase un triunfo? Yo no tenía la fuerza ciega de los vencedores, o la visión cierta de los locos... Era lúcido y triste como un día frío.||
-
-Las cosas nítidas confortan, y las cosas al sol confortan. Ver pasar la vida bajo un día azul me compensa de muchas cosas. Olvido indefinidamente, olvido más de lo que podría recordar.
-Mi corazón translúcido y aéreo se penetra de la suficiencia de las cosas, y mirar me basta cariñosamente. Nunca he sido otra cosa que una visión incorpórea, desnuda de toda el alma salvo de un vago aire que ha pasado y que veia.
-||Tengo elementos espirituales de bohemio, de esos que dejan la vida pasar como una cosa que se escapa de las manos en un momento o que el gesto de alcanzarla duerme en la mera idea de hacerlo. Pero no he tenido la compensación exterior del espiritu bohemio, el descuido fácil de las emociones inmediatas y abandonadas. Nunca he sido más que un bohemio aislado, lo que es algo absurdo; o un bohemio místico, lo que es algo imposible.
-Ciertas horas que he vivido, horas ante la Naturaleza, esculpidas en la ternura del aislamiento, me quedarán para siempre como medallas. En esos momentos olvidé todos mis propósitos de vida, todas mis deseadas direcciones.
-Gocé de no ser nada con una plenitud de bonanza espiritual, cayendo en el regazo azul de mis aspiraciones.
-No gocé nunca, tal vez, una hora indeleble, exenta de un fondo espiritual de fracaso y desánimo.
-||En todas mis horas libertas un dolor dormía, florecía vagamente, detrás de los muros de mi conciencia, en otros jardines, pero el aroma y el propio color de esas flores tristes atravesaban intuitivamente los muros, y el lado de allá, donde florecían las rosas, nunca dejaba de ser, en el misterio confuso de mi ser, un lado de acá degradado en mi somnolencia de vivir.
-Fue en un mar interior donde el río de mi vida terminó..">
-          <img src="img/dibujos/dibujo1.jpg" alt="Estudio de manos" onerror="this.classList.add('missing')">
+                 data-desc="Reconozco hoy que he fallado; solo me sorprende, a veces, no haber previsto que fallaría. ||¿Qué había en mí que pronosticase un triunfo? Yo no tenía la fuerza ciega de los vencedores, o la visión cierta de los locos... Era lúcido y triste como un día frío.||Las cosas nítidas confortan, y las cosas al sol confortan. Ver pasar la vida bajo un día azul me compensa de muchas cosas. Olvido indefinidamente, olvido más de lo que podría recordar. Mi corazón translúcido y aéreo se penetra de la suficiencia de las cosas, y mirar me basta cariñosamente. Nunca he sido otra cosa que una visión incorpórea, desnuda de toda el alma salvo de un vago aire que ha pasado y que veia.||Tengo elementos espirituales de bohemio, de esos que dejan la vida pasar como una cosa que se escapa de las manos en un momento o que el gesto de alcanzarla duerme en la mera idea de hacerlo. Pero no he tenido la compensación exterior del espiritu bohemio, el descuido fácil de las emociones inmediatas y abandonadas. Nunca he sido más que un bohemio aislado, lo que es algo absurdo; o un bohemio místico, lo que es algo imposible. Ciertas horas que he vivido, horas ante la Naturaleza, esculpidas en la ternura del aislamiento, me quedarán para siempre como medallas. En esos momentos olvidé todos mis propósitos de vida, todas mis deseadas direcciones. Gocé de no ser nada con una plenitud de bonanza espiritual, cayendo en el regazo azul de mis aspiraciones. No gocé nunca, tal vez, una hora indeleble, exenta de un fondo espiritual de fracaso y desánimo.||En todas mis horas libertas un dolor dormía, florecía vagamente, detrás de los muros de mi conciencia, en otros jardines, pero el aroma y el propio color de esas flores tristes atravesaban intuitivamente los muros, y el lado de allá, donde florecían las rosas, nunca dejaba de ser, en el misterio confuso de mi ser, un lado de acá degradado en mi somnolencia de vivir. Fue en un mar interior donde el río de mi vida terminó..">
+          <img src="img/dibujos/dibujo1.jpg" alt="Sobre una roca" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Sobre una roca</div>
             <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
@@ -1083,15 +1216,8 @@ Fue en un mar interior donde el río de mi vida terminó..">
                  data-img="img/dibujos/dibujo2.jpg"
                  data-title="Descansando en mis sueños"
                  data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Cuando me miras mis ojos son llaves,|
-el muro tiene secretos,|
-mi temor palabras,|
-poemas.|
-Sólo tú haces de mi memoria una viajera fascinada,
-un fuego incesante||
-
-– Alejandra Pizarnik.">
-          <img src="img/dibujos/dibujo2.jpg" alt="Figura" onerror="this.classList.add('missing')">
+                 data-desc="Cuando me miras mis ojos son llaves,|el muro tiene secretos,|mi temor palabras,|poemas.|Sólo tú haces de mi memoria una viajera fascinada,|un fuego incesante||– Alejandra Pizarnik.">
+          <img src="img/dibujos/dibujo2.jpg" alt="Descansando en mis sueños" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Descansando en mis sueños</div>
             <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
@@ -1103,25 +1229,8 @@ un fuego incesante||
                  data-img="img/dibujos/dibujo3.jpg"
                  data-title="Una manzana"
                  data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Los niños sentados|
-escuchan un cuento.|
-El río traía|
-coronas de viento|
-y una gran serpiente|
-desde un tronco viejo|
-miraba las nubes|
-redondas del cielo.|
-Niño mío chico,|
-¿dónde estás?|
-Te siento|
-en el corazón|
-y no es verdad.|
-Lejos esperas|
-que yo saque|
-tu alma del silencio.||
-
-– Federico Garcia Lorca.">
-          <img src="img/dibujos/dibujo3.jpg" alt="Rostro" onerror="this.classList.add('missing')">
+                 data-desc="Los niños sentados|escuchan un cuento.|El río traía|coronas de viento|y una gran serpiente|desde un tronco viejo|miraba las nubes|redondas del cielo.|Niño mío chico,|¿dónde estás?|Te siento|en el corazón|y no es verdad.|Lejos esperas|que yo saque|tu alma del silencio.||– Federico Garcia Lorca.">
+          <img src="img/dibujos/dibujo3.jpg" alt="Una manzana" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Una manzana</div>
             <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
@@ -1133,18 +1242,8 @@ tu alma del silencio.||
                  data-img="img/dibujos/dibujo4.jpg"
                  data-title="Contacto"
                  data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Lo que hace falta es ser natural y calmo|
-en la felicidad o en la infelicidad,|
-sentir como quien mira,|
-pensar como quien anda,|
-y cuando se va a morir acordarse que el día muere,|
-y que el poniente hermoso|
-y es hermosa la noche que|
-queda...||
-Así es y que así sea...||
-
-- Fernando Pessoa.">
-          <img src="img/dibujos/dibujo4.jpg" alt="Arte oscuro" onerror="this.classList.add('missing')">
+                 data-desc="Lo que hace falta es ser natural y calmo|en la felicidad o en la infelicidad,|sentir como quien mira,|pensar como quien anda,|y cuando se va a morir acordarse que el día muere,|y que el poniente hermoso|y es hermosa la noche que|queda...||Así es y que así sea...||- Fernando Pessoa.">
+          <img src="img/dibujos/dibujo4.jpg" alt="Contacto" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Contacto</div>
             <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
@@ -1156,13 +1255,8 @@ Así es y que así sea...||
                  data-img="img/dibujos/dibujo5.jpg"
                  data-title="Perdido"
                  data-meta="Dibujo · Lapiz · 2025"
-                 data-desc="He estado demasiado tiempo|
-descansando de mi mismo,|
-que he olvidado como era mi rostro,|
-cuando despertaba en la mañana,|
-cuando pedaleaba por la ciudad,|
-y corría por la montaña.||">
-          <img src="img/dibujos/dibujo5.jpg" alt="Arte técnico" onerror="this.classList.add('missing')">
+                 data-desc="He estado demasiado tiempo|descansando de mi mismo,|que he olvidado como era mi rostro,|cuando despertaba en la mañana,|cuando pedaleaba por la ciudad,|y corría por la montaña.">
+          <img src="img/dibujos/dibujo5.jpg" alt="Perdido" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Perdido</div>
             <div class="gallery-item-meta">Dibujo · Lapiz · 2025</div>
@@ -1174,9 +1268,8 @@ y corría por la montaña.||">
                  data-img="img/dibujos/dibujo6.jpg"
                  data-title="Sobre las estrellas"
                  data-meta="Ilustración · Tinta · 2024"
-                 data-desc="Recuerda que eres tu propio universo.|
-Descansa, mañana será otro día para soñar.">
-          <img src="img/dibujos/dibujo6.jpg" alt="Cuaderno" onerror="this.classList.add('missing')">
+                 data-desc="Recuerda que eres tu propio universo.|Descansa, mañana será otro día para soñar.">
+          <img src="img/dibujos/dibujo6.jpg" alt="Sobre las estrellas" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Sobre las estrellas</div>
             <div class="gallery-item-meta">Ilustración · Tinta · 2024</div>
@@ -1400,13 +1493,13 @@ Descansa, mañana será otro día para soñar.">
         <h2 class="section-title reveal">Contacto</h2>
         <p class="contact-tagline reveal">La máquina escucha. Escríbeme.</p>
         <div class="contact-links reveal">
-          <a href="https://www.instagram.com" target="reyautomata" class="contact-link">
+          <a href="https://instagram.com/reyautomata" target="_blank" class="contact-link">
             ◈ Instagram
           </a>
           <a href="https://github.com" target="_blank" class="contact-link">
             ◈ GitHub
           </a>
-          <a href="ingenieria.ahumada@email.com" class="contact-link">
+          <a href="mailto:ingenieria.ahumada@email.com" class="contact-link">
             ◈ Email
           </a>
         </div>
@@ -1491,9 +1584,6 @@ Descansa, mañana será otro día para soñar.">
     lbImg.alt = item.dataset.title || '';
     lbTitle.textContent = item.dataset.title || '';
     lbMeta.textContent = item.dataset.meta || '';
-    // Convierte las marcas de salto del texto:
-    //   ||  = salto de parrafo (deja un espacio entre bloques)
-    //   |   = salto de linea simple
     const descRaw = item.dataset.desc || '';
     lbDesc.innerHTML = descRaw
       .split('||')
@@ -1519,13 +1609,89 @@ Descansa, mañana será otro día para soñar.">
     item.addEventListener('click', () => openLightbox(item));
   });
 
-  // Cerrar: con la X, clic en el fondo, o tecla Escape
   document.getElementById('lb-close').addEventListener('click', closeLightbox);
   lightbox.addEventListener('click', (e) => {
     if (e.target === lightbox) closeLightbox();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ── REPRODUCTOR DE MUSICA (playlist) ──
+
+  // ===================================================================
+  //  TU LISTA DE CANCIONES
+  //  Escribe aqui cada cancion: "archivo" es el nombre del MP3 dentro
+  //  de la carpeta audio/, y "titulo" es el nombre que se muestra.
+  //  Puedes agregar o quitar todas las que quieras (copia una linea).
+  // ===================================================================
+  const playlist = [
+    { archivo: 'audio/Deep_Sea_Ranch.mp3', titulo: 'Deep Sea Ranch' },
+    { archivo: 'audio/In_the_Rain.mp3', titulo: 'In the Rain' },
+    { archivo: 'audio/One_Summer_Day.mp3', titulo: 'One Summer Day' },
+    { archivo: 'audio/Spring_Cleaning.mp3', titulo: 'Spring Cleaning' },
+    { archivo: 'audio/The_Legend_of_Ashitaka.mp3', titulo: 'The Legend of Ashitaka' },
+  ];
+  // ===================================================================
+
+  const music = document.getElementById('bg-music');
+  const musicBtn = document.getElementById('music-btn');
+  const musicPrev = document.getElementById('music-prev');
+  const musicNext = document.getElementById('music-next');
+  const musicPlayer = document.getElementById('music-player');
+  const musicLabel = document.getElementById('music-label');
+
+  music.volume = 0.4; // volumen ambiente al 40%
+  let pista = 0;       // indice de la cancion actual
+
+  // Carga una cancion por su numero en la lista
+  function cargarPista(i) {
+    pista = (i + playlist.length) % playlist.length; // vuelve al inicio al pasar el final
+    music.src = playlist[pista].archivo;
+  }
+
+  // Reproduce y actualiza el estado visual
+  function reproducir() {
+    music.play().then(() => {
+      musicBtn.textContent = '❚❚';
+      musicBtn.setAttribute('aria-label', 'Pausar música');
+      musicLabel.textContent = playlist[pista].titulo;
+      musicPlayer.classList.add('playing');
+    }).catch(() => {
+      musicLabel.textContent = 'Sin audio';
+    });
+  }
+
+  // Boton principal: play / pausa
+  musicBtn.addEventListener('click', () => {
+    if (!music.src) cargarPista(0); // primera vez: carga la primera cancion
+    if (music.paused) {
+      reproducir();
+    } else {
+      music.pause();
+      musicBtn.textContent = '▶';
+      musicBtn.setAttribute('aria-label', 'Reproducir música');
+      musicLabel.textContent = 'Pausado';
+      musicPlayer.classList.remove('playing');
+    }
+  });
+
+  // Siguiente cancion
+  musicNext.addEventListener('click', () => {
+    cargarPista(pista + 1);
+    reproducir();
+  });
+
+  // Cancion anterior
+  musicPrev.addEventListener('click', () => {
+    cargarPista(pista - 1);
+    reproducir();
+  });
+
+  // Al terminar una cancion, pasa automaticamente a la siguiente (loop infinito)
+  music.addEventListener('ended', () => {
+    cargarPista(pista + 1);
+    reproducir();
   });
 </script>
 </body>
