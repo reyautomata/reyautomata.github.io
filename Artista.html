@@ -364,6 +364,27 @@
       cursor: pointer;
     }
 
+    /* Imagen dentro del cuadro: llena el espacio sin deformarse */
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease, filter 0.3s ease;
+      filter: grayscale(20%) brightness(0.92);
+    }
+
+    /* Si la imagen aun no existe, el cuadro queda con fondo limpio
+       (sin icono de imagen rota) gracias al onerror del HTML */
+    .gallery-item img.missing {
+      visibility: hidden;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.05);
+      filter: grayscale(0%) brightness(1);
+    }
+
     .gallery-item-placeholder {
       width: 100%;
       height: 100%;
@@ -866,67 +887,69 @@
       </div>
 
       <div class="gallery-grid reveal">
-        <!-- Las imágenes se agregan aquí. Por ahora, placeholders. -->
+
+        <!-- ===================================================== -->
+        <!--  COMO AGREGAR UN DIBUJO:                               -->
+        <!--  1. Sube tu imagen a la carpeta  img/dibujos/          -->
+        <!--  2. En src="..." escribe la ruta: img/dibujos/TU-FOTO.jpg -->
+        <!--  3. Cambia el TITULO y los datos (tecnica, fecha)      -->
+        <!--  4. Copia y pega este bloque para agregar mas dibujos  -->
+        <!-- ===================================================== -->
+
+        <!-- DIBUJO 1 (ejemplo con imagen) -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo1.jpg" alt="Estudio de manos" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Título del dibujo</div>
+            <div class="gallery-item-title">Estudio de manos</div>
             <div class="gallery-item-meta">Boceto · Lápiz · 2024</div>
           </div>
         </div>
+
+        <!-- DIBUJO 2 -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo2.jpg" alt="Figura" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Figura humana · Carboncillo · 2024</div>
           </div>
         </div>
+
+        <!-- DIBUJO 3 -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo3.jpg" alt="Rostro" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Rostro · Tinta · 2025</div>
           </div>
         </div>
+
+        <!-- DIBUJO 4 -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo4.jpg" alt="Arte oscuro" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Arte oscuro · Digital · 2025</div>
           </div>
         </div>
+
+        <!-- DIBUJO 5 -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo5.jpg" alt="Arte técnico" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Arte técnico · Pluma · 2025</div>
           </div>
         </div>
+
+        <!-- DIBUJO 6 -->
         <div class="gallery-item">
-          <div class="gallery-item-placeholder">
-            <span class="placeholder-icon">✦</span>
-            <span>Subir imagen</span>
-          </div>
+          <img src="img/dibujos/dibujo6.jpg" alt="Cuaderno" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Cuaderno · Acuarela · 2026</div>
           </div>
         </div>
+
       </div>
     </section>
 
