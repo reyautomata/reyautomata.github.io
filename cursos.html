@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link data-mgx-overview="icon" rel="icon" href="https://public-frontend-1300249583.cos.ap-nanjing.myqcloud.com/commonfile/DefaultAppLogo.png" />
+    <title>Cursos — Rey Automata</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">REY AUTOMATA</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="blog.html">Blog Técnico</a></li>
+                <li><a href="calculadoras.html">Calculadoras I&C</a></li>
+                <li><a href="cursos.html" class="active">Cursos</a></li>
+                <li><a href="recursos.html">Recursos Técnicos</a></li>
+                <li><a href="acerca.html">Acerca de mí</a></li>
+            </ul>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="section">
+            <div class="container">
+                <h1 class="section-title">Ingeniería de Proyectos en Instrumentación y Control</h1>
+                <p class="section-subtitle">Programa de formación técnica para ingenieros y proyectistas I&C en la industria de procesos y minería.</p>
+
+                <!-- Course 1: Available -->
+                <div class="course-card">
+                    <div class="course-card-header">
+                        <img class="course-img" src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=560&h=320&fit=crop" alt="Proyectista I&C">
+                        <div class="course-meta">
+                            <span class="tag">Curso principal</span>
+                            <h3>Proyectista en Instrumentación y Control Industrial</h3>
+                            <p>Formación integral para desarrollar proyectos de ingeniería I&C en la gran minería. Desde P&ID hasta entrega de documentación final.</p>
+                            <div class="skill-pills">
+                                <span class="skill-pill">ISA 5.1</span>
+                                <span class="skill-pill">ISA 5.4</span>
+                                <span class="skill-pill">PLC/DCS</span>
+                                <span class="skill-pill">AutoCAD</span>
+                                <span class="skill-pill">8 semanas</span>
+                            </div>
+                        </div>
+                        <div class="course-status">
+                            <span class="badge badge-available">Disponible</span>
+                            <button class="toggle-btn" onclick="toggleCourse('course1')">Ver módulos ▾</button>
+                        </div>
+                    </div>
+                    <div class="course-expand" id="course1">
+
+                        <!-- ═══ VIDEO DE PRESENTACIÓN (PÚBLICO) ═══ -->
+                        <div class="video-section-public">
+                            <h4 class="video-section-title">▶ Video de presentación del curso</h4>
+                            <p class="video-section-desc">Conoce el contenido, metodología y entregables del programa.</p>
+                            <div class="video-player">
+                                <iframe
+                                    id="video-presentacion"
+                                    src="https://drive.google.com/file/d/REEMPLAZAR_ID_VIDEO_PRESENTACION/preview"
+                                    allow="autoplay; encrypted-media"
+                                    allowfullscreen></iframe>
+                            </div>
+                        </div>
+
+                        <!-- ═══ ACCESO A CONTENIDO BLOQUEADO ═══ -->
+                        <div class="access-panel" id="access-panel">
+                            <div class="access-icon">🔒</div>
+                            <h4>Contenido del curso bloqueado</h4>
+                            <p>Los videos de las lecciones están disponibles para alumnos inscritos. Ingresa tu código de acceso para desbloquearlos.</p>
+                            <div class="access-form">
+                                <input type="text" id="access-code" placeholder="Código de acceso" autocomplete="off"/>
+                                <button onclick="unlockContent()" class="btn btn-primary">Desbloquear →</button>
+                            </div>
+                            <p class="access-help">¿No tienes código? <a href="#inscripcion">Inscríbete aquí</a> para recibirlo.</p>
+                            <p class="access-error" id="access-error">Código incorrecto. Verifica e intenta de nuevo.</p>
+                        </div>
+
+                        <!-- ═══ MÓDULOS CON VIDEOS (BLOQUEADO POR DEFECTO) ═══ -->
+                        <div class="module-list locked" id="module-content">
+                            <div class="module-item">
+                                <h4>MOD-01: Fundamentos I&C</h4>
+                                <ul>
+                                    <li>Variables de proceso: presión, temperatura, nivel, flujo</li>
+                                    <li>Principios de medición y tipos de sensores industriales</li>
+                                    <li>Señales estándar: 4-20mA, 0-10V, HART, digital</li>
+                                    <li>Normativa ISA: panorama general de estándares aplicables</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD01_L01', 'MOD-01 · Lección 1: Variables de proceso'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">Variables de proceso — Introducción</span><span class="lesson-duration">12:30</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD01_L02', 'MOD-01 · Lección 2: Sensores industriales'); return false;">
+                                        <span class="lesson-num">L02</span><span class="lesson-title">Sensores y transmisores industriales</span><span class="lesson-duration">18:45</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD01_L03', 'MOD-01 · Lección 3: Señales 4-20mA'); return false;">
+                                        <span class="lesson-num">L03</span><span class="lesson-title">Señales 4-20mA, HART y digital</span><span class="lesson-duration">22:10</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <h4>MOD-02: P&ID y Diagramas</h4>
+                                <ul>
+                                    <li>Simbología ISA 5.1: instrumentos, líneas, válvulas</li>
+                                    <li>Identificación funcional y numeración de lazos</li>
+                                    <li>ISA 5.2: diagramas lógicos y secuencias de control</li>
+                                    <li>ISA 5.4: diagramas de lazo — diseño y criterios</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD02_L01', 'MOD-02 · Lección 1: Simbología ISA 5.1'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">Simbología ISA 5.1 — Instrumentos básicos</span><span class="lesson-duration">25:20</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD02_L02', 'MOD-02 · Lección 2: Numeración de lazos'); return false;">
+                                        <span class="lesson-num">L02</span><span class="lesson-title">Identificación funcional y numeración</span><span class="lesson-duration">19:15</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD02_L03', 'MOD-02 · Lección 3: Loop diagrams'); return false;">
+                                        <span class="lesson-num">L03</span><span class="lesson-title">Diagramas de lazo ISA 5.4 — Diseño</span><span class="lesson-duration">28:40</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <h4>MOD-03: Documentación Técnica</h4>
+                                <ul>
+                                    <li>Tag List: estructura, nomenclatura y gestión</li>
+                                    <li>I/O List: asignación de señales al sistema de control</li>
+                                    <li>Hojas de datos (datasheets) de instrumentos</li>
+                                    <li>MTO (Material Take-Off) y especificaciones de compra</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD03_L01', 'MOD-03 · Lección 1: Tag List'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">Tag List — Estructura y gestión</span><span class="lesson-duration">21:30</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD03_L02', 'MOD-03 · Lección 2: I/O List'); return false;">
+                                        <span class="lesson-num">L02</span><span class="lesson-title">I/O List y asignación al DCS</span><span class="lesson-duration">17:55</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <h4>MOD-04: Arquitecturas de Control</h4>
+                                <ul>
+                                    <li>PLC vs DCS: criterios de selección por aplicación</li>
+                                    <li>Profibus DP/PA: configuración y diagnóstico</li>
+                                    <li>Modbus RTU/TCP: implementación y troubleshooting</li>
+                                    <li>Foundation Fieldbus H1 y Ethernet industrial</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD04_L01', 'MOD-04 · Lección 1: PLC vs DCS'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">PLC vs DCS — Criterios de selección</span><span class="lesson-duration">24:10</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD04_L02', 'MOD-04 · Lección 2: Profibus DP'); return false;">
+                                        <span class="lesson-num">L02</span><span class="lesson-title">Profibus DP/PA — Configuración</span><span class="lesson-duration">31:20</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <h4>MOD-05: AutoCAD + Navisworks</h4>
+                                <ul>
+                                    <li>Templates y bloques ISA para AutoCAD Electrical</li>
+                                    <li>Generación de planos de montaje y ruteo de cables</li>
+                                    <li>Revisión de modelos 3D en Navisworks</li>
+                                    <li>Integración BIM: coordinación con otras disciplinas</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD05_L01', 'MOD-05 · Lección 1: AutoCAD Electrical'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">AutoCAD Electrical — Setup y bloques ISA</span><span class="lesson-duration">26:45</span>
+                                    </a>
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD05_L02', 'MOD-05 · Lección 2: Navisworks BIM'); return false;">
+                                        <span class="lesson-num">L02</span><span class="lesson-title">Navisworks — Revisión 3D y clash detection</span><span class="lesson-duration">22:15</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <h4>MOD-06: Proyecto Final Integrador</h4>
+                                <ul>
+                                    <li>Desarrollo de paquete completo de ingeniería I&C</li>
+                                    <li>P&ID, diagramas de lazo, listas y especificaciones</li>
+                                    <li>Revisión cruzada y control de calidad documental</li>
+                                    <li>Presentación y defensa del proyecto ante evaluadores</li>
+                                </ul>
+                                <div class="lesson-list">
+                                    <a href="#" class="lesson-row" onclick="playLesson('REEMPLAZAR_ID_MOD06_L01', 'MOD-06 · Lección 1: Desarrollo del proyecto'); return false;">
+                                        <span class="lesson-num">L01</span><span class="lesson-title">Desarrollo del paquete de ingeniería</span><span class="lesson-duration">35:50</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ═══ MODAL DE VIDEO ═══ -->
+                        <div class="video-modal" id="video-modal" onclick="closeVideo(event)">
+                            <div class="video-modal-content" onclick="event.stopPropagation()">
+                                <div class="video-modal-header">
+                                    <h4 id="video-modal-title">Lección</h4>
+                                    <button class="video-modal-close" onclick="closeVideo()">✕</button>
+                                </div>
+                                <div class="video-player">
+                                    <iframe id="video-modal-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="#inscripcion" class="btn btn-primary" style="margin-top:24px;">Inscribirme en este curso →</a>
+                    </div>
+                </div>
+
+                <!-- Course 2: Coming Soon -->
+                <div class="course-card">
+                    <div class="course-card-header">
+                        <img class="course-img" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=560&h=320&fit=crop" alt="PLC Industrial">
+                        <div class="course-meta">
+                            <span class="tag">PLC</span>
+                            <h3>PLC Industrial — Básico a Avanzado</h3>
+                            <p>Programación en Ladder y FBD, comunicación Profibus DP, diseño de HMI y aplicaciones industriales en minería.</p>
+                            <div class="skill-pills">
+                                <span class="skill-pill">Ladder</span>
+                                <span class="skill-pill">FBD</span>
+                                <span class="skill-pill">Profibus DP</span>
+                                <span class="skill-pill">HMI</span>
+                            </div>
+                        </div>
+                        <div class="course-status">
+                            <span class="badge badge-coming">Próximamente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 3: Coming Soon -->
+                <div class="course-card">
+                    <div class="course-card-header">
+                        <img class="course-img" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=560&h=320&fit=crop" alt="Redes Industriales">
+                        <div class="course-meta">
+                            <span class="tag">Redes</span>
+                            <h3>Redes Industriales — Profibus, Modbus y Foundation Fieldbus</h3>
+                            <p>Diseño, implementación y diagnóstico de redes de comunicación industrial para sistemas de control distribuido.</p>
+                            <div class="skill-pills">
+                                <span class="skill-pill">Profibus</span>
+                                <span class="skill-pill">Modbus</span>
+                                <span class="skill-pill">FF H1</span>
+                                <span class="skill-pill">Ethernet/IP</span>
+                            </div>
+                        </div>
+                        <div class="course-status">
+                            <span class="badge badge-coming">Próximamente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 4: Coming Soon -->
+                <div class="course-card">
+                    <div class="course-card-header">
+                        <img class="course-img" src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=560&h=320&fit=crop" alt="AutoCAD BIM">
+                        <div class="course-meta">
+                            <span class="tag">CAD/BIM</span>
+                            <h3>AutoCAD Electrical & BIM para I&C</h3>
+                            <p>Diseño de planos eléctricos e instrumentación con AutoCAD Electrical, integración BIM con Revit MEP y Navisworks.</p>
+                            <div class="skill-pills">
+                                <span class="skill-pill">AutoCAD Electrical</span>
+                                <span class="skill-pill">Revit MEP</span>
+                                <span class="skill-pill">Navisworks</span>
+                                <span class="skill-pill">BIM</span>
+                            </div>
+                        </div>
+                        <div class="course-status">
+                            <span class="badge badge-coming">Próximamente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inscription Form -->
+                <div class="inscription-section" id="inscripcion">
+                    <div>
+                        <h2 class="section-title">Inscripción</h2>
+                        <p class="section-subtitle" style="margin-bottom: 2rem;">Complete el formulario para reservar su cupo en el próximo ciclo.</p>
+                        <form onsubmit="handleInscription(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nombre completo</label>
+                                <input type="text" class="form-input" placeholder="Ej: Juan Pérez González" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correo electrónico</label>
+                                <input type="email" class="form-input" placeholder="juan.perez@empresa.cl" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Curso de interés</label>
+                                <select class="form-select" required>
+                                    <option value="">Seleccionar curso...</option>
+                                    <option value="proyectista">Proyectista en Instrumentación y Control Industrial</option>
+                                    <option value="plc">PLC Industrial — Básico a Avanzado</option>
+                                    <option value="redes">Redes Industriales</option>
+                                    <option value="autocad">AutoCAD Electrical & BIM para I&C</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Perfil profesional</label>
+                                <select class="form-select" required>
+                                    <option value="">Seleccionar perfil...</option>
+                                    <option value="estudiante">Estudiante universitario</option>
+                                    <option value="egresado">Egresado / Recién titulado</option>
+                                    <option value="junior">Ingeniero junior (0-3 años)</option>
+                                    <option value="senior">Ingeniero senior (3+ años)</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mensaje (opcional)</label>
+                                <textarea class="form-textarea" placeholder="¿Alguna consulta o comentario adicional?"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Enviar inscripción →</button>
+                        </form>
+                    </div>
+                    <div class="course-details-card">
+                        <h3>// Detalles del curso</h3>
+                        <div class="detail-row">
+                            <span class="label">Duración</span>
+                            <span class="value">8 semanas</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Formato</span>
+                            <span class="value">100% online</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Nivel</span>
+                            <span class="value">Básico-Intermedio</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Certificado</span>
+                            <span class="value">Sí</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Acceso</span>
+                            <span class="value">Permanente</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Precio</span>
+                            <span class="value">$000.000 CLP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="nav-logo">REY AUTOMATA</a>
+                <p>Formación técnica para proyectistas I&C de nivel industrial. Cursos, calculadoras y recursos para ingenieros en la gran minería chilena.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Contenido</h4>
+                <ul>
+                    <li><a href="blog.html">Blog Técnico</a></li>
+                    <li><a href="calculadoras.html">Calculadoras I&C</a></li>
+                    <li><a href="recursos.html">Recursos Técnicos</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Formación</h4>
+                <ul>
+                    <li><a href="cursos.html">Cursos disponibles</a></li>
+                    <li><a href="cursos.html#inscripcion">Inscripción</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Nosotros</h4>
+                <ul>
+                    <li><a href="acerca.html">Alberto Ahumada</a></li>
+                    <li><a href="acerca.html#contacto">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Rey Automata — reyautomata.cl — Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="./script.js"></script>
+    <script>
+        function toggleCourse(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('active');
+            const btn = el.previousElementSibling.querySelector('.toggle-btn');
+            if (el.classList.contains('active')) {
+                btn.textContent = 'Ocultar módulos ▴';
+            } else {
+                btn.textContent = 'Ver módulos ▾';
+            }
+        }
+
+        function handleInscription(e) {
+            e.preventDefault();
+            alert('¡Gracias por tu interés! Tu inscripción ha sido recibida. Te contactaremos pronto.');
+            e.target.reset();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SISTEMA DE DESBLOQUEO DE CONTENIDO
+        // ═══════════════════════════════════════════════════════════
+        // Para cambiar el código de acceso, edita la lista de abajo.
+        // Puedes tener múltiples códigos válidos (uno por cohorte, por ejemplo).
+        // ═══════════════════════════════════════════════════════════
+        const ACCESS_CODES = [
+            'REYAUTOMATA2026',
+            'COHORTE-01',
+            'ALUMNO-DEMO'
+        ];
+
+        function unlockContent() {
+            const input = document.getElementById('access-code');
+            const code = input.value.trim().toUpperCase();
+            const errorMsg = document.getElementById('access-error');
+
+            if (ACCESS_CODES.map(c => c.toUpperCase()).includes(code)) {
+                // Código correcto — desbloquear
+                document.getElementById('access-panel').style.display = 'none';
+                document.getElementById('module-content').classList.remove('locked');
+                // Guardar en localStorage para que no tenga que ingresarlo de nuevo
+                try { localStorage.setItem('reyautomata_access', 'unlocked'); } catch(e) {}
+            } else {
+                errorMsg.style.display = 'block';
+                input.style.borderColor = '#ef4444';
+                setTimeout(() => {
+                    errorMsg.style.display = 'none';
+                    input.style.borderColor = '';
+                }, 3000);
+            }
+        }
+
+        // Al cargar la página, verificar si ya está desbloqueado
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (localStorage.getItem('reyautomata_access') === 'unlocked') {
+                    const panel = document.getElementById('access-panel');
+                    const content = document.getElementById('module-content');
+                    if (panel) panel.style.display = 'none';
+                    if (content) content.classList.remove('locked');
+                }
+            } catch(e) {}
+            // Enter abre el desbloqueo
+            const codeInput = document.getElementById('access-code');
+            if (codeInput) codeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); unlockContent(); }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════
+        // MODAL DE VIDEO PARA LECCIONES
+        // ═══════════════════════════════════════════════════════════
+        function playLesson(videoId, title) {
+            const modal = document.getElementById('video-modal');
+            const iframe = document.getElementById('video-modal-iframe');
+            const titleEl = document.getElementById('video-modal-title');
+
+            titleEl.textContent = title;
+            iframe.src = `https://drive.google.com/file/d/${videoId}/preview`;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideo(e) {
+            if (e && e.target.id !== 'video-modal') return;
+            const modal = document.getElementById('video-modal');
+            const iframe = document.getElementById('video-modal-iframe');
+            iframe.src = ''; // Detiene la reproducción
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ESC cierra el modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeVideo();
+        });
+    </script>
+</body>
+</html>
