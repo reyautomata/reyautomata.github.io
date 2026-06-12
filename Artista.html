@@ -800,6 +800,133 @@
       .typewriter { animation: none; width: 100%; border-right: none; }
       .reveal { opacity: 1; transform: none; transition: none; }
     }
+    /* ── LIGHTBOX (ventana flotante de dibujos) ── */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(5, 5, 8, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .lightbox.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+      max-width: 1100px;
+      width: 100%;
+      max-height: 85vh;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transform: scale(0.96);
+      transition: transform 0.3s ease;
+    }
+
+    .lightbox.open .lightbox-panel {
+      transform: scale(1);
+    }
+
+    /* Lado izquierdo: la imagen */
+    .lightbox-image {
+      background: #060608;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 300px;
+    }
+
+    .lightbox-image img {
+      width: 100%;
+      height: 100%;
+      max-height: 85vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Lado derecho: la informacion */
+    .lightbox-info {
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .lightbox-meta {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 1rem;
+    }
+
+    .lightbox-title {
+      font-family: var(--serif);
+      font-size: 1.9rem;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 1.5rem;
+    }
+
+    .lightbox-desc {
+      font-size: 0.95rem;
+      line-height: 1.85;
+      color: var(--muted);
+      font-style: italic;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+    }
+
+    /* Boton de cerrar */
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 44px;
+      height: 44px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .lightbox-close:hover {
+      border-color: var(--copper);
+      color: var(--copper);
+    }
+
+    @media (max-width: 760px) {
+      .lightbox { padding: 1rem; }
+      .lightbox-panel {
+        grid-template-columns: 1fr;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .lightbox-image { max-height: 50vh; }
+      .lightbox-image img { max-height: 50vh; }
+      .lightbox-info { padding: 1.75rem 1.5rem; }
+      .lightbox-title { font-size: 1.5rem; }
+    }
+
   </style>
 </head>
 <body>
@@ -889,66 +1016,99 @@
       <div class="gallery-grid reveal">
 
         <!-- ===================================================== -->
-        <!--  COMO AGREGAR UN DIBUJO:                               -->
+        <!--  COMO AGREGAR / EDITAR UN DIBUJO:                      -->
+        <!--                                                        -->
         <!--  1. Sube tu imagen a la carpeta  img/dibujos/          -->
-        <!--  2. En src="..." escribe la ruta: img/dibujos/TU-FOTO.jpg -->
-        <!--  3. Cambia el TITULO y los datos (tecnica, fecha)      -->
-        <!--  4. Copia y pega este bloque para agregar mas dibujos  -->
+        <!--  2. En src="..." escribe: img/dibujos/TU-FOTO.jpg      -->
+        <!--  3. Edita el TITULO (data-title)                       -->
+        <!--  4. Edita los DATOS (data-meta): tecnica, año...       -->
+        <!--  5. Edita la DESCRIPCION (data-desc): tu texto largo   -->
+        <!--                                                        -->
+        <!--  Al hacer CLIC en el dibujo se abre la ventana grande  -->
+        <!--  con la imagen y, al lado derecho, el titulo, datos y  -->
+        <!--  tu texto descriptivo.                                 -->
+        <!--                                                        -->
+        <!--  Para mas dibujos: copia un bloque completo            -->
+        <!--  (de <article ...> hasta </article>) y pegalo aqui.    -->
         <!-- ===================================================== -->
 
-        <!-- DIBUJO 1 (ejemplo con imagen) -->
-        <div class="gallery-item">
+        <!-- DIBUJO 1 -->
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo1.jpg"
+                 data-title="Estudio de manos"
+                 data-meta="Boceto · Lápiz · 2024"
+                 data-desc="Aquí escribes la historia del dibujo: qué te llevó a hacerlo, qué buscabas, una reflexión o incluso un poema. Este texto aparece a la derecha cuando alguien abre la imagen.">
           <img src="img/dibujos/dibujo1.jpg" alt="Estudio de manos" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Estudio de manos</div>
             <div class="gallery-item-meta">Boceto · Lápiz · 2024</div>
           </div>
-        </div>
+        </article>
 
         <!-- DIBUJO 2 -->
-        <div class="gallery-item">
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo2.jpg"
+                 data-title="Título del dibujo"
+                 data-meta="Figura humana · Carboncillo · 2024"
+                 data-desc="Escribe aquí la descripción de este dibujo.">
           <img src="img/dibujos/dibujo2.jpg" alt="Figura" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Figura humana · Carboncillo · 2024</div>
           </div>
-        </div>
+        </article>
 
         <!-- DIBUJO 3 -->
-        <div class="gallery-item">
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo3.jpg"
+                 data-title="Título del dibujo"
+                 data-meta="Rostro · Tinta · 2025"
+                 data-desc="Escribe aquí la descripción de este dibujo.">
           <img src="img/dibujos/dibujo3.jpg" alt="Rostro" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Rostro · Tinta · 2025</div>
           </div>
-        </div>
+        </article>
 
         <!-- DIBUJO 4 -->
-        <div class="gallery-item">
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo4.jpg"
+                 data-title="Título del dibujo"
+                 data-meta="Arte oscuro · Digital · 2025"
+                 data-desc="Escribe aquí la descripción de este dibujo.">
           <img src="img/dibujos/dibujo4.jpg" alt="Arte oscuro" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Arte oscuro · Digital · 2025</div>
           </div>
-        </div>
+        </article>
 
         <!-- DIBUJO 5 -->
-        <div class="gallery-item">
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo5.jpg"
+                 data-title="Título del dibujo"
+                 data-meta="Arte técnico · Pluma · 2025"
+                 data-desc="Escribe aquí la descripción de este dibujo.">
           <img src="img/dibujos/dibujo5.jpg" alt="Arte técnico" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Arte técnico · Pluma · 2025</div>
           </div>
-        </div>
+        </article>
 
         <!-- DIBUJO 6 -->
-        <div class="gallery-item">
+        <article class="gallery-item"
+                 data-img="img/dibujos/dibujo6.jpg"
+                 data-title="Título del dibujo"
+                 data-meta="Cuaderno · Acuarela · 2026"
+                 data-desc="Escribe aquí la descripción de este dibujo.">
           <img src="img/dibujos/dibujo6.jpg" alt="Cuaderno" onerror="this.classList.add('missing')">
           <div class="gallery-item-overlay">
             <div class="gallery-item-title">Título del dibujo</div>
             <div class="gallery-item-meta">Cuaderno · Acuarela · 2026</div>
           </div>
-        </div>
+        </article>
 
       </div>
     </section>
@@ -1183,6 +1343,21 @@
   </main>
 </div>
 
+<!-- ── VENTANA FLOTANTE (lightbox) de los dibujos ── -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lb-close" aria-label="Cerrar">✕</button>
+  <div class="lightbox-panel">
+    <div class="lightbox-image">
+      <img id="lb-img" src="" alt="">
+    </div>
+    <div class="lightbox-info">
+      <div class="lightbox-meta" id="lb-meta"></div>
+      <h3 class="lightbox-title" id="lb-title"></h3>
+      <p class="lightbox-desc" id="lb-desc"></p>
+    </div>
+  </div>
+</div>
+
 <script>
   // ── ACTIVE NAV ──
   const sections = document.querySelectorAll('section[id]');
@@ -1229,6 +1404,41 @@
     a.addEventListener('click', () => {
       document.getElementById('sidebar').classList.remove('open');
     });
+  });
+
+  // ── LIGHTBOX (ventana flotante de dibujos) ──
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lb-img');
+  const lbTitle = document.getElementById('lb-title');
+  const lbMeta = document.getElementById('lb-meta');
+  const lbDesc = document.getElementById('lb-desc');
+
+  function openLightbox(item) {
+    lbImg.src = item.dataset.img;
+    lbImg.alt = item.dataset.title || '';
+    lbTitle.textContent = item.dataset.title || '';
+    lbMeta.textContent = item.dataset.meta || '';
+    lbDesc.textContent = item.dataset.desc || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.gallery-item').forEach(item => {
+    item.addEventListener('click', () => openLightbox(item));
+  });
+
+  // Cerrar: con la X, clic en el fondo, o tecla Escape
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
   });
 </script>
 </body>
