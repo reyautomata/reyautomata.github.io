@@ -240,7 +240,7 @@
          img/fondo-poesia.png
          img/fondo-biblioteca.png
          img/fondo-archivo.png
-         img/fondo-sobremi.jpg
+         img/fondo-sobremi.png
          img/fondo-contacto.png
     */
     .bg-img {
@@ -548,6 +548,22 @@
     #poesia { background: var(--bg2); }
 
     /* ── TARJETAS DE CATEGORIA DE POESIA ── */
+    .cat-hint {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.08em;
+      color: var(--copper);
+      margin-bottom: 2rem;
+      margin-top: -2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border: 1px dashed rgba(184,70,10,0.4);
+      border-radius: 2px;
+      background: rgba(184,70,10,0.05);
+    }
+
     .cat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -556,8 +572,8 @@
     }
 
     .cat-card {
-      background: rgba(15,15,22,0.6);
-      border: 1px solid var(--border);
+      background: rgba(22,20,28,0.92);
+      border: 1px solid #3a3640;
       padding: 2.5rem 2rem 2rem;
       text-align: left;
       cursor: pointer;
@@ -568,6 +584,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      backdrop-filter: blur(2px);
     }
 
     .cat-card::after {
@@ -611,7 +628,7 @@
     .cat-card-desc {
       font-size: 0.9rem;
       font-style: italic;
-      color: var(--muted);
+      color: #b5ac9c;
       line-height: 1.6;
     }
 
@@ -620,9 +637,9 @@
       font-size: 0.6rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--copper);
       margin-top: auto;
-      opacity: 0.7;
+      opacity: 0.9;
     }
 
     /* ── VENTANA DE CATEGORIA (cuadros de poemas) ── */
@@ -1504,7 +1521,7 @@
   <!-- ── SIDEBAR ── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">Rey Autómata</div>
-    <div class="sidebar-title">Rey<br>Ahumada</div>
+    <div class="sidebar-title">Alberto<br>Ahumada</div>
 
     <ul class="nav-list">
       <li><a href="#inicio" class="active">
@@ -1683,6 +1700,8 @@
       <p class="section-label reveal">— Blog poético</p>
       <h2 class="section-title reveal">Poesía</h2>
       <p class="section-desc reveal">Cuaderno de Medianoche — textos escritos entre estudio, cansancio, té, pan caliente y silencio. Elige una categoría para entrar.</p>
+
+      <p class="cat-hint reveal">↓ Presiona una categoría para abrirla, y luego toca cada texto para leerlo completo.</p>
 
       <!-- Tarjetas de categoria: al hacer clic abren su ventana de poemas -->
       <div class="cat-grid reveal">
