@@ -1710,6 +1710,30 @@
       100% { margin-left: 0; }
     }
 
+    /* Cruce de izquierda a derecha (entra por la izquierda, sale por la derecha,
+       bajando un poco, como llevada por una brisa) */
+    @keyframes note-cross-lr {
+      0%   { transform: translate(-110vw, 0) rotate(-3deg); opacity: 0; }
+      12%  { opacity: 0.9; }
+      88%  { opacity: 0.9; }
+      100% { transform: translate(110vw, 12vh) rotate(3deg); opacity: 0; }
+    }
+
+    /* Cruce de derecha a izquierda */
+    @keyframes note-cross-rl {
+      0%   { transform: translate(110vw, 0) rotate(3deg); opacity: 0; }
+      12%  { opacity: 0.9; }
+      88%  { opacity: 0.9; }
+      100% { transform: translate(-110vw, 12vh) rotate(-3deg); opacity: 0; }
+    }
+
+    /* Mecido vertical suave para las que cruzan de lado */
+    @keyframes note-bob {
+      0%   { margin-top: 0; }
+      50%  { margin-top: 22px; }
+      100% { margin-top: 0; }
+    }
+
     /* En pantallas chicas, las notas un poco mas pequeñas */
     @media (max-width: 760px) {
       .floating-note { font-size: 0.95rem; padding: 0.35rem 0.85rem; }
@@ -2659,7 +2683,7 @@
 
     let indice = 0;
 
-    // Suelta una nota (nombre de poeta) que cae flotando
+    // Suelta una nota (nombre de poeta) con una trayectoria al azar
     function soltarNota() {
       const cita = citas[indice % citas.length];
       indice++;
@@ -2667,12 +2691,29 @@
       const nota = document.createElement('div');
       nota.className = 'floating-note';
       nota.textContent = cita.autor;
-      nota.style.left = (5 + Math.random() * 80) + 'vw';
 
-      const dur = 16 + Math.random() * 8;   // caida lenta (16–24s) para alcanzar a tocarla
-      const swayDur = 4 + Math.random() * 3;
-      nota.style.animation =
-        `note-fall ${dur}s linear forwards, note-sway ${swayDur}s ease-in-out infinite`;
+      // Elige al azar como se mueve: caer, cruzar →, o cruzar ←
+      const tipo = Math.floor(Math.random() * 3); // 0, 1 o 2
+      let dur;
+
+      if (tipo === 0) {
+        // Cae desde arriba (como antes), en una columna al azar
+        nota.style.left = (5 + Math.random() * 80) + 'vw';
+        nota.style.top = '-60px';
+        dur = 16 + Math.random() * 8; // 16–24s
+        const swayDur = 4 + Math.random() * 3;
+        nota.style.animation =
+          `note-fall ${dur}s linear forwards, note-sway ${swayDur}s ease-in-out infinite`;
+      } else {
+        // Cruza la pantalla de lado a lado, a una altura al azar
+        nota.style.top = (10 + Math.random() * 70) + 'vh';
+        nota.style.left = '0';
+        dur = 18 + Math.random() * 10; // 18–28s (lento, da tiempo a tocarla)
+        const bobDur = 4 + Math.random() * 3;
+        const cruce = (tipo === 1) ? 'note-cross-lr' : 'note-cross-rl';
+        nota.style.animation =
+          `${cruce} ${dur}s linear forwards, note-bob ${bobDur}s ease-in-out infinite`;
+      }
 
       // Al tocarla: abre la cita
       nota.addEventListener('click', () => abrirCita(cita));
