@@ -1491,9 +1491,62 @@
       .music-bars span { animation: none; }
     }
 
+    /* ── HOJAS DE OTOÑO CAYENDO ── */
+    /* Contenedor a pantalla completa, detras del contenido, no estorba clics */
+    .leaves-container {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .leaf {
+      position: absolute;
+      top: -40px;
+      will-change: transform;
+      opacity: 0;
+    }
+
+    .leaf svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Caida: baja por la pantalla mientras se balancea de lado a lado */
+    @keyframes leaf-fall {
+      0% {
+        transform: translateY(-5vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 0.7; }
+      90% { opacity: 0.7; }
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Balanceo horizontal (efecto viento) */
+    @keyframes leaf-sway {
+      0%   { margin-left: 0; }
+      25%  { margin-left: 40px; }
+      50%  { margin-left: -20px; }
+      75%  { margin-left: 30px; }
+      100% { margin-left: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .leaves-container { display: none; }
+    }
+
   </style>
 </head>
 <body>
+
+<!-- ── HOJAS DE OTOÑO (se generan solas con el script de abajo) ── -->
+<div class="leaves-container" id="leaves" aria-hidden="true"></div>
 
 <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menú">☰</button>
 
@@ -2240,6 +2293,74 @@
     test.onload = () => seccion.classList.add('has-image');
     test.src = ruta;
   });
+
+  // ── HOJAS DE OTOÑO CAYENDO ──
+  // Genera hojas de vez en cuando que cruzan la pantalla con el viento.
+  (function () {
+    const cont = document.getElementById('leaves');
+    if (!cont) return;
+
+    // Respeta a quien prefiere menos animacion
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Dibujo SVG de una hoja, en tonos cobre/ambar
+    const hojaSVG = `
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2 C9 8, 4 14, 4 22 C4 28, 10 30, 16 30 C22 30, 28 28, 28 22 C28 14, 23 8, 16 2 Z"
+              fill="COLOR" opacity="0.9"/>
+        <path d="M16 5 L16 28" stroke="#5a2a06" stroke-width="0.8" opacity="0.5"/>
+        <path d="M16 12 L11 9 M16 16 L22 13 M16 20 L11 18 M16 23 L21 22"
+              stroke="#5a2a06" stroke-width="0.6" opacity="0.4" fill="none"/>
+      </svg>`;
+
+    // Colores otoñales (cobre, ámbar, terracota)
+    const colores = ['#B8460A', '#C8651A', '#9A3B0A', '#D4791F', '#8a4a1a'];
+
+    // Crea una hoja y la deja caer
+    function soltarHoja() {
+      const leaf = document.createElement('div');
+      leaf.className = 'leaf';
+
+      // Tamaño aleatorio pequeño (sutil)
+      const size = 14 + Math.random() * 14; // 14–28 px
+      leaf.style.width = size + 'px';
+      leaf.style.height = size + 'px';
+
+      // Posicion horizontal de inicio
+      leaf.style.left = Math.random() * 100 + 'vw';
+
+      // Color aleatorio
+      const color = colores[Math.floor(Math.random() * colores.length)];
+      leaf.innerHTML = hojaSVG.replace('COLOR', color);
+
+      // Duracion de la caida (lenta, entre 8 y 14 segundos)
+      const dur = 8 + Math.random() * 6;
+      // El balanceo va a otro ritmo para que se vea natural
+      const swayDur = 3 + Math.random() * 3;
+
+      leaf.style.animation =
+        `leaf-fall ${dur}s linear forwards, leaf-sway ${swayDur}s ease-in-out infinite`;
+
+      cont.appendChild(leaf);
+
+      // Quitar la hoja del DOM cuando termina (no acumular)
+      setTimeout(() => leaf.remove(), dur * 1000 + 500);
+    }
+
+    // Lanza una "rafaga" de viento: 2 a 5 hojas seguidas
+    function rafaga() {
+      const cuantas = 2 + Math.floor(Math.random() * 5); // 2–5 hojas
+      for (let i = 0; i < cuantas; i++) {
+        setTimeout(soltarHoja, i * (400 + Math.random() * 600));
+      }
+      // Proxima rafaga en un rato (entre 5 y 15 segundos): "de vez en cuando"
+      const proxima = 5000 + Math.random() * 10000;
+      setTimeout(rafaga, proxima);
+    }
+
+    // Primera rafaga a los 2 segundos de cargar
+    setTimeout(rafaga, 2000);
+  })();
 </script>
 </body>
 </html>
