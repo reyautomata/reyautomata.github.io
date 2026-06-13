@@ -187,7 +187,7 @@
       position: absolute;
       inset: 0;
       z-index: 0;
-      background-image: url('img/inicio.jpg');
+      background-image: url('img/inicio.png');
       background-size: cover;
       background-position: center right;
       /* Tono calido sutil sobre la imagen. brightness controla el brillo:
@@ -240,7 +240,7 @@
          img/fondo-poesia.png
          img/fondo-biblioteca.png
          img/fondo-archivo.png
-         img/fondo-sobremi.png
+         img/fondo-sobremi.jpg
          img/fondo-contacto.png
     */
     .bg-img {
@@ -1801,7 +1801,7 @@
     <div class="rule"></div>
 
     <!-- SOBRE MÍ -->
-    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.png')">
+    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.jpg')">
       <div class="about-wrap">
       <div class="about-portrait">
         <img src="img/retrato.png" alt="Rey Ahumada"
@@ -2206,7 +2206,7 @@
     const hero = document.getElementById('inicio');
     const test = new Image();
     test.onload = () => hero.classList.add('has-image');
-    test.src = 'img/inicio.jpg';
+    test.src = 'img/inicio.png';
   })();
 
   // ── FONDOS DE LAS DEMAS SECCIONES ──
