@@ -1994,6 +1994,13 @@
           <span class="cat-card-desc">Astillas, destellos, lo inacabado.</span>
           <span class="cat-card-count" data-count="fragmentos"></span>
         </button>
+
+        <button class="cat-card" data-cat="otros">
+          <span class="cat-card-label">— IV</span>
+          <span class="cat-card-title">Otros poetas</span>
+          <span class="cat-card-desc">Voces que admiro y guardo.</span>
+          <span class="cat-card-count" data-count="otros"></span>
+        </button>
       </div>
     </section>
 
@@ -2443,6 +2450,34 @@
         },
       ]
     },
+    // ── OTROS POETAS ──
+    // Poemas de autores que admiras. IMPORTANTE sobre derechos:
+    //  - Autores de DOMINIO PÚBLICO (Machado, Mistral, Darío, Bécquer...):
+    //    puedes poner el poema COMPLETO sin problema.
+    //  - Autores con derechos vigentes (fallecidos hace menos de ~70 años,
+    //    como Bolaño): pon solo un FRAGMENTO breve y cita autor y obra.
+    otros: {
+      label: '— IV · Otros poetas',
+      titulo: 'Otros poetas',
+      items: [
+        {
+          titulo: 'Caminante — Antonio Machado',
+          fecha: 'Proverbios y cantares, XXIX',
+          texto: 'Caminante, son tus huellas|el camino y nada más;|caminante, no hay camino,|se hace camino al andar.||Al andar se hace el camino,|y al volver la vista atrás|se ve la senda que nunca|se ha de volver a pisar.||Caminante, no hay camino,|sino estelas en la mar.'
+        },
+        {
+          titulo: 'Dame la mano — Gabriela Mistral',
+          fecha: 'Ternura',
+          texto: 'Dame la mano y danzaremos;|dame la mano y me amarás.|Como una sola flor seremos,|como una flor, y nada más...||El mismo verso cantaremos,|al mismo paso bailarás.|Como una espiga ondularemos,|como una espiga, y nada más.||Te llamas Rosa y yo Esperanza;|pero tu nombre olvidarás,|porque seremos una danza|en la colina y nada más.'
+        },
+        // Para AGREGAR otro poema, copia este bloque:
+        // {
+        //   titulo: 'Título — Autor',
+        //   fecha: 'Libro o año',
+        //   texto: 'Verso uno|verso dos||nueva estrofa...'
+        // },
+      ]
+    },
   };
   // ===================================================================
 
@@ -2656,6 +2691,26 @@
       autor: 'Pablo Neruda',
       obra: 'Veinte poemas de amor',
       texto: 'Es tan corto el amor,|y es tan largo el olvido.'
+    },
+    {
+      autor: 'Jorge Luis Borges',
+      obra: 'Arte poética',
+      texto: 'A veces en las tardes una cara|nos mira desde el fondo de un espejo;|el arte debe ser como ese espejo|que nos revela nuestra propia cara.'
+    },
+    {
+      autor: 'Antonio Machado',
+      obra: 'Proverbios y cantares',
+      texto: 'Caminante, no hay camino,|se hace camino al andar.'
+    },
+    {
+      autor: 'Gabriela Mistral',
+      obra: 'La maestra rural',
+      texto: 'Todo el que pasa lo toma,|y bebe, como del río.|Y nadie sabe que beben|del corazón de una sombra.'
+    },
+    {
+      autor: 'Roberto Bolaño',
+      obra: 'Los perros románticos',
+      texto: 'Soñé que era un viejo detective|y buscaba gente perdida hace mucho tiempo.'
     },
   ];
   // ===================================================================
