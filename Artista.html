@@ -1652,74 +1652,71 @@
       .leaves-container { display: none; }
     }
 
-    /* ── CITAS FLOTANTES ENTRE SECCIONES ── */
-    /* Una franja serena donde aparece un verso al hacer scroll */
-    .quote-band {
-      min-height: 60vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6rem clamp(2rem, 8vw, 10rem);
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      background:
-        radial-gradient(ellipse 50% 80% at 50% 50%, rgba(184,70,10,0.05) 0%, transparent 70%),
-        var(--bg);
-      text-align: center;
+    /* ── NOTAS FLOTANTES (nombres de poetas que flotan y se abren al tocar) ── */
+    /* Contenedor a pantalla completa; deja pasar los clics salvo en las notas */
+    .notes-container {
+      position: fixed;
+      inset: 0;
+      z-index: 350;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    .quote-inner {
-      max-width: 760px;
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 1.2s ease, transform 1.2s ease;
-    }
-
-    .quote-inner.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .quote-mark {
-      font-family: var(--serif);
-      font-size: 4rem;
-      color: var(--copper);
-      opacity: 0.3;
-      line-height: 0.5;
-      margin-bottom: 1rem;
-      display: block;
-    }
-
-    .quote-text {
+    /* Cada nota: el nombre del poeta flotando */
+    .floating-note {
+      position: absolute;
+      top: -60px;
       font-family: var(--serif);
       font-style: italic;
-      font-size: clamp(1.4rem, 3vw, 2.1rem);
-      line-height: 1.6;
-      color: var(--ink);
-      margin-bottom: 1.75rem;
-    }
-
-    .quote-author {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
+      font-size: 1.1rem;
       color: var(--copper);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
+      white-space: nowrap;
+      cursor: pointer;
+      pointer-events: auto;
+      opacity: 0;
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(184,70,10,0.35);
+      border-radius: 20px;
+      background: rgba(15,15,22,0.7);
+      backdrop-filter: blur(3px);
+      transition: color 0.25s, border-color 0.25s, background 0.25s, transform 0.25s;
+      will-change: transform;
+      user-select: none;
     }
 
-    .quote-author::before {
-      content: '';
-      width: 30px;
-      height: 1px;
-      background: var(--copper);
-      opacity: 0.5;
+    .floating-note::before {
+      content: '❝ ';
+      opacity: 0.6;
+      font-size: 0.85em;
+    }
+
+    .floating-note:hover {
+      color: var(--ink);
+      border-color: var(--copper);
+      background: rgba(184,70,10,0.15);
+    }
+
+    /* Caida lenta meciendose, como las hojas */
+    @keyframes note-fall {
+      0%   { transform: translateY(-5vh) rotate(-2deg); opacity: 0; }
+      12%  { opacity: 0.9; }
+      88%  { opacity: 0.9; }
+      100% { transform: translateY(108vh) rotate(2deg); opacity: 0; }
+    }
+
+    @keyframes note-sway {
+      0%   { margin-left: 0; }
+      50%  { margin-left: 35px; }
+      100% { margin-left: 0; }
+    }
+
+    /* En pantallas chicas, las notas un poco mas pequeñas */
+    @media (max-width: 760px) {
+      .floating-note { font-size: 0.95rem; padding: 0.35rem 0.85rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .quote-inner { opacity: 1; transform: none; transition: none; }
+      .notes-container { display: none; }
     }
 
   </style>
@@ -1728,6 +1725,9 @@
 
 <!-- ── HOJAS DE OTOÑO (se generan solas con el script de abajo) ── -->
 <div class="leaves-container" id="leaves" aria-hidden="true"></div>
+
+<!-- ── NOTAS FLOTANTES (nombres de poetas; se generan solas con el script) ── -->
+<div class="notes-container" id="notes"></div>
 
 <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menú">☰</button>
 
@@ -1762,7 +1762,7 @@
   <!-- ── SIDEBAR ── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">Rey Autómata</div>
-    <div class="sidebar-title">Alberto<br>Ahumada</div>
+    <div class="sidebar-title">Rey<br>Ahumada</div>
 
     <ul class="nav-list">
       <li><a href="#inicio" class="active">
@@ -1938,15 +1938,7 @@
 
     <!-- ═══ CITA FLOTANTE 1 ═══
          Para EDITAR: cambia el texto y el autor.
-         Para AGREGAR tuyas: copia todo este bloque <section class="quote-band">...
-         y pégalo entre cualquier par de secciones. -->
-    <section class="quote-band">
-      <div class="quote-inner reveal-quote">
-        <span class="quote-mark">"</span>
-        <p class="quote-text">No soy nada. Nunca seré nada. No puedo querer ser nada. Aparte de eso, tengo en mí todos los sueños del mundo.</p>
-        <span class="quote-author">Fernando Pessoa</span>
-      </div>
-    </section>
+         Para AGREGAR tuyas: copia todo este bloque
 
     <!-- POESÍA -->
     <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.png')">
@@ -2034,15 +2026,6 @@
 
     <div class="rule"></div>
 
-    <!-- ═══ CITA FLOTANTE 2 ═══ -->
-    <section class="quote-band">
-      <div class="quote-inner reveal-quote">
-        <span class="quote-mark">"</span>
-        <p class="quote-text">Y una gran serpiente desde un tronco viejo miraba las nubes redondas del cielo.</p>
-        <span class="quote-author">Federico García Lorca</span>
-      </div>
-    </section>
-
     <!-- ARCHIVO -->
     <section id="archivo" class="bg-img" style="--bg-image: url('img/fondo-archivo.png')">
       <p class="section-label reveal">— Repositorio</p>
@@ -2080,15 +2063,6 @@
     </section>
 
     <div class="rule"></div>
-
-    <!-- ═══ CITA FLOTANTE 3 ═══ -->
-    <section class="quote-band">
-      <div class="quote-inner reveal-quote">
-        <span class="quote-mark">"</span>
-        <p class="quote-text">Cuando me miras mis ojos son llaves, el muro tiene secretos, mi temor palabras, poemas.</p>
-        <span class="quote-author">Alejandra Pizarnik</span>
-      </div>
-    </section>
 
     <!-- SOBRE MÍ -->
     <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.png')">
@@ -2211,17 +2185,6 @@
   }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
   reveals.forEach(r => revealObserver.observe(r));
-
-  // ── CITAS FLOTANTES (aparecen y se desvanecen al hacer scroll) ──
-  const quotes = document.querySelectorAll('.reveal-quote');
-  const quoteObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      // Aparece al entrar, se desvanece al salir (efecto flotante)
-      entry.target.classList.toggle('visible', entry.isIntersecting);
-    });
-  }, { threshold: 0.4 });
-
-  quotes.forEach(q => quoteObserver.observe(q));
 
   // ── GALLERY FILTERS ──
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -2638,6 +2601,95 @@
 
     // Primera rafaga a los 2 segundos de cargar
     setTimeout(rafaga, 2000);
+  })();
+
+  // ── NOTAS FLOTANTES (citas de poetas que flotan y se abren al tocar) ──
+  // ===================================================================
+  //  TUS CITAS DE POETAS
+  //  Para AGREGAR una: copia un bloque { ... } y edita autor, texto y fecha.
+  //  - autor: el nombre que FLOTA por la pantalla.
+  //  - texto: la cita completa (usa | para saltos de linea, || para estrofas).
+  //  - obra: (opcional) el libro o poema de donde viene.
+  //  No uses comillas dobles " dentro del texto; usa ' o « ».
+  // ===================================================================
+  const citas = [
+    {
+      autor: 'Fernando Pessoa',
+      obra: 'Tabaquería',
+      texto: 'No soy nada.|Nunca seré nada.|No puedo querer ser nada.|Aparte de eso, tengo en mí todos los sueños del mundo.'
+    },
+    {
+      autor: 'Alejandra Pizarnik',
+      obra: 'El despertar',
+      texto: 'Cuando me miras mis ojos son llaves,|el muro tiene secretos,|mi temor palabras, poemas.'
+    },
+    {
+      autor: 'Federico García Lorca',
+      obra: 'Balada del agua del mar',
+      texto: 'Y una gran serpiente|desde un tronco viejo|miraba las nubes|redondas del cielo.'
+    },
+    {
+      autor: 'Pablo Neruda',
+      obra: 'Veinte poemas de amor',
+      texto: 'Es tan corto el amor,|y es tan largo el olvido.'
+    },
+  ];
+  // ===================================================================
+
+  (function () {
+    const cont = document.getElementById('notes');
+    if (!cont) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!citas.length) return;
+
+    // Reutiliza la ventana de lectura de poemas para mostrar la cita
+    const lectorReader = document.getElementById('poem-reader');
+    const lectorLabel = document.getElementById('poem-reader-label');
+    const lectorTitle = document.getElementById('poem-reader-title');
+    const lectorText = document.getElementById('poem-reader-text');
+    const lectorDate = document.getElementById('poem-reader-date');
+
+    function abrirCita(cita) {
+      lectorLabel.textContent = '— Cita';
+      lectorTitle.textContent = cita.autor;
+      lectorText.innerHTML = formatearTexto(cita.texto);
+      lectorDate.textContent = cita.obra || '';
+      lectorReader.classList.add('open');
+    }
+
+    let indice = 0;
+
+    // Suelta una nota (nombre de poeta) que cae flotando
+    function soltarNota() {
+      const cita = citas[indice % citas.length];
+      indice++;
+
+      const nota = document.createElement('div');
+      nota.className = 'floating-note';
+      nota.textContent = cita.autor;
+      nota.style.left = (5 + Math.random() * 80) + 'vw';
+
+      const dur = 16 + Math.random() * 8;   // caida lenta (16–24s) para alcanzar a tocarla
+      const swayDur = 4 + Math.random() * 3;
+      nota.style.animation =
+        `note-fall ${dur}s linear forwards, note-sway ${swayDur}s ease-in-out infinite`;
+
+      // Al tocarla: abre la cita
+      nota.addEventListener('click', () => abrirCita(cita));
+
+      cont.appendChild(nota);
+      setTimeout(() => nota.remove(), dur * 1000 + 500);
+    }
+
+    // Una nota cada cierto tiempo (espaciadas, sin saturar)
+    function cicloNotas() {
+      soltarNota();
+      const proxima = 12000 + Math.random() * 10000; // cada 12–22 segundos
+      setTimeout(cicloNotas, proxima);
+    }
+
+    // Primera nota a los 5 segundos (deja que la pagina respire primero)
+    setTimeout(cicloNotas, 5000);
   })();
 </script>
 </body>
