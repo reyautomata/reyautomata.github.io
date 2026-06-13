@@ -171,10 +171,63 @@
       min-height: 100vh;
       padding-top: 5rem;
       padding-bottom: 5rem;
+      position: relative;
+      overflow: hidden;
       background: 
         radial-gradient(ellipse 60% 50% at 80% 50%, rgba(42,74,107,0.12) 0%, transparent 70%),
         radial-gradient(ellipse 40% 60% at 20% 80%, rgba(184,70,10,0.08) 0%, transparent 60%),
         var(--bg);
+    }
+
+    /* Imagen de fondo del inicio (sube tu foto como img/inicio.jpg).
+       Se desvanece hacia la oscuridad para que el texto se lea bien
+       y la escena emerja de las sombras. */
+    #inicio::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: url('img/inicio.jpg');
+      background-size: cover;
+      background-position: center right;
+      /* Tono calido sutil sobre la imagen */
+      filter: brightness(0.7) sepia(0.15) saturate(1.1);
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    /* Cuando la imagen carga, aparece suavemente */
+    #inicio.has-image::before {
+      opacity: 1;
+    }
+
+    /* Capa de desvanecido: oscurece la izquierda (donde va el texto)
+       y la parte inferior, dejando las luces calidas a la derecha. */
+    #inicio::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(90deg,
+          var(--bg) 0%,
+          rgba(10,10,15,0.92) 30%,
+          rgba(10,10,15,0.55) 60%,
+          rgba(10,10,15,0.35) 100%),
+        linear-gradient(180deg,
+          rgba(10,10,15,0.4) 0%,
+          transparent 30%,
+          transparent 60%,
+          var(--bg) 100%),
+        radial-gradient(ellipse 50% 60% at 75% 45%,
+          rgba(184,70,10,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* El contenido del hero queda por encima de las capas */
+    #inicio > * {
+      position: relative;
+      z-index: 2;
     }
 
     .hero-eyebrow {
@@ -644,6 +697,16 @@
       text-transform: uppercase;
       flex-direction: column;
       gap: 1rem;
+      overflow: hidden;
+    }
+
+    /* La foto llena el cuadro sin deformarse */
+    .about-portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: grayscale(15%) brightness(0.95);
     }
 
     .about-text .section-label { margin-bottom: 0.5rem; }
@@ -1693,6 +1756,15 @@
     cargarPista(pista + 1);
     reproducir();
   });
+
+  // ── IMAGEN DE FONDO DEL INICIO ──
+  // Solo muestra la imagen si existe (evita un fondo roto mientras no la subes)
+  (function () {
+    const hero = document.getElementById('inicio');
+    const test = new Image();
+    test.onload = () => hero.classList.add('has-image');
+    test.src = 'img/inicio.jpg';
+  })();
 </script>
 </body>
 </html>
