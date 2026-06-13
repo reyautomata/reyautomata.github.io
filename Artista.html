@@ -390,11 +390,12 @@
       white-space: nowrap;
       animation: typing 2.5s steps(12, end) forwards, blink 0.8s step-end 3s infinite;
       width: 0;
+      max-width: 100%;
     }
 
     @keyframes typing {
       from { width: 0 }
-      to   { width: 100% }
+      to   { width: 12ch }
     }
 
     @keyframes blink {
@@ -1197,6 +1198,15 @@
       .about-portrait { aspect-ratio: 4/3; }
 
       .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* En movil el titulo se ve completo aunque la animacion no quepa:
+         al terminar de "escribirse" permite que el texto use todo el ancho. */
+      .typewriter {
+        animation: typing 2.5s steps(12, end) forwards, blink 0.8s step-end 3s infinite;
+        white-space: normal;
+        width: auto;
+        border-right: none;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2347,14 +2357,14 @@
       setTimeout(() => leaf.remove(), dur * 1000 + 500);
     }
 
-    // Lanza una "rafaga" de viento: 2 a 5 hojas seguidas
+    // Lanza una "rafaga" de viento: 1 a 3 hojas seguidas
     function rafaga() {
-      const cuantas = 2 + Math.floor(Math.random() * 5); // 2–5 hojas
+      const cuantas = 1 + Math.floor(Math.random() * 3); // 1–3 hojas
       for (let i = 0; i < cuantas; i++) {
         setTimeout(soltarHoja, i * (400 + Math.random() * 600));
       }
-      // Proxima rafaga en un rato (entre 5 y 15 segundos): "de vez en cuando"
-      const proxima = 5000 + Math.random() * 10000;
+      // Proxima rafaga en un rato (entre 6 y 16 segundos): "de vez en cuando"
+      const proxima = 6000 + Math.random() * 10000;
       setTimeout(rafaga, proxima);
     }
 
