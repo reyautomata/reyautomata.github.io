@@ -237,11 +237,11 @@
        Cualquier seccion con la clase .bg-img tendra una imagen de fondo.
        La imagen se define con --bg-image en el HTML de cada seccion.
        Sube tus imagenes a img/ con estos nombres:
-         img/fondo-poesia.jpg
-         img/fondo-biblioteca.jpg
-         img/fondo-archivo.jpg
-         img/fondo-sobremi.jpg
-         img/fondo-contacto.jpg
+         img/fondo-poesia.png
+         img/fondo-biblioteca.png
+         img/fondo-archivo.png
+         img/fondo-sobremi.png
+         img/fondo-contacto.png
     */
     .bg-img {
       position: relative;
@@ -1679,7 +1679,7 @@
     <div class="rule"></div>
 
     <!-- POESÍA -->
-    <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.jpg.png')">
+    <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.png')">
       <p class="section-label reveal">— Blog poético</p>
       <h2 class="section-title reveal">Poesía</h2>
       <p class="section-desc reveal">Cuaderno de Medianoche — textos escritos entre estudio, cansancio, té, pan caliente y silencio. Elige una categoría para entrar.</p>
@@ -1712,7 +1712,7 @@
     <div class="rule"></div>
 
     <!-- BIBLIOTECA -->
-    <section id="biblioteca" class="bg-img" style="--bg-image: url('img/fondo-biblioteca.jpg.png')">
+    <section id="biblioteca" class="bg-img" style="--bg-image: url('img/fondo-biblioteca.png')">
       <p class="section-label reveal">— Lecturas</p>
       <h2 class="section-title reveal">Biblioteca</h2>
       <p class="section-desc reveal">Libros que habitan mi mesa, mi cabeza y mis lápices.</p>
@@ -1763,7 +1763,7 @@
     <div class="rule"></div>
 
     <!-- ARCHIVO -->
-    <section id="archivo" class="bg-img" style="--bg-image: url('img/fondo-archivo.jpg.png')">
+    <section id="archivo" class="bg-img" style="--bg-image: url('img/fondo-archivo.png')">
       <p class="section-label reveal">— Repositorio</p>
       <h2 class="section-title reveal">Archivo</h2>
       <p class="section-desc reveal">Materiales de dibujo, textos de arte y dibujos disponibles para lectura y descarga.</p>
@@ -1801,11 +1801,13 @@
     <div class="rule"></div>
 
     <!-- SOBRE MÍ -->
-    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.jpg.png')">
+    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.png')">
       <div class="about-wrap">
       <div class="about-portrait">
-        <span style="font-size:2rem; opacity:0.2">◎</span>
-        <span>Foto / Retrato</span>
+        <img src="img/retrato.png" alt="Rey Ahumada"
+             onerror="if(!this.dataset.t){this.dataset.t=1;this.src='img/retrato.jpg';}else{this.style.display='none';this.nextElementSibling.style.display='flex';this.nextElementSibling.nextElementSibling.style.display='block';}">
+        <span style="font-size:2rem; opacity:0.2; display:none">◎</span>
+        <span style="display:none">Foto / Retrato</span>
       </div>
       <div class="about-text">
         <p class="section-label reveal">— Quién soy</p>
@@ -1831,7 +1833,7 @@
     <div class="rule"></div>
 
     <!-- CONTACTO -->
-    <section id="contacto" class="bg-img" style="--bg-image: url('img/fondo-contacto.jpg.png')">
+    <section id="contacto" class="bg-img" style="--bg-image: url('img/fondo-contacto.png')">
       <div class="contact-inner">
         <p class="section-label reveal">— Encontrarme</p>
         <h2 class="section-title reveal">Contacto</h2>
