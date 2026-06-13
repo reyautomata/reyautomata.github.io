@@ -1652,6 +1652,76 @@
       .leaves-container { display: none; }
     }
 
+    /* ── CITAS FLOTANTES ENTRE SECCIONES ── */
+    /* Una franja serena donde aparece un verso al hacer scroll */
+    .quote-band {
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem clamp(2rem, 8vw, 10rem);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      background:
+        radial-gradient(ellipse 50% 80% at 50% 50%, rgba(184,70,10,0.05) 0%, transparent 70%),
+        var(--bg);
+      text-align: center;
+    }
+
+    .quote-inner {
+      max-width: 760px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1.2s ease, transform 1.2s ease;
+    }
+
+    .quote-inner.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .quote-mark {
+      font-family: var(--serif);
+      font-size: 4rem;
+      color: var(--copper);
+      opacity: 0.3;
+      line-height: 0.5;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .quote-text {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      line-height: 1.6;
+      color: var(--ink);
+      margin-bottom: 1.75rem;
+    }
+
+    .quote-author {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .quote-author::before {
+      content: '';
+      width: 30px;
+      height: 1px;
+      background: var(--copper);
+      opacity: 0.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .quote-inner { opacity: 1; transform: none; transition: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -1692,7 +1762,7 @@
   <!-- ── SIDEBAR ── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">Rey Autómata</div>
-    <div class="sidebar-title">Rey<br>Ahumada</div>
+    <div class="sidebar-title">Alberto<br>Ahumada</div>
 
     <ul class="nav-list">
       <li><a href="#inicio" class="active">
@@ -1866,6 +1936,18 @@
 
     <div class="rule"></div>
 
+    <!-- ═══ CITA FLOTANTE 1 ═══
+         Para EDITAR: cambia el texto y el autor.
+         Para AGREGAR tuyas: copia todo este bloque <section class="quote-band">...
+         y pégalo entre cualquier par de secciones. -->
+    <section class="quote-band">
+      <div class="quote-inner reveal-quote">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">No soy nada. Nunca seré nada. No puedo querer ser nada. Aparte de eso, tengo en mí todos los sueños del mundo.</p>
+        <span class="quote-author">Fernando Pessoa</span>
+      </div>
+    </section>
+
     <!-- POESÍA -->
     <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.png')">
       <p class="section-label reveal">— Blog poético</p>
@@ -1952,6 +2034,15 @@
 
     <div class="rule"></div>
 
+    <!-- ═══ CITA FLOTANTE 2 ═══ -->
+    <section class="quote-band">
+      <div class="quote-inner reveal-quote">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">Y una gran serpiente desde un tronco viejo miraba las nubes redondas del cielo.</p>
+        <span class="quote-author">Federico García Lorca</span>
+      </div>
+    </section>
+
     <!-- ARCHIVO -->
     <section id="archivo" class="bg-img" style="--bg-image: url('img/fondo-archivo.png')">
       <p class="section-label reveal">— Repositorio</p>
@@ -1990,8 +2081,17 @@
 
     <div class="rule"></div>
 
+    <!-- ═══ CITA FLOTANTE 3 ═══ -->
+    <section class="quote-band">
+      <div class="quote-inner reveal-quote">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">Cuando me miras mis ojos son llaves, el muro tiene secretos, mi temor palabras, poemas.</p>
+        <span class="quote-author">Alejandra Pizarnik</span>
+      </div>
+    </section>
+
     <!-- SOBRE MÍ -->
-    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.jpg')">
+    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.png')">
       <div class="about-wrap">
       <div class="about-portrait">
         <img src="img/retrato.png" alt="Rey Ahumada"
@@ -2111,6 +2211,17 @@
   }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
   reveals.forEach(r => revealObserver.observe(r));
+
+  // ── CITAS FLOTANTES (aparecen y se desvanecen al hacer scroll) ──
+  const quotes = document.querySelectorAll('.reveal-quote');
+  const quoteObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // Aparece al entrar, se desvanece al salir (efecto flotante)
+      entry.target.classList.toggle('visible', entry.isIntersecting);
+    });
+  }, { threshold: 0.4 });
+
+  quotes.forEach(q => quoteObserver.observe(q));
 
   // ── GALLERY FILTERS ──
   document.querySelectorAll('.filter-btn').forEach(btn => {
