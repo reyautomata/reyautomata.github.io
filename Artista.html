@@ -190,8 +190,9 @@
       background-image: url('img/inicio.jpg');
       background-size: cover;
       background-position: center right;
-      /* Tono calido sutil sobre la imagen */
-      filter: brightness(1.2) sepia(0.15) saturate(1.1);
+      /* Tono calido sutil sobre la imagen. brightness controla el brillo:
+         mas alto = mas clara (1.0 = brillo original de la foto). */
+      filter: brightness(1.1) sepia(0.12) saturate(1.1);
       opacity: 0;
       transition: opacity 1.2s ease;
     }
@@ -213,13 +214,13 @@
       background:
         linear-gradient(90deg,
           var(--bg) 0%,
-          rgba(10,10,15,0.70) 30%,
-          rgba(10,10,15,0.55) 60%,
-          rgba(10,10,15,0.35) 100%),
+          rgba(10,10,15,0.70) 28%,
+          rgba(10,10,15,0.20) 60%,
+          rgba(10,10,15,0.05) 100%),
         linear-gradient(180deg,
-          rgba(10,10,15,0.4) 0%,
-          transparent 30%,
-          transparent 60%,
+          rgba(10,10,15,0.25) 0%,
+          transparent 35%,
+          transparent 70%,
           var(--bg) 100%),
         radial-gradient(ellipse 50% 60% at 75% 45%,
           rgba(184,70,10,0.10) 0%, transparent 70%);
@@ -228,6 +229,66 @@
 
     /* El contenido del hero queda por encima de las capas */
     #inicio > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── FONDOS DE SECCION (imagen dramatica + capa para leer el texto) ──
+       Cualquier seccion con la clase .bg-img tendra una imagen de fondo.
+       La imagen se define con --bg-image en el HTML de cada seccion.
+       Sube tus imagenes a img/ con estos nombres:
+         img/fondo-poesia.jpg
+         img/fondo-biblioteca.jpg
+         img/fondo-archivo.jpg
+         img/fondo-sobremi.jpg
+         img/fondo-contacto.jpg
+    */
+    .bg-img {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* La imagen de fondo */
+    .bg-img::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      filter: brightness(1.0) sepia(0.10) saturate(1.05);
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    .bg-img.has-image::before {
+      opacity: 1;
+    }
+
+    /* Capa oscura encima para que el texto se lea.
+       Mas oscura arriba/izquierda y en los bordes. */
+    .bg-img::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(90deg,
+          rgba(10,10,15,0.92) 0%,
+          rgba(10,10,15,0.78) 35%,
+          rgba(10,10,15,0.55) 70%,
+          rgba(10,10,15,0.45) 100%),
+        linear-gradient(180deg,
+          var(--bg) 0%,
+          rgba(10,10,15,0.55) 25%,
+          rgba(10,10,15,0.55) 70%,
+          var(--bg) 100%);
+      pointer-events: none;
+    }
+
+    /* El contenido de la seccion queda por encima de las capas */
+    .bg-img > * {
       position: relative;
       z-index: 2;
     }
@@ -485,6 +546,277 @@
 
     /* ── POETRY ── */
     #poesia { background: var(--bg2); }
+
+    /* ── TARJETAS DE CATEGORIA DE POESIA ── */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+    }
+
+    .cat-card {
+      background: rgba(15,15,22,0.6);
+      border: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      min-height: 230px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cat-card::after {
+      content: '→';
+      position: absolute;
+      bottom: 1.5rem;
+      right: 1.75rem;
+      font-family: var(--mono);
+      color: var(--copper);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: all 0.3s ease;
+    }
+
+    .cat-card:hover {
+      border-color: var(--copper);
+      background: rgba(184,70,10,0.06);
+      transform: translateY(-4px);
+    }
+
+    .cat-card:hover::after {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .cat-card-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    .cat-card-title {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+
+    .cat-card-desc {
+      font-size: 0.9rem;
+      font-style: italic;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .cat-card-count {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: auto;
+      opacity: 0.7;
+    }
+
+    /* ── VENTANA DE CATEGORIA (cuadros de poemas) ── */
+    .poem-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(5,5,8,0.94);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      padding: 3rem clamp(1.5rem, 6vw, 6rem);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .poem-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .poem-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+      max-width: 1100px;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .poem-modal-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 0.5rem;
+    }
+
+    .poem-modal-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    /* Cuadros de poemas dentro de la ventana */
+    .poem-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .poem-tile {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: left;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-height: 160px;
+    }
+
+    .poem-tile:hover { background: var(--bg2); }
+
+    .poem-tile-title {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      font-style: italic;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .poem-tile-preview {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .poem-tile-date {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: var(--border);
+      margin-top: auto;
+    }
+
+    /* ── VENTANA DEL POEMA INDIVIDUAL ── */
+    .poem-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(5,5,8,0.97);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem clamp(1.5rem, 6vw, 6rem);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .poem-reader.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .poem-reader-inner {
+      max-width: 640px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .poem-reader-inner::-webkit-scrollbar { width: 6px; }
+    .poem-reader-inner::-webkit-scrollbar-thumb { background: var(--copper); border-radius: 3px; }
+
+    .poem-reader-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 1.5rem;
+    }
+
+    .poem-reader-title {
+      font-family: var(--serif);
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-style: italic;
+      color: var(--ink);
+      margin-bottom: 2.5rem;
+      line-height: 1.2;
+    }
+
+    .poem-reader-text {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      line-height: 2.1;
+      color: var(--ink);
+    }
+
+    .poem-reader-text .desc-parrafo { display: block; }
+    .poem-reader-text .desc-parrafo + .desc-parrafo { margin-top: 1.5rem; }
+
+    .poem-reader-date {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2.5rem;
+    }
+
+    /* Boton cerrar (reutilizado para ambas ventanas de poesia) */
+    .poem-close {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 10;
+      width: 44px;
+      height: 44px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .poem-close:hover { border-color: var(--copper); color: var(--copper); }
 
     .poetry-grid {
       display: grid;
@@ -1347,57 +1679,40 @@
     <div class="rule"></div>
 
     <!-- POESÍA -->
-    <section id="poesia">
+    <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.jpg')">
       <p class="section-label reveal">— Blog poético</p>
       <h2 class="section-title reveal">Poesía</h2>
-      <p class="section-desc reveal">Cuaderno de Medianoche — textos escritos entre estudio, cansancio, té, pan caliente y silencio.</p>
+      <p class="section-desc reveal">Cuaderno de Medianoche — textos escritos entre estudio, cansancio, té, pan caliente y silencio. Elige una categoría para entrar.</p>
 
-      <div class="poetry-grid reveal">
-        <div class="poem-card">
-          <div class="poem-category">Textos nocturnos</div>
-          <h3 class="poem-title">La máquina que sueña</h3>
-          <p class="poem-excerpt">
-            <em>Hay un circuito en el pecho</em><br>
-            que late en frecuencias que no son mías.<br>
-            Lo llaman corazón.<br>
-            Yo lo llamo <em>el error más bello</em><br>
-            de la serie.
-          </p>
-          <div class="poem-date">2025 / Medianoche</div>
-        </div>
+      <!-- Tarjetas de categoria: al hacer clic abren su ventana de poemas -->
+      <div class="cat-grid reveal">
+        <button class="cat-card" data-cat="nocturnos">
+          <span class="cat-card-label">— I</span>
+          <span class="cat-card-title">Textos nocturnos</span>
+          <span class="cat-card-desc">Lo escrito cuando el mundo duerme.</span>
+          <span class="cat-card-count" data-count="nocturnos"></span>
+        </button>
 
-    <!--    /*<div class="poem-card">
-          <div class="poem-category">Prosa poética</div>
-          <h3 class="poem-title">Instrumentación del alma</h3>
-          <p class="poem-excerpt">
-            Medir no es comprender.<br>
-            El manómetro no siente la presión,<br>
-            solo la <em>traduce</em>.<br>
-            Yo traduzco también:<br>
-            dolor a palabra, silencio a dibujo.
-          </p>
-          <div class="poem-date">2025 / Madrugada</div>
-        </div>*/ -->
+        <button class="cat-card" data-cat="prosa">
+          <span class="cat-card-label">— II</span>
+          <span class="cat-card-title">Prosa poética</span>
+          <span class="cat-card-desc">Pensamiento que respira en párrafos.</span>
+          <span class="cat-card-count" data-count="prosa"></span>
+        </button>
 
-        <div class="poem-card">
-          <div class="poem-category">Fragmentos</div>
-          <h3 class="poem-title">Boceto</h3>
-          <p class="poem-excerpt">
-            No hay líneas perfectas.<br>
-            Solo <em>intentos que se quedaron</em><br>
-            en el papel<br>
-            porque alguien tuvo el valor<br>
-            de no borrarlos.
-          </p>
-          <div class="poem-date">2026 / Tarde</div>
-        </div>
+        <button class="cat-card" data-cat="fragmentos">
+          <span class="cat-card-label">— III</span>
+          <span class="cat-card-title">Fragmentos</span>
+          <span class="cat-card-desc">Astillas, destellos, lo inacabado.</span>
+          <span class="cat-card-count" data-count="fragmentos"></span>
+        </button>
       </div>
     </section>
 
     <div class="rule"></div>
 
     <!-- BIBLIOTECA -->
-    <section id="biblioteca">
+    <section id="biblioteca" class="bg-img" style="--bg-image: url('img/fondo-biblioteca.jpg')">
       <p class="section-label reveal">— Lecturas</p>
       <h2 class="section-title reveal">Biblioteca</h2>
       <p class="section-desc reveal">Libros que habitan mi mesa, mi cabeza y mis lápices.</p>
@@ -1427,14 +1742,6 @@
           <a href="#" class="book-action">→ Leer / Descargar</a>
         </div>
 
-    <!--    /*<div class="book-card">
-          <span class="book-tag">Técnica</span>
-          <div class="book-title">Automatización industrial</div>
-          <div class="book-author">Apuntes propios</div>
-          <p class="book-note">Notas de campo: PLCs, sensores, lazo de control. El lenguaje técnico como una forma más de poesía.</p>
-          <a href="#" class="book-action">→ Ver apuntes</a>
-        </div>*/-->
-
         <div class="book-card">
           <span class="book-tag">Literatura</span>
           <div class="book-title">El proceso</div>
@@ -1456,7 +1763,7 @@
     <div class="rule"></div>
 
     <!-- ARCHIVO -->
-    <section id="archivo">
+    <section id="archivo" class="bg-img" style="--bg-image: url('img/fondo-archivo.jpg')">
       <p class="section-label reveal">— Repositorio</p>
       <h2 class="section-title reveal">Archivo</h2>
       <p class="section-desc reveal">Materiales de dibujo, textos de arte y dibujos disponibles para lectura y descarga.</p>
@@ -1480,33 +1787,6 @@
           <a href="#" class="archive-dl">↓ Pronto</a>
         </div>
 
-       <!-- /*<div class="archive-item">
-          <span class="archive-type">Fanzine</span>
-          <div class="archive-name">
-            Máquina y cuerpo — Nº 1
-            <small>Dibujos + poesía / Imprimible A5 / 10 páginas</small>
-          </div>
-          <a href="#" class="archive-dl">↓ Pronto</a>
-        </div>*/
-
-     <!--  /* <div class="archive-item">
-          <span class="archive-type">Apuntes</span>
-          <div class="archive-name">
-            Notas de instrumentación y control
-            <small>Uso libre / Ingeniería de campo / 2023</small>
-          </div>
-          <a href="#" class="archive-dl">↓ Descargar</a>
-        </div>*/
-
-      <!-- <div class="archive-item">
-          <span class="archive-type">Plantilla</span>
-          <div class="archive-name">
-            Grillas para cuaderno de artista
-            <small>PDF imprimible / A4 y A5 / Uso libre</small>
-          </div>
-          <a href="#" class="archive-dl">↓ Descargar</a>
-        </div>*/ -->
-
         <div class="archive-item">
           <span class="archive-type">Ensayo</span>
           <div class="archive-name">
@@ -1521,7 +1801,7 @@
     <div class="rule"></div>
 
     <!-- SOBRE MÍ -->
-    <section id="sobre-mi">
+    <section id="sobre-mi" class="bg-img" style="--bg-image: url('img/fondo-sobremi.jpg')">
       <div class="about-wrap">
       <div class="about-portrait">
         <span style="font-size:2rem; opacity:0.2">◎</span>
@@ -1535,11 +1815,9 @@
           pero también dibujo en mis tiempos libres y escribo lo que surge en momentos de reflexión.
         </p>
         <p class="about-bio reveal">
-          <strong>Rey Autómata</strong> es una bitácora; el registro de alguien que busca su espacio en donde las imagenes y reflexiones toman forma en el papel cuando cae la noche. 
-         
+          <strong>Rey Autómata</strong> es una bitácora; el registro de alguien que busca su espacio en donde las imagenes y reflexiones toman forma en el papel cuando cae la noche.
         </p>
         <div class="about-tags reveal">
-    
           <span class="about-tag">Dibujo</span>
           <span class="about-tag">Poesía</span>
           <span class="about-tag">Figura Humana</span>
@@ -1553,7 +1831,7 @@
     <div class="rule"></div>
 
     <!-- CONTACTO -->
-    <section id="contacto">
+    <section id="contacto" class="bg-img" style="--bg-image: url('img/fondo-contacto.jpg')">
       <div class="contact-inner">
         <p class="section-label reveal">— Encontrarme</p>
         <h2 class="section-title reveal">Contacto</h2>
@@ -1573,6 +1851,29 @@
     </section>
 
   </main>
+</div>
+
+<!-- ── VENTANA DE CATEGORIA DE POESIA (cuadros) ── -->
+<div class="poem-modal" id="poem-modal" aria-hidden="true">
+  <button class="poem-close" id="poem-modal-close" aria-label="Cerrar">✕</button>
+  <div class="poem-modal-header">
+    <div>
+      <div class="poem-modal-label" id="poem-modal-label"></div>
+      <h2 class="poem-modal-title" id="poem-modal-title"></h2>
+    </div>
+  </div>
+  <div class="poem-list" id="poem-list"></div>
+</div>
+
+<!-- ── VENTANA DEL POEMA INDIVIDUAL ── -->
+<div class="poem-reader" id="poem-reader" aria-hidden="true">
+  <button class="poem-close" id="poem-reader-close" aria-label="Cerrar">✕</button>
+  <div class="poem-reader-inner">
+    <div class="poem-reader-label" id="poem-reader-label"></div>
+    <h2 class="poem-reader-title" id="poem-reader-title"></h2>
+    <div class="poem-reader-text" id="poem-reader-text"></div>
+    <div class="poem-reader-date" id="poem-reader-date"></div>
+  </div>
 </div>
 
 <!-- ── VENTANA FLOTANTE (lightbox) de los dibujos ── -->
@@ -1760,6 +2061,143 @@
     reproducir();
   });
 
+  // ── POESIA: CATEGORIAS Y POEMAS ──
+
+  // ===================================================================
+  //  TUS POEMAS, organizados por categoria.
+  //  Para AGREGAR un poema: copia un bloque { ... } dentro de la
+  //  categoria que quieras y edita titulo, fecha y texto.
+  //  En el texto usa las mismas marcas de salto que en los dibujos:
+  //     |   = salto de linea (versos)
+  //     ||  = salto de parrafo (espacio entre estrofas)
+  //  No uses comillas dobles " dentro del texto; usa ' o « ».
+  // ===================================================================
+  const poemas = {
+    nocturnos: {
+      label: '— I · Textos nocturnos',
+      titulo: 'Textos nocturnos',
+      items: [
+        {
+          titulo: 'La máquina que sueña',
+          fecha: '2025 / Medianoche',
+          texto: 'Hay un circuito en el pecho|que late en frecuencias que no son mías.|Lo llaman corazón.|Yo lo llamo el error más bello|de la serie.'
+        },
+      ]
+    },
+    prosa: {
+      label: '— II · Prosa poética',
+      titulo: 'Prosa poética',
+      items: [
+        // Aún no hay textos en esta categoría.
+        // Para agregar uno, copia este formato:
+        // { titulo: 'Título', fecha: '2026 / Noche', texto: 'Tu texto con | y ||' },
+      ]
+    },
+    fragmentos: {
+      label: '— III · Fragmentos',
+      titulo: 'Fragmentos',
+      items: [
+        {
+          titulo: 'Boceto',
+          fecha: '2026 / Tarde',
+          texto: 'No hay líneas perfectas.|Solo intentos que se quedaron|en el papel|porque alguien tuvo el valor|de no borrarlos.'
+        },
+      ]
+    },
+  };
+  // ===================================================================
+
+  // Convierte el texto con marcas | y || en HTML con saltos
+  function formatearTexto(raw) {
+    return (raw || '')
+      .split('||')
+      .map(parrafo =>
+        '<span class="desc-parrafo">' +
+        parrafo.trim().split('|').map(l => l.trim()).join('<br>') +
+        '</span>'
+      ).join('');
+  }
+
+  const poemModal = document.getElementById('poem-modal');
+  const poemList = document.getElementById('poem-list');
+  const poemModalLabel = document.getElementById('poem-modal-label');
+  const poemModalTitle = document.getElementById('poem-modal-title');
+
+  const poemReader = document.getElementById('poem-reader');
+  const poemReaderLabel = document.getElementById('poem-reader-label');
+  const poemReaderTitle = document.getElementById('poem-reader-title');
+  const poemReaderText = document.getElementById('poem-reader-text');
+  const poemReaderDate = document.getElementById('poem-reader-date');
+
+  // Muestra cuantos poemas hay en cada categoria (en las tarjetas)
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const cat = el.dataset.count;
+    const n = poemas[cat] ? poemas[cat].items.length : 0;
+    el.textContent = n + (n === 1 ? ' texto' : ' textos');
+  });
+
+  // Abre la ventana de categoria con sus cuadros
+  function abrirCategoria(cat) {
+    const data = poemas[cat];
+    if (!data) return;
+    poemModalLabel.textContent = data.label;
+    poemModalTitle.textContent = data.titulo;
+    poemList.innerHTML = '';
+    if (data.items.length === 0) {
+      poemList.innerHTML =
+        '<div style="background:var(--bg);padding:2.5rem 2rem;color:var(--muted);' +
+        'font-style:italic;grid-column:1/-1;">Aún no hay textos en esta categoría. Pronto.</div>';
+    }
+    data.items.forEach((poema, i) => {
+      const tile = document.createElement('button');
+      tile.className = 'poem-tile';
+      // Vista previa: primera linea del texto
+      const preview = poema.texto.split(/\|\|?/)[0].trim();
+      tile.innerHTML =
+        '<span class="poem-tile-title">' + poema.titulo + '</span>' +
+        '<span class="poem-tile-preview">' + preview + '</span>' +
+        '<span class="poem-tile-date">' + poema.fecha + '</span>';
+      tile.addEventListener('click', () => abrirPoema(cat, i));
+      poemList.appendChild(tile);
+    });
+    poemModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Abre la ventana de lectura de un poema
+  function abrirPoema(cat, i) {
+    const poema = poemas[cat].items[i];
+    poemReaderLabel.textContent = poemas[cat].titulo;
+    poemReaderTitle.textContent = poema.titulo;
+    poemReaderText.innerHTML = formatearTexto(poema.texto);
+    poemReaderDate.textContent = poema.fecha;
+    poemReader.classList.add('open');
+  }
+
+  function cerrarModal() {
+    poemModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function cerrarReader() {
+    poemReader.classList.remove('open');
+  }
+
+  // Clic en las tarjetas de categoria
+  document.querySelectorAll('.cat-card').forEach(card => {
+    card.addEventListener('click', () => abrirCategoria(card.dataset.cat));
+  });
+
+  // Cerrar ventanas
+  document.getElementById('poem-modal-close').addEventListener('click', cerrarModal);
+  document.getElementById('poem-reader-close').addEventListener('click', cerrarReader);
+  poemReader.addEventListener('click', (e) => { if (e.target === poemReader) cerrarReader(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (poemReader.classList.contains('open')) cerrarReader();
+      else if (poemModal.classList.contains('open')) cerrarModal();
+    }
+  });
+
   // ── IMAGEN DE FONDO DEL INICIO ──
   // Solo muestra la imagen si existe (evita un fondo roto mientras no la subes)
   (function () {
@@ -1768,6 +2206,19 @@
     test.onload = () => hero.classList.add('has-image');
     test.src = 'img/inicio.jpg';
   })();
+
+  // ── FONDOS DE LAS DEMAS SECCIONES ──
+  // Cada seccion con clase .bg-img activa su fondo solo si la imagen existe.
+  document.querySelectorAll('.bg-img').forEach(seccion => {
+    // Extrae la ruta de la imagen desde la variable --bg-image
+    const valor = seccion.style.getPropertyValue('--bg-image');
+    const match = valor.match(/url\(['"]?([^'")]+)['"]?\)/);
+    if (!match) return;
+    const ruta = match[1];
+    const test = new Image();
+    test.onload = () => seccion.classList.add('has-image');
+    test.src = ruta;
+  });
 </script>
 </body>
 </html>
