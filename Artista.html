@@ -191,7 +191,7 @@
       background-size: cover;
       background-position: center right;
       /* Tono calido sutil sobre la imagen */
-      filter: brightness(0.7) sepia(0.15) saturate(1.1);
+      filter: brightness(1.2) sepia(0.15) saturate(1.1);
       opacity: 0;
       transition: opacity 1.2s ease;
     }
@@ -202,7 +202,9 @@
     }
 
     /* Capa de desvanecido: oscurece la izquierda (donde va el texto)
-       y la parte inferior, dejando las luces calidas a la derecha. */
+       y la parte inferior, dejando las luces calidas a la derecha.
+       Si quieres ver MAS la imagen, baja los numeros (0.70, 0.25...).
+       Si el texto no se lee bien, subelos (0.90, 0.45...). */
     #inicio::after {
       content: '';
       position: absolute;
@@ -211,7 +213,7 @@
       background:
         linear-gradient(90deg,
           var(--bg) 0%,
-          rgba(10,10,15,0.92) 30%,
+          rgba(10,10,15,0.70) 30%,
           rgba(10,10,15,0.55) 60%,
           rgba(10,10,15,0.35) 100%),
         linear-gradient(180deg,
