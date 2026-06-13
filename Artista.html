@@ -1501,6 +1501,107 @@
       .music-bars span { animation: none; }
     }
 
+    /* Boton para abrir/cerrar la lista de canciones */
+    .music-list-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .music-list-btn:hover {
+      border-color: var(--copper);
+      color: var(--copper);
+    }
+
+    /* Panel desplegable con la lista de canciones */
+    .music-panel {
+      position: fixed;
+      bottom: 5.5rem;
+      right: 1.5rem;
+      z-index: 301;
+      width: 240px;
+      max-height: 320px;
+      overflow-y: auto;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      padding: 0.5rem;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .music-panel.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .music-panel::-webkit-scrollbar { width: 4px; }
+    .music-panel::-webkit-scrollbar-thumb { background: var(--copper); border-radius: 2px; }
+
+    .music-panel-title {
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.25rem;
+    }
+
+    .music-track {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      line-height: 1.3;
+    }
+
+    .music-track:hover {
+      background: rgba(184,70,10,0.08);
+      color: var(--ink);
+    }
+
+    /* La cancion que esta sonando se resalta */
+    .music-track.current {
+      color: var(--copper);
+    }
+
+    .music-track-num {
+      font-size: 0.6rem;
+      opacity: 0.6;
+      min-width: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .music-panel { bottom: 5rem; right: 1rem; width: 220px; }
+    }
+
     /* ── HOJAS DE OTOÑO CAYENDO ── */
     /* Contenedor a pantalla completa, detras del contenido, no estorba clics */
     .leaves-container {
@@ -1575,6 +1676,13 @@
   <div class="music-bars" aria-hidden="true"><span></span><span></span><span></span></div>
   <span class="music-label" id="music-label">Reproducir música</span>
   <button class="music-nav" id="music-next" aria-label="Canción siguiente">►</button>
+  <button class="music-list-btn" id="music-list-btn" aria-label="Ver lista de canciones">☰</button>
+</div>
+
+<!-- Panel desplegable con la lista de canciones -->
+<div class="music-panel" id="music-panel" aria-hidden="true">
+  <div class="music-panel-title">Lista de reproducción</div>
+  <!-- Las canciones se generan solas con el script -->
 </div>
 
 <audio id="bg-music" preload="none"></audio>
@@ -1584,7 +1692,7 @@
   <!-- ── SIDEBAR ── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">Rey Autómata</div>
-    <div class="sidebar-title">Rey<br>Ahumada</div>
+    <div class="sidebar-title">Alberto<br>Ahumada</div>
 
     <ul class="nav-list">
       <li><a href="#inicio" class="active">
@@ -2094,6 +2202,8 @@
   const musicNext = document.getElementById('music-next');
   const musicPlayer = document.getElementById('music-player');
   const musicLabel = document.getElementById('music-label');
+  const musicListBtn = document.getElementById('music-list-btn');
+  const musicPanel = document.getElementById('music-panel');
 
   music.volume = 0.4; // volumen ambiente al 40%
   let pista = 0;       // indice de la cancion actual
@@ -2111,8 +2221,16 @@
       musicBtn.setAttribute('aria-label', 'Pausar música');
       musicLabel.textContent = playlist[pista].titulo;
       musicPlayer.classList.add('playing');
+      marcarPistaActual();
     }).catch(() => {
       musicLabel.textContent = 'Sin audio';
+    });
+  }
+
+  // Resalta en el panel la cancion que esta sonando
+  function marcarPistaActual() {
+    document.querySelectorAll('.music-track').forEach((t, i) => {
+      t.classList.toggle('current', i === pista);
     });
   }
 
@@ -2146,6 +2264,38 @@
   music.addEventListener('ended', () => {
     cargarPista(pista + 1);
     reproducir();
+  });
+
+  // ── PANEL DE LISTA DE CANCIONES ──
+  // Genera un boton por cada cancion de la playlist
+  playlist.forEach((cancion, i) => {
+    const track = document.createElement('button');
+    track.className = 'music-track';
+    track.innerHTML =
+      '<span class="music-track-num">' + (i + 1) + '</span>' +
+      '<span>' + cancion.titulo + '</span>';
+    // Al tocar una cancion: la carga, la reproduce y cierra el panel
+    track.addEventListener('click', () => {
+      cargarPista(i);
+      reproducir();
+      musicPanel.classList.remove('open');
+    });
+    musicPanel.appendChild(track);
+  });
+
+  // Abrir / cerrar el panel con el boton de lista
+  musicListBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    musicPanel.classList.toggle('open');
+  });
+
+  // Cerrar el panel si se hace clic fuera de el
+  document.addEventListener('click', (e) => {
+    if (musicPanel.classList.contains('open') &&
+        !musicPanel.contains(e.target) &&
+        e.target !== musicListBtn) {
+      musicPanel.classList.remove('open');
+    }
   });
 
   // ── POESIA: CATEGORIAS Y POEMAS ──
