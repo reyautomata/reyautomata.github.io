@@ -1743,6 +1743,327 @@
       .notes-container { display: none; }
     }
 
+    /* ── EL ORÁCULO (carta que se voltea con un tema para dibujar) ── */
+    #oraculo {
+      background: var(--bg2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 100vh;
+    }
+
+    .oraculo-intro {
+      max-width: 560px;
+      margin: 0 auto 3rem;
+    }
+
+    /* Escenario de la carta (da perspectiva 3D) */
+    .card-stage {
+      perspective: 1400px;
+      width: min(340px, 80vw);
+      height: 460px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .oracle-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.4, 0.0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .oracle-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Las dos caras de la carta */
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translateZ(0);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 2rem;
+      overflow: hidden;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.65);
+    }
+
+    /* Azul noche profundo de las cartas (con un toque más cálido que el fondo) */
+    .card-back, .card-front {
+      /* Capa base SÓLIDA opaca primero, para que nunca se transparente el reverso */
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 42%, rgba(42,74,107,0.45) 0%, rgba(16,22,40,0.5) 70%),
+        linear-gradient(160deg, #141d33 0%, #0c1222 100%),
+        #0c1222;
+      border: 1px solid rgba(201,162,77,0.5);
+    }
+
+    /* El SVG llena la carta (rayos, marco, signo) */
+    .card-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* ── DORSO (se ve primero) ── */
+    .card-back-emblema {
+      position: relative;
+      z-index: 2;
+      width: 92px;
+      height: 92px;
+      margin-bottom: 1.4rem;
+      animation: oracle-pulse 4s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(184,70,10,0.4));
+    }
+
+    .card-back-emblema svg { width: 100%; height: 100%; display: block; }
+
+    .card-back-titulo {
+      position: relative;
+      z-index: 2;
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      line-height: 1.2;
+      color: #c9a24d;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    @keyframes oracle-pulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50%      { opacity: 1; transform: scale(1.04); }
+    }
+
+    .card-back-text {
+      position: relative;
+      z-index: 2;
+      font-family: var(--mono);
+      font-size: 0.56rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #c9a24d;
+      opacity: 0.8;
+    }
+
+    /* ── FRENTE (el signo + el desafío) ── */
+    .card-front {
+      transform: rotateY(180deg) translateZ(0);
+      justify-content: flex-start;
+      padding-top: 38%;
+    }
+
+    /* Nombre del signo zodiacal */
+    .card-front-signo {
+      position: relative;
+      z-index: 2;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #c9a24d;
+      margin-top: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-front-label {
+      position: relative;
+      z-index: 2;
+      font-family: var(--mono);
+      font-size: 0.52rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 0.9rem;
+    }
+
+    .card-front-theme {
+      position: relative;
+      z-index: 2;
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      line-height: 1.4;
+      color: #f0e6cf;
+      font-style: italic;
+      padding: 0 0.5rem;
+    }
+
+    .card-front-tecnica {
+      position: relative;
+      z-index: 2;
+      margin-top: 1.4rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid rgba(201,162,77,0.3);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #a9bdd6;
+      max-width: 80%;
+    }
+
+    .card-front-tecnica strong {
+      color: #c9a24d;
+      font-weight: 700;
+    }
+
+    /* Botón para invocar/girar */
+    .oracle-btn {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.9rem 2rem;
+      background: var(--copper);
+      border: 1px solid var(--copper);
+      color: var(--bg);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .oracle-btn:hover {
+      background: transparent;
+      color: var(--copper);
+    }
+
+    .oracle-hint {
+      margin-top: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    /* ── MEMORICE DE POESÍA ── */
+    #memorice {
+      background: var(--bg2);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 1.5rem;
+    }
+
+    .mem-intro { max-width: 560px; margin: 0 auto 2rem; }
+
+    .mem-stats {
+      display: flex; gap: 2.5rem; justify-content: center;
+      margin-bottom: 2rem;
+      font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    .mem-stats b { color: var(--oro, #c9a24d); font-size: 1.1rem; display: block; }
+
+    .mem-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+      width: min(680px, 96vw);
+      margin: 0 auto;
+    }
+
+    .mem-card {
+      aspect-ratio: 3 / 4;
+      perspective: 900px;
+      cursor: pointer;
+    }
+    .mem-card-inner {
+      position: relative; width: 100%; height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .mem-card.flip .mem-card-inner,
+    .mem-card.matched .mem-card-inner { transform: rotateY(180deg); }
+
+    .mem-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translateZ(0);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.6rem;
+      overflow: hidden;
+    }
+
+    /* Dorso */
+    .mem-back {
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 45%, rgba(184,70,10,0.18) 0%, transparent 65%),
+        linear-gradient(160deg, #141d33 0%, #0c1222 100%),
+        #0c1222;
+      border: 1px solid rgba(201,162,77,0.4);
+    }
+    .mem-back span {
+      font-size: 1.5rem; color: var(--copper);
+      opacity: 0.85;
+      filter: drop-shadow(0 0 8px rgba(184,70,10,0.4));
+    }
+
+    /* Frente */
+    .mem-front {
+      transform: rotateY(180deg) translateZ(0);
+      background:
+        linear-gradient(160deg, #1a2540 0%, #0c1222 100%),
+        #0c1222;
+      border: 1px solid rgba(201,162,77,0.6);
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .mem-card.matched .mem-front {
+      border-color: var(--copper);
+      box-shadow: 0 0 16px rgba(184,70,10,0.4);
+    }
+
+    .mem-tipo {
+      font-family: var(--mono); font-size: 0.5rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #c9a24d; opacity: 0.8;
+    }
+    .mem-texto {
+      font-family: var(--serif);
+      font-size: 0.82rem; line-height: 1.3;
+      color: var(--ink); font-style: italic;
+    }
+    .mem-card.tipo-autor .mem-texto { font-style: normal; color: #c9a24d; font-size: 0.95rem; }
+
+    .mem-btn {
+      margin-top: 2.5rem;
+      font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 0.9rem 2rem;
+      background: transparent; border: 1px solid var(--copper);
+      color: var(--copper); cursor: pointer; transition: all 0.2s;
+    }
+    .mem-btn:hover { background: var(--copper); color: var(--bg); }
+
+    .mem-win {
+      margin-top: 1.5rem; font-family: var(--serif); font-style: italic;
+      font-size: 1.1rem; color: var(--oro, #c9a24d);
+      min-height: 1.5rem; opacity: 0; transition: opacity 0.4s;
+    }
+    .mem-win.show { opacity: 1; }
+
+    @media (max-width: 560px) {
+      .mem-board { grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+      .mem-texto { font-size: 0.6rem; }
+      .mem-tipo { font-size: 0.42rem; }
+    }
+
   </style>
 </head>
 <body>
@@ -1795,6 +2116,12 @@
       <li><a href="#dibujos">
         <span class="nav-icon">◻</span> Dibujos
       </a></li>
+      <li><a href="#oraculo">
+        <span class="nav-icon">✦</span> El Oráculo
+      </a></li>
+      <li><a href="#memorice">
+        <span class="nav-icon">⊞</span> Memorice
+      </a></li>
       <li><a href="#poesia">
         <span class="nav-icon">◆</span> Poesía
       </a></li>
@@ -1831,11 +2158,12 @@
       <h1 class="hero-title typewriter">Rey Autómata</h1>
       <p class="hero-subtitle">Dibujo, poesía y pensamiento<br>desde el árbol interior.</p>
       <p class="hero-body">
-        Un espacio donde conviven el arte, los pensamientos, la escritura y la contemplación. 
+        Un espacio donde conviven el arte, la técnica, la escritura y la contemplación. 
         Aquí guardo dibujos, poemas, libros, apuntes y fragmentos de una búsqueda personal.
       </p>
       <div class="hero-buttons">
         <a href="#dibujos" class="btn btn-primary">Ver dibujos</a>
+        <a href="#oraculo" class="btn btn-ghost">El Oráculo</a>
         <a href="#poesia" class="btn btn-ghost">Leer poesía</a>
         <a href="#biblioteca" class="btn btn-ghost">Biblioteca</a>
         <a href="https://instagram.com/reyautomata" target="_blank" class="btn btn-ghost">Instagram</a>
@@ -1861,108 +2189,72 @@
         <button class="filter-btn">Cuadernos</button>
       </div>
 
-      <div class="gallery-grid reveal">
-
-        <!-- ===================================================== -->
-        <!--  COMO AGREGAR / EDITAR UN DIBUJO:                      -->
-        <!--                                                        -->
-        <!--  1. Sube tu imagen a la carpeta  img/dibujos/          -->
-        <!--  2. En src="..." escribe: img/dibujos/TU-FOTO.jpg      -->
-        <!--  3. Edita el TITULO (data-title)                       -->
-        <!--  4. Edita los DATOS (data-meta): tecnica, año...       -->
-        <!--  5. Edita la DESCRIPCION (data-desc): tu texto largo   -->
-        <!--                                                        -->
-        <!--  Saltos en el texto:                                   -->
-        <!--    |   = salto de linea simple                         -->
-        <!--    ||  = salto de parrafo (renglon en blanco)          -->
-        <!-- ===================================================== -->
-
-        <!-- DIBUJO 1 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo1.jpg"
-                 data-title="Sobre una roca"
-                 data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Reconozco hoy que he fallado; solo me sorprende, a veces, no haber previsto que fallaría. ||¿Qué había en mí que pronosticase un triunfo? Yo no tenía la fuerza ciega de los vencedores, o la visión cierta de los locos... Era lúcido y triste como un día frío.||Las cosas nítidas confortan, y las cosas al sol confortan. Ver pasar la vida bajo un día azul me compensa de muchas cosas. Olvido indefinidamente, olvido más de lo que podría recordar. Mi corazón translúcido y aéreo se penetra de la suficiencia de las cosas, y mirar me basta cariñosamente. Nunca he sido otra cosa que una visión incorpórea, desnuda de toda el alma salvo de un vago aire que ha pasado y que veia.||Tengo elementos espirituales de bohemio, de esos que dejan la vida pasar como una cosa que se escapa de las manos en un momento o que el gesto de alcanzarla duerme en la mera idea de hacerlo. Pero no he tenido la compensación exterior del espiritu bohemio, el descuido fácil de las emociones inmediatas y abandonadas. Nunca he sido más que un bohemio aislado, lo que es algo absurdo; o un bohemio místico, lo que es algo imposible. Ciertas horas que he vivido, horas ante la Naturaleza, esculpidas en la ternura del aislamiento, me quedarán para siempre como medallas. En esos momentos olvidé todos mis propósitos de vida, todas mis deseadas direcciones. Gocé de no ser nada con una plenitud de bonanza espiritual, cayendo en el regazo azul de mis aspiraciones. No gocé nunca, tal vez, una hora indeleble, exenta de un fondo espiritual de fracaso y desánimo.||En todas mis horas libertas un dolor dormía, florecía vagamente, detrás de los muros de mi conciencia, en otros jardines, pero el aroma y el propio color de esas flores tristes atravesaban intuitivamente los muros, y el lado de allá, donde florecían las rosas, nunca dejaba de ser, en el misterio confuso de mi ser, un lado de acá degradado en mi somnolencia de vivir. Fue en un mar interior donde el río de mi vida terminó..">
-          <img src="img/dibujos/dibujo1.jpg" alt="Sobre una roca" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Sobre una roca</div>
-            <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
-          </div>
-        </article>
-
-        <!-- DIBUJO 2 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo2.jpg"
-                 data-title="Descansando en mis sueños"
-                 data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Cuando me miras mis ojos son llaves,|el muro tiene secretos,|mi temor palabras,|poemas.|Sólo tú haces de mi memoria una viajera fascinada,|un fuego incesante||– Alejandra Pizarnik.">
-          <img src="img/dibujos/dibujo2.jpg" alt="Descansando en mis sueños" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Descansando en mis sueños</div>
-            <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
-          </div>
-        </article>
-
-        <!-- DIBUJO 3 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo3.jpg"
-                 data-title="Una manzana"
-                 data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Los niños sentados|escuchan un cuento.|El río traía|coronas de viento|y una gran serpiente|desde un tronco viejo|miraba las nubes|redondas del cielo.|Niño mío chico,|¿dónde estás?|Te siento|en el corazón|y no es verdad.|Lejos esperas|que yo saque|tu alma del silencio.||– Federico Garcia Lorca.">
-          <img src="img/dibujos/dibujo3.jpg" alt="Una manzana" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Una manzana</div>
-            <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
-          </div>
-        </article>
-
-        <!-- DIBUJO 4 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo4.jpg"
-                 data-title="Contacto"
-                 data-meta="Dibujo · Lápiz · 2025"
-                 data-desc="Lo que hace falta es ser natural y calmo|en la felicidad o en la infelicidad,|sentir como quien mira,|pensar como quien anda,|y cuando se va a morir acordarse que el día muere,|y que el poniente hermoso|y es hermosa la noche que|queda...||Así es y que así sea...||- Fernando Pessoa.">
-          <img src="img/dibujos/dibujo4.jpg" alt="Contacto" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Contacto</div>
-            <div class="gallery-item-meta">Dibujo · Lápiz · 2025</div>
-          </div>
-        </article>
-
-        <!-- DIBUJO 5 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo5.jpg"
-                 data-title="Perdido"
-                 data-meta="Dibujo · Lapiz · 2025"
-                 data-desc="He estado demasiado tiempo|descansando de mi mismo,|que he olvidado como era mi rostro,|cuando despertaba en la mañana,|cuando pedaleaba por la ciudad,|y corría por la montaña.">
-          <img src="img/dibujos/dibujo5.jpg" alt="Perdido" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Perdido</div>
-            <div class="gallery-item-meta">Dibujo · Lapiz · 2025</div>
-          </div>
-        </article>
-
-        <!-- DIBUJO 6 -->
-        <article class="gallery-item"
-                 data-img="img/dibujos/dibujo6.jpg"
-                 data-title="Sobre las estrellas"
-                 data-meta="Ilustración · Tinta · 2024"
-                 data-desc="Recuerda que eres tu propio universo.|Descansa, mañana será otro día para soñar.">
-          <img src="img/dibujos/dibujo6.jpg" alt="Sobre las estrellas" onerror="this.classList.add('missing')">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">Sobre las estrellas</div>
-            <div class="gallery-item-meta">Ilustración · Tinta · 2024</div>
-          </div>
-        </article>
-
+      <div class="gallery-grid reveal" id="gallery-grid">
+        <!-- Los dibujos se cargan solos desde la carpeta dibujos/ (CMS).
+             No edites aquí a mano: usa el panel en /admin/ -->
+        <div class="gallery-loading" id="gallery-loading"
+             style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);font-family:var(--mono);font-size:0.7rem;letter-spacing:0.1em;">
+          Cargando dibujos...
+        </div>
       </div>
     </section>
 
     <div class="rule"></div>
 
-    <!-- ═══ CITA FLOTANTE 1 ═══
-         Para EDITAR: cambia el texto y el autor.
-         Para AGREGAR tuyas: copia todo este bloque
+    <!-- EL ORÁCULO (generador de temas para dibujar) -->
+    <section id="oraculo">
+      <div class="oraculo-intro">
+        <p class="section-label reveal">— El Oráculo</p>
+        <h2 class="section-title reveal">¿Qué dibujo hoy?</h2>
+        <p class="section-desc reveal" style="margin-left:auto;margin-right:auto;">Cuando la página en blanco pesa, deja que el azar decida. Invoca una carta y acepta su desafío.</p>
+      </div>
+
+      <div class="card-stage reveal">
+        <div class="oracle-card" id="oracle-card">
+          <!-- Dorso (se ve primero) -->
+          <div class="card-face card-back">
+            <div class="card-svg" id="card-svg-back"></div>
+            <div class="card-back-emblema" id="card-emblema"></div>
+            <div class="card-back-titulo">El Oráculo<br>del Dibujo</div>
+            <div class="card-back-text">Toca para revelar</div>
+          </div>
+          <!-- Frente (signo zodiacal + desafío) -->
+          <div class="card-face card-front">
+            <div class="card-svg" id="card-svg-front"></div>
+            <div class="card-front-label">— Tu carta</div>
+            <div class="card-front-signo" id="oracle-signo"></div>
+            <div class="card-front-theme" id="oracle-theme">…</div>
+            <div class="card-front-tecnica" id="oracle-tecnica"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="oracle-btn" id="oracle-btn">Invocar un tema</button>
+      <p class="oracle-hint">Cada carta es un punto de partida, no una regla. Rómpela si quieres.</p>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- MEMORICE DE POESÍA (juego de parejas: poeta + su verso) -->
+    <section id="memorice">
+      <div class="mem-intro">
+        <p class="section-label reveal">— Juego de memoria</p>
+        <h2 class="section-title reveal">Memorice de la palabra</h2>
+        <p class="section-desc reveal" style="margin-left:auto;margin-right:auto;">Encuentra cada poeta latinoamericano junto al verso que lo hizo eterno. Voltea dos cartas y descubre las parejas.</p>
+      </div>
+
+      <div class="mem-stats reveal">
+        <div><b id="mem-pares">0</b> Parejas</div>
+        <div><b id="mem-intentos">0</b> Intentos</div>
+      </div>
+
+      <div class="mem-board" id="mem-board"></div>
+
+      <p class="mem-win" id="mem-win"></p>
+      <button class="mem-btn" id="mem-btn">Reiniciar juego</button>
+    </section>
+
+    <div class="rule"></div>
 
     <!-- POESÍA -->
     <section id="poesia" class="bg-img" style="--bg-image: url('img/fondo-poesia.png')">
@@ -2218,10 +2510,22 @@
   reveals.forEach(r => revealObserver.observe(r));
 
   // ── GALLERY FILTERS ──
+  // Filtra los dibujos por categoría al presionar un botón.
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+
+      const filtro = btn.textContent.trim();
+      // Recorre todas las tarjetas y muestra solo las que coinciden
+      document.querySelectorAll('#gallery-grid .gallery-item').forEach(item => {
+        const cat = (item.dataset.categoria || '').trim();
+        if (filtro === 'Todo' || cat === filtro) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
     });
   });
 
@@ -2572,6 +2876,119 @@
     }
   });
 
+  // ── GALERÍA DE DIBUJOS (se llena sola desde la carpeta dibujos/) ──
+  // Lee los dibujos guardados por el panel (CMS) usando la API de GitHub.
+  (function () {
+    const grid = document.getElementById('gallery-grid');
+    const loading = document.getElementById('gallery-loading');
+    if (!grid) return;
+
+    // Datos de tu repositorio
+    const usuario = 'reyautomata';
+    const repo = 'reyautomata-art';
+    const carpeta = 'dibujos';
+    const api = `https://api.github.com/repos/${usuario}/${repo}/contents/${carpeta}`;
+
+    // Lee un valor del frontmatter (formato: campo: "valor")
+    function leerCampo(texto, campo) {
+      // Divide el archivo en líneas para poder leer bloques multilínea
+      const lineas = texto.split('\n');
+      const re = new RegExp('^' + campo + ':\\s*(.*)$');
+      let i = lineas.findIndex(l => re.test(l));
+      if (i === -1) return '';
+
+      let valor = lineas[i].match(re)[1].trim();
+
+      // ¿Es un bloque YAML? (>-  >  |  |-  |+  >+)
+      if (/^[>|][+-]?$/.test(valor)) {
+        const plegado = valor[0] === '>'; // > junta líneas con espacios; | las conserva
+        const cuerpo = [];
+        // Lee las líneas siguientes que estén indentadas (parte del bloque)
+        for (let j = i + 1; j < lineas.length; j++) {
+          const l = lineas[j];
+          if (l.trim() === '') { cuerpo.push(''); continue; }
+          if (/^\s+/.test(l)) {
+            cuerpo.push(l.replace(/^\s+/, '')); // quita la indentación
+          } else {
+            break; // se acabó el bloque
+          }
+        }
+        // > junta con espacios; | usa saltos de línea (los volvemos | para tu formato)
+        if (plegado) {
+          // El bloque >- junta todo con espacios. Pero el usuario pudo escribir
+          // sus marcas | y || para versos/estrofas: las respetamos y limpiamos.
+          let t = cuerpo.join(' ').replace(/\s+/g, ' ').trim();
+          t = t.replace(/\s*\|\s*/g, '|');
+          return t;
+        } else {
+          return cuerpo.join('|').replace(/\|+$/,'');
+        }
+      }
+
+      // Si el valor está entre comillas, quita SOLO las de los extremos
+      if (valor.length >= 2 &&
+          ((valor[0] === '"' && valor[valor.length - 1] === '"') ||
+           (valor[0] === "'" && valor[valor.length - 1] === "'"))) {
+        const comilla = valor[0];
+        valor = valor.slice(1, -1);
+        if (comilla === '"') {
+          valor = valor.replace(/""/g, '"').replace(/\\"/g, '"');
+        } else {
+          valor = valor.replace(/''/g, "'");
+        }
+      }
+      return valor;
+    }
+
+    // Crea la tarjeta de un dibujo en la galería
+    function crearTarjeta(d) {
+      const art = document.createElement('article');
+      art.className = 'gallery-item';
+      art.dataset.img = d.imagen;
+      art.dataset.title = d.titulo;
+      art.dataset.meta = (d.tecnica || '') + (d.anio ? ' · ' + d.anio : '');
+      art.dataset.desc = d.texto || '';
+      art.dataset.categoria = d.categoria || '';
+      art.innerHTML =
+        '<img src="' + d.imagen + '" alt="' + d.titulo + '" onerror="this.classList.add(\'missing\')">' +
+        '<div class="gallery-item-overlay">' +
+          '<div class="gallery-item-title">' + d.titulo + '</div>' +
+          '<div class="gallery-item-meta">' + art.dataset.meta + '</div>' +
+        '</div>';
+      art.addEventListener('click', () => openLightbox(art));
+      return art;
+    }
+
+    // Pide la lista de archivos a GitHub y arma la galería
+    fetch(api)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(archivos => {
+        const mds = archivos.filter(a => a.name.endsWith('.md'));
+        if (!mds.length) {
+          loading.textContent = 'Aún no hay dibujos. Sube el primero desde /admin/';
+          return;
+        }
+        // Leer cada archivo .md (más nuevos primero)
+        return Promise.all(
+          mds.map(a => fetch(a.download_url).then(r => r.text()).then(txt => ({
+            titulo: leerCampo(txt, 'titulo'),
+            imagen: leerCampo(txt, 'imagen'),
+            tecnica: leerCampo(txt, 'tecnica'),
+            anio: leerCampo(txt, 'anio'),
+            categoria: leerCampo(txt, 'categoria'),
+            texto: leerCampo(txt, 'texto')
+          })))
+        ).then(dibujos => {
+          if (loading) loading.remove();
+          dibujos.reverse(); // los últimos subidos, primero
+          dibujos.forEach(d => grid.appendChild(crearTarjeta(d)));
+        });
+      })
+      .catch(err => {
+        if (loading) loading.textContent = 'No se pudieron cargar los dibujos (' + err + ').';
+      });
+  })();
+
   // ── IMAGEN DE FONDO DEL INICIO ──
   // Solo muestra la imagen si existe (evita un fondo roto mientras no la subes)
   (function () {
@@ -2581,7 +2998,358 @@
     test.src = 'img/inicio.png';
   })();
 
-  // ── FONDOS DE LAS DEMAS SECCIONES ──
+  // ── EL ORÁCULO (carta zodiacal con tema para dibujar) ──
+  // ===================================================================
+  //  TUS TEMAS DE DIBUJO
+  //  Para AGREGAR: copia una línea { consigna: '...', tecnica: '...' },
+  // ===================================================================
+  const temasDibujo = [
+    { consigna: 'Un rostro que mira hacia otro lado', tecnica: 'Solo líneas continuas, sin levantar el lápiz' },
+    { consigna: 'Tus propias manos en reposo', tecnica: 'Claroscuro, solo luces y sombras' },
+    { consigna: 'Un árbol que parece una persona', tecnica: 'Tinta, trazo suelto' },
+    { consigna: 'El desorden de tu mesa ahora mismo', tecnica: 'Boceto rápido, menos de 5 minutos' },
+    { consigna: 'Una figura humana en movimiento', tecnica: 'Gestual, capturando el ritmo, no el detalle' },
+    { consigna: 'Un objeto cotidiano, muy de cerca', tecnica: 'Grafito, máximo detalle' },
+    { consigna: 'El reflejo en una ventana de noche', tecnica: 'Carboncillo, fondos oscuros' },
+    { consigna: 'Alguien leyendo, absorto', tecnica: 'Línea limpia, sin sombras' },
+    { consigna: 'Un autorretrato sin mirarte al espejo', tecnica: 'De memoria, a una sola tinta' },
+    { consigna: 'Una planta marchita', tecnica: 'Acuarela o aguada, tonos apagados' },
+    { consigna: 'Pies descalzos', tecnica: 'Estudio anatómico, lápiz duro' },
+    { consigna: 'El cielo entre dos edificios', tecnica: 'Solo siluetas y un degradado' },
+    { consigna: 'Un animal imaginario hecho de partes reales', tecnica: 'Tinta y collage de ideas' },
+    { consigna: 'La misma cara con tres emociones', tecnica: 'Tres bocetos rápidos lado a lado' },
+    { consigna: 'Un rincón de tu casa que nunca dibujas', tecnica: 'Perspectiva libre, lápiz blando' },
+    { consigna: 'Una multitud, pero solo con manchas', tecnica: 'Pincel seco, sin rostros' },
+    { consigna: 'El movimiento del agua', tecnica: 'Línea gestual, gris medio' },
+    { consigna: 'Un retrato de alguien que extrañas', tecnica: 'De memoria, claroscuro suave' },
+    { consigna: 'Tu sombra proyectada', tecnica: 'Solo negro y blanco, sin grises' },
+    { consigna: 'Una máquina vieja u oxidada', tecnica: 'Detalle de texturas, grafito' },
+    { consigna: 'Un par de ojos que esconden algo', tecnica: 'Solo la mirada, nada más del rostro' },
+    { consigna: 'El interior de tu bolsillo o mochila', tecnica: 'Bodegón rápido, lápiz' },
+    { consigna: 'Una pareja de ancianos', tecnica: 'Línea expresiva, capturando arrugas' },
+    { consigna: 'Lo primero que ves al despertar', tecnica: 'De memoria, tonos suaves' },
+    { consigna: 'Una calle vacía de madrugada', tecnica: 'Perspectiva y sombras largas' },
+    { consigna: 'Tu comida favorita a medio comer', tecnica: 'Color o aguada, apetitoso' },
+    { consigna: 'Una emoción sin dibujar a nadie', tecnica: 'Solo formas y líneas abstractas' },
+    { consigna: 'Un animal dormido', tecnica: 'Curvas suaves, mínimo detalle' },
+    { consigna: 'El humo de algo (cigarro, té, incienso)', tecnica: 'Difuminado, carboncillo' },
+    { consigna: 'Tu mano no dominante dibujándose sola', tecnica: 'Dibuja con la mano que no usas' },
+    { consigna: 'Un personaje inventado en 3 minutos', tecnica: 'Diseño rápido, tinta directa' },
+    { consigna: 'La textura de una tela arrugada', tecnica: 'Estudio de pliegues, grafito' },
+    { consigna: 'Algo visto a través del agua', tecnica: 'Distorsión, bordes suaves' },
+    { consigna: 'Un esqueleto haciendo algo cotidiano', tecnica: 'Anatomía con humor, línea limpia' },
+    { consigna: 'El mismo objeto desde tres ángulos', tecnica: 'Estudio de volumen, lápiz' },
+    { consigna: 'Una multitud reducida a siluetas', tecnica: 'Solo negros, sin rasgos' },
+    { consigna: 'Tu rostro como si tuvieras 80 años', tecnica: 'Proyección, claroscuro' },
+    { consigna: 'Un paisaje que solo existe en tu cabeza', tecnica: 'Imaginación libre, técnica mixta' },
+    { consigna: 'Las raíces de un árbol como venas', tecnica: 'Tinta, líneas orgánicas' },
+    { consigna: 'Un instrumento musical en reposo', tecnica: 'Curvas y brillos, grafito blando' },
+  ];
+  // ===================================================================
+
+  // Los 12 signos del zodíaco con su símbolo y las estrellas de su constelación
+  // (coordenadas en un lienzo de 100x100, centradas alrededor de 50,50)
+  // Los 12 signos: símbolo, nombre, estrellas de la constelación, y el dibujo (figura)
+  // de su animal/símbolo en líneas (path SVG sobre un lienzo 0..100).
+  const zodiaco = [
+    { nombre: 'Aries', simbolo: '\u2648', estrellas: [[35,40],[45,38],[55,42],[63,50]],
+      figura: 'M38,60 C30,56 30,44 40,44 C40,36 52,36 52,46 C52,36 64,36 64,44 C74,44 74,56 66,60 M52,46 L52,66' },
+    { nombre: 'Tauro', simbolo: '\u2649', estrellas: [[36,55],[44,48],[52,45],[60,48],[66,42]],
+      figura: 'M34,40 C40,48 40,50 44,52 M66,40 C60,48 60,50 56,52 M50,68 A14,14 0 1,1 50.1,68 Z' },
+    { nombre: 'Géminis', simbolo: '\u264A', estrellas: [[40,35],[42,50],[44,63],[58,35],[58,50],[57,63]],
+      figura: 'M36,38 L64,38 M36,68 L64,68 M44,38 L44,68 M56,38 L56,68' },
+    { nombre: 'Cáncer', simbolo: '\u264B', estrellas: [[38,45],[48,42],[58,46],[52,55]],
+      figura: 'M34,46 A8,8 0 1,1 42,54 M66,58 A8,8 0 1,1 58,50 M42,50 L58,54' },
+    { nombre: 'Leo', simbolo: '\u264C', estrellas: [[36,50],[42,42],[50,40],[58,45],[62,54],[55,60]],
+      figura: 'M44,62 A10,10 0 1,1 54,54 C54,44 44,44 44,52 C44,40 60,38 62,50 C64,60 56,64 52,62' },
+    { nombre: 'Virgo', simbolo: '\u264D', estrellas: [[35,42],[44,46],[52,44],[60,48],[56,58]],
+      figura: 'M36,40 L36,64 M44,40 L44,64 M52,40 L52,60 C52,68 62,68 62,58 C68,58 68,48 60,50' },
+    { nombre: 'Libra', simbolo: '\u264E', estrellas: [[38,52],[48,45],[58,45],[64,52]],
+      figura: 'M32,62 L68,62 M40,54 A12,8 0 0,1 60,54 M50,54 L50,62 M36,54 L44,54 M56,54 L64,54' },
+    { nombre: 'Escorpio', simbolo: '\u264F', estrellas: [[34,42],[42,46],[50,48],[57,53],[62,60]],
+      figura: 'M32,42 L32,62 M40,42 L40,62 M48,42 L48,62 C48,70 60,70 60,60 L60,56 L66,62 M60,56 L64,52' },
+    { nombre: 'Sagitario', simbolo: '\u2650', estrellas: [[36,58],[44,50],[52,44],[60,40],[58,50]],
+      figura: 'M32,68 L64,36 M64,36 L52,36 M64,36 L64,48 M44,48 L56,60' },
+    { nombre: 'Capricornio', simbolo: '\u2651', estrellas: [[36,46],[44,42],[52,46],[58,52]],
+      figura: 'M34,42 C34,56 46,56 46,44 L46,62 C46,52 56,50 58,58 C62,68 50,72 48,64' },
+    { nombre: 'Acuario', simbolo: '\u2652', estrellas: [[36,46],[44,50],[50,45],[56,50],[62,45]],
+      figura: 'M32,46 L38,42 L44,46 L50,42 L56,46 L62,42 L68,46 M32,58 L38,54 L44,58 L50,54 L56,58 L62,54 L68,58' },
+    { nombre: 'Piscis', simbolo: '\u2653', estrellas: [[36,42],[42,50],[40,60],[58,42],[64,50],[60,60]],
+      figura: 'M36,40 C28,48 28,56 36,64 M64,40 C72,48 72,56 64,64 M30,52 L70,52' },
+  ];
+
+  // Genera el SVG del marco art déco + rayos radiantes (estilo tarot)
+  function svgMarco(conRayos) {
+    const rayos = [];
+    if (conRayos) {
+      // Rayos radiantes desde el centro hacia los bordes
+      const cx = 50, cy = 46;
+      for (let a = 0; a < 360; a += 7.5) {
+        const rad = a * Math.PI / 180;
+        const r1 = 20, r2 = 30 + (a % 15 === 0 ? 6 : 0);
+        const x1 = cx + Math.cos(rad) * r1, y1 = cy + Math.sin(rad) * r1;
+        const x2 = cx + Math.cos(rad) * r2, y2 = cy + Math.sin(rad) * r2;
+        rayos.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#c9a24d" stroke-width="0.3" opacity="0.5"/>`);
+      }
+    }
+    return `
+      <svg class="card-svg" viewBox="0 0 100 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Marco exterior -->
+        <rect x="4" y="4" width="92" height="142" fill="none" stroke="#c9a24d" stroke-width="0.6" opacity="0.8"/>
+        <rect x="6.5" y="6.5" width="87" height="137" fill="none" stroke="#c9a24d" stroke-width="0.3" opacity="0.5"/>
+        <!-- Esquinas art déco -->
+        <path d="M4,16 L4,4 L16,4 M10,4 L10,10 L4,10" fill="none" stroke="#c9a24d" stroke-width="0.5"/>
+        <path d="M96,16 L96,4 L84,4 M90,4 L90,10 L96,10" fill="none" stroke="#c9a24d" stroke-width="0.5"/>
+        <path d="M4,134 L4,146 L16,146 M10,146 L10,140 L4,140" fill="none" stroke="#c9a24d" stroke-width="0.5"/>
+        <path d="M96,134 L96,146 L84,146 M90,146 L90,140 L96,140" fill="none" stroke="#c9a24d" stroke-width="0.5"/>
+        ${rayos.join('')}
+      </svg>`;
+  }
+
+  // Genera el SVG de la constelación de un signo (estrellas + líneas + símbolo)
+  function svgConstelacion(signo) {
+    const e = signo.estrellas;
+    // Estrellas tenues de fondo (la constelación, detrás de la figura)
+    let estrellas = '';
+    e.forEach((p) => {
+      estrellas += `<circle cx="${p[0]}" cy="${p[1]}" r="0.9" fill="#f0e6cf" opacity="0.55"/>`;
+    });
+    for (let i = 0; i < e.length - 1; i++) {
+      estrellas += `<line x1="${e[i][0]}" y1="${e[i][1]}" x2="${e[i+1][0]}" y2="${e[i+1][1]}" stroke="#c9a24d" stroke-width="0.25" opacity="0.35"/>`;
+    }
+    // La FIGURA del animal/símbolo, en líneas doradas (lo principal)
+    const figura = `<path d="${signo.figura}" fill="none" stroke="#c9a24d" stroke-width="1.3"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     filter="url(#glow)" opacity="0.95"/>`;
+    return `
+      <svg class="card-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"
+           style="top:4%;height:34%;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="0.6" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        ${estrellas}
+        ${figura}
+      </svg>`;
+  }
+
+  (function () {
+    const card = document.getElementById('oracle-card');
+    const btn = document.getElementById('oracle-btn');
+    const themeEl = document.getElementById('oracle-theme');
+    const tecnicaEl = document.getElementById('oracle-tecnica');
+    const signoEl = document.getElementById('oracle-signo');
+    const svgBack = document.getElementById('card-svg-back');
+    const svgFront = document.getElementById('card-svg-front');
+    if (!card || !btn) return;
+
+    // Dibuja los marcos fijos (dorso con rayos, frente con marco)
+    svgBack.innerHTML = svgMarco(true);
+
+    // Emblema del mazo: bola de cristal + lápiz + constelación, fundidos
+    const emblema = document.getElementById('card-emblema');
+    if (emblema) {
+      emblema.innerHTML = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bola" cx="42%" cy="38%" r="60%">
+              <stop offset="0%" stop-color="rgba(201,162,77,0.35)"/>
+              <stop offset="60%" stop-color="rgba(42,74,107,0.25)"/>
+              <stop offset="100%" stop-color="rgba(12,18,34,0.1)"/>
+            </radialGradient>
+          </defs>
+          <!-- Bola de cristal -->
+          <circle cx="50" cy="48" r="26" fill="url(#bola)" stroke="#c9a24d" stroke-width="1.2"/>
+          <!-- Brillo de la bola -->
+          <ellipse cx="42" cy="40" rx="7" ry="4" fill="#f0e6cf" opacity="0.4"/>
+          <!-- Base/soporte de la bola -->
+          <path d="M38,74 Q50,82 62,74 L58,78 Q50,84 42,78 Z" fill="#c9a24d" opacity="0.8"/>
+          <path d="M44,72 L56,72" stroke="#c9a24d" stroke-width="1.4" stroke-linecap="round"/>
+          <!-- Constelación dentro de la bola (estrellas + líneas) -->
+          <g opacity="0.9">
+            <line x1="40" y1="52" x2="48" y2="44" stroke="#c9a24d" stroke-width="0.5"/>
+            <line x1="48" y1="44" x2="58" y2="50" stroke="#c9a24d" stroke-width="0.5"/>
+            <line x1="58" y1="50" x2="62" y2="42" stroke="#c9a24d" stroke-width="0.5"/>
+            <circle cx="40" cy="52" r="1.3" fill="#f0e6cf"/>
+            <circle cx="48" cy="44" r="1.6" fill="#f0e6cf"/>
+            <circle cx="58" cy="50" r="1.3" fill="#f0e6cf"/>
+            <circle cx="62" cy="42" r="1.1" fill="#f0e6cf"/>
+          </g>
+          <!-- Lápiz cruzando, como varita mágica (de abajo-izq a arriba-der) -->
+          <g transform="rotate(-38 50 50)">
+            <!-- cuerpo -->
+            <rect x="47" y="14" width="6" height="48" fill="rgba(201,162,77,0.2)" stroke="#c9a24d" stroke-width="1.1"/>
+            <!-- punta -->
+            <path d="M47,62 L53,62 L50,72 Z" fill="#c9a24d"/>
+            <path d="M48.5,67 L51.5,67 L50,72 Z" fill="#0c1222"/>
+            <!-- goma/tope arriba -->
+            <rect x="47" y="11" width="6" height="4" fill="#c9a24d"/>
+            <line x1="47" y1="24" x2="53" y2="24" stroke="#c9a24d" stroke-width="0.8"/>
+          </g>
+          <!-- Pequeños destellos alrededor -->
+          <path d="M22,30 l1.5,3 l3,1.5 l-3,1.5 l-1.5,3 l-1.5,-3 l-3,-1.5 l3,-1.5 Z" fill="#c9a24d" opacity="0.7"/>
+          <path d="M80,60 l1,2 l2,1 l-2,1 l-1,2 l-1,-2 l-2,-1 l2,-1 Z" fill="#c9a24d" opacity="0.6"/>
+        </svg>`;
+    }
+    svgFront.innerHTML = svgMarco(false);
+
+    let girada = false;
+    let ultimoTema = -1, ultimoSigno = -1;
+
+    function elegir(arr, ultimo) {
+      let i;
+      do { i = Math.floor(Math.random() * arr.length); }
+      while (i === ultimo && arr.length > 1);
+      return i;
+    }
+
+    function pintar() {
+      const ti = elegir(temasDibujo, ultimoTema); ultimoTema = ti;
+      const si = elegir(zodiaco, ultimoSigno); ultimoSigno = si;
+      const tema = temasDibujo[ti];
+      const signo = zodiaco[si];
+
+      themeEl.textContent = tema.consigna;
+      tecnicaEl.innerHTML = '<strong>Técnica:</strong> ' + tema.tecnica;
+      signoEl.textContent = signo.simbolo + '  ' + signo.nombre;
+      // Marco + constelación + símbolo grande tenue de fondo
+      svgFront.innerHTML = svgMarco(false) + svgConstelacion(signo);
+    }
+
+    function revelar() {
+      if (!card.classList.contains('flipped')) {
+        // Está boca abajo → revela un resultado nuevo
+        pintar();
+        card.classList.add('flipped');
+        btn.textContent = 'Bajar carta';
+      } else {
+        // Está mostrando → la baja (boca abajo) y se queda así, sin mostrar nada
+        card.classList.remove('flipped');
+        btn.textContent = 'Invocar un tema';
+      }
+    }
+
+    btn.addEventListener('click', revelar);
+    card.addEventListener('click', revelar);
+  })();
+
+  // ── MEMORICE DE POESÍA ──
+  // ===================================================================
+  //  LAS PAREJAS: cada poeta con su verso famoso.
+  //  Para AGREGAR/EDITAR: { autor: 'Nombre', verso: 'su verso...' },
+  // ===================================================================
+  const parejas = [
+    { autor: 'Pablo Neruda',        verso: 'Puedo escribir los versos más tristes esta noche.' },
+    { autor: 'Gabriela Mistral',    verso: 'Dame la mano y danzaremos; dame la mano y me amarás.' },
+    { autor: 'César Vallejo',       verso: 'Hay golpes en la vida, tan fuertes… Yo no sé.' },
+    { autor: 'Alejandra Pizarnik',  verso: 'Explicar con palabras de este mundo que partió de mí un barco llevándome.' },
+    { autor: 'Octavio Paz',         verso: 'Para que pueda ser he de ser otro, salir de mí, buscarme entre los otros.' },
+    { autor: 'Rubén Darío',         verso: 'Yo soy aquel que ayer no más decía el verso azul y la canción profana.' },
+    { autor: 'Jorge Luis Borges',   verso: 'Uno no es lo que es por lo que escribe, sino por lo que ha leído.' },
+    { autor: 'Sor Juana Inés de la Cruz', verso: 'Hombres necios que acusáis a la mujer sin razón.' },
+  ];
+  // ===================================================================
+
+  (function () {
+    const board = document.getElementById('mem-board');
+    const btn = document.getElementById('mem-btn');
+    const elPares = document.getElementById('mem-pares');
+    const elIntentos = document.getElementById('mem-intentos');
+    const elWin = document.getElementById('mem-win');
+    if (!board) return;
+
+    let cartas = [], primera = null, segunda = null;
+    let bloqueo = false, pares = 0, intentos = 0;
+
+    function barajar(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function crear() {
+      board.innerHTML = '';
+      elWin.classList.remove('show');
+      elWin.textContent = '';
+      primera = segunda = null; bloqueo = false;
+      pares = 0; intentos = 0;
+      elPares.textContent = '0'; elIntentos.textContent = '0';
+
+      // Genera dos cartas por pareja: una de autor, una de verso, con id de pareja
+      cartas = [];
+      parejas.forEach((p, i) => {
+        cartas.push({ id: i, tipo: 'autor', texto: p.autor });
+        cartas.push({ id: i, tipo: 'verso', texto: p.verso });
+      });
+      cartas = barajar(cartas);
+
+      cartas.forEach((c) => {
+        const card = document.createElement('div');
+        card.className = 'mem-card' + (c.tipo === 'autor' ? ' tipo-autor' : '');
+        card.dataset.id = c.id;
+        card.innerHTML = `
+          <div class="mem-card-inner">
+            <div class="mem-face mem-back"><span>✦</span></div>
+            <div class="mem-face mem-front">
+              <span class="mem-tipo">${c.tipo === 'autor' ? 'Poeta' : 'Verso'}</span>
+              <span class="mem-texto">${c.texto}</span>
+            </div>
+          </div>`;
+        card.addEventListener('click', () => voltear(card));
+        board.appendChild(card);
+      });
+    }
+
+    function voltear(card) {
+      if (bloqueo) return;
+      if (card.classList.contains('flip') || card.classList.contains('matched')) return;
+
+      card.classList.add('flip');
+
+      if (!primera) { primera = card; return; }
+      segunda = card;
+      bloqueo = true;
+      intentos++;
+      elIntentos.textContent = intentos;
+
+      // ¿Son pareja? (mismo id, distinto tipo ya está garantizado al tocar dos)
+      if (primera.dataset.id === segunda.dataset.id) {
+        setTimeout(() => {
+          primera.classList.add('matched');
+          segunda.classList.add('matched');
+          primera.classList.remove('flip');
+          segunda.classList.remove('flip');
+          resetTurno();
+          pares++;
+          elPares.textContent = pares;
+          if (pares === parejas.length) ganar();
+        }, 600);
+      } else {
+        setTimeout(() => {
+          primera.classList.remove('flip');
+          segunda.classList.remove('flip');
+          resetTurno();
+        }, 1100);
+      }
+    }
+
+    function resetTurno() { primera = null; segunda = null; bloqueo = false; }
+
+    function ganar() {
+      elWin.textContent = '✦ ¡Completaste el mazo en ' + intentos + ' intentos! ✦';
+      elWin.classList.add('show');
+    }
+
+    btn.addEventListener('click', crear);
+    crear();
+  })();
+
+    // ── FONDOS DE LAS DEMAS SECCIONES ──
   // Cada seccion con clase .bg-img activa su fondo solo si la imagen existe.
   document.querySelectorAll('.bg-img').forEach(seccion => {
     // Extrae la ruta de la imagen desde la variable --bg-image
@@ -2711,6 +3479,71 @@
       autor: 'Roberto Bolaño',
       obra: 'Los perros románticos',
       texto: 'Soñé que era un viejo detective|y buscaba gente perdida hace mucho tiempo.'
+    },
+    {
+      autor: 'Rainer Maria Rilke',
+      obra: 'Cartas a un joven poeta',
+      texto: 'Nadie puede aconsejarte ni ayudarte,|nadie.|Solo hay un camino: entra en ti mismo.'
+    },
+    {
+      autor: 'Friedrich Nietzsche',
+      obra: 'Así habló Zaratustra',
+      texto: 'Hay que tener todavía caos dentro de sí|para poder dar a luz una estrella que baile.'
+    },
+    {
+      autor: 'Walt Whitman',
+      obra: 'Canto a mí mismo',
+      texto: '¿Me contradigo?|Muy bien, me contradigo.|Soy amplio, contengo multitudes.'
+    },
+    {
+      autor: 'Emily Dickinson',
+      obra: 'Poemas',
+      texto: 'El alma debe mantenerse siempre entreabierta,|lista para recibir la experiencia.'
+    },
+    {
+      autor: 'Heráclito',
+      obra: 'Fragmentos',
+      texto: 'Ningún hombre se baña dos veces|en el mismo río.'
+    },
+    {
+      autor: 'Marco Aurelio',
+      obra: 'Meditaciones',
+      texto: 'La vida de un hombre|es lo que sus pensamientos|hacen de ella.'
+    },
+    {
+      autor: 'Rubén Darío',
+      obra: 'Cantos de vida y esperanza',
+      texto: 'Yo soy aquel que ayer no más decía|el verso azul y la canción profana.'
+    },
+    {
+      autor: 'Sor Juana Inés de la Cruz',
+      obra: 'Redondillas',
+      texto: 'Hombres necios que acusáis|a la mujer sin razón,|sin ver que sois la ocasión|de lo mismo que culpáis.'
+    },
+    {
+      autor: 'César Vallejo',
+      obra: 'Los heraldos negros',
+      texto: 'Hay golpes en la vida, tan fuertes...|Yo no sé.'
+    },
+    {
+      autor: 'Søren Kierkegaard',
+      obra: 'Diario',
+      texto: 'La vida solo puede ser comprendida hacia atrás,|pero ha de ser vivida hacia adelante.'
+    },
+    {
+      autor: 'Khalil Gibran',
+      obra: 'El profeta',
+      texto: 'El trabajo es el amor hecho visible.'
+    },
+    {
+      autor: 'Octavio Paz',
+      obra: 'Piedra de sol',
+      texto: 'Para que pueda ser he de ser otro,|salir de mí, buscarme entre los otros.'
+    },
+    {
+      autor: 'Simone de Beauvoir',
+      obra: 'La invitada',
+      texto: 'Quise hacer de mi vida una historia|tan hermosa como una leyenda,|y que no podría distinguir de mi sueño.'
     },
   ];
   // ===================================================================
