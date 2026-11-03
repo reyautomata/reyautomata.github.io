@@ -1,12 +1,12 @@
 {
-  "name": "Visores 3D Reyautomata",
+  "name": "Visores 3D ReyEngi",
   "short_name": "Visores 3D",
   "description": "Visores 3D de montaje de instrumentación y equipos de demostración. Funciona sin internet.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#001F3F",
-  "theme_color": "#001F3F",
+  "background_color": "#022A55",
+  "theme_color": "#022A55",
   "lang": "es",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },

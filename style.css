@@ -14,21 +14,21 @@
   --bg-nav: #FFFFFF;         /* Navbar y footer */
 
   /* Marca corporativa */
-  --brand-navy: #001F3F;     /* Azul navy formal — autoridad técnica */
-  --brand-navy-2: #003366;   /* Azul navy hover/secundario */
-  --brand-navy-soft: #E8EEF5; /* Azul navy muy claro para fondos */
+  --brand-navy: #034488;     /* Azul ReyEngi — autoridad técnica */
+  --brand-navy-2: #02346A;   /* Azul navy hover/secundario */
+  --brand-navy-soft: #E6EEF8; /* Azul navy muy claro para fondos */
 
   /* Acento industrial */
-  --accent: #C8901E;         /* Ámbar industrial sobrio */
-  --accent-hover: #B07F1B;   /* Ámbar oscuro hover */
-  --accent-soft: #F8F1E0;    /* Ámbar muy claro para fondos */
+  --accent: #EF5A05;         /* Naranjo ReyEngi */
+  --accent-hover: #C94A04;   /* Naranjo oscuro hover */
+  --accent-soft: #FDEBDD;    /* Ámbar muy claro para fondos */
 
   /* Códigos por categoría */
-  --cat-blog: #001F3F;       /* Azul navy — contenido editorial */
+  --cat-blog: #034488;       /* Azul navy — contenido editorial */
   --cat-tools: #1E5B3F;      /* Verde técnico — herramientas */
   --cat-tools-soft: #E8F0E5;
-  --cat-courses: #C8901E;    /* Ámbar — formación */
-  --cat-courses-soft: #F8F1E0;
+  --cat-courses: #EF5A05;    /* Naranjo — formación */
+  --cat-courses-soft: #FDEBDD;
   --cat-resources: #6B4E91;  /* Púrpura — recursos/archivo */
   --cat-resources-soft: #EFEAF5;
   --cat-profile: #475569;    /* Gris oscuro — perfil */
@@ -43,14 +43,14 @@
   /* Bordes y separadores */
   --border-color: #E5E7EB;
   --border-strong: #CBD5E0;
-  --border-accent: #C8901E;
+  --border-accent: #EF5A05;
 
   /* Radios y sombras (sombras muy sutiles, no más estilo brutalist) */
   --radius: 6px;
   --radius-lg: 10px;
-  --shadow-sm: 0 1px 2px rgba(0, 31, 63, 0.06);
-  --shadow: 0 2px 8px rgba(0, 31, 63, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 31, 63, 0.10);
+  --shadow-sm: 0 1px 2px rgba(3, 68, 136, 0.06);
+  --shadow: 0 2px 8px rgba(3, 68, 136, 0.08);
+  --shadow-lg: 0 8px 24px rgba(3, 68, 136, 0.10);
 
   /* Tipografía */
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -354,7 +354,7 @@ img {
 .form-textarea:focus {
   outline: none;
   border-color: var(--brand-navy);
-  box-shadow: 0 0 0 3px rgba(0, 31, 63, 0.1);
+  box-shadow: 0 0 0 3px rgba(3, 68, 136, 0.1);
 }
 
 .form-textarea {
@@ -450,8 +450,8 @@ img {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0, 31, 63, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 31, 63, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(3, 68, 136, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 68, 136, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
 }
@@ -783,7 +783,7 @@ img {
   left: 0;
   right: 0;
   padding: 2rem;
-  background: linear-gradient(transparent, rgba(0, 31, 63, 0.92));
+  background: linear-gradient(transparent, rgba(3, 68, 136, 0.92));
   color: var(--text-on-navy);
 }
 
@@ -1728,7 +1728,7 @@ img {
 }
 .access-form input:focus {
   border-color: var(--brand-navy);
-  box-shadow: 0 0 0 3px rgba(0, 31, 63, 0.1);
+  box-shadow: 0 0 0 3px rgba(3, 68, 136, 0.1);
 }
 .access-form input::placeholder {
   color: var(--text-muted);
@@ -1821,7 +1821,7 @@ img {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 31, 63, 0.85);
+  background: rgba(3, 68, 136, 0.85);
   backdrop-filter: blur(10px);
   z-index: 1000;
   align-items: center;
@@ -1838,7 +1838,7 @@ img {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0, 31, 63, 0.4);
+  box-shadow: 0 24px 80px rgba(3, 68, 136, 0.4);
   border-top: 4px solid var(--accent);
 }
 .video-modal-header {
@@ -1960,14 +1960,14 @@ img {
 .hub-card-3d {
   display: flex; align-items: center; justify-content: center;
   background:
-    linear-gradient(rgba(200, 144, 30, 0.10) 1px, transparent 1px) 0 0 / 24px 24px,
-    linear-gradient(90deg, rgba(200, 144, 30, 0.10) 1px, transparent 1px) 0 0 / 24px 24px,
-    radial-gradient(ellipse at center, #0A3A6B 0%, #001F3F 70%);
+    linear-gradient(rgba(239, 90, 5, 0.10) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(239, 90, 5, 0.10) 1px, transparent 1px) 0 0 / 24px 24px,
+    radial-gradient(ellipse at center, #0B5AAE 0%, #021E3D 70%);
 }
 .hub-card-3d span {
   font-family: var(--font-mono); font-size: 3.5rem; font-weight: 800;
   color: var(--accent); letter-spacing: -0.04em;
-  text-shadow: 0 0 24px rgba(200, 144, 30, 0.35);
+  text-shadow: 0 0 24px rgba(239, 90, 5, 0.35);
 }
 
 /* Nav con 7 pestañas: un poco más compacta en pantallas medianas */
@@ -1999,21 +1999,21 @@ body.theme-dark .nav-logo { color: var(--accent); }
 body.theme-dark .nav-links a:hover,
 body.theme-dark .nav-links a.active { color: #FFFFFF; }
 body.theme-dark .hamburger span { background: #E6EDF5; }
-body.theme-dark .hero { background: linear-gradient(180deg, #001F3F 0%, var(--bg-primary) 100%); }
+body.theme-dark .hero { background: linear-gradient(180deg, #022A55 0%, var(--bg-primary) 100%); }
 body.theme-dark .hero::before {
   background-image:
-    linear-gradient(rgba(200, 144, 30, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 144, 30, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(239, 90, 5, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 90, 5, 0.06) 1px, transparent 1px);
 }
 body.theme-dark .hero-headline,
 body.theme-dark .section-title,
 body.theme-dark .hero-panel h3 { color: #F4F7FB; }
 body.theme-dark .hero-panel { border-top-color: var(--accent); }
 body.theme-dark .hero-panel-links a:hover { border-color: var(--accent); color: #FFFFFF; }
-body.theme-dark .btn-primary { background: var(--accent); border-color: var(--accent); color: #001F3F; }
-body.theme-dark .btn-primary:hover { background: #E0A632; border-color: #E0A632; color: #001F3F; }
+body.theme-dark .btn-primary { background: var(--accent); border-color: var(--accent); color: #021E3D; }
+body.theme-dark .btn-primary:hover { background: #FF7A2E; border-color: #FF7A2E; color: #021E3D; }
 body.theme-dark .btn-secondary { color: #E6EDF5; border-color: #3A5778; }
-body.theme-dark .btn-secondary:hover { background: #E6EDF5; border-color: #E6EDF5; color: #001F3F; }
+body.theme-dark .btn-secondary:hover { background: #E6EDF5; border-color: #E6EDF5; color: #021E3D; }
 body.theme-dark .hub-card:hover { border-color: var(--accent); }
 body.theme-dark .hub-card:nth-child(1) { border-top-color: #3B7BC4; }
 body.theme-dark .hub-card:nth-child(6) { border-top-color: #8A9BB0; }
@@ -2021,3 +2021,12 @@ body.theme-dark .hub-card-body h3 { color: #F4F7FB; }
 body.theme-dark .tag { background: #16304F; border-color: #24456B; color: #9CC3EE; }
 body.theme-dark .hub-card-img:not(.hub-card-3d) { filter: saturate(0.8) brightness(0.85); }
 body.theme-dark .footer { background: #040B15; }
+
+/* ===== LOGO REYENGI ===== */
+.nav-logo { display: flex; align-items: center; }
+.nav-logo img { height: 50px; width: auto; display: block; }
+.nav-logo .logo-light { display: none; }
+body.theme-dark .navbar .nav-logo .logo-dark { display: none; }
+body.theme-dark .navbar .nav-logo .logo-light { display: block; }
+.footer-brand .nav-logo img { height: 52px; }
+@media (max-width: 768px) { .nav-logo img { height: 32px; } }
