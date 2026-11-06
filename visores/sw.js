@@ -1,5 +1,5 @@
 /* Guarda la app en el teléfono para usarla sin internet. Cambia VERSION al publicar cambios. */
-const VERSION = 'visores-v43';
+const VERSION = 'visores-v44';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
