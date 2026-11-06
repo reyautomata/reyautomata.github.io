@@ -113,6 +113,14 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
 @media (max-width: 760px) { .pv-box { grid-template-columns: 1fr; } .pv-t { font-size: 25px; } }
 @media (prefers-reduced-motion: reduce) { .pv-img { transition: none; } }
 </style>
+<style id="tabsCss">
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 18px; border-bottom: 2px solid var(--line, #D5DCE3); }
+.tabs button { font: 700 15px var(--f-body, system-ui); color: var(--muted, #5A6573); background: transparent; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 12px 16px; min-height: 46px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.tabs button[aria-selected="true"] { color: var(--accent-ink, #034488); border-bottom-color: var(--accent, #EF5A05); }
+.tabs button:hover { color: var(--fg, #17212C); }
+.tabs .tn { font: 600 12px var(--f-mono, monospace); background: var(--chip, #EEF1F4); border-radius: 999px; padding: 2px 8px; }
+main section[data-tab][hidden] { display: none !important; }
+</style>
 </head>
 <body>
 <header>
@@ -125,7 +133,8 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
   </div>
 </header>
 <main>
-  <section>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones"><button type="button" role="tab" data-tab="ic" aria-selected="true">Instrumentación y control <span class="tn"></span></button><button type="button" role="tab" data-tab="mu" aria-selected="false">♪ Música · Ocarina <span class="tn"></span></button></nav>
+  <section data-tab="ic">
     <h2>Detalles de montaje</h2>
     <div class="grid">
       <a class="card" href="visores/1-manometros.html" data-id="1-manometros"><span class="num">1</span><span><h3>Manómetros</h3><p>Sin sello, sello bridado y sello roscado, en tubería horizontal y vertical.</p><span class="codes">1-A · 1-B · 1-C</span></span></a>
@@ -144,7 +153,7 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
       <a class="card" href="visores/16-valvulas-autorreguladoras.html" data-id="16-valvulas-autorreguladoras"><span class="num">16</span><span><h3>Válvulas autorreguladoras</h3><p>Reguladora de presión autopilotada con transmisor de posición y reductora proporcional, con P1/P2 simuladas.</p><span class="codes">16-A · 16-B</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Correas transportadoras <small>planos P757D-0300-IN-PLA-0807, 0812 y 0813</small></h2>
     <div class="grid">
       <a class="card" href="visores/pull-cord-correa.html" data-id="pull-cord-correa"><span class="num">PC</span><span><h3>Pull-cord en correa</h3><p>Paradas de emergencia por cuerda a ambos lados, soporte, canalización y simulación de parada y reset.</p><span class="codes">HSS · par de instrumentos</span></span></a>
@@ -152,32 +161,32 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
       <a class="card" href="visores/ruptura-correa.html" data-id="ruptura-correa"><span class="num">RC</span><span><h3>Interruptor de ruptura de correa</h3><p>Par de interruptores con cable cruzado bajo la correa, soportes, canalización y simulación de rotura, disparo y reset.</p><span class="codes">XS · par de instrumentos</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Tableros de control <small>planos TK150-EE-PL-006 y D1 3924</small></h2>
     <div class="grid">
       <a class="card" href="visores/tablero-control-tk150.html" data-id="tablero-control-tk150"><span class="num">TC</span><span><h3>Gabinete de control GC-TK150</h3><p>Gabinete con puerta, fuentes redundantes, switches, CFU PA, E/S PROFIBUS PA y relés; recorrido por componentes y simulación de energía y red.</p><span class="codes">PROFIBUS PA · 24 Vdc redundante</span></span></a>
       <a class="card" href="visores/tablero-fuerza-tdf03.html" data-id="tablero-fuerza-tdf03"><span class="num">TF</span><span><h3>Tablero de fuerza 220-TDF-03</h3><p>Interruptor general 250 A, barras con acrílico, derivados, contactores, RPI y diferenciales; simulación de pérdida de fase y prueba diferencial.</p><span class="codes">380 Vac · 250 A · 18 kA</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Fibra óptica <small>fichas OCC y Real Optic</small></h2>
     <div class="grid">
       <a class="card" href="visores/paneles-fibra-optica.html" data-id="paneles-fibra-optica"><span class="num">FO</span><span><h3>Paneles murales de fibra óptica</h3><p>ZDMB6B, WTC12/24B y FW05 en muro: gomas, reserva, empalmes, adaptadores SC y patch cords; prueba con VFL, macrocurvatura y presupuesto de pérdidas.</p><span class="codes">6 · 24 · 48 puertos SC</span></span></a>
     </div>
   </section>
-  <section>
-    <h2>Simuladores <small>práctica musical</small></h2>
+  <section data-tab="mu">
+    <h2>Ocarina <small>práctica musical</small></h2>
     <div class="grid">
       <a class="card" href="visores/ocarina-12-agujeros.html" data-id="ocarina-12-agujeros"><span class="num">♪</span><span><h3>Ocarina de 12 agujeros</h3><p>Ocarina alto C en 3D con digitación iluminada, dedos, partituras que suenan nota a nota, tempo ajustable y tips de práctica.</p><span class="codes">La grave – Fa agudo · 13 notas</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Procesos mineros <small>instrumentación y automatización</small></h2>
     <div class="grid">
       <a class="card" href="visores/chancado-primario.html" data-id="chancado-primario" data-feat="Planta 3D: tolva, chancador giratorio, pocket, alimentador de placas, CV-01 y acopio|Ciclo real del camión: espera semáforo, retrocede al muro tope y descarga|Práctica: ubica 18 instrumentos en su punto de instalación, con puntaje y solución|Operación con interlocks, consignas y fallas (pull-cord, lubricación, metal, colpa)"><span class="num">M1</span><span><h3>Chancado primario · instrumentación</h3><p>Chancador giratorio con descarga de CAEX, tolva, pocket, alimentador y correa CV-01. Ubica los instrumentos en la planta y opera el proceso con sus lazos y enclavamientos.</p><span class="codes">LIT · YL · ZS · PIT · VT · WIT · HS</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Simuladores de procesos <small>control en tiempo real</small></h2>
     <div class="grid">
       <a class="card" href="visores/estanque-impulsion.html" data-id="estanque-impulsion"><span class="num">P1</span><span><h3>Estanque e impulsión con PLC y VDF</h3><p>Estanque Ø5 × 3 m con nivel ultrasónico o radar, 2 bombas (VDF + reserva), tablero con PLC, HMI, botonera local/remoto, Modbus RTU o TCP, válvula de bola o cuchillo, flujómetro magnético, escalerillas y conduits a cada equipo. Diagrama escalera en línea y HMI flotante.</p><span class="codes">PLC · Ladder · VDF · Modbus · HMI · PID</span></span></a>
@@ -185,13 +194,13 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
       <a class="card" href="visores/banco-plc.html" data-id="banco-plc" data-feat="CPU S7-1200 1214C AC/DC/relé con bornes, LED de E/S y RUN/STOP|Cableado de pulsadores, térmico, contactores y bomba a entradas y salidas|Programa en escalera editable y en línea: contactos, bobinas, S/R y temporizadores|Ejercicio de inversión de giro con verificación paso a paso"><span class="num">P3</span><span><h3>Banco PLC S7-1200 · cablea, programa y simula</h3><p>CPU 1214C AC/DC/relé con pulsadores, térmico, dos contactores e ITM: cablea entradas y salidas, programa en escalera y simula una bomba con inversión de giro.</p><span class="codes">S7-1200 · Ladder · E/S · Contactores</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Comunicaciones industriales <small>laboratorio por fases</small></h2>
     <div class="grid">
       <a class="card" href="visores/comunicaciones-fase1.html" data-id="comunicaciones-fase1"><span class="num">F1</span><span><h3>Fase 1 · Serial e instrumentación</h3><p>Modbus RTU por RS-485 con tramas animadas byte a byte, CRC y fallas; lazo 4–20 mA, HART sobre FSK y señales discretas 24 Vdc.</p><span class="codes">Modbus RTU · RS-485 · 4–20 mA · HART · DI/DO</span></span></a>
     </div>
   </section>
-  <section>
+  <section data-tab="ic">
     <h2>Equipos de demostración</h2>
     <div class="grid">
       <a class="card" href="visores/maleta-demo-s7-1200.html" data-id="maleta-demo-s7-1200"><span class="num">PLC</span><span><h3>Maleta demo S7-1200</h3><p>HMI, pilotos, pulsadores, selector y emergencia con lógica de demostración.</p><span class="codes">S7-1200 · KTP700</span></span></a>
@@ -288,6 +297,25 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     }
     a.addEventListener('click', function (e) { if (a.getAttribute('data-go') === '1') return; e.preventDefault(); e.stopImmediatePropagation(); openPv(a); }, true);
   });
+})();
+</script>
+<script id="tabsJs">
+(function () {
+  var nav = document.getElementById('tabs'); if (!nav) return;
+  var bs = nav.querySelectorAll('button'), secs = document.querySelectorAll('main section[data-tab]');
+  var h1 = document.querySelector('header h1'), lede = document.querySelector('header .lede');
+  var TXT = { ic: [h1 && h1.textContent, lede && lede.textContent], mu: ['Práctica musical', 'Simulador de ocarina de 12 agujeros en 3D: digitación iluminada, partituras que suenan nota a nota y tempo ajustable.'] };
+  nav.querySelectorAll('button').forEach(function (b) { var n = 0; secs.forEach(function (s) { if (s.dataset.tab === b.dataset.tab) n += s.querySelectorAll('.card').length; }); var t = b.querySelector('.tn'); if (t) t.textContent = n; });
+  function show(t, push) {
+    bs.forEach(function (b) { var on = b.dataset.tab === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+    secs.forEach(function (s) { s.hidden = s.dataset.tab !== t; });
+    if (h1 && TXT[t][0]) h1.textContent = TXT[t][0]; if (lede && TXT[t][1]) lede.textContent = TXT[t][1];
+    try { localStorage.setItem('reyengiTab', t); } catch (e) {}
+    if (push) { try { history.replaceState(null, '', t === 'mu' ? '#musica' : location.pathname + location.search); } catch (e) {} }
+  }
+  bs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab, true); }); b.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { var o = b.dataset.tab === 'ic' ? 'mu' : 'ic'; show(o, true); nav.querySelector('[data-tab="' + o + '"]').focus(); } }); });
+  var t0 = location.hash === '#musica' ? 'mu' : 'ic'; if (!location.hash) { try { t0 = localStorage.getItem('reyengiTab') || 'ic'; } catch (e) {} }
+  show(t0 === 'mu' ? 'mu' : 'ic', false);
 })();
 </script>
 </body>
