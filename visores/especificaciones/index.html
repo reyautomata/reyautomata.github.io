@@ -34,6 +34,9 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
 .tarjeta .cod { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 .tarjeta h3 { margin: 0; font-size: 16.5px; line-height: 1.25; }
 .tarjeta p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.tarjeta p.nor { font: 500 11.5px var(--f-mono); color: var(--accent-ink); }
+.grid h2.area { grid-column: 1 / -1; margin: 14px 0 0; font: 700 13px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.grid h2.area:first-child { margin-top: 0; }
 
 .editor { display: grid; grid-template-columns: minmax(0, 290px) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
@@ -104,13 +107,13 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
 </div></div>
 <main>
   <div id="cat">
-    <p class="intro">Especificaciones técnicas tipo por familia de instrumentos, con la estructura habitual de los proyectos mineros: alcance, condiciones de servicio, normas, referencias, diseño por instrumento, calibración, pruebas, garantías e información de la oferta. Los datos del proyecto activo (cliente, sitio, alimentación, garantías, códigos) se insertan solos; el texto se puede editar y se exporta a Word.</p>
+    <p class="intro">Especificaciones técnicas tipo de instrumentación de terreno, control y automatización, comunicaciones industriales, y montaje y pruebas, con la estructura habitual de los proyectos mineros: alcance, condiciones de servicio, normas internacionales y chilenas, referencias, requerimientos por equipo, pruebas, garantías e información de la oferta. Los datos del proyecto activo (cliente, sitio, alimentación, garantías, códigos) se insertan solos; el texto se puede editar y se exporta a Word.</p>
     <div class="grid" id="grid"></div>
   </div>
   <div class="editor" id="vista" hidden>
     <aside class="panel">
       <button type="button" id="volver">← Todas las ET</button>
-      <h2>Instrumentos incluidos</h2>
+      <h2 id="etiq">Instrumentos incluidos</h2>
       <div id="instr"></div>
       <div class="btns">
         <button type="button" class="pri" id="btnWord">Descargar Word (.docx)</button>
@@ -126,6 +129,7 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
 <script src="../proyectos.js"></script>
 <script src="../hojas-datos/plantillas.js"></script>
 <script src="plantillas-et.js"></script>
+<script src="plantillas-et2.js"></script>
 <script src="docx.js"></script>
 <script src="et.js"></script>
 <script>
@@ -142,10 +146,14 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
   }
   function catalogo() {
     var pr = R.activo();
-    $('grid').innerHTML = F.map(function (f) {
-      var n = A.seleccion(f, A.datosEt(f.id)).length;
-      return '<button type="button" class="tarjeta" data-id="' + f.id + '"><span class="cod">' + esc(A.numeroEt(f, pr)) + '</span><h3>ET ' + esc(f.titulo.charAt(0) + f.titulo.slice(1).toLowerCase()) + '</h3><p>' +
-        n + ' de ' + f.instrumentos.length + ' instrumentos: ' + esc(f.instrumentos.map(function (i) { return i.t; }).join(', ')) + '</p></button>';
+    var areas = [];
+    F.forEach(function (f) { if (areas.indexOf(f.area) < 0) areas.push(f.area); });
+    $('grid').innerHTML = areas.map(function (a) {
+      return '<h2 class="area">' + esc(a) + '</h2>' + F.filter(function (f) { return f.area === a; }).map(function (f) {
+        var n = A.seleccion(f, A.datosEt(f.id)).length;
+        return '<button type="button" class="tarjeta" data-id="' + f.id + '"><span class="cod">' + esc(A.numeroEt(f, pr)) + '</span><h3>ET ' + esc(A.nombreFam(f)) + '</h3><p>' +
+          n + ' de ' + f.instrumentos.length + ': ' + esc(f.instrumentos.map(function (i) { return i.t; }).join(', ')) + '</p><p class="nor">' + esc((f.normas || []).slice(0, 3).map(function (x) { return x.split(':')[0]; }).join(' · ')) + '</p></button>';
+      }).join('');
     }).join('');
   }
   function mostrar(id) {
@@ -154,6 +162,7 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
     $('cat').hidden = true; $('vista').hidden = false;
     var pr = R.activo(), d = A.datosEt(id), sel = A.seleccion(f, d);
     $('sub').textContent = A.numeroEt(f, pr) + ' · ' + f.titulo;
+    $('etiq').textContent = f.etiqueta || 'Instrumentos incluidos';
     $('instr').innerHTML = f.instrumentos.map(function (i) {
       return '<label class="chk"><input type="checkbox" value="' + i.id + '"' + (sel.indexOf(i.id) >= 0 ? ' checked' : '') + '><span>' + esc(i.t) +
         (i.das && i.das.length ? '<small>con hoja de datos</small>' : '') + '</span></label>';

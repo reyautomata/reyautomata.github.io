@@ -283,7 +283,7 @@
         p('El actuador será eléctrico, de cuarto de vuelta o multivuelta según el tipo de válvula, dimensionado para las condiciones de la hoja de datos.'),
         p('El motor será de inducción jaula de ardilla, trifásico, alimentado en {alimMotor}, con aislación clase F, protección térmica y factor de servicio 1,15.'),
         p('Incluirá interruptores de torque y de final de carrera ajustables, volante manual que se desacopla al operar el motor, indicador mecánico de posición, selector Local/Off/Remoto, contactores, protecciones y calefactor anticondensación.'),
-        p('Entregará contactos libres de potencial para: abierta, cerrada, falla y local/remoto, y aceptará comandos remotos de abrir, cerrar y parar. Cuando se indique, se comunicará por {bus}.'),
+        p('Entregará contactos libres de potencial para: abierta, cerrada, falla y local/remoto, y aceptará comandos remotos de abrir, cerrar y parar. Cuando se indique, se comunicará por red de campo ({bus|PROFIBUS DP, PROFINET o la red definida por el Proyecto}).'),
         p('El proveedor indicará los tiempos de apertura y cierre en la hoja de datos.')
       ] },
       { id: 'fcv', t: 'Válvula de control', das: ['fcv'], b: [
@@ -300,5 +300,6 @@
     ]
   });
 
-  window.ET = { familias: F };
+  F.forEach(function (f) { f.area = 'Instrumentación de terreno'; });
+  window.ET = { familias: F, comun: { TX_GENERAL: TX_GENERAL, TX_ELECTRICO: TX_ELECTRICO, TX_SENALES: TX_SENALES, TX_RANGO: TX_RANGO, SW_GENERAL: SW_GENERAL, SW_ELECTRICO: SW_ELECTRICO } };
 })();

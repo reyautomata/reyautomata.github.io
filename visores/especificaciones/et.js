@@ -6,6 +6,13 @@
   var LOGO = '../../img/logo-reyengi.png', MARCA = 'ReyEngi · Automatización y Control Industrial';
 
   function fam(id) { return F.filter(function (f) { return f.id === id; })[0]; }
+  // Título en tipo oración, respetando siglas (PLC, SCADA, HMI, SIS, OT...)
+  var SIGLAS = ['PLC', 'DCS', 'SCADA', 'HMI', 'SIS', 'OT', 'E/S'];
+  function nombreFam(f) {
+    var t = f.titulo.charAt(0) + f.titulo.slice(1).toLowerCase();
+    SIGLAS.forEach(function (s) { t = t.replace(new RegExp('\\b' + s.toLowerCase().replace('/', '\\/') + '\\b', 'g'), s); });
+    return t;
+  }
   function datosEt(id) { return R.leer('et:' + id, { sel: null, v: {}, revs: null }); }
   function guardarEt(id, d) { R.escribir('et:' + id, d); }
   function seleccion(f, d) { return d.sel || f.instrumentos.map(function (i) { return i.id; }); }
@@ -23,9 +30,11 @@
 
   // Sustituye {campo} por el dato del proyecto
   function tok(t, pr) {
-    return String(t).replace(/\{(\w+)\}/g, function (m, k) {
+    // {campo} o {campo|texto por defecto si el campo está vacío}
+    return String(t).replace(/\{(\w+)(?:\|([^}]*))?\}/g, function (m, k, def) {
       var v = pr[k];
-      return v === undefined || v === null || v === '' ? '[' + k + ']' : String(v);
+      if (v === undefined || v === null || String(v).trim() === '') return def !== undefined ? def : '[' + k + ']';
+      return String(v);
     });
   }
 
@@ -58,14 +67,16 @@
       if (sel.indexOf(i.id) < 0) return;
       (i.das || []).forEach(function (d) { if (!vistos[d]) { vistos[d] = 1; filas.push([numeroDas(d, pr), { t: pr.rev, c: true }, tituloDas(d)]); } });
     });
+    (f.refsEt || []).forEach(function (id) { var g = fam(id); if (g) filas.push([numeroEt(g, pr), { t: pr.rev, c: true }, 'Especificación técnica ' + nombreFam(g).charAt(0).toLowerCase() + nombreFam(g).slice(1)]); });
     R.filasTexto(pr.refs, 3).forEach(function (r) { filas.push([r[0], { t: r[1], c: true }, r[2]]); });
-    if (!filas.length) filas.push(['—', '', 'Hojas de datos de los instrumentos (por definir)']);
+    if (!filas.length) filas.push(['—', '', f.sistema ? 'Diagrama de arquitectura y criterios de diseño del Proyecto (por definir)' : 'Hojas de datos de los instrumentos (por definir)']);
     return [{ tabla: { cab: 1, anchos: [55, 15, 100], filas: [['CÓDIGO DOCUMENTO', 'REV', 'NOMBRE DOCUMENTO']].concat(filas) }, gen: true }];
   }
   function electrico(pr, f) {
     var L = [];
     if (!f.interruptores && !f.valvulas) L.push('Transmisores de 4 hilos: ' + pr.alim4h + '.', 'Transmisores de 2 hilos: ' + pr.alim2h + '.');
     if (f.valvulas) L.push('Instrumentos y accesorios de 4 hilos: ' + pr.alim4h + '.');
+    if (f.sistema) { L = ['Alimentación principal: ' + pr.alim4h + ', desde UPS cuando corresponda.', 'Distribución de control, E/S y equipos de red: 24 VDC redundante.']; }
     return [{ p: 'En caso de requerir una alimentación distinta, se indicará en la hoja de datos correspondiente. Las alimentaciones especificadas son:', gen: true }, { ul: L.length ? L : ['Según hoja de datos.'], gen: true }];
   }
 
@@ -92,10 +103,10 @@
     cap('intro', 'Introducción', [P('{intro}'), P('El presente documento corresponde a la especificación técnica de ' + f.objeto + ' del proyecto {proyecto}, en adelante el Proyecto. En este documento, {cliente} se denomina el Cliente.')]);
     cap('obj', 'Objetivo', [P('Este documento tiene como propósito especificar el diseño, la fabricación, las pruebas y el suministro de ' + f.objeto + ' que se indican en las hojas de datos, de acuerdo con los requerimientos del Cliente para el desarrollo del Proyecto.')]);
     cap('alc', 'Alcance y exclusiones', [
-      P('El alcance de la presente especificación considera el suministro de los siguientes equipos:'),
-      U(instr.map(function (i) { return i.t + '.'; }).concat(['Accesorios necesarios para el funcionamiento de cada instrumento.'])),
-      P('Adicionalmente, el suministro debe contemplar los siguientes requerimientos y servicios:'),
-      U(['Planos de fabricación certificados.', 'Certificados de calibración y de pruebas en fábrica.', 'Pruebas de aceptación en fábrica (FAT), de configuración (CAT) y en sitio (SAT).',
+      P(f.servicio ? 'El alcance de la presente especificación comprende:' : f.sistema ? 'El alcance de la presente especificación comprende el suministro, la ingeniería y las pruebas de:' : 'El alcance de la presente especificación considera el suministro de los siguientes equipos:'),
+      U(instr.map(function (i) { return i.t + '.'; }).concat(f.servicio ? [] : [f.sistema ? 'Accesorios, licencias y materiales necesarios para el funcionamiento del sistema.' : 'Accesorios necesarios para el funcionamiento de cada instrumento.'])),
+      P(f.servicio ? 'Adicionalmente, el contratista debe contemplar:' : 'Adicionalmente, el suministro debe contemplar los siguientes requerimientos y servicios:'),
+      U(f.servicio ? ['Procedimientos y protocolos aprobados por el Cliente.', 'Personal calificado, herramientas e instrumentos patrón calibrados.', 'Registro y cierre de observaciones.', 'Dossier de calidad y documentación conforme a construcción.'] : ['Planos de fabricación certificados.', 'Certificados de calibración y de pruebas en fábrica.', 'Pruebas de aceptación en fábrica (FAT), de configuración (CAT) y en sitio (SAT).',
         'Manuales de instalación, operación y mantenimiento en {idioma}.'.replace('{idioma}', 'español'), 'Repuestos para la puesta en marcha y el primer año de operación.',
         'Listado de repuestos, con precios unitarios, para {repuestosAnios} años de operación.', 'Asistencia técnica en terreno para la puesta en marcha.', 'Pruebas de puesta en servicio.',
         'Embalaje y transporte hasta las instalaciones indicadas por el Cliente.']),
@@ -112,7 +123,7 @@
       P('Los elementos en contacto con el proceso considerarán las características físicas y químicas de los fluidos.'),
       P('Los equipos, incluyendo todos sus componentes y accesorios, soportarán sin daño los esfuerzos producidos por los movimientos sísmicos que puedan ocurrir.')
     ]);
-    sub('serv3', 3, 'Suministro eléctrico', [P(f.interruptores ? 'Los interruptores operarán con tensión de control {tensionControl}, desde el tablero o gabinete más cercano.' : f.valvulas ? 'Los actuadores eléctricos se alimentarán en {alimMotor}; la tensión de control será {tensionControl}.' : 'Los instrumentos de 4 hilos se alimentarán en {alim4h} desde el gabinete de alimentación más cercano; los de 2 hilos, en {alim2h}. Una tensión distinta se indicará en la hoja de datos.')]);
+    if (!f.servicio) sub('serv3', 3, 'Suministro eléctrico', [P(f.alimTexto ? f.alimTexto : f.interruptores ? 'Los interruptores operarán con tensión de control {tensionControl}, desde el tablero o gabinete más cercano.' : f.valvulas ? 'Los actuadores eléctricos se alimentarán en {alimMotor}; la tensión de control será {tensionControl}.' : 'Los instrumentos de 4 hilos se alimentarán en {alim4h} desde el gabinete de alimentación más cercano; los de 2 hilos, en {alim2h}. Una tensión distinta se indicará en la hoja de datos.')]);
     sub('serv4', 2, 'Grado de protección', [P('El grado de protección se especifica según NEMA 250. Si el equipo ofrecido indica su protección según IEC 60529 (IP), el proveedor indicará la equivalencia de acuerdo con la publicación NEMA "A Brief Comparison of NEMA 250 and IEC 60529". El grado de protección mínimo en exterior será {proteccion} y en zonas corrosivas {protCorrosivo}.')]);
     sub('serv5', 2, 'Clasificación de áreas', [P('La clasificación de área del Proyecto es: {area}. Las instalaciones en lugares con riesgo de incendio o explosión por gases, vapores, líquidos inflamables, polvos o fibras combustibles se regirán por el Artículo 500 del NEC o por la serie IEC 60079, según se indique en la hoja de datos.')]);
     cap('normas', 'Códigos y normas', [
@@ -127,40 +138,42 @@
       P('Las unidades y los rangos de operación de cada variable se indican en la hoja de datos de cada instrumento.')
     ]);
     cap('ref', 'Antecedentes y referencias', [P('Para el desarrollo de este documento se han utilizado los siguientes planos y documentos:'), { gen: 'referencias' }]);
-    cap('dis', 'Diseño y construcción', [P('El diseño y la construcción de los equipos y sus accesorios permitirán instalarlos y operarlos de acuerdo con los códigos, normas y condiciones de este documento, las hojas de datos y los criterios de diseño de instrumentación y control del Proyecto, cumpliendo además con lo siguiente.')]);
+    cap('dis', f.sistema ? 'Requerimientos técnicos' : 'Diseño y construcción', [P('El diseño y la construcción de los equipos y sus accesorios permitirán instalarlos y operarlos de acuerdo con los códigos, normas y condiciones de este documento, las hojas de datos y los criterios de diseño de instrumentación y control del Proyecto, cumpliendo además con lo siguiente.')]);
     sub('gen', 2, 'Características generales', f.general);
+    var nI = f.sistema ? 2 : 3;
     instr.forEach(function (i) {
-      B.push({ h: 3, t: i.t });
-      i.b.forEach(function (b) { if (b.h) B.push({ h: 4, t: b.t }); else add('i-' + i.id, b); });
+      B.push({ h: nI, t: i.t });
+      i.b.forEach(function (b) { if (b.h) B.push({ h: nI + 1, t: b.t }); else add('i-' + i.id, b); });
     });
-    sub('ele', 2, f.valvulas ? 'Diseño eléctrico de actuadores' : 'Diseño eléctrico', f.electrico);
-    sub('prot', 2, 'Grado de protección', [P('Para equipos en exterior el grado de protección será {proteccion}. Un grado de protección IP equivalente quedará sujeto a la aprobación del Cliente.')]);
-    sub('caja', 2, 'Diseño de caja de conexión', [
+    if (f.electrico) sub('ele', 2, f.valvulas ? 'Diseño eléctrico de actuadores' : 'Diseño eléctrico', f.electrico);
+    if (!f.servicio) sub('prot', 2, 'Grado de protección', [P('Para equipos en exterior el grado de protección será {proteccion}. Un grado de protección IP equivalente quedará sujeto a la aprobación del Cliente.')]);
+    if (!f.sistema) sub('caja', 2, 'Diseño de caja de conexión', [
       P('Todos los puntos eléctricos estarán alambrados a una regleta interior de fácil acceso.'),
       P('Los bornes serán para servicio pesado, con capacidad mínima de 5 A, y aceptarán dos conductores N° 14 AWG por borne.'),
       P('El alambrado será de propósito general para áreas no clasificadas, salvo lo indicado en la hoja de datos de cada instrumento. Las entradas de alimentación y de señal serán independientes.')
     ]);
     if (f.senales) sub('sen', 2, 'Señales transmitidas', f.senales);
     if (f.rango) sub('ran', 2, f.valvulas ? 'Dimensionamiento' : 'Rango y precisión', f.rango);
-    cap('cal', 'Calibración', [
+    (f.extra || []).forEach(function (x, j) { sub('x' + j, 2, x.t, x.b); });
+    if (!f.servicio) cap('cal', 'Calibración', [
       P('Los equipos serán probados y calibrados en fábrica antes del embarque, según los procedimientos estándar del fabricante y las normas de este documento, para garantizar el funcionamiento en los rangos y condiciones de las hojas de datos.'),
       P('El proveedor adjuntará el certificado y el protocolo de calibración de cada instrumento, identificado por su TAG.'),
       P('Si se requiere un dispositivo especial para la calibración o verificación en terreno, el proveedor lo informará al Cliente para que decida su adquisición.')
     ]);
-    cap('pint', 'Pintura y terminaciones', [P('Todas las partes expuestas al ambiente tendrán un tratamiento de pintura adecuado a las condiciones del sitio, aplicado en fábrica según el estándar del fabricante, el que se indicará en la oferta.')]);
+    if (!f.servicio) cap('pint', 'Pintura y terminaciones', [P('Todas las partes expuestas al ambiente tendrán un tratamiento de pintura adecuado a las condiciones del sitio, aplicado en fábrica según el estándar del fabricante, el que se indicará en la oferta.')]);
     cap('insp', 'Inspección y pruebas', [
       P('El proveedor entregará la información que certifique el plan de control y aseguramiento de calidad del diseño, la fabricación y la calibración.'),
       P('El proveedor recomendará los procedimientos y programas de prueba que garanticen el buen funcionamiento, la seguridad eléctrica y la integridad mecánica. Los parámetros medidos (señal de salida, carga, etc.) se registrarán en protocolos.'),
       P('El proveedor avisará con {aviso} días hábiles de anticipación para coordinar la inspección final en fábrica. Las inspecciones parciales no lo eximen de la garantía.'),
       P('Si un equipo no cumple los requerimientos especificados, el proveedor realizará las correcciones necesarias a la brevedad y sin costo para el Cliente.')
-    ].concat(f.valvulas ? [P('Cada conjunto válvula-actuador se probará en fábrica: prueba hidrostática del cuerpo, prueba de asiento según la clase de fuga especificada y prueba funcional del actuador con registro del tiempo de carrera y de la presión o torque necesario a la presión diferencial máxima.')] : []));
+    ].concat(f.pruebas || []).concat(f.valvulas ? [P('Cada conjunto válvula-actuador se probará en fábrica: prueba hidrostática del cuerpo, prueba de asiento según la clase de fuga especificada y prueba funcional del actuador con registro del tiempo de carrera y de la presión o torque necesario a la presión diferencial máxima.')] : []));
     cap('acep', 'Aceptación', [P('Una vez instalado el equipo y demostrada y aprobada su correcta operación por el Cliente, el equipo será aceptado, sujeto solo a la garantía indicada en esta especificación.')]);
     cap('resp', 'Responsabilidad del proveedor', [
       P('El proveedor suministrará los equipos indicados en las hojas de datos con todos los accesorios y cables especiales necesarios para su operación correcta y continua, aunque no estén señalados explícitamente.'),
       P('El proveedor será responsable de la correcta selección y aplicación de los equipos ofrecidos y de su correcto funcionamiento.')
     ]);
-    cap('sum', 'Suministro', [P('Los equipos se suministrarán de acuerdo con esta especificación y con las hojas de datos. El TAG de cada instrumento se indicará en los documentos comerciales y en el embalaje, asegurando su trazabilidad hasta la bodega del Cliente y su montaje.')]);
-    cap('emb', 'Embalaje, transporte y lugar de entrega', [
+    if (!f.servicio) cap('sum', 'Suministro', [P('Los equipos se suministrarán de acuerdo con esta especificación y con las hojas de datos. El TAG de cada instrumento se indicará en los documentos comerciales y en el embalaje, asegurando su trazabilidad hasta la bodega del Cliente y su montaje.')]);
+    if (!f.servicio) cap('emb', 'Embalaje, transporte y lugar de entrega', [
       P('El proveedor será responsable del transporte hasta la dirección indicada en la orden de compra.'),
       P('El embalaje resistirá sin daño el transporte y el almacenamiento prolongado en terreno, a prueba de golpes y humedad. Cada bulto se marcará con: nombre del proveedor, destinatario, número de orden de compra, número de ítem, TAG del equipo y peso bruto, e incluirá lista de empaque y de partes.'),
       P('Los repuestos, planos y catálogos se embalarán por separado y debidamente identificados.')
@@ -314,7 +327,7 @@
   }
 
   window.ETApp = {
-    fam: fam, datosEt: datosEt, guardarEt: guardarEt, seleccion: seleccion, numeroEt: numeroEt,
+    fam: fam, nombreFam: nombreFam, datosEt: datosEt, guardarEt: guardarEt, seleccion: seleccion, numeroEt: numeroEt,
     construir: construir, html: html, word: word, descargarWord: descargarWord
   };
 })();
