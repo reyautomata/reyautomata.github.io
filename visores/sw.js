@@ -1,7 +1,7 @@
 /* Guarda la app en el teléfono para usarla sin internet. Cambia VERSION al publicar cambios. */
-const VERSION = 'visores-v45';
+const VERSION = 'visores-v46';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
-  './hojas-datos/', './hojas-datos/index.html', './hojas-datos/plantillas.js', './hojas-datos/xlsx.js', './hojas-datos/hojas.js', '../img/logo-reyengi.png'];
+  './exportar-3d.js', './hojas-datos/', './hojas-datos/index.html', './hojas-datos/plantillas.js', './hojas-datos/xlsx.js', './hojas-datos/hojas.js', '../img/logo-reyengi.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
