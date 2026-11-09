@@ -915,5 +915,12 @@
     'TA: Ver Tabla de Aplicación.'
   ];
 
-  window.HD = { plantillas: P, proyecto: PROYECTO, notasGenerales: NOTAS_GENERALES, TA: TA, EPV: EPV };
+  // Grupo de cada hoja (para ordenar el catálogo)
+  var GRUPO = { pi: 'Presión', pit: 'Presión', 'fit-mag': 'Flujo', fs: 'Flujo', 'fit-sonar': 'Flujo', 'fit-ut': 'Flujo', 'lit-radar': 'Nivel', 'lit-hidro': 'Nivel', 'lsh-mw': 'Nivel',
+    dit: 'Densidad y análisis', 'ait-ph': 'Densidad y análisis', xa: 'Correas transportadoras y alarmas', 'hs-pull': 'Correas transportadoras y alarmas', wit: 'Correas transportadoras y alarmas', 'xs-rip': 'Correas transportadoras y alarmas',
+    'xv-neu': 'Válvulas', 'xv-hid': 'Válvulas', 'xv-mot': 'Válvulas', fcv: 'Válvulas', pcv: 'Válvulas' };
+  P.forEach(function (p) { p.grupo = GRUPO[p.id] || 'Otros'; });
+
+  window.HD = { plantillas: P, proyecto: PROYECTO, notasGenerales: NOTAS_GENERALES, TA: TA, EPV: EPV,
+    util: { f: f, mnm: mnm, S: S, GENERAL: GENERAL, SITIO: SITIO, REQUISITOS: REQUISITOS, C_TAG: C_TAG, C_SERV: C_SERV, C_PID: C_PID, C_DET: C_DET } };
 })();

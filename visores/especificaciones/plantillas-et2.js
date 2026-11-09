@@ -20,25 +20,25 @@
     normas: ['IEC 60751: Termómetros industriales de resistencia de platino (Pt100)', 'IEC 60584-1/-3: Termocuplas, tablas de referencia y cables de extensión', 'ASME PTC 19.3 TW: Termopozos (cálculo de frecuencia de estela y resistencia)', 'IEC 61515: Termocuplas con aislación mineral'],
     general: C.TX_GENERAL, electrico: C.TX_ELECTRICO, senales: C.TX_SENALES, rango: C.TX_RANGO,
     instrumentos: [
-      { id: 'te-rtd', t: 'Elemento de temperatura tipo RTD', das: [], b: [
+      { id: 'te-rtd', t: 'Elemento de temperatura tipo RTD', das: ['tit'], b: [
         p('Los elementos serán RTD Pt100 de 4 hilos (3 hilos cuando la hoja de datos lo permita), clase A según IEC 60751, con aislación mineral y vaina de acero inoxidable AISI 316.'),
         p('Se usarán en rangos de -50 a 400 °C. Se suministrarán con cabezal de conexión, bloque de terminales y resorte de contacto con el fondo del termopozo.')
       ] },
-      { id: 'te-tc', t: 'Elemento de temperatura tipo termocupla', das: [], b: [
+      { id: 'te-tc', t: 'Elemento de temperatura tipo termocupla', das: ['tit'], b: [
         p('Las termocuplas serán tipo K o N según IEC 60584-1, de aislación mineral, con junta aislada de tierra y vaina de Inconel 600 o AISI 316 según la temperatura.'),
         p('Se usarán sobre 400 °C o donde la hoja de datos lo indique. Los cables de extensión serán del tipo y código de colores de IEC 60584-3.')
       ] },
-      { id: 'tt', t: 'Transmisor de temperatura', das: [], b: [
+      { id: 'tt', t: 'Transmisor de temperatura', das: ['tit'], b: [
         p('Los transmisores serán inteligentes, de entrada universal (RTD y termocupla), con salida {senal}, aislación galvánica entrada/salida y diagnóstico de rotura o cortocircuito del sensor.'),
         p('Se montarán en el cabezal del sensor o en campo sobre tubo de 2", con indicador local LCD, según la hoja de datos. La exactitud digital será de ± 0,1 °C o mejor para RTD.'),
         p('Cuando se indique se suministrarán con doble entrada y función de respaldo (backup) o promedio.')
       ] },
-      { id: 'tw', t: 'Termopozo', das: [], b: [
+      { id: 'tw', t: 'Termopozo', das: ['tit'], b: [
         p('Los termopozos serán de barra perforada (bar stock), de acero inoxidable AISI 316 salvo otra indicación, con conexión a proceso bridada ASME B16.5 o roscada, según la hoja de datos.'),
         p('El proveedor entregará el cálculo de frecuencia de estela y de resistencia según ASME PTC 19.3 TW para las condiciones de proceso indicadas.'),
         p('En servicio de pulpa abrasiva se usarán recubrimientos duros (estelita o carburo de tungsteno) o materiales resistentes a la abrasión.')
       ] },
-      { id: 'tsw', t: 'Interruptor de temperatura', das: [], b: [
+      { id: 'tsw', t: 'Interruptor de temperatura', das: ['tsh'], b: [
         p('Los interruptores serán electrónicos o de bulbo y capilar, con punto de ajuste regulable, banda muerta ajustable y contactos {contactos}.')
       ] }
     ]
@@ -49,15 +49,15 @@
   if (analisis) {
     analisis.normas = analisis.normas.concat(['IEC 60079-29-1/-2: Detectores de gases, desempeño, selección e instalación', 'ISO 7027: Calidad del agua – determinación de turbidez']);
     analisis.instrumentos.push(
-      { id: 'ait-cond', t: 'Analizador de conductividad', das: [], b: [
+      { id: 'ait-cond', t: 'Analizador de conductividad', das: ['ait-cond'], b: [
         p('El sensor será inductivo (toroidal) en servicios con sólidos o incrustaciones, y de contacto (dos o cuatro electrodos) en agua limpia, con compensación de temperatura integrada.'),
         p('El transmisor tendrá salida {senal}, compensación de temperatura configurable, indicación local y relés de alarma.')
       ] },
-      { id: 'ait-turb', t: 'Analizador de turbidez y sólidos suspendidos', das: [], b: [
+      { id: 'ait-turb', t: 'Analizador de turbidez y sólidos suspendidos', das: ['ait-turb'], b: [
         p('El sensor será óptico de luz dispersa a 90° según ISO 7027, con limpieza automática por escobilla o aire, para medición en línea o por inmersión.'),
         p('El transmisor tendrá salida {senal} y rangos configurables en NTU, FNU o mg/L.')
       ] },
-      { id: 'ait-gas', t: 'Detector fijo de gases', das: [], b: [
+      { id: 'ait-gas', t: 'Detector fijo de gases', das: ['ait-gas'], b: [
         p('Los detectores serán para los gases indicados en la hoja de datos (H2S, CO, SO2, O2 u otros), con sensor electroquímico, catalítico o infrarrojo según el gas, desempeño según IEC 60079-29-1.'),
         p('La selección y ubicación de detectores seguirá IEC 60079-29-2. En áreas clasificadas los detectores tendrán certificación para la zona y grupo de gas correspondiente (IEC 60079 / NEC 500).'),
         p('Tendrán salida {senal}, indicación local, dos niveles de alarma y una de falla, alarma audiovisual local cuando se indique, y kit de calibración con gas patrón.')
@@ -81,12 +81,12 @@
     alimTexto: 'Los gabinetes del sistema de control se alimentarán en {alim4h} desde un sistema UPS; la alimentación de E/S y de instrumentos de 2 hilos será {alim2h} con fuentes redundantes.',
     general: SIS_GENERAL.concat([p('El sistema será de arquitectura abierta, con comunicaciones basadas en estándares industriales, y permitirá ampliaciones futuras sin detener el proceso.')]),
     instrumentos: [
-      { id: 'cpu', t: 'Controladores', das: [], b: [
+      { id: 'cpu', t: 'Controladores', das: ['plc'], b: [
         p('Los controladores serán redundantes en caliente (hot standby) para los procesos críticos indicados en la arquitectura, con conmutación automática sin perturbar las salidas.'),
         p('La carga de CPU no superará el 60 % y la memoria utilizada no superará el 60 % al término de la puesta en marcha.'),
         p('Soportarán programación en los lenguajes de IEC 61131-3, modificación en línea, sincronización horaria (NTP o PTP) y diagnóstico de todos los módulos.')
       ] },
-      { id: 'io', t: 'Entradas y salidas', das: [], b: [
+      { id: 'io', t: 'Entradas y salidas', das: ['plc'], b: [
         p('Las E/S serán remotas o locales según la arquitectura, con módulos de canales aislados para señales analógicas y señalización de estado por canal.'),
         p('Las entradas analógicas serán {senal} con paso HART hacia la estación de ingeniería o gestión de activos. Las entradas y salidas discretas serán de 24 VDC, salvo indicación distinta.'),
         p('Se dejará una reserva instalada y cableada del 20 % por tipo de señal, más un 20 % de espacio libre en racks y gabinetes.')
@@ -148,16 +148,16 @@
     alimTexto: 'Los gabinetes se alimentarán en {alim4h}; la distribución interna de control será en 24 VDC.',
     general: SIS_GENERAL.concat([p('Los gabinetes se fabricarán y verificarán según IEC 61439 (o UL 508A cuando el Cliente lo requiera), incluyendo verificación de diseño de elevación de temperatura y resistencia a cortocircuito.')]),
     instrumentos: [
-      { id: 'env', t: 'Envolvente', das: [], b: [
+      { id: 'env', t: 'Envolvente', das: ['gab'], b: [
         p('Los gabinetes serán de acero al carbono pintado o acero inoxidable AISI 304/316 según la ubicación, con grado de protección {proteccion} en terreno e IP54 como mínimo en salas.'),
         p('Tendrán placa de montaje, puerta con chapa, bolsillo porta planos, iluminación interior con interruptor de puerta, tomacorriente de servicio y barra de tierra de protección y de tierra de instrumentación aisladas.'),
         p('El cálculo térmico considerará la máxima temperatura ambiente del sitio y la radiación solar en terreno, con protección solar o climatización cuando se requiera.')
       ] },
-      { id: 'dist', t: 'Distribución y protecciones', das: [], b: [
+      { id: 'dist', t: 'Distribución y protecciones', das: ['gab'], b: [
         p('Cada circuito de alimentación de instrumentos y de E/S tendrá protección individual (interruptor o borne fusible con indicación de fusión).'),
         p('Las fuentes de 24 VDC serán redundantes con supervisión de falla. Se instalarán supresores de transientes en las entradas de alimentación y en las señales que vienen de terreno.')
       ] },
-      { id: 'alamb', t: 'Alambrado y borneras', das: [], b: [
+      { id: 'alamb', t: 'Alambrado y borneras', das: ['gab'], b: [
         p('El alambrado interno será de cobre flexible, libre de halógenos, con colores según IEC 60445 o el estándar del Proyecto, y marcado en ambos extremos.'),
         p('Las señales intrínsecamente seguras, analógicas, discretas y de potencia irán en canaletas separadas. El llenado de canaletas no superará el 40 %.'),
         p('Las borneras serán de tornillo o resorte, de dos niveles cuando se requiera, con un 20 % de bornes de reserva.')
@@ -203,7 +203,7 @@
     alimTexto: 'Los equipos activos se alimentarán en 24 VDC redundante desde los gabinetes del sistema de control, o en {alim4h} desde UPS.',
     general: SIS_GENERAL.concat([p('Las redes se diseñarán, instalarán y certificarán según los perfiles de instalación de IEC 61784-5 para cada protocolo y las guías de PROFIBUS & PROFINET International o de la organización del protocolo correspondiente.')]),
     instrumentos: [
-      { id: 'sw', t: 'Switches industriales', das: [], b: [
+      { id: 'sw', t: 'Switches industriales', das: ['sw-eth'], b: [
         p('Los switches serán administrables, de grado industrial, montaje en riel DIN o rack, con alimentación redundante, contacto de falla y rango de temperatura extendido.'),
         p('Soportarán VLAN (IEEE 802.1Q), QoS, IGMP snooping, SNMP v3, redundancia en anillo con recuperación menor a 200 ms (MRP o equivalente) y RSTP, y puertos de fibra óptica SFP.'),
         p('Para PROFINET tendrán certificación de conformidad de la clase requerida.')
@@ -228,7 +228,7 @@
     normas: ['ANSI/TIA-568.3-D: Componentes de cableado de fibra óptica', 'ANSI/TIA-568.2-D: Cableado de par trenzado balanceado', 'ANSI/TIA-758: Planta externa de propiedad del cliente', 'ISO/IEC 11801-1: Cableado genérico', 'IEC 60793-2-50 / ITU-T G.652.D: Fibra monomodo', 'IEC 60794: Cables de fibra óptica', 'ANSI/TIA-606: Administración e identificación'],
     general: SIS_GENERAL,
     instrumentos: [
-      { id: 'cfo', t: 'Cable de fibra óptica', das: [], b: [
+      { id: 'cfo', t: 'Cable de fibra óptica', das: ['cab-fo'], b: [
         p('Los cables troncales serán de fibra monomodo G.652.D (OS2), con el número de fibras indicado más un 50 % de reserva, armados o dieléctricos según la canalización, con protección contra roedores y humedad.'),
         p('En interiores se usarán cables libres de halógenos (LSZH) y en canalización subterránea o aérea cables para planta externa.')
       ] },
@@ -251,7 +251,7 @@
     normas: ['IEEE 802.11: Redes inalámbricas de área local', 'ETSI EN 300 328 / EN 301 893: Equipos de radio en 2,4 y 5 GHz', 'ETSI TS 102 361: Radio móvil digital (DMR)', 'IEC 62591 (WirelessHART) / IEC 62734 (ISA100.11a)', 'Normativa técnica de la Subsecretaría de Telecomunicaciones (SUBTEL)'],
     general: SIS_GENERAL.concat([p('Todos los equipos de radio tendrán homologación y operarán en bandas autorizadas en Chile. Las frecuencias que requieran concesión o permiso serán tramitadas ante SUBTEL según lo indique el Cliente.')]),
     instrumentos: [
-      { id: 'ptp', t: 'Enlaces punto a punto y punto multipunto', das: [], b: [
+      { id: 'ptp', t: 'Enlaces punto a punto y punto multipunto', das: ['radio-ptp'], b: [
         p('Los radios serán de grado industrial, para exterior, con alimentación PoE, cifrado AES y administración remota.'),
         p('El proveedor entregará el estudio de radioenlace (perfil de terreno, zona de Fresnel, margen de desvanecimiento y disponibilidad) para cada enlace.')
       ] },
@@ -302,14 +302,14 @@
       p('Cada carrete se identificará con tipo, formación, largo, número de lote y fecha de fabricación.')
     ],
     instrumentos: [
-      { id: 'par', t: 'Cable de instrumentación (pares y tríadas)', das: [], b: [
+      { id: 'par', t: 'Cable de instrumentación (pares y tríadas)', das: ['cab-inst'], b: [
         p('Los cables de señales analógicas serán de pares o tríadas trenzados de cobre estañado, mínimo 16 AWG (1,5 mm²) para cables individuales y 18 AWG (1,0 mm²) para multipares, con pantalla individual y general de aluminio-poliéster con drenaje.'),
         p('La aislación será para 300 V (600 V cuando comparta canalización con circuitos de control) y la cubierta exterior de PVC retardante o LSZH, con armadura cuando se instale enterrado o expuesto a daño mecánico.')
       ] },
-      { id: 'ctrl', t: 'Cable de control', das: [], b: [p('Los cables de control serán multiconductores de cobre de 14 AWG (2,5 mm²) mínimo, 600 V, con conductores numerados, tipo TC según UL 1277 o equivalente IEC.')] },
-      { id: 'tcx', t: 'Cable de extensión de termocupla', das: [], b: [p('Los cables de extensión serán del tipo y código de colores de la termocupla según IEC 60584-3, con pantalla individual.')] },
+      { id: 'ctrl', t: 'Cable de control', das: ['cab-inst'], b: [p('Los cables de control serán multiconductores de cobre de 14 AWG (2,5 mm²) mínimo, 600 V, con conductores numerados, tipo TC según UL 1277 o equivalente IEC.')] },
+      { id: 'tcx', t: 'Cable de extensión de termocupla', das: ['cab-inst'], b: [p('Los cables de extensión serán del tipo y código de colores de la termocupla según IEC 60584-3, con pantalla individual.')] },
       { id: 'bus', t: 'Cables de bus de campo y Ethernet', das: [], b: [p('Los cables PROFIBUS DP, PROFIBUS PA, PROFINET o Ethernet industrial serán los especificados por la organización del protocolo, de color estándar y aptos para uso industrial.')] },
-      { id: 'jb', t: 'Cajas de conexión de terreno', das: [], b: [p('Las cajas de conexión serán de acero inoxidable o poliéster reforzado con fibra de vidrio, grado {proteccion}, con borneras con 20 % de reserva, barras de tierra de pantallas aisladas y prensaestopas certificados.')] }
+      { id: 'jb', t: 'Cajas de conexión de terreno', das: ['jb'], b: [p('Las cajas de conexión serán de acero inoxidable o poliéster reforzado con fibra de vidrio, grado {proteccion}, con borneras con 20 % de reserva, barras de tierra de pantallas aisladas y prensaestopas certificados.')] }
     ],
     extra: [{ t: 'Separación y puesta a tierra de pantallas', b: [
       p('Los cables de instrumentación se separarán de los cables de fuerza según las distancias de IEC 61000-5-2 o del criterio del Proyecto, o mediante separadores metálicos en la escalerilla.'),
