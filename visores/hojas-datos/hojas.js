@@ -293,7 +293,10 @@
         if (c.cs > 1) attrs += ' colspan="' + c.cs + '"';
         if (c.rs > 1) attrs += ' rowspan="' + c.rs + '"';
         if (c.key) attrs += ' data-k="' + escHtml(c.key) + '" contenteditable="true" spellcheck="false"';
-        var v = c.cls === 'logo' ? '<img src="' + LOGO + '" alt="ReyEngi">' : (c.cls === 'sec' ? '<span>' + escHtml(c.v) + '</span>' : escHtml(c.v));
+        // Etiqueta vertical de sección: se achica si la sección tiene pocas filas, para no estirarlas
+        var fs = '';
+        if (c.cls === 'sec') { var nec = String(c.v).length * 1.35 + 2, disp = c.rs * 4.3; if (nec > disp) fs = ' style="font-size:' + Math.max(3.5, 6.4 * disp / nec).toFixed(1) + 'pt"'; }
+        var v = c.cls === 'logo' ? '<img src="' + LOGO + '" alt="ReyEngi">' : (c.cls === 'sec' ? '<span' + fs + '>' + escHtml(c.v) + '</span>' : escHtml(c.v));
         h.push('<td' + attrs + '>' + v + '</td>');
       });
       h.push('</tr>');

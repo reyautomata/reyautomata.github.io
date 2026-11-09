@@ -82,7 +82,7 @@
         p('En servicios con pulpa, fluidos viscosos o corrosivos se suministrará sello de diafragma según la hoja de datos.'),
         p('Se incluirá protección contra transientes en el bloque de terminales.')
       ] },
-      { id: 'psw', t: 'Interruptor de presión', das: [], b: [
+      { id: 'psw', t: 'Interruptor de presión', das: ['psh'], b: [
         p('Los interruptores de presión serán de diafragma o pistón, con punto de ajuste regulable en terreno y banda muerta indicada por el proveedor.'),
         p('Tendrán contactos {contactos}, carcasa de aluminio con pintura epóxica y partes húmedas de acero inoxidable AISI 316.'),
         p('La repetibilidad será de ± 1 % del rango o mejor.')
@@ -108,7 +108,7 @@
         p('El transmisor tendrá salida {senal}, salida de pulsos para totalizado e indicación local de caudal y totalizador. Se montará en un soporte de tubo de 2" o en superficie, próximo al sensor (montaje remoto) o integrado (montaje compacto) según la hoja de datos.'),
         p('Incluirá diagnósticos de tubería vacía, electrodo recubierto y verificación del medidor en línea.')
       ] },
-      { id: 'fit-vortex', t: 'Transmisor de flujo tipo vortex', das: [], b: [
+      { id: 'fit-vortex', t: 'Transmisor de flujo tipo vortex', das: ['fit-vortex'], b: [
         p('El conjunto incluirá sensor de flujo tipo vortex, transmisor, cables de interconexión cuando se requieran y accesorios de montaje. Se usará en aire de proceso, gases y vapor.'),
         p('El diámetro será el indicado en la hoja de datos y validado por el proveedor según las condiciones de operación. El cuerpo y las bridas se diseñarán para la presión máxima de trabajo, en acero inoxidable salvo otra indicación.'),
         p('El elemento sensor será reemplazable sin afectar la integridad del cuerpo y será inmune a vibraciones.'),
@@ -148,7 +148,7 @@
         p('La exactitud será de ± 2 mm o mejor. La electrónica tendrá supresión de ecos falsos y promedio de ecos.'),
         p('El montaje será con brida o en soporte, según la hoja de datos, e incluirá protección solar e indicador remoto cuando se especifique.')
       ] },
-      { id: 'lit-us', t: 'Transmisor de nivel tipo ultrasónico', das: [], b: [
+      { id: 'lit-us', t: 'Transmisor de nivel tipo ultrasónico', das: ['lit-us'], b: [
         p('Los transmisores serán ultrasónicos sin contacto, de tipo compuesto (sensor y transmisor separados). El conjunto incluirá sensor, transmisor, cable de interconexión y accesorios de montaje.'),
         h(4, 'Sensor'),
         p('El sensor transmitirá pulsos ultrasónicos hacia la superficie y recibirá su eco. El proveedor indicará en la hoja de datos la potencia y la frecuencia de operación.'),
@@ -162,7 +162,7 @@
         p('El cable será de PUR o FEP con tubo de compensación atmosférica, del largo indicado en la hoja de datos, y terminará en una caja de terminales con filtro de compensación.'),
         p('La exactitud será de ± 0,2 % del span o mejor. Se suministrará la abrazadera de suspensión.')
       ] },
-      { id: 'lsw-vib', t: 'Interruptor de nivel tipo vibratorio', das: [], b: [
+      { id: 'lsw-vib', t: 'Interruptor de nivel tipo vibratorio', das: ['lsw-vib'], b: [
         p('El interruptor funcionará con una horquilla vibratoria de acero inoxidable cuya frecuencia cambia al quedar cubierta por el medio, activando la salida.'),
         p('El montaje será lateral; el nivel de activación queda definido por la altura de la conexión a proceso en el estanque.'),
         p('La conexión a proceso será con brida ASME B16.5 Clase 150 de 1", de acero inoxidable, salvo otra indicación en la hoja de datos.'),
@@ -204,7 +204,7 @@
     general: SW_GENERAL.concat([p('Las correas transportadoras incorporarán todos los instrumentos necesarios para la seguridad de las personas y de los equipos, según se describe a continuación.')]),
     electrico: SW_ELECTRICO,
     instrumentos: [
-      { id: 'zs-des', t: 'Interruptor de desalineamiento', das: [], b: [
+      { id: 'zs-des', t: 'Interruptor de desalineamiento', das: ['zs-des'], b: [
         p('Cada control consistirá en dos interruptores, uno a cada lado de la correa, con brazo de rodillo y operación ajustable según el ángulo del brazo.'),
         p('Cada interruptor tendrá dos microinterruptores con contactos {contactos}: alarma a 10° y detención a 20° de la vertical.'),
         p('El brazo o rodillo será recubierto con material de bajo roce y desgaste.'),
@@ -217,7 +217,7 @@
         p('El suministro incluirá pernos de ojo, guías, tensores, resortes y abrazaderas de remate del cable.'),
         p('Los interruptores se instalarán cada 30 m (cada 60 m como máximo en correas de más de 600 m), a ambos lados de la correa o donde exista acceso.')
       ] },
-      { id: 'ss-cero', t: 'Interruptor de velocidad cero', das: [], b: [
+      { id: 'ss-cero', t: 'Interruptor de velocidad cero', das: ['ss-cero'], b: [
         p('El sensor será inductivo, sin contacto, y el receptor tendrá retardo ajustable de 5 a 50 s y al menos un contacto {contactos} con punto de operación ajustable según las RPM.'),
         p('El sensor se instalará en la polea de cola (o de cabeza si el accionamiento está en cola). Además se instalará un sensor en la polea motriz para detectar resbalamiento por diferencia de velocidad.'),
         p('El cable sensor–receptor se suministrará con el equipo.')
@@ -227,11 +227,11 @@
         p('Cuando un objeto o una porción dañada de la correa cuelga, tira de los cables y activa un contacto {contactos}. La reposición será manual.'),
         p('Se instalarán después de cada punto de carga.')
       ] },
-      { id: 'ls-tilt', t: 'Interruptor de nivel tipo tilt', das: [], b: [
+      { id: 'ls-tilt', t: 'Interruptor de nivel tipo tilt', das: ['ls-tilt'], b: [
         p('El instrumento tendrá una sonda de acero inoxidable que, al ser inclinada por el material, abre su contacto interno. La sonda se conectará a la unidad electrónica mediante un cable suministrado con el equipo.'),
         p('La unidad electrónica rechazará aperturas falsas por rebote y validará el tiempo de permanencia del contacto abierto. Tendrá dos contactos {contactos} e indicación luminosa del estado del relé.')
       ] },
-      { id: 'zs-cp', t: 'Interruptor de posición en contrapeso', das: [], b: [
+      { id: 'zs-cp', t: 'Interruptor de posición en contrapeso', das: ['zs-cp'], b: [
         p('En las correas que lo requieran, según el diseño mecánico, se instalarán interruptores de posición para supervisar que el sistema tensor se encuentre en la posición correcta.'),
         p('Cada interruptor tendrá un microinterruptor con contacto {contactos}. La cantidad depende del diseño de cada correa.')
       ] },

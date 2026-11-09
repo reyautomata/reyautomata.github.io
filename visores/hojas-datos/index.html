@@ -49,6 +49,8 @@ main { padding: 22px max(16px, env(safe-area-inset-right)) 40px max(16px, env(sa
 .tarjeta h3 { margin: 0 0 4px; font-size: 16.5px; line-height: 1.2; }
 .tarjeta p { margin: 0; color: var(--muted); font: 500 12.5px var(--f-mono); line-height: 1.5; }
 .vacio { color: var(--muted); padding: 30px 0; }
+.grid h2.grupo { grid-column: 1 / -1; margin: 14px 0 0; font: 700 13px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.grid h2.grupo:first-child { margin-top: 0; }
 
 /* Vista de hoja */
 .herr { max-width: 1240px; margin: 0 auto 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -144,7 +146,7 @@ dialog .pie-dlg .izq { margin-right: auto; }
 
 <main>
   <div class="cat" id="cat">
-    <p class="intro">Hojas de datos tipo para cada instrumento de los visores, con el formato usual de proyectos mineros (columnas Especificado / Propuesto, EPV, Tabla de Aplicación por TAG) y la estructura de los formularios ISA-TR20: datos de operación, especificación del equipo y requisitos generales. Haz clic en cualquier celda para editarla; los cambios se guardan en este navegador.</p>
+    <p class="intro">Hojas de datos tipo para los instrumentos y equipos de las especificaciones técnicas (instrumentación, control, comunicaciones y cables), con el formato usual de proyectos mineros (columnas Especificado / Propuesto, EPV, Tabla de Aplicación por TAG) y la estructura de los formularios ISA-TR20: datos de operación, especificación del equipo y requisitos generales. Haz clic en cualquier celda para editarla; los cambios se guardan en este navegador.</p>
     <div class="filtros">
       <input type="search" id="buscar" placeholder="Buscar por TAG o instrumento (ej. PIT, radar, válvula)" aria-label="Buscar hoja de datos">
       <span class="chip" id="filtroVisor" hidden></span>
@@ -210,6 +212,7 @@ dialog .pie-dlg .izq { margin-right: auto; }
 
 <script src="../proyectos.js"></script>
 <script src="plantillas.js"></script>
+<script src="plantillas2.js"></script>
 <script src="xlsx.js"></script>
 <script src="hojas.js"></script>
 <script>
@@ -229,10 +232,14 @@ dialog .pie-dlg .izq { margin-right: auto; }
       if (filtroVisor && p.visores.indexOf(filtroVisor) < 0) return false;
       return !q || norm(p.tag + ' ' + p.titulo + ' ' + p.hoja).indexOf(q) >= 0;
     });
-    $('grid').innerHTML = lista.length ? lista.map(function (p) {
-      var n = A.filasAplicacion(p, A.datosHoja(p.id)).length;
-      return '<button type="button" class="tarjeta" data-id="' + p.id + '"><span class="tag">' + esc(p.tag) + '</span><span><h3>' + esc(p.titulo) + '</h3><p>' +
-        esc(A.numeroDoc(p, pr)) + '<br>' + n + ' TAG' + (n === 1 ? '' : 's') + ' en tabla de aplicación</p></span></button>';
+    var grupos = [];
+    lista.forEach(function (p) { if (grupos.indexOf(p.grupo) < 0) grupos.push(p.grupo); });
+    $('grid').innerHTML = lista.length ? grupos.map(function (g) {
+      return '<h2 class="grupo">' + esc(g) + '</h2>' + lista.filter(function (p) { return p.grupo === g; }).map(function (p) {
+        var n = A.filasAplicacion(p, A.datosHoja(p.id)).length;
+        return '<button type="button" class="tarjeta" data-id="' + p.id + '"><span class="tag">' + esc(p.tag) + '</span><span><h3>' + esc(p.titulo) + '</h3><p>' +
+          esc(A.numeroDoc(p, pr)) + '<br>' + n + ' TAG' + (n === 1 ? '' : 's') + ' en tabla de aplicación</p></span></button>';
+      }).join('');
     }).join('') : '<p class="vacio">No hay hojas que coincidan.</p>';
     $('filtroVisor').hidden = $('quitarFiltro').hidden = !filtroVisor;
     if (filtroVisor) $('filtroVisor').textContent = 'Filtrado por visor: ' + filtroVisor;
