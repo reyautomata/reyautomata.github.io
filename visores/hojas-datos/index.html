@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hojas de datos · ReyEngi</title>
+<meta name="description" content="Hojas de datos de instrumentos tipo para proyectos mineros: editables, imprimibles en PDF y exportables a Excel.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45;
+  --papel: #FFFFFF; --tinta: #17212C; --claro: #DCE3EB; --item: #2E4A6B;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; }
+[hidden] { display: none !important; }
+button, .btn { font: 600 14px var(--f-body); border-radius: 8px; padding: 9px 14px; min-height: 40px; cursor: pointer; border: 1.5px solid var(--line); background: transparent; color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+button.pri, .btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover, .btn:hover { border-color: var(--accent); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Barra superior */
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 4px solid var(--accent); padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1240px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 19px; font-weight: 700; letter-spacing: .2px; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+.barra a.volver:hover { color: var(--accent-ink); }
+
+/* Catálogo */
+main { padding: 22px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+.cat { max-width: 1240px; margin: 0 auto; }
+.intro { color: var(--muted); max-width: 78ch; line-height: 1.55; margin: 0 0 16px; }
+.filtros { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.filtros input { flex: 1 1 260px; min-height: 42px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--panel); color: var(--fg); padding: 0 12px; font: 15px var(--f-body); }
+.chip { font: 600 12.5px var(--f-mono); color: var(--accent-ink); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.tarjeta { text-align: left; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; align-items: start; background: var(--panel); border: 1.5px solid var(--line); border-radius: 10px; padding: 14px; color: inherit; min-height: 96px; }
+.tarjeta:hover { border-color: var(--accent); transform: translateY(-1px); }
+.tarjeta .tag { width: 58px; height: 46px; border-radius: 8px; background: var(--brand); border-bottom: 4px solid var(--accent); display: grid; place-items: center; font: 800 15px var(--f-mono); color: #fff; }
+.tarjeta h3 { margin: 0 0 4px; font-size: 16.5px; line-height: 1.2; }
+.tarjeta p { margin: 0; color: var(--muted); font: 500 12.5px var(--f-mono); line-height: 1.5; }
+.vacio { color: var(--muted); padding: 30px 0; }
+
+/* Vista de hoja */
+.herr { max-width: 1240px; margin: 0 auto 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.herr .estado { margin-left: auto; font: 500 12.5px var(--f-mono); color: var(--muted); }
+.lienzo { overflow-x: auto; padding-bottom: 20px; }
+.paginas { display: flex; flex-direction: column; align-items: center; gap: 18px; transform-origin: top left; }
+
+.pagina { background: var(--papel); color: var(--tinta); width: 210mm; min-height: 297mm; padding: 8mm; box-shadow: 0 6px 30px rgba(0, 0, 0, .45); position: relative; color-scheme: light; }
+.pagina.horizontal { width: 297mm; min-height: 210mm; }
+.pie { position: absolute; left: 8mm; right: 8mm; bottom: 5mm; display: flex; justify-content: space-between; font: 7pt Arial, Helvetica, sans-serif; color: #5A6573; }
+.acciones-apl { display: flex; gap: 8px; margin-top: 4mm; }
+.acciones-apl button { color: var(--brand); border-color: #9FB0C3; font-size: 12px; min-height: 32px; padding: 4px 10px; }
+
+table.hd { border-collapse: collapse; table-layout: fixed; width: 100%; font: 7.4pt/1.15 Arial, Helvetica, sans-serif; color: var(--tinta); }
+table.hd td { border: 0.6pt solid #1F2A36; padding: 0.35mm 1.2mm; height: 4.5mm; vertical-align: middle; overflow-wrap: anywhere; }
+table.hd td.logo, table.hd td.marca { border: 0; padding: 0 0 1.5mm; }
+table.hd td.logo img { height: 11mm; display: block; }
+table.hd td.marca { text-align: right; vertical-align: bottom; font-style: italic; color: #5A6573; font-size: 7pt; }
+table.hd td.lbl { background: var(--brand); color: #fff; font-weight: 700; font-size: 7pt; }
+table.hd td.lbl2 { background: var(--claro); color: var(--brand); font-weight: 700; font-size: 7pt; }
+table.hd td.vcab { font-size: 7.2pt; }
+table.hd td.c { text-align: center; }
+table.hd td.tit { text-align: center; font-weight: 700; font-size: 10pt; color: var(--brand); }
+table.hd td.th { background: var(--brand); color: #fff; font-weight: 700; text-align: center; font-size: 7pt; }
+table.hd td.sub { background: var(--claro); color: var(--brand); font-weight: 700; text-align: center; font-size: 7pt; }
+table.hd td.sec { background: var(--claro); color: var(--brand); font-weight: 700; font-size: 6.4pt; text-align: center; padding: 1mm 0; }
+table.hd td.sec span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; white-space: nowrap; letter-spacing: .3px; }
+table.hd td.n { background: var(--item); color: #fff; font-weight: 700; text-align: center; font-size: 7pt; }
+table.hd td.u, table.hd td.e, table.hd td.p { text-align: center; }
+table.hd td.p.izq { text-align: left; }
+table.hd td.p.tag { font-weight: 700; }
+table.hd td.e.ta { font-style: italic; color: #34475C; }
+table.hd td.mh { background: #F1F4F7; font-weight: 700; text-align: center; font-size: 6.8pt; }
+table.hd td[contenteditable] { cursor: text; }
+table.hd td[contenteditable]:hover { background: #FFF6EE; }
+table.hd td[contenteditable]:focus { outline: 2px solid var(--accent); outline-offset: -2px; background: #FFF6EE; }
+
+/* Diálogo de proyecto */
+dialog { background: var(--panel); color: var(--fg); border: 1.5px solid var(--line); border-radius: 12px; padding: 0; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); }
+dialog::backdrop { background: rgba(4, 12, 22, .75); }
+dialog form { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+dialog h2 { margin: 0; font-size: 19px; }
+dialog fieldset { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+dialog legend { font: 600 12px var(--f-mono); color: var(--accent-ink); text-transform: uppercase; letter-spacing: 1px; padding: 0 6px; }
+dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+dialog label.ancho { grid-column: 1 / -1; }
+dialog input { min-height: 38px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 10px; font: 14px var(--f-body); }
+dialog .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+dialog .calc { font: 500 13px var(--f-mono); color: var(--fg); padding-top: 8px; }
+dialog .pie-dlg { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+dialog .pie-dlg .izq { margin-right: auto; }
+
+#impresion { display: none; }
+
+@media (max-width: 640px) {
+  .barra h1 { font-size: 16px; width: 100%; }
+  .herr .estado { margin-left: 0; width: 100%; }
+}
+
+/* Impresión / PDF */
+@page { size: A4 portrait; margin: 0; }
+@page horiz { size: A4 landscape; margin: 0; }
+@media print {
+  html, body { background: #fff !important; }
+  body > *:not(#impresion):not(main) { display: none !important; }
+  main { padding: 0 !important; }
+  main > *:not(.lienzo-wrap) { display: none !important; }
+  .barra, .herr, .no-imprimir, .cat { display: none !important; }
+  .lienzo { overflow: visible !important; padding: 0 !important; }
+  .paginas { gap: 0 !important; transform: none !important; zoom: 1 !important; display: block !important; }
+  .pagina { box-shadow: none !important; margin: 0 !important; break-after: page; page-break-after: always; width: 210mm; height: 297mm; min-height: 0; overflow: hidden; }
+  .pagina.horizontal { page: horiz; width: 297mm; height: 210mm; }
+  .pagina:last-child { break-after: auto; page-break-after: auto; }
+  table.hd td[contenteditable]:hover { background: none; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body.imprimiendo-todo main { display: none !important; }
+  body.imprimiendo-todo #impresion { display: block !important; }
+}
+</style>
+</head>
+<body>
+<div class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Visores 3D</a>
+    <h1>Hojas de datos de instrumentos <small id="sub">Instrumentos tipo · PDF y Excel</small></h1>
+    <button type="button" id="btnProyecto">Datos del proyecto</button>
+    <button type="button" id="btnPdfTodas">PDF de todas</button>
+    <button type="button" class="pri" id="btnXlsTodas">Excel de todas</button>
+  </div>
+</div>
+
+<main>
+  <div class="cat" id="cat">
+    <p class="intro">Hojas de datos tipo para cada instrumento de los visores, con el formato usual de proyectos mineros (columnas Especificado / Propuesto, EPV, Tabla de Aplicación por TAG) y la estructura de los formularios ISA-TR20: datos de operación, especificación del equipo y requisitos generales. Haz clic en cualquier celda para editarla; los cambios se guardan en este navegador.</p>
+    <div class="filtros">
+      <input type="search" id="buscar" placeholder="Buscar por TAG o instrumento (ej. PIT, radar, válvula)" aria-label="Buscar hoja de datos">
+      <span class="chip" id="filtroVisor" hidden></span>
+      <button type="button" id="quitarFiltro" hidden>Ver todas</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="lienzo-wrap" id="vista" hidden>
+    <div class="herr">
+      <button type="button" id="btnVolver">← Catálogo</button>
+      <a class="btn" id="btnVisor" href="../">Ver visor 3D</a>
+      <button type="button" id="btnPdf">Imprimir / PDF</button>
+      <button type="button" class="pri" id="btnXls">Excel</button>
+      <button type="button" id="btnReset">Restablecer hoja</button>
+      <span class="estado" id="estado">Los cambios se guardan en este navegador</span>
+    </div>
+    <div class="lienzo" id="lienzo"><div class="paginas" id="paginas"></div></div>
+  </div>
+</main>
+
+<div id="impresion"></div>
+
+<dialog id="dlgProyecto" aria-labelledby="dlgT">
+  <form method="dialog" id="frmProyecto">
+    <h2 id="dlgT">Datos del proyecto</h2>
+    <fieldset>
+      <legend>Identificación</legend>
+      <label class="ancho">Proyecto <input name="proyecto"></label>
+      <label class="ancho">Cliente <input name="cliente"></label>
+      <label>Ubicación <input name="ubicacion"></label>
+      <label>N° de proyecto <input name="numero"></label>
+      <label>Prefijo de documento <input name="prefijo" placeholder="RE-001-IN-DAS-"></label>
+      <label>Revisión <input name="rev"></label>
+    </fieldset>
+    <fieldset>
+      <legend>Endosos</legend>
+      <label>Elaboró (iniciales) <input name="por"></label>
+      <label>Fecha <input name="porFecha" placeholder="dd-mm-aa"></label>
+      <label>Revisó <input name="reviso"></label>
+      <label>Fecha <input name="revisoFecha" placeholder="dd-mm-aa"></label>
+      <label>Aprobó <input name="aprobo"></label>
+      <label>Fecha <input name="aproboFecha" placeholder="dd-mm-aa"></label>
+    </fieldset>
+    <fieldset>
+      <legend>Condiciones de sitio (se aplican a todas las hojas)</legend>
+      <label>Lugar de instalación <input name="lugar"></label>
+      <label>Tipo de ambiente <input name="ambiente"></label>
+      <label>Temperatura ambiente °C (mín / nor / máx)<span class="trio"><input name="tMin" aria-label="Temperatura mínima"><input name="tNor" aria-label="Temperatura normal"><input name="tMax" aria-label="Temperatura máxima"></span></label>
+      <label>Humedad relativa % (mín / nor / máx)<span class="trio"><input name="hrMin" aria-label="Humedad mínima"><input name="hrNor" aria-label="Humedad normal"><input name="hrMax" aria-label="Humedad máxima"></span></label>
+      <label>Altura geográfica (m.s.n.m.) <input name="altura"></label>
+      <label>Presión barométrica (calculada) <span class="calc" id="patm"></span></label>
+      <label>Zona sísmica <input name="sismo"></label>
+      <label>Clasificación de área <input name="area"></label>
+    </fieldset>
+    <div class="pie-dlg">
+      <button type="button" class="izq" id="dlgReset">Valores por defecto</button>
+      <button type="button" id="dlgCancelar">Cancelar</button>
+      <button type="submit" class="pri">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="plantillas.js"></script>
+<script src="xlsx.js"></script>
+<script src="hojas.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.HDApp, P = window.HD.plantillas;
+  var $ = function (id) { return document.getElementById(id); };
+  var actual = null, filtroVisor = null;
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+
+  // ── Catálogo ──
+  function catalogo() {
+    var q = norm($('buscar').value.trim()), pr = A.proyecto();
+    var lista = P.filter(function (p) {
+      if (filtroVisor && p.visores.indexOf(filtroVisor) < 0) return false;
+      return !q || norm(p.tag + ' ' + p.titulo + ' ' + p.hoja).indexOf(q) >= 0;
+    });
+    $('grid').innerHTML = lista.length ? lista.map(function (p) {
+      var n = A.filasAplicacion(p, A.datosHoja(p.id)).length;
+      return '<button type="button" class="tarjeta" data-id="' + p.id + '"><span class="tag">' + esc(p.tag) + '</span><span><h3>' + esc(p.titulo) + '</h3><p>' +
+        esc(A.numeroDoc(p, pr)) + '<br>' + n + ' TAG' + (n === 1 ? '' : 's') + ' en tabla de aplicación</p></span></button>';
+    }).join('') : '<p class="vacio">No hay hojas que coincidan.</p>';
+    $('filtroVisor').hidden = $('quitarFiltro').hidden = !filtroVisor;
+    if (filtroVisor) $('filtroVisor').textContent = 'Filtrado por visor: ' + filtroVisor;
+  }
+
+  // ── Hoja ──
+  function ajustarEscala() {
+    var pags = $('paginas'); if (!pags.firstChild) return;
+    pags.style.zoom = 1;
+    var ancho = $('lienzo').clientWidth, max = 0;
+    pags.querySelectorAll('.pagina').forEach(function (pg) { max = Math.max(max, pg.offsetWidth); });
+    var z = Math.min(1, (ancho - 4) / max);
+    pags.style.zoom = z < 1 ? z.toFixed(3) : 1;
+  }
+  function mostrarHoja(id) {
+    var p = A.plantilla(id); if (!p) return mostrarCatalogo();
+    actual = id;
+    $('cat').hidden = true; $('vista').hidden = false;
+    $('sub').textContent = p.tag + ' · ' + p.titulo;
+    $('btnVisor').href = '../#' + (p.visores[0] || '');
+    $('btnVisor').hidden = !p.visores.length;
+    $('paginas').innerHTML = A.htmlHoja(p);
+    document.title = p.titulo + ' · Hojas de datos · ReyEngi';
+    ajustarEscala();
+    window.scrollTo(0, 0);
+  }
+  function mostrarCatalogo() {
+    actual = null;
+    $('vista').hidden = true; $('cat').hidden = false;
+    $('sub').textContent = 'Instrumentos tipo · PDF y Excel';
+    document.title = 'Hojas de datos · ReyEngi';
+    catalogo();
+  }
+  function ruta() {
+    var h = decodeURIComponent(location.hash.slice(1));
+    var m;
+    if ((m = /^h=(.+)$/.exec(h))) return mostrarHoja(m[1]);
+    if ((m = /^v=(.+)$/.exec(h))) {
+      filtroVisor = m[1];
+      var de = P.filter(function (p) { return p.visores.indexOf(filtroVisor) >= 0; });
+      if (de.length === 1) { history.replaceState(null, '', '#h=' + de[0].id); return mostrarHoja(de[0].id); }
+    } else filtroVisor = null;
+    mostrarCatalogo();
+  }
+
+  $('grid').addEventListener('click', function (e) {
+    var t = e.target.closest('.tarjeta'); if (t) location.hash = 'h=' + t.dataset.id;
+  });
+  $('buscar').addEventListener('input', catalogo);
+  $('quitarFiltro').addEventListener('click', function () { location.hash = ''; });
+  $('btnVolver').addEventListener('click', function () {
+    var varias = filtroVisor && P.filter(function (p) { return p.visores.indexOf(filtroVisor) >= 0; }).length > 1;
+    location.hash = varias ? 'v=' + filtroVisor : '';
+  });
+  window.addEventListener('hashchange', ruta);
+  window.addEventListener('resize', function () { if (actual) ajustarEscala(); });
+
+  // Edición en las celdas
+  var timer = 0;
+  $('paginas').addEventListener('input', function (e) {
+    var td = e.target.closest('td[data-k]'); if (!td || !actual) return;
+    A.guardarCelda(actual, td.dataset.k, td.innerText.replace(/\n+$/, ''));
+    $('estado').textContent = 'Guardando…';
+    clearTimeout(timer); timer = setTimeout(function () { $('estado').textContent = 'Cambios guardados en este navegador'; }, 500);
+  });
+  $('paginas').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && e.target.matches('td[data-k]')) { e.preventDefault(); e.target.blur(); }
+  });
+  $('paginas').addEventListener('paste', function (e) {
+    if (!e.target.closest('td[data-k]')) return;
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text');
+    document.execCommand('insertText', false, t.replace(/\r?\n/g, ' '));
+  });
+  $('paginas').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-accion]'); if (!b || !actual) return;
+    A.filaAplicacion(actual, b.dataset.accion === 'fila-mas' ? 1 : -1);
+    mostrarHoja(actual);
+    var pags = $('paginas').querySelectorAll('.pagina'); pags[pags.length - 1].scrollIntoView({ block: 'end' });
+  });
+
+  $('btnPdf').addEventListener('click', function () { window.print(); });
+  $('btnXls').addEventListener('click', function () { if (actual) A.exportarExcel([actual]); });
+  $('btnXlsTodas').addEventListener('click', function () {
+    A.exportarExcel((filtroVisor && !actual ? P.filter(function (p) { return p.visores.indexOf(filtroVisor) >= 0; }) : P).map(function (p) { return p.id; }));
+  });
+  $('btnPdfTodas').addEventListener('click', function () {
+    var cont = $('impresion');
+    cont.innerHTML = '<div class="paginas">' + P.map(function (p) { return A.htmlHoja(p); }).join('') + '</div>';
+    cont.querySelectorAll('[contenteditable]').forEach(function (td) { td.removeAttribute('contenteditable'); });
+    cont.querySelectorAll('.no-imprimir').forEach(function (n) { n.remove(); });
+    document.body.classList.add('imprimiendo-todo');
+    var fin = function () { document.body.classList.remove('imprimiendo-todo'); cont.innerHTML = ''; window.removeEventListener('afterprint', fin); };
+    window.addEventListener('afterprint', fin);
+    setTimeout(function () { window.print(); }, 300);
+  });
+  $('btnReset').addEventListener('click', function () {
+    if (!actual) return;
+    if (window.confirm('¿Borrar los cambios de esta hoja y volver a los valores tipo?')) { A.reiniciarHoja(actual); mostrarHoja(actual); }
+  });
+
+  // ── Datos del proyecto ──
+  var dlg = $('dlgProyecto'), frm = $('frmProyecto');
+  function llenar(v) {
+    Array.prototype.forEach.call(frm.elements, function (el) { if (el.name) el.value = v[el.name] || ''; });
+    $('patm').textContent = A.presionBarometrica(v.altura) + ' kPa abs';
+  }
+  $('btnProyecto').addEventListener('click', function () { llenar(A.proyecto()); dlg.showModal(); });
+  frm.altura.addEventListener('input', function () { $('patm').textContent = A.presionBarometrica(frm.altura.value) + ' kPa abs'; });
+  $('dlgCancelar').addEventListener('click', function () { dlg.close(); });
+  $('dlgReset').addEventListener('click', function () { A.reiniciarProyecto(); llenar(A.proyecto()); });
+  frm.addEventListener('submit', function () {
+    var v = {};
+    Array.prototype.forEach.call(frm.elements, function (el) { if (el.name) v[el.name] = el.value.trim(); });
+    A.guardarProyecto(v);
+    if (actual) mostrarHoja(actual); else catalogo();
+  });
+
+  ruta();
+})();
+</script>
+</body>
+</html>
