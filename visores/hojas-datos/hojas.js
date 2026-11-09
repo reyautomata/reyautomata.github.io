@@ -60,9 +60,11 @@
       case 'temp': return [pr.tMin, pr.tNor, pr.tMax];
       case 'hr': return [pr.hrMin, pr.hrNor, pr.hrMax];
       case 'patm': return presionBarometrica(pr.altura);
-      default: return pr[k] || '';
+      default: return pr[k] || VALOR_DEFECTO[k] || '';
     }
   }
+  // Valores cuando el proyecto no define el dato
+  var VALOR_DEFECTO = { viento: 'Según condiciones de sitio', bus: 'HART sobre 4-20 mA', senal: '4-20 mA + HART' };
 
   // ── Grilla ─────────────────────────────────────────────────────────────────────
   // Columnas de la hoja de datos (12): sección, ítem, descripción ×3, unidad, especificado ×3, propuesto ×3

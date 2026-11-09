@@ -42,12 +42,14 @@
       f('Altura geográfica', 'm.s.n.m.', S('altura')),
       f('Presión barométrica', 'kPa abs', S('patm')),
       f('Zona sísmica', '', S('sismo')),
+      f('Viento de diseño', '', S('viento')),
       f('Clasificación de área', '', S('area'))
     ] };
   }
 
   function REQUISITOS(extra) {
     var r = (extra || []).concat([
+      f('Kit de montaje', '', 'Requerido'),
       f('Placa de identificación', '', 'Acero inoxidable, TAG grabado, fijada con alambre'),
       f('Certificado de calibración', '', 'Requerido'),
       f('Certificado de aprobación', '', 'Requerido'),
@@ -909,7 +911,9 @@
   };
 
   var NOTAS_GENERALES = [
+    'El Vendedor deberá completar o corregir todas las características del equipo propuesto, en la columna PROPUESTO.',
     'El Vendedor deberá entregar las hojas de datos completadas individualmente por TAG.',
+    'El Vendedor deberá entregar despiece, números de parte, planos dimensionales y repuestos recomendados.',
     'EPV: Especificado por el Vendedor.',
     'NA: No aplica.',
     'TA: Ver Tabla de Aplicación.'
