@@ -162,3 +162,21 @@
       filas: [['2200-ICS-001', 'Piso de operación molino SAG', 'Manos libres', '95', '2200-CCTV-0905', '—', 'A']] }
   });
 })();
+
+/* Enlace de las hojas de datos con los visores 3D de equipos (visores/equipos/visores-equipos.js) */
+(function () {
+  'use strict';
+  var ENLACES = {
+    'eq-temperatura': ['tit', 'tsh'], 'eq-flujo2': ['fit-vortex', 'fit-term'], 'eq-nivel2': ['lit-us', 'lsw-vib'], 'eq-presion-sw': ['psh'],
+    'eq-analizadores': ['ait-cond', 'ait-turb', 'ait-orp', 'ait-gas', 'dit-perc', 'froth'], 'eq-solenoide': ['xv-sol', 'tcv'],
+    'eq-correa': ['zs-des', 'ss-cero', 'ls-tilt', 'zs-cp'], 'eq-plc': ['plc', 'gab'],
+    'eq-comunicaciones': ['sw-eth', 'odf', 'gab-com', 'jb', 'tab-cctv', 'cab-inst', 'cab-fo'], 'eq-cctv': ['cam-ptz', 'cam-fija', 'nvr', 'tab-cctv'],
+    'eq-acceso': ['ca-ctrl', 'ca-lector', 'ca-puerta', 'ca-torn'], 'eq-intercom': ['intercom'], 'rocket-m5-omni': ['radio-ptp']
+  };
+  var P = window.HD.plantillas;
+  Object.keys(ENLACES).forEach(function (v) {
+    ENLACES[v].forEach(function (id) {
+      P.forEach(function (p) { if (p.id === id) { p.visores = p.visores || []; if (p.visores.indexOf(v) < 0) p.visores.push(v); } });
+    });
+  });
+})();
