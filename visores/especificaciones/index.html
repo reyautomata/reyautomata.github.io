@@ -50,7 +50,9 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
 /* Documento */
 .doc { background: var(--papel); color: var(--tinta); color-scheme: light; font: 10.5pt/1.5 Arial, Helvetica, sans-serif; padding: 18mm 18mm 22mm; max-width: 210mm; margin: 0 auto; box-shadow: 0 6px 30px rgba(0,0,0,.45); }
 .doc .portada { min-height: 240mm; display: flex; flex-direction: column; gap: 6mm; }
-.doc .pt-marca { font: 700 16pt Arial, sans-serif; color: var(--brand); text-align: center; padding: 4mm 0 2mm; border-bottom: 2pt solid var(--accent); }
+.doc .pt-marca { display: flex; flex-direction: column; align-items: center; gap: 2mm; padding: 4mm 0 3mm; border-bottom: 2pt solid var(--accent); }
+.doc .pt-marca img { height: 20mm; width: auto; display: block; }
+.doc .pt-marca span { font: italic 9pt Arial, sans-serif; color: #5A6573; }
 .doc .tb { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 2mm 0 4mm; }
 .doc .tb th, .doc .tb td { border: 0.6pt solid #1F2A36; padding: 1.2mm 2mm; vertical-align: middle; text-align: left; }
 .doc .tb th { background: var(--brand); color: #fff; font-weight: 700; text-align: center; }
@@ -79,6 +81,7 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
 
 @page { size: A4; margin: 16mm 16mm 18mm; }
 @media print {
+  :root { color-scheme: light; }
   html, body { background: #fff !important; }
   .barra, .panel, .no-imprimir, #cat { display: none !important; }
   main { padding: 0 !important; max-width: none; }

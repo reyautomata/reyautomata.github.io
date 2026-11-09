@@ -3,6 +3,7 @@
   'use strict';
 
   var R = window.REProyectos, F = window.ET.familias, HD = window.HD;
+  var LOGO = '../../img/logo-reyengi.png', MARCA = 'ReyEngi · Automatización y Control Industrial';
 
   function fam(id) { return F.filter(function (f) { return f.id === id; })[0]; }
   function datosEt(id) { return R.leer('et:' + id, { sel: null, v: {}, revs: null }); }
@@ -210,7 +211,7 @@
   function portada(f, pr, d) {
     var revs = d.revs || [[pr.rev || 'A', pr.porFecha || R.hoy(), 'Emitido para revisión interna']];
     return {
-      datos: [['TIPO DOCUMENTO', 'ESPECIFICACIÓN TÉCNICA'], ['TÍTULO', 'ESPECIFICACIÓN TÉCNICA ' + f.titulo], ['TÍTULO PROYECTO', pr.proyecto], ['CLIENTE', pr.cliente],
+      datos: [['TIPO DOCUMENTO', 'ESPECIFICACIÓN TÉCNICA'], ['EMPRESA DE INGENIERÍA', pr.contratista || '—'], ['TÍTULO', 'ESPECIFICACIÓN TÉCNICA ' + f.titulo], ['TÍTULO PROYECTO', pr.proyecto], ['CLIENTE', pr.cliente],
         ['ID', pr.idCliente || '—'], ['CÓDIGO', numeroEt(f, pr)], ['FECHA DOCUMENTO', revs[revs.length - 1][1] || R.hoy()]],
       control: [['Preparado por', pr.por, 'Ingeniero de Proyecto'], ['Revisado por', pr.reviso, 'Jefe de Disciplina'], ['Aprobado por', pr.aprobo, 'Jefe de Proyecto'],
         ['Revisado por el Cliente', pr.revisoCliente, 'Contraparte'], ['Aprobado por el Cliente', pr.aproboCliente, 'Jefe de Proyecto']],
@@ -235,7 +236,7 @@
   function html(f, pr, d) {
     var B = construir(f, pr, d), P = portada(f, pr, d), codigo = numeroEt(f, pr);
     var h = ['<article class="doc">'];
-    h.push('<section class="portada"><div class="pt-marca">' + e(pr.contratista) + '</div>');
+    h.push('<section class="portada"><div class="pt-marca"><img src="' + LOGO + '" alt="ReyEngi"><span>' + e(MARCA) + '</span></div>');
     h.push(tablaHtml({ cab: 0, filas: P.datos.map(function (r) { return [{ t: r[0] }, { t: r[1] }]; }) }).replace('<table class="tb">', '<table class="tb pt-datos">'));
     h.push(tablaHtml({ cab: 1, filas: [['Control', 'Nombre', 'Rol', 'Firma', 'Fecha']].concat(P.control.map(function (r) { return [r[0], r[1] || '', r[2], '', '']; })) }));
     h.push('<div class="revs">' + tablaHtml({ cab: 1, filas: [['Revisión', 'Descripción', 'Fecha']].concat(P.revs.map(function (r) { return [{ t: r[0], c: true }, r[2], { t: r[1], c: true }]; })) }) +
@@ -257,10 +258,11 @@
   }
 
   // ── Word ──────────────────────────────────────────────────────────────────────────
-  function word(f, pr, d) {
+  function word(f, pr, d, logo) {
     var B = construir(f, pr, d), P = portada(f, pr, d), codigo = numeroEt(f, pr), C = 'DCE3EB';
     var bloques = [];
-    bloques.push({ p: pr.contratista || '', b: true, c: true, sz: 28, color: '022A55' });
+    bloques.push(logo ? { p: '', img: 70, c: true } : { p: 'ReyEngi', b: true, c: true, sz: 32, color: '022A55' });
+    bloques.push({ p: MARCA, c: true, sz: 16, color: '5A6573' });
     bloques.push({ p: '', c: true });
     bloques.push({ tabla: { anchos: [45, 125], filas: P.datos.map(function (r) { return [{ t: r[0], b: true, fill: C, color: '022A55' }, { t: r[1], b: r[0] === 'TÍTULO' || r[0] === 'CÓDIGO' }]; }) } });
     bloques.push({ tabla: { cab: 1, anchos: [42, 30, 42, 30, 26], filas: [['Control', 'Nombre', 'Rol', 'Firma', 'Fecha']].concat(P.control.map(function (r) { return [{ t: r[0], b: true }, { t: r[1] || '', c: true }, r[2], '', '']; })) } });
@@ -283,18 +285,28 @@
     return window.DOCX.generar({
       titulo: 'Especificación técnica ' + f.titulo, autor: pr.contratista || 'ReyEngi',
       encabezado: [
-        [{ t: pr.contratista || '', b: true }, { t: pr.proyecto || '', c: true }, { t: codigo, b: true, c: true }],
-        [{ t: pr.cliente || '' }, { t: 'ESPECIFICACIÓN TÉCNICA ' + f.titulo, c: true, b: true }, { t: 'Rev. ' + (P.revs[P.revs.length - 1][0] || '') + '  ·  {PAG}', c: true }]
+        [logo ? { t: '', img: 34, c: true } : { t: 'ReyEngi', b: true, c: true }, { t: pr.proyecto || '', c: true }, { t: codigo, b: true, c: true }],
+        [{ t: pr.cliente || '', c: true }, { t: 'ESPECIFICACIÓN TÉCNICA ' + f.titulo, c: true, b: true }, { t: 'Rev. ' + (P.revs[P.revs.length - 1][0] || '') + '  ·  {PAG}', c: true }]
       ],
+      logo: logo,
       anchosEncabezado: [42, 86, 42],
       pie: codigo,
       bloques: todos
     });
   }
 
-  function descargarWord(id) {
+  function cargarLogo() {
+    return fetch(LOGO).then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) {
+      if (!b) return null;
+      var u = new Uint8Array(b), dv = new DataView(b);
+      // tamaño en píxeles desde la cabecera PNG (IHDR)
+      return { bytes: u, w: dv.getUint32(16), h: dv.getUint32(20) };
+    }).catch(function () { return null; });
+  }
+  function descargarWord(id) { return cargarLogo().then(function (logo) { guardarWord(id, logo); }); }
+  function guardarWord(id, logo) {
     var f = fam(id), pr = R.activo(), d = datosEt(id);
-    var bytes = word(f, pr, d), nombre = (numeroEt(f, pr) + ' ET ' + f.titulo).replace(/[\\/:*?"<>|]+/g, '-') + '.docx';
+    var bytes = word(f, pr, d, logo), nombre = (numeroEt(f, pr) + ' ET ' + f.titulo).replace(/[\\/:*?"<>|]+/g, '-') + '.docx';
     var url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
     var a = document.createElement('a'); a.href = url; a.download = nombre;
     document.body.appendChild(a); a.click(); a.remove();

@@ -44,7 +44,17 @@
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
   }
-  var NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  var NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+  var IMG = null, idDib = 1;   // logo del documento: { bytes, w, h } en píxeles
+  // Imagen en línea (el logo); ancho en mm, alto proporcional
+  function imagen(mm) {
+    if (!IMG) return '';
+    var cx = Math.round(mm * 36000), cy = Math.round(cx * IMG.h / IMG.w), id = idDib++;
+    return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + id + '" name="Logo ' + id + '"/>' +
+      '<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+      '<pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+  }
   var MM = 56.6929; // twips por mm
   var AZUL = '022A55', CLARO = 'DCE3EB';
 
@@ -69,7 +79,7 @@
     op = op || {};
     var ppr = (op.estilo ? '<w:pStyle w:val="' + op.estilo + '"/>' : '') + (op.num ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : '') +
       (op.c ? '<w:jc w:val="center"/>' : op.j ? '<w:jc w:val="both"/>' : '') + (op.esp !== undefined ? '<w:spacing w:before="0" w:after="' + op.esp + '"/>' : '');
-    return '<w:p>' + (ppr ? '<w:pPr>' + ppr + '</w:pPr>' : '') + texto(t, op) + '</w:p>';
+    return '<w:p>' + (ppr ? '<w:pPr>' + ppr + '</w:pPr>' : '') + (op.img ? imagen(op.img) : '') + texto(t, op) + '</w:p>';
   }
 
   // Celda: string o { t, b, c, fill, color, cs (gridSpan), sz }
@@ -93,7 +103,7 @@
         var fill = c.fill || (esCab ? AZUL : null), color = c.color || (esCab ? 'FFFFFF' : null);
         x.push('<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/>' + (cs > 1 ? '<w:gridSpan w:val="' + cs + '"/>' : '') +
           (fill ? '<w:shd w:val="clear" w:color="auto" w:fill="' + fill + '"/>' : '') + '<w:vAlign w:val="center"/></w:tcPr>' +
-          parrafo(c.t, { b: c.b || esCab, c: c.c || esCab, color: color, sz: c.sz || 18, esp: 0 }) + '</w:tc>');
+          parrafo(c.t, { b: c.b || esCab, c: c.c || esCab, color: color, sz: c.sz || 18, esp: 0, img: c.img }) + '</w:tc>');
       });
       x.push('</w:tr>');
     });
@@ -120,7 +130,7 @@
       if (b.h) return parrafo((b.num ? b.num + '\t' : '') + b.t, { estilo: 'Titulo' + b.h });
       if (b.ul) return b.ul.map(function (t) { return parrafo(t, { num: true, estilo: 'Vineta' }); }).join('');
       if (b.tabla) return tabla(b.tabla);
-      if (b.p !== undefined) return parrafo(b.p, { b: b.b, c: b.c, sz: b.sz, color: b.color, j: !b.c, estilo: b.estilo });
+      if (b.p !== undefined) return parrafo(b.p, { b: b.b, c: b.c, sz: b.sz, color: b.color, j: !b.c, estilo: b.estilo, img: b.img });
       return '';
     }).join('');
   }
@@ -151,6 +161,7 @@
     '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>';
 
   function generar(doc) {
+    IMG = doc.logo && doc.logo.bytes ? doc.logo : null; idDib = 1;
     var ancho = 170; // mm útiles en A4 con márgenes de 20 mm
     var cab = doc.encabezado ? tabla({ anchos: doc.anchosEncabezado || [45, 80, 45], filas: doc.encabezado.map(function (f) { return f.map(function (c) { return typeof c === 'object' && c ? Object.assign({ sz: 15 }, c) : { t: c, sz: 15 }; }); }) }) : '';
     var sect = '<w:sectPr><w:headerReference w:type="default" r:id="rIdH1"/><w:footerReference w:type="default" r:id="rIdF1"/><w:titlePg/>' +
@@ -159,9 +170,10 @@
     var header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr ' + NS + '>' + (cab || '<w:p/>') + '</w:hdr>';
     var footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:ftr ' + NS + '>' + parrafo((doc.pie || '') + '   ·   {PAG}', { c: true, sz: 14, color: '5A6573', esp: 0 }) + '</w:ftr>';
     var fecha = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+    var RELIMG = IMG ? '<Relationship Id="rIdImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>' : '';
     var archivos = [
       { nombre: '[Content_Types].xml', datos: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/>' +
         '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
         '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
         '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' +
@@ -182,7 +194,8 @@
         '<Relationship Id="rIdN" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' +
         '<Relationship Id="rIdT" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>' +
         '<Relationship Id="rIdH1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>' +
-        '<Relationship Id="rIdF1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>' },
+        '<Relationship Id="rIdF1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' + RELIMG + '</Relationships>' },
+      { nombre: 'word/_rels/header1.xml.rels', datos: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + RELIMG + '</Relationships>' },
       { nombre: 'word/document.xml', datos: documento },
       { nombre: 'word/styles.xml', datos: estilos() },
       { nombre: 'word/numbering.xml', datos: NUMERACION },
@@ -190,6 +203,7 @@
       { nombre: 'word/header1.xml', datos: header },
       { nombre: 'word/footer1.xml', datos: footer }
     ];
+    if (IMG) archivos.push({ nombre: 'word/media/logo.png', datos: IMG.bytes });
     return zip(archivos);
   }
 
