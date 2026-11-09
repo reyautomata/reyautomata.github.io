@@ -156,6 +156,35 @@
       filas: [['2300-FIT-0345', 'Aire a celda de flotación 1', '8"-AL-2300-011', 'Aire', '8', '300', '600', '900', '40', '35', 'Inserción', '—', 'A']] }
   });
 
+  agrega('Flujo', {
+    id: 'fit-parshall', tag: 'FIT', titulo: 'Medidor de flujo en canaleta Parshall', hoja: 'MEDIDOR DE FLUJO EN CANALETA PARSHALL',
+    secciones: [GENERAL(), SITIO(),
+      { s: 'DATOS DE PROCESO', r: [f('Fluido', '', TA), f('Sólidos en suspensión', '% p/p', TA), f('Temperatura', '°C', TA), f('Flujo (mín / normal / máx)', 'L/s', TA),
+        f('Nivel aguas abajo máximo sobre la cresta (Hb)', 'm', TA), f('Espuma / oleaje / turbulencia', '', TA)] },
+      { s: 'CANALETA PARSHALL', r: [
+        f('Norma de diseño', '', 'ISO 9826 / ASTM D1941'), f('Ancho de garganta (W)', 'pulg', TA), f('Ecuación de descarga (flujo libre)', '', 'Q = K · Ha^n'),
+        f('Coeficiente K y exponente n', '', 'Según W (ASTM D1941)'), f('Rango de flujo de la canaleta', 'L/s', EPV), f('Carga máxima Ha', 'm', EPV),
+        f('Límite de sumergencia Hb/Ha', '%', '60 (6"–9") / 70 (1–8 pies)'), f('Punto de medición de Ha', '', '2/3 de A aguas arriba de la cresta'),
+        f('Punto de medición de Hb', '', 'En la garganta (si se requiere corrección)'), f('Material', '', 'FRP / AISI 304 / hormigón (TA)'),
+        f('Instalación', '', 'Embebida en canal de hormigón (TA)'), f('Pozo de calma', '', TA)
+      ] },
+      { s: 'SENSOR DE NIVEL', r: [
+        f('Principio de medición', '', 'Ultrasónico sin contacto / radar 80 GHz (TA)'), f('Rango de medición', 'm', TA), f('Zona muerta (blanking)', 'm', EPV),
+        f('Exactitud', 'mm', '± 2 o mejor'), f('Compensación de temperatura', '', REQ), f('Montaje', '', 'Soporte sobre el punto Ha / pozo de calma'),
+        f('Material del sensor', '', 'PVDF / PP'), f('Largo de cable sensor–transmisor', 'm', TA)
+      ] },
+      TRANSMISOR([f('Montaje', '', 'Remoto en tubo de 2"'), f('Linealización', '', 'Curva Parshall predefinida (Q = K · Ha^n)'),
+        f('Unidades de ingeniería', '', 'L/s, m³/h, m³'), f('Totalizador', '', 'No reseteable y reseteable'), f('Salida de pulsos', 'm³/pulso', TA),
+        f('Relés', '', '2 (alarma de flujo alto / bajo)'), f('Registro de datos', '', REQ), f('Alimentación', '', S('alim2h'))]),
+      { s: 'INSTALACIÓN', r: [f('Canal de aproximación', '', 'Recto, sin oleaje, ≥ 10 W (EPV)'), f('Nivelación', '', 'Piso convergente nivelado longitudinal y transversal'),
+        f('Cero de la medición', '', 'Cota de la cresta')] },
+      ACCESORIOS([f('Protección solar del sensor y transmisor', '', REQ), f('Regla limnimétrica en el punto Ha', '', REQ)]),
+      CERT([f('Verificación en terreno', '', 'Contra regla limnimétrica y aforo volumétrico o por trazador')])],
+    aplicacion: { columnas: [C_TAG, C_SERV, { t: 'CANAL', w: 13 }, { t: 'FLUIDO', w: 9 }, { t: 'W (pulg)', w: 6 }, { t: 'FLUJO (L/s)', sub: ['MÍN', 'NOR', 'MÁX'], w: 6 },
+      { t: 'Ha MÁX (m)', w: 7 }, { t: 'SENSOR', w: 9 }, C_PID, C_REV],
+      filas: [['3100-FIT-0101', 'Agua recuperada a espesador', 'CN-3100-01', 'Agua', '12', '20', '150', '350', '0,60', 'Ultrasónico', '—', 'A']] }
+  });
+
   // ── Nivel ───────────────────────────────────────────────────────────────────────
   reemplaza('lit-radar', {
     tag: 'LIT', titulo: 'Transmisor de nivel radar', hoja: 'TRANSMISOR DE NIVEL TIPO RADAR',

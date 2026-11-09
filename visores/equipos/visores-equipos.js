@@ -558,16 +558,188 @@
         [3, 'Techo de protección', 1, techo, [0, 20, 0], [0, 194, 20]], [4, 'Baliza de llamada', 1, baliza, [0, 20, 0], [0, 206, 0]], [5, 'Parlante bocina para ruido alto', 1, bocina, [30, 0, 20], [16, 186, 18]], [6, 'Conduit PoE', 1, cond, [0, 0, 20], [10, 40, 20]]] };
     };
 
+    // ── Canaleta Parshall con medición de nivel y totalizador ──
+    // Dimensiones (cm) según ASTM D1941 / USBR Water Measurement Manual; descarga en flujo libre
+    // Q = C·Ha^n con Ha en pies y Q en pie³/s (C y n de ASTM D1941), convertida a unidades SI.
+    var PARSHALL = {
+      '6"': { W: 15.2, A: 62.1, B: 61.0, C: 39.4, D: 40.3, E: 61.0, F: 30.5, G: 61.0, K: 7.6, N: 11.4, c: 2.06, n: 1.58, qmin: 1.5, qmax: 111, hmax: 0.45, sl: 0.60 },
+      '9"': { W: 22.9, A: 88.0, B: 86.4, C: 38.1, D: 57.5, E: 76.2, F: 30.5, G: 45.7, K: 7.6, N: 11.4, c: 3.07, n: 1.53, qmin: 2.5, qmax: 251, hmax: 0.61, sl: 0.60 },
+      "1'": { W: 30.5, A: 137.2, B: 134.4, C: 61.0, D: 84.5, E: 91.5, F: 61.0, G: 91.5, K: 7.6, N: 22.9, c: 4.00, n: 1.522, qmin: 3.1, qmax: 455, hmax: 0.76, sl: 0.70 },
+      "2'": { W: 61.0, A: 152.4, B: 149.5, C: 91.5, D: 120.7, E: 91.5, F: 61.0, G: 91.5, K: 7.6, N: 22.9, c: 8.00, n: 1.550, qmin: 11.9, qmax: 937, hmax: 0.76, sl: 0.70 },
+      "3'": { W: 91.5, A: 167.6, B: 164.5, C: 122.0, D: 157.2, E: 91.5, F: 61.0, G: 91.5, K: 7.6, N: 22.9, c: 12.00, n: 1.566, qmin: 17.3, qmax: 1427, hmax: 0.76, sl: 0.70 }
+    };
+    var SE = { w: "1'", q: null, h2: -0.10, vel: 60, tot: 0 };
+    function kSI(p) { return 0.0283168 * p.c * Math.pow(1 / 0.3048, p.n); }              // Q [m³/s] = K·Ha[m]^n
+    function qLibre(p, ha) { return ha > 0 ? kSI(p) * Math.pow(ha, p.n) * 1000 : 0; }      // L/s
+    function haLibre(p, q) { return q > 0 ? Math.pow(q / 1000 / kSI(p), 1 / p.n) : 0; }     // m
+    // Reducción de caudal por sumergencia (aproximación didáctica, no reemplaza las curvas de corrección)
+    function qSumergido(p, ha, hb) { var s = hb / ha; if (s <= p.sl) return qLibre(p, ha); var x = Math.min(1, (s - p.sl) / (1 - p.sl)); return qLibre(p, ha) * Math.max(0.05, 1 - 0.45 * Math.pow(x, 1.5)); }
+    function hidraulica(p, q, h2) { // q real L/s, h2 nivel aguas abajo sobre la cresta (m)
+      var ha = haLibre(p, q), hb = h2, sum = false;
+      if (ha > 0 && hb / ha > p.sl) {
+        sum = true; var lo = ha, hi = ha * 4 + 0.5;
+        for (var i = 0; i < 60; i++) { var mid = (lo + hi) / 2; if (qSumergido(p, mid, hb) < q) lo = mid; else hi = mid; }
+        ha = (lo + hi) / 2;
+      }
+      return { ha: ha, hb: hb, s: ha > 0 ? hb / ha : 0, sum: sum, qmed: qLibre(p, ha) };
+    }
+    function hexa(c, mat) {
+      var idx = [0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0], pos = [];
+      idx.forEach(function (i) { pos.push(c[i][0], c[i][1], c[i][2]); });
+      var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+      return M(g, mat);
+    }
+    // Prisma entre x0 y x1 con límites en z (za..zb) y alturas de fondo (yb) y techo (yt) en cada extremo
+    function prisma(x0, x1, za0, zb0, za1, zb1, yb0, yb1, yt0, yt1, mat) {
+      return hexa([[x0, yb0, za0], [x1, yb1, za1], [x1, yb1, zb1], [x0, yb0, zb0], [x0, yt0, za0], [x1, yt1, za1], [x1, yt1, zb1], [x0, yt0, zb0]], mat);
+    }
+    var mFrp = std(0xe8e2d2, 0.05, 0.55, { side: THREE.DoubleSide }), mHorm = std(0xb9b5ad, 0, 0.95, { side: THREE.DoubleSide });
+    var mAgua = new THREE.MeshPhysicalMaterial({ color: 0x3f8fd2, metalness: 0, roughness: 0.15, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false });
+    function lcd() {
+      var c = document.createElement('canvas'); c.width = 256; c.height = 128;
+      var tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+      var m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshBasicMaterial({ map: tx }));
+      m.userData.dibujar = function (l1, l2, l3) {
+        var x = c.getContext('2d'); x.fillStyle = '#a9dcb2'; x.fillRect(0, 0, 256, 128); x.fillStyle = '#0d2a14';
+        x.font = 'bold 34px monospace'; x.fillText(l1, 10, 42); x.font = 'bold 28px monospace'; x.fillText(l2, 10, 82); x.font = '22px monospace'; x.fillText(l3, 10, 116);
+        tx.needsUpdate = true;
+      };
+      return m;
+    }
+    function parshall(conPozo) {
+      var p = PARSHALL[SE.w], t = 4, yc = p.N + 20, E = p.E, B = p.B, F = p.F, LG = p.G;
+      var Lap = 120 + p.W, Ldn = 90 + p.W;
+      var fd = yc - p.N + p.K;
+      // Secciones: [x0, x1, semiancho0, semiancho1, fondo0, fondo1, material]
+      var xm = -2 / 3 * B, hwm = p.D / 2 + (p.W / 2 - p.D / 2) / 3;
+      var secs = [[-B - Lap, -B, p.D / 2, p.D / 2, yc, yc, mHorm], [-B, xm, p.D / 2, hwm, yc, yc, mFrp], [xm, 0, hwm, p.W / 2, yc, yc, mFrp],
+        [0, F, p.W / 2, p.W / 2, yc, yc - p.N, mFrp], [F, F + LG, p.W / 2, p.C / 2, yc - p.N, fd, mFrp], [F + LG, F + LG + Ldn, p.C / 2, p.C / 2, fd, fd, mHorm]];
+      var canal = G(), canaleta = G();
+      secs.forEach(function (s) {
+        var g = s[6] === mHorm ? canal : canaleta;
+        g.add(prisma(s[0], s[1], -(s[2] + t), s[2] + t, -(s[3] + t), s[3] + t, 0, 0, s[4], s[5], s[6]));
+        [-1, 1].forEach(function (k) { g.add(prisma(s[0], s[1], k * s[2], k * (s[2] + t), k * s[3], k * (s[3] + t), 0, 0, yc + E, yc + E, s[6])); });
+      });
+      // Agua: se rehace cuando cambian Ha o el nivel aguas abajo
+      var agua = G(); agua.userData.scope = 'agua';
+      function dibujarAgua(h) {
+        while (agua.children.length) { var o = agua.children.pop(); o.geometry.dispose(); }
+        var Ha = h.ha * 100, yd = Math.max(fd + 1.5, yc + h.hb * 100);
+        var sup = [yc + Ha * 1.01, yc + Ha * 1.005, yc + Ha, Math.max(yc + 0.72 * Ha, h.sum ? yc + h.hb * 100 : 0), Math.max(yc - p.N + 0.4 * Ha, yd), yd, yd];
+        if (Ha <= 0.05) return;
+        secs.forEach(function (s, i) {
+          var a = Math.max(sup[i], s[4] + 0.6), b = Math.max(sup[i + 1], s[5] + 0.6);
+          agua.add(prisma(s[0], s[1], -s[2] + 0.2, s[2] - 0.2, -s[3] + 0.2, s[3] - 0.2, s[4] + 0.3, s[5] + 0.3, a, b, mAgua));
+        });
+        agua.children.forEach(function (m) { m.castShadow = false; m.userData.scope = 'agua'; });
+      }
+      // Regla limnimétrica en el punto de medición (2/3 de A aguas arriba de la cresta)
+      var regla = G(box(1, E, 6, mats.yellow, xm, yc + E / 2, -hwm + 0.6));
+      for (var r = 0; r < E; r += 10) regla.add(box(1.2, 1, 3, mats.black, xm, yc + r, -hwm + 3.2));
+      // Sensor y soportes
+      var ys = yc + E + 30, zs = 0, xw = xm, zPozo = -(hwm + t + 30);
+      if (conPozo) zs = zPozo;
+      var sensor = conPozo
+        ? G(cyl(4, 9, mats.white, xw, ys + 3, zs, 'y'), cone(4.6, 3, 4, mats.white, xw, ys - 3, zs, 'y'), brida(3, xw, ys - 5, zs, 'y'))
+        : G(cyl(5.5, 14, mats.white, xw, ys + 7, zs, 'y'), brida(4, xw, ys + 15, zs, 'y'));
+      var zPost = (conPozo ? zPozo : -(hwm + t)) - 22;
+      var soporte = G(pedestal(ys + 20, xw, zPost), box(5, 5, Math.abs(zPost - zs) + 8, mats.galv, xw, ys + 20, (zPost + zs) / 2));
+      var haz = M(new THREE.ConeGeometry(1, 1, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xef5a05, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
+      var pozo = null, aguaPozo = null;
+      if (conPozo) {
+        aguaPozo = cyl(14, 1, mAgua, xw, 0, zPozo, 'y'); aguaPozo.castShadow = false; aguaPozo.userData.scope = 'agua';
+        pozo = G(tubo(15, E + 30, mats.tank, xw, yc - 15 + (E + 30) / 2, zPozo, 'y'), cyl(15, 2, mats.concrete, xw, yc - 15, zPozo, 'y'),
+          cyl(2.5, -zPozo - hwm, mats.pipe, xw, yc + 4, (zPozo - hwm) / 2, 'z'), valvulaBola(2, xw, yc + 4, -(hwm + t + 8), 'z'));
+      }
+      var xT = xw + 90, zT = zPost - 30;
+      var pantalla = lcd(); pantalla.position.set(0, 3, 6.3);
+      var tx = G(rbox(22, 26, 12, 2, mats.cab, 0, 0, 0), pantalla, box(28, 2, 18, mats.galv, 0, 15, 2)); tx.position.set(xT, 140, zT);
+      var pedT = pedestal(150, xT, zT);
+      var cable = conduit([[xw, ys + 15, zs], [xw, ys + 28, zs - 6], [xw + 10, ys + 24, zPost], [xT - 10, 150, zT + 4], [xT, 126, zT]]);
+      var root = G(canal, canaleta, agua, regla, sensor, soporte, haz, tx, pedT, cable, flecha(-B - Lap + 30, yc + p.hmax * 100 + 12, 0));
+      if (pozo) root.add(pozo, aguaPozo);
+      var partes = [
+        [1, 'Canal de aproximación con tramo recto', 1, canal, [0, 0, 0], [-B - Lap / 2, yc + E + 6, p.D / 2]],
+        [2, 'Canaleta Parshall de ' + SE.w + ' (convergente, garganta, divergente)', 1, canaleta, [0, -10, 0], [F + LG / 2, yc + E + 8, p.C / 2]],
+        [3, 'Punto de medición Ha (2/3 de A) con regla limnimétrica', 1, regla, [0, 0, -20], [xm - 25, yc + E + 4, -hwm]],
+        [4, conPozo ? 'Sensor radar sobre el pozo de calma' : 'Sensor ultrasónico sobre el punto Ha', 1, sensor, [0, 30, 0], [xw, ys + 40, zs]],
+        [5, 'Transmisor de flujo con totalizador', 1, tx, [30, 0, 30], [xT, 178, zT]],
+        [6, 'Soporte del sensor y pedestal del transmisor', 2, G(soporte, pedT), [0, 0, 30], [xw - 10, 40, zPost]],
+        [7, 'Cable sensor–transmisor en conduit', 1, cable, [10, 10, 10], [xT - 30, 165, zT + 6]]
+      ];
+      if (pozo) partes.push([8, 'Pozo de calma con tubo de conexión y válvula', 1, pozo, [0, 0, 30], [xw + 45, yc - 10, zPozo - 16]]);
+
+      // Simulación
+      var lect = null, acum = 0;
+      function calcular() {
+        var h = hidraulica(p, SE.q, SE.h2);
+        dibujarAgua(h);
+        var yAgua = yc + h.ha * 100, d = ys - yAgua;
+        haz.scale.set(conPozo ? 10 : Math.max(4, d * 0.18), Math.max(1, d), conPozo ? 10 : Math.max(4, d * 0.18));
+        haz.position.set(xw, yAgua + d / 2, zs); haz.visible = d > 1;
+        if (aguaPozo) { var hh = Math.max(1, yAgua - (yc - 14)); aguaPozo.scale.y = hh; aguaPozo.position.y = yc - 14 + hh / 2; }
+        lect = h; lect.d = d; lect.h0 = ys - yc;
+        return h;
+      }
+      var sim = {
+        html: '<div class="simg">' +
+          '<label>Ancho de garganta W<select id="sW">' + Object.keys(PARSHALL).map(function (k) { return '<option' + (k === SE.w ? ' selected' : '') + '>' + k + '</option>'; }).join('') + '</select></label>' +
+          '<label>Caudal real en el canal <output id="oQ"></output><input type="range" id="sQ" min="' + p.qmin + '" max="' + p.qmax + '" step="0.1"></label>' +
+          '<label>Nivel aguas abajo sobre la cresta <output id="oT"></output><input type="range" id="sT" min="-20" max="' + Math.round(p.hmax * 100) + '" step="1"></label>' +
+          '<label>Velocidad del totalizador<select id="sV"><option value="1">Tiempo real</option><option value="60">× 60 (1 s = 1 min)</option><option value="3600">× 3600 (1 s = 1 h)</option></select></label></div>' +
+          '<dl class="lect" id="lect"></dl><p class="eq" id="eq"></p><button type="button" id="sRes" class="tg">Reiniciar totalizador</button>',
+        montar: function () {
+          if (SE.q === null || SE.q > p.qmax || SE.q < p.qmin) SE.q = Math.round(p.qmax * 0.35);
+          $('sQ').value = SE.q; $('sT').value = Math.round(SE.h2 * 100); $('sV').value = String(SE.vel);
+          $('sW').addEventListener('change', function () { SE.w = this.value; SE.q = null; construir(); });
+          $('sQ').addEventListener('input', function () { SE.q = +this.value; calcular(); sim.pintar(); });
+          $('sT').addEventListener('input', function () { SE.h2 = +this.value / 100; calcular(); sim.pintar(); });
+          $('sV').addEventListener('change', function () { SE.vel = +this.value; });
+          $('sRes').addEventListener('click', function () { SE.tot = 0; sim.pintar(); });
+          calcular(); sim.pintar();
+        },
+        pintar: function () {
+          var h = lect, n = function (v, d) { return v.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d }); };
+          var mA = Math.min(20.5, 4 + 16 * h.qmed / p.qmax), err = SE.q > 0 ? (h.qmed - SE.q) / SE.q * 100 : 0, rebalse = h.ha * 100 > E;
+          $('oQ').textContent = n(SE.q, 1) + ' L/s'; $('oT').textContent = n(SE.h2 * 100, 0) + ' cm';
+          var filas = [
+            ['Distancia sensor–agua d', n(h.d * 10, 0) + ' mm'],
+            ['Carga Ha = H0 − d', n(h.ha * 1000, 0) + ' mm'],
+            ['Nivel aguas abajo Hb', n(h.hb * 1000, 0) + ' mm'],
+            ['Sumergencia Hb/Ha', n(h.s * 100, 0) + ' % (límite ' + n(p.sl * 100, 0) + ' %)'],
+            ['Régimen', h.sum ? '<span class="warn">Sumergido: medición sobrestimada</span>' : 'Flujo libre'],
+            ['Caudal medido', n(h.qmed, 1) + ' L/s · ' + n(h.qmed * 3.6, 1) + ' m³/h'],
+            ['Error frente al caudal real', (Math.abs(err) < 0.05 ? '0,0' : (err > 0 ? '+' : '') + n(err, 1)) + ' %'],
+            ['Señal 4–20 mA (0–' + n(p.qmax, 0) + ' L/s)', n(mA, 2) + ' mA'],
+            ['Totalizador', n(SE.tot, 2) + ' m³']
+          ];
+          if (rebalse) filas.push(['Alerta', '<span class="warn">Ha supera la altura de la canaleta</span>']);
+          $('lect').innerHTML = filas.map(function (f) { return '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd>'; }).join('');
+          $('eq').innerHTML = 'Q = K · Ha<sup>n</sup> con K = ' + n(kSI(p), 4) + ' y n = ' + n(p.n, 3) + ' (Q en m³/s, Ha en m). H0 = ' + n(h.h0 * 10, 0) + ' mm es la distancia del sensor a la cresta.';
+          pantalla.userData.dibujar(n(h.qmed, 1) + ' L/s', 'Σ ' + n(SE.tot, 1) + ' m3', 'Ha ' + n(h.ha * 1000, 0) + ' mm  ' + n(mA, 1) + ' mA');
+        },
+        tick: function (dt) {
+          if (!lect) return;
+          SE.tot += lect.qmed / 1000 * dt * SE.vel; acum += dt;
+          if (acum > 0.25) { acum = 0; sim.pintar(); }
+        }
+      };
+      return { root: root, partes: partes, sim: sim };
+    }
+    V['parshall-us'] = function () { return parshall(false); };
+    V['parshall-pozo'] = function () { return parshall(true); };
+
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
     var $ = function (id) { return document.getElementById(id); };
     var estado = { v: DEF.variantes[0], etiquetas: true, explotar: false, giro: false };
-    var modelo = null, partes = [], etiquetas = [], ex = 0, exObj = 0;
+    var modelo = null, partes = [], etiquetas = [], ex = 0, exObj = 0, simAct = null, tPrev = 0;
 
     function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function construir() {
       if (modelo) { scene.remove(modelo); etiquetas.forEach(function (l) { l.element.remove(); }); }
       var r = V[estado.v.m]();
-      modelo = r.root; partes = r.partes; etiquetas = [];
+      modelo = r.root; partes = r.partes; etiquetas = []; simAct = r.sim || null;
+      $('simSec').hidden = !simAct; if (simAct) $('sim').innerHTML = simAct.html;
       modelo.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       partes.forEach(function (p) {
         var obj = p[3]; if (obj && obj !== modelo && !obj.parent) modelo.add(obj);
@@ -580,13 +752,14 @@
       etiquetas.forEach(function (l) { l.visible = estado.etiquetas; });
       encuadrar();
       pintarPanel();
+      if (simAct) simAct.montar();
     }
     function encuadrar() {
       partes.forEach(function (p) { p[3].position.copy(p[3].userData.base); });
       var box3 = new THREE.Box3().setFromObject(modelo);
       var c = box3.getCenter(new THREE.Vector3()), r = box3.getSize(new THREE.Vector3()).length() / 2;
-      var dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.0;
-      var dir = new THREE.Vector3(0.65, 0.42, 1).normalize();
+      var dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (estado.v.zoom || 1);
+      var cd = estado.v.cam || [0.65, 0.42, 1], dir = new THREE.Vector3(cd[0], cd[1], cd[2]).normalize();
       controls.target.copy(c); camera.position.copy(c).addScaledVector(dir, dist);
       camera.near = Math.max(0.5, dist / 60); camera.far = dist * 20; camera.updateProjectionMatrix();
       controls.minDistance = r * 0.25; controls.maxDistance = dist * 3; controls.update();
@@ -620,7 +793,9 @@
     }
     window.addEventListener('resize', resize);
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function loop() {
+    function loop(ts) {
+      var dt = tPrev ? Math.min(0.1, (ts - tPrev) / 1000) : 0; tPrev = ts || 0;
+      if (simAct && simAct.tick) simAct.tick(dt);
       var meta = estado.explotar ? 1 : 0;
       if (Math.abs(ex - meta) > 0.001) { ex += (meta - ex) * (reduce ? 1 : 0.12); aplicarSeparacion(); }
       modelo && modelo.traverse(function (o) { if (o.userData.flecha) { o.userData.t = ((o.userData.t || 0) + 0.6) % 60; o.position.x = (o.userData.x0 === undefined ? (o.userData.x0 = o.position.x) : o.userData.x0) + (reduce ? 0 : o.userData.t); } });
@@ -660,6 +835,9 @@
       { c: '23-B', t: 'Velocidad cero', m: 'velocidad-cero', d: 'Sensor inductivo frente a un disco blanco en el eje de la polea de cola, con receptor en pedestal.', n: ['Distancia sensor–blanco según el fabricante.', 'Agregar sensor en la polea motriz para detectar resbalamiento.'] },
       { c: '23-C', t: 'Interruptor tilt', m: 'tilt', d: 'Sonda tilt colgante en el chute para detectar atollos.', n: ['Ubicar la sonda donde el material la incline al acumularse.'] },
       { c: '23-D', t: 'Contrapeso', m: 'contrapeso', d: 'Interruptores de posición alta y baja del contrapeso del tensor.', n: ['Coordinar las posiciones con el diseño mecánico de la correa.'] }] },
+    { id: 'eq-parshall', num: '24', tab: 'ic', titulo: 'Canaleta Parshall', sub: 'Medición de flujo en canal abierto con nivel ultrasónico o radar y totalizador.', variantes: [
+      { c: '24-A', t: 'Sensor ultrasónico sobre la canaleta', m: 'parshall-us', cam: [-0.7, 1.4, 1], zoom: 0.72, d: 'Canaleta Parshall con sensor ultrasónico sobre el punto de medición Ha y transmisor que calcula el caudal con la curva Q = K·Ha^n y lo totaliza. Cambia el ancho de garganta, el caudal y el nivel aguas abajo para ver la medición, la señal 4–20 mA y el efecto de la sumergencia.', n: ['Medir Ha a 2/3 de la longitud de la pared convergente (A) aguas arriba de la cresta (ISO 9826 / ASTM D1941).', 'Piso de la sección convergente nivelado en ambos sentidos; el cero del transmisor es la cota de la cresta.', 'Canal de aproximación recto, sin oleaje ni turbulencia y con velocidad baja.', 'Verificar que Hb/Ha no supere el límite de sumergencia (60 % en 6"–9", 70 % en 1–8 pies); si lo supera, medir Hb y corregir.', 'Sensor fuera de su zona muerta, con protección solar y sin espuma bajo el haz.'] },
+      { c: '24-B', t: 'Sensor radar sobre pozo de calma', m: 'parshall-pozo', cam: [-0.7, 1.4, 1], zoom: 0.72, d: 'El nivel se mide en un pozo de calma conectado a la pared de la canaleta en el punto Ha, útil con oleaje, espuma o viento. Usa la misma simulación de caudal y totalizador.', n: ['Tubo de conexión al ras de la pared interior y a la altura del piso de la sección convergente.', 'Válvula para limpiar sedimentos del tubo y del pozo.', 'Pozo con protección contra heladas si corresponde.'] }] },
     { id: 'eq-plc', num: 'CP', tab: 'tb', titulo: 'Gabinete PLC y E/S remotas', sub: 'Gabinete de control con PLC, fuentes redundantes y borneras, y E/S remotas en terreno.', variantes: [
       { c: 'CP-A', t: 'Gabinete de control en sala', m: 'gabinete-plc', d: 'Gabinete autosoportado con PLC, módulos de E/S, fuentes redundantes, switch, canaletas y borneras.', n: ['Reserva de 20 % en E/S y borneras.', 'Llenado de canaletas ≤ 40 %.'] },
       { c: 'CP-B', t: 'E/S remotas en terreno', m: 'rio-terreno', d: 'Gabinete NEMA 4X en estructura de terreno con techo de protección solar y prensaestopas.', n: ['Entradas de cables solo por la parte inferior.'] }] },
@@ -699,6 +877,10 @@
     'ul.notas{margin:0;padding-left:18px;line-height:1.5;color:var(--fg)}.toggles{display:flex;flex-wrap:wrap;gap:6px}' +
     '.tg,#reset{font:600 13px var(--f-body);background:transparent;color:var(--fg);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:40px}.tg[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}' +
     '.foot{font-size:12px;color:var(--muted);line-height:1.5}' +
+    '.simg{display:flex;flex-direction:column;gap:10px}.simg label{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font-weight:600;font-size:13px;align-items:center}' +
+    '.simg input,.simg select{grid-column:1/-1;width:100%;font:14px var(--f-body);accent-color:var(--accent)}.simg select{min-height:36px;border:1.5px solid var(--line);border-radius:6px;background:var(--chip);color:var(--fg);padding:4px 8px}' +
+    '.simg output{font:600 13px var(--f-mono);color:var(--accent-ink)}dl.lect{display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin:12px 0 8px;font-size:13px}' +
+    'dl.lect dt{color:var(--muted)}dl.lect dd{margin:0;font:600 13px var(--f-mono);text-align:right}.warn{color:#c0392b;font-family:var(--f-body)}p.eq{margin:0 0 10px;font-size:12px;line-height:1.5;color:var(--muted)}' +
     '@media (max-width:820px){.tag span{display:none}.tag{padding:3px}main{grid-template-columns:1fr;grid-template-rows:minmax(320px,55vh) auto}aside{border-left:0;border-top:1px solid var(--line)}.howto{display:none}}';
 
   function htmlVisor(def) {
@@ -710,6 +892,7 @@
       '<aside><section><h2>Montaje</h2><div class="types" id="types"></div></section>' +
       '<section><p class="desc" id="desc"></p></section>' +
       '<section><h2>Vista</h2><div class="toggles"><button type="button" class="tg" id="tLabels">Etiquetas</button><button type="button" class="tg" id="tExplode">Separar piezas</button><button type="button" class="tg" id="tSpin">Girar</button><button type="button" id="reset">Restablecer vista</button></div></section>' +
+      '<section id="simSec" hidden><h2>Simulación y variables</h2><div id="sim"></div></section>' +
       '<section><h2>Componentes</h2><ol class="bom" id="bom"></ol></section>' +
       '<section><h2>Notas de montaje</h2><ul class="notas" id="notas"></ul></section>' +
       '<p class="foot">Modelo referencial con proporciones aproximadas (1 u = 1 cm). Usa “Hoja de datos”, “Especificación técnica” y “Exportar 3D” en la barra superior.</p></aside></main>\n</div>\n' +
