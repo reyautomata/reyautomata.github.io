@@ -12,6 +12,11 @@
     p('El proveedor indicará los tramos rectos requeridos y, en los de inserción, incluirá la válvula de inserción en caliente cuando se especifique.')
   ] });
 
+  agregar('flujo', { id: 'fit-parshall', t: 'Medidor de flujo en canaleta Parshall', das: ['fit-parshall'], b: [
+    p('La medición de flujo en canal abierto se hará con canaleta Parshall según ISO 9826 / ASTM D1941, con el ancho de garganta indicado en la hoja de datos, y un sensor de nivel ultrasónico o radar ubicado a 2/3 de la longitud de la pared convergente aguas arriba de la cresta, directamente o en un pozo de calma.'),
+    p('El transmisor calculará el caudal con la ecuación de descarga Q = K·Ha^n de la canaleta, lo totalizará y entregará salida {senal}, salida de pulsos y relés de alarma.'),
+    p('El Contratista verificará la nivelación de la canaleta, el cero en la cota de la cresta y que la relación Hb/Ha no supere el límite de sumergencia. Si lo supera, se medirá Hb y se aplicará la corrección por sumergencia.')
+  ] });
   agregar('analisis', { id: 'dit-perc', t: 'Densímetro no nuclear', das: ['dit-perc'], b: [
     p('El densímetro será no invasivo y sin fuente radiactiva, montado sobre la tubería, con compensación de temperatura y salida {senal}.'),
     p('El proveedor informará las condiciones de montaje, los pesos dinámicos para el diseño del soporte y la exactitud esperada para la pulpa indicada en la hoja de datos.')
