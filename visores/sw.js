@@ -1,5 +1,5 @@
 /* Guarda la app en el teléfono para usarla sin internet. Cambia VERSION al publicar cambios. */
-const VERSION = 'visores-v47';
+const VERSION = 'visores-v48';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
   './exportar-3d.js', './proyectos.js', './proyectos/', './proyectos/index.html', './especificaciones/', './especificaciones/index.html', './especificaciones/plantillas-et.js', './especificaciones/docx.js', './especificaciones/et.js', './hojas-datos/', './hojas-datos/index.html', './hojas-datos/plantillas.js', './hojas-datos/xlsx.js', './hojas-datos/hojas.js', '../img/logo-reyengi.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
