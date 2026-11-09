@@ -12,13 +12,26 @@
   var LOGO = '../../img/logo-reyengi.png';
 
   // ── Persistencia (localStorage, siempre con try/catch) ───────────────────────
+  // Los datos viven en el proyecto activo (ver ../proyectos.js); sin ese módulo se usa la clave antigua
+  var PR = window.REProyectos;
   function leer(k, def) {
+    if (PR) return k === 'proyecto' ? PR.datos() : PR.leer(k, def);
     try { var v = localStorage.getItem(CLAVE + k); return v ? JSON.parse(v) : def; } catch (e) { return def; }
   }
   function guardar(k, v) {
+    if (PR) {
+      if (k === 'proyecto') { var d = PR.activo(); PR.guardar(d.id, Object.assign(d, v)); } else PR.escribir(k, v);
+      return;
+    }
     try { localStorage.setItem(CLAVE + k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ }
   }
-  function borrar(k) { try { localStorage.removeItem(CLAVE + k); } catch (e) {} }
+  function borrar(k) {
+    if (PR) {
+      if (k === 'proyecto') { var d = PR.activo(); PR.guardar(d.id, Object.assign({}, PR.DEFECTO, { nombre: d.nombre })); } else PR.borrar(k);
+      return;
+    }
+    try { localStorage.removeItem(CLAVE + k); } catch (e) {}
+  }
 
   function proyecto() { return Object.assign({}, HD.proyecto, leer('proyecto', {})); }
   function datosHoja(id) { return leer('hoja:' + id, { v: {}, apl: null, prov: {}, notas: [], revs: null }); }

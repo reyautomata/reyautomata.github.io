@@ -86,6 +86,8 @@ footer { max-width: 1180px; margin: 0 auto; color: var(--muted); font-size: 12.5
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
 .hdlink { align-self: flex-start; margin-top: 12px; display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--accent); color: #fff; text-decoration: none; font: 600 14px var(--f-body); }
 .hdlink:hover { background: var(--accent); }
+.hdlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.hdlinks .hdlink { margin-top: 8px; }
 .hdlink:focus-visible, .pv-hd:focus-visible, .vbar a:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .pv-hd { display: inline-flex; align-items: center; background: transparent; color: var(--fg); border: 1.5px solid var(--accent); border-radius: 8px; padding: 12px 16px; font: 600 14px var(--f-body); min-height: 46px; text-decoration: none; }
 .pv-hd:hover { background: var(--accent); color: #fff; }
@@ -148,7 +150,7 @@ main section[data-tab][hidden] { display: none !important; }
     <h1>Visores 3D de montaje</h1>
     <p class="lede">Modelos interactivos de los detalles típicos de instrumentación y de los equipos de demostración. Gira, separa piezas, revisa listas de materiales y simula la medición.</p>
     <div class="mode" id="mode"><i aria-hidden="true"></i><span id="modeTxt">Versión en línea</span></div>
-    <a class="hdlink" href="hojas-datos/">Hojas de datos de instrumentos · PDF y Excel →</a>
+    <div class="hdlinks"><a class="hdlink" href="hojas-datos/">Hojas de datos · PDF y Excel →</a><a class="hdlink" href="especificaciones/">Especificaciones técnicas · Word →</a><a class="hdlink" href="proyectos/">Proyectos</a></div>
   </div>
 </header>
 <main>

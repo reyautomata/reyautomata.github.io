@@ -32,6 +32,8 @@ button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visi
 .barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
 .barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
 .barra a.volver:hover { color: var(--accent-ink); }
+.selp { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--f-mono); color: var(--muted); }
+.selp select { min-height: 40px; max-width: 220px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--panel); color: var(--fg); font: 600 14px var(--f-body); padding: 0 8px; }
 
 /* Catálogo */
 main { padding: 22px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
@@ -132,6 +134,8 @@ dialog .pie-dlg .izq { margin-right: auto; }
   <div class="fila">
     <a class="volver" href="../">← Visores 3D</a>
     <h1>Hojas de datos de instrumentos <small id="sub">Instrumentos tipo · PDF y Excel</small></h1>
+    <label class="selp">Proyecto <select id="selProyecto" aria-label="Proyecto activo"></select></label>
+    <a class="btn" href="../proyectos/">Proyectos</a>
     <button type="button" id="btnProyecto">Datos del proyecto</button>
     <button type="button" id="btnPdfTodas">PDF de todas</button>
     <button type="button" class="pri" id="btnXlsTodas">Excel de todas</button>
@@ -204,6 +208,7 @@ dialog .pie-dlg .izq { margin-right: auto; }
   </form>
 </dialog>
 
+<script src="../proyectos.js"></script>
 <script src="plantillas.js"></script>
 <script src="xlsx.js"></script>
 <script src="hojas.js"></script>
@@ -346,6 +351,18 @@ dialog .pie-dlg .izq { margin-right: auto; }
     if (actual) mostrarHoja(actual); else catalogo();
   });
 
+  // ── Proyecto activo ──
+  function llenarProyectos() {
+    var R = window.REProyectos, sel = $('selProyecto'); if (!R || !sel) return;
+    var a = R.activoId();
+    sel.innerHTML = R.lista().map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === a ? ' selected' : '') + '>' + esc(p.nombre) + '</option>'; }).join('');
+  }
+  $('selProyecto').addEventListener('change', function () {
+    window.REProyectos.seleccionar(this.value);
+    if (actual) mostrarHoja(actual); else catalogo();
+  });
+  window.addEventListener('storage', function () { llenarProyectos(); });
+  llenarProyectos();
   ruta();
 })();
 </script>
