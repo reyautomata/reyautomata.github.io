@@ -1,0 +1,24 @@
+/* Suite ReyEngi · capa común de las páginas internas: tipografía compacta y menú de entregables. */
+body { font-size: 13.5px; }
+.barra { border-bottom-width: 3px !important; padding-top: 8px !important; }
+.barra h1 { font-size: 17px !important; letter-spacing: .2px; }
+.barra h1 small { font-size: 11px !important; }
+.barra .volver { font-size: 12px !important; }
+.barra .btn, .barra button:not([role="tab"]), .barra select { font-size: 12.5px !important; min-height: 32px !important; padding: 5px 10px !important; border-radius: 6px !important; border-width: 1px !important; }
+.barra .selp { font-size: 11.5px !important; }
+.barra .tabs button, .barra [role="tab"] { font-size: 13px !important; min-height: 36px !important; padding: 7px 12px !important; }
+main .btn, main > * button.btn { font-size: 12.5px !important; min-height: 32px !important; padding: 5px 11px !important; border-width: 1px !important; border-radius: 6px !important; }
+main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), main select, main textarea { font-size: 13px; }
+main h2 { font-size: 15px; }
+/* Menú de entregables */
+.rg-ent { position: relative; }
+.rg-ent > summary { list-style: none; cursor: pointer; font: 600 12.5px var(--f-body, system-ui); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 6px; padding: 5px 10px; min-height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.rg-ent > summary::-webkit-details-marker { display: none; }
+.rg-ent > summary:hover, .rg-ent[open] > summary { border-color: #EF5A05; }
+.rg-ent > summary:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.rg-ent ol { position: absolute; left: 0; top: calc(100% + 6px); z-index: 50; list-style: none; margin: 0; padding: 6px; width: 280px; background: #0F2036; border: 1px solid #1E3350; border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+.rg-ent a { display: flex; gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 5px; color: #E6EDF5; text-decoration: none; font: 500 13px var(--f-body, system-ui); }
+.rg-ent a b { font: 600 11px var(--f-mono, monospace); color: #FF8A45; min-width: 18px; }
+.rg-ent a:hover, .rg-ent a:focus-visible { background: #13263F; outline: none; }
+.rg-ent a[aria-current="page"] { background: #13263F; box-shadow: inset 2px 0 0 #EF5A05; }
+@media print { .rg-ent { display: none !important; } }
