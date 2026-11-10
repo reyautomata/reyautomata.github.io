@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de espesamiento · ReyEngi</title>
+<meta name="description" content="Simulador dinámico de una planta de espesamiento de relaves: espesador, cama, floculante, rastras, bombas de descarga, agua recuperada, lazos de control, alarmas, tendencias y vista 3D.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --panel2: #13284A; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544; --bad: #FF8C8F; --sym-bg: #0F2036;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; line-height: 1.5; }
+[hidden] { display: none !important; }
+a { color: var(--accent-ink); }
+button { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 5px 11px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, select, textarea { font: 13px var(--f-body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 32px; width: 100%; }
+label { display: grid; gap: 3px; align-content: start; font: 600 11.5px var(--f-body); color: var(--muted); }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 3px solid var(--accent); padding: 8px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1400px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 17px; font-weight: 700; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 12px var(--f-mono); text-decoration: none; }
+.tabs { max-width: 1400px; margin: 8px auto 0; display: flex; gap: 2px; overflow-x: auto; }
+.tabs button { border: 0; border-radius: 6px 6px 0 0; min-height: 36px; color: var(--muted); background: transparent; white-space: nowrap; font-size: 13px; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--fg); box-shadow: inset 0 3px 0 var(--accent); }
+main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1400px; margin: 0 auto; }
+.intro { color: var(--muted); max-width: 100ch; margin: 0 0 14px; }
+.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px 14px; margin: 0 0 14px; }
+.blk > h2 { margin: 0 0 8px; font: 700 12px var(--f-mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--accent-ink); }
+.blk p { margin: 0 0 8px; max-width: 110ch; }
+h3.sub { margin: 14px 0 8px; font: 600 12px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+ol.pasos { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 110ch; }
+ol.pasos b { color: #fff; }
+table.t { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.t th { text-align: left; font: 600 11px var(--f-mono); color: var(--muted); padding: 6px 7px; border-bottom: 1px solid var(--line); background: var(--panel2); position: sticky; top: 0; }
+table.t td { padding: 5px 7px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t td b { color: #fff; }
+.tscroll { overflow: auto; max-height: 460px; border: 1px solid var(--line); border-radius: 8px; }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.sym { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; align-items: center; }
+.sym svg { width: 80px; height: 60px; color: #DCE6F1; }
+.sym figcaption b { display: block; font-size: 12.5px; color: #fff; }
+.sym figcaption span { font-size: 11.5px; color: var(--muted); line-height: 1.35; display: block; }
+.linea { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; margin: 8px 0; font: 700 18px var(--f-mono); }
+.seg { padding: 3px 8px; border-radius: 5px; background: var(--panel2); border: 1px solid var(--line); }
+.seg.area { border-color: #3F7FBF; } .seg.serv { border-color: #3FBF7F; } .seg.nps { border-color: #F2B544; } .seg.spec { border-color: #EF5A05; } .seg.corr { border-color: #A98BFF; } .seg.aisl { border-color: #FF8C8F; }
+.guion { color: var(--muted); }
+ul.lst { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; align-items: end; }
+.res { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--bg); }
+.res.bien { border-color: #2A8C5E; } .res.av { border-color: #8C6A1F; } .res.mal { border-color: #8C2A2E; }
+.res .big { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--muted); }
+.res .big b { display: block; font: 700 18px var(--f-mono); color: #fff; }
+b.mal { color: var(--bad); } b.av { color: var(--warn); }
+.peq { font-size: 11.5px; color: var(--muted); }
+textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margin-top: 8px; }
+.simgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-items: start; }
+.simvista { padding: 0; overflow: hidden; position: relative; }
+#sCv { display: block; width: 100%; height: 420px; background: #0B1828; }
+.lect { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+.lect div { background: var(--panel); padding: 7px 10px; font-size: 11px; color: var(--muted); }
+.lect b { display: block; font: 700 16px var(--f-mono); color: #fff; }
+.lect .mal b { color: var(--bad); } .lect .av b { color: var(--warn); } .lect .ok b { color: var(--ok); }
+.herr { display: flex; gap: 6px; flex-wrap: wrap; }
+input[type=range] { accent-color: var(--accent); padding: 0; min-height: 24px; border: 0; background: none; }
+label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
+#sCurva { width: 100%; height: auto; background: #0B1828; border-radius: 8px; }
+@media (max-width: 1000px) { .simgrid { grid-template-columns: 1fr; } .lect { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .dos, .tres { grid-template-columns: 1fr; } }
+@media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
+
+
+.simg { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 12px; align-items: start; }
+#v3d { position: relative; height: 470px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #0b1828; }
+#v3d canvas { display: block; }
+.lab3d { position: absolute; inset: 0; pointer-events: none; }
+.tag3d { font: 600 10.5px var(--f-body); color: #dbe8f5; background: rgba(11,24,40,.82); border: 1px solid #35587d; padding: 2px 6px; border-radius: 4px; white-space: nowrap; line-height: 1.35; }
+.tag3d b { color: #FF8A45; } .tag3d .mal, .lect .mal b { color: var(--bad); }
+.barra3d { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+.barra3d button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+#reloj { font: 700 13px var(--f-mono); color: #fff; margin-left: auto; }
+#panel { display: grid; gap: 8px; max-height: 760px; overflow: auto; padding-right: 2px; }
+.fp { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px 10px; display: grid; gap: 6px; }
+.fp h3 { margin: 0; font: 700 11.5px var(--f-mono); text-transform: uppercase; letter-spacing: .8px; color: var(--accent-ink); display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.fp h3 small { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; }
+.fp label { font-size: 11px; }
+.fp .lect { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.fp .lect div { background: var(--bg); padding: 4px 7px; font-size: 10.5px; color: var(--muted); }
+.fp .lect b { display: block; font: 700 14px var(--f-mono); color: #fff; } .fp .lect i { font-style: normal; font-size: 10px; }
+.fp .lect .av b { color: var(--warn); } .fp .lect .ok b { color: var(--ok); }
+.fila { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+button.eq { font-size: 11.5px; } button.eq.ok, button.ok { border-color: #2A8C5E; color: #3FBF7F; } button.eq.mal, button.mal { border-color: #8C2A2E; color: var(--bad); }
+button.mini { min-height: 28px; padding: 2px 7px; }
+.chk { display: flex; gap: 6px; align-items: center; font: 500 11.5px var(--f-body); color: var(--fg); grid-template-columns: none; }
+.chk input { width: auto; min-height: 0; }
+.trendbox { margin-top: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+#trend { width: 100%; height: 200px; display: block; }
+#leyenda { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+#leyenda i { display: inline-block; width: 12px; height: 3px; margin-right: 4px; vertical-align: middle; }
+.al { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.al ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; max-height: 190px; overflow: auto; font-size: 11.5px; }
+.al li { padding: 4px 8px; border-radius: 5px; background: var(--bg); border-left: 3px solid var(--line); }
+.al li.falla { border-left-color: #E5484D; } .al li.aviso { border-left-color: #F2B544; } .al li.info { border-left-color: #3F7FBF; } .al li.ok { border-left-color: #2A8C5E; }
+.al li span { font: 600 10.5px var(--f-mono); color: var(--muted); }
+tr.grp td { background: var(--panel2); font: 700 11px var(--f-mono); color: var(--accent-ink); text-transform: uppercase; }
+table.t input { min-height: 28px; padding: 3px 6px; }
+@media (max-width: 1100px) { .simg { grid-template-columns: minmax(0, 1fr); } #panel { max-height: none; } } .simg > div { min-width: 0; }
+@media (max-width: 700px) { #v3d { height: 340px; } .al { grid-template-columns: 1fr; } .fp .lect { grid-template-columns: 1fr 1fr; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Suite ReyEngi</a>
+    <h1>Simulador de espesamiento<small>espesador · floculante · descarga · agua recuperada</small></h1>
+  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <button type="button" data-t="sim" aria-selected="true">Simulador</button>
+    <button type="button" data-t="proceso" aria-selected="false">Proceso y control</button>
+    <button type="button" data-t="planta" aria-selected="false">Planta del modelo</button>
+  </nav>
+</header>
+<main>
+  <section data-t="sim">
+    <div class="barra3d">
+      <button type="button" class="pri" id="bPlay">⏸ Pausa</button>
+      <span class="fila" id="velocidad" role="group" aria-label="Velocidad de simulación"><button type="button" data-v="1" aria-pressed="false">×1</button><button type="button" data-v="10" aria-pressed="true">×10</button><button type="button" data-v="60" aria-pressed="false">×60</button><button type="button" data-v="300" aria-pressed="false">×300</button></span>
+      <select id="esc" aria-label="Escenario" style="width:auto"><option value="">Escenarios…</option><option value="base">Reiniciar operación normal</option><option value="alim">Alimentación +20 %</option><option value="gruesos">Alimentación más concentrada</option><option value="floc">Falla de dosificación de floculante</option><option value="sobre">Sobredosificación de floculante</option><option value="bomba">Falla de bomba de descarga</option><option value="rastras">Rastras detenidas</option><option value="acumula">Cama acumulada</option></select>
+      <span class="fila" id="vistas"><button type="button" data-vista="general">General</button><button type="button" data-vista="espesador">Espesador</button><button type="button" data-vista="bombas">Bombas</button><button type="button" data-vista="floculante">Floculante</button></span>
+      <label class="chk"><input type="checkbox" id="iCorte" checked> Corte</label>
+      <span id="reloj"></span>
+    </div>
+    <div class="simg">
+      <div>
+        <div id="v3d" aria-label="Vista 3D de la planta de espesamiento"></div>
+        <div class="trendbox"><canvas id="trend" aria-label="Tendencias"></canvas><div id="leyenda"></div></div>
+        <div class="al"><div class="blk" style="margin:0"><h2>Alarmas activas</h2><ul id="alarmas"></ul></div><div class="blk" style="margin:0"><h2>Bitácora</h2><ul id="bitacora"></ul></div></div>
+      </div>
+      <div id="panel"></div>
+    </div>
+  </section>
+
+  <section data-t="proceso" hidden>
+    <p class="intro">El simulador resuelve, segundo a segundo, el balance de sólidos y agua del espesador. La dosis de floculante fija el flujo límite de sólidos, la velocidad de sedimentación y la densidad máxima alcanzable. La compactación de la cama depende del tiempo de residencia de los sólidos. El torque de rastras crece con el inventario y la densidad, y el levante automático lo alivia. Es un modelo de entrenamiento y de estudio de control: los parámetros se ajustan con ensayos de sedimentación y datos del proveedor.</p>
+    <div class="dos">
+      <div class="blk"><h2>Balance en línea</h2><div class="tscroll" style="max-height:none"><table class="t" id="balance"></table></div></div>
+      <div class="blk"><h2>Estrategia de control</h2><ol class="pasos">
+        <li><b>Densidad de descarga → velocidad de la bomba.</b> PI inverso: si la densidad sube sobre la consigna, la bomba acelera y extrae más cama.</li>
+        <li><b>Override por cama.</b> Si el nivel de cama supera el límite (5 m), el selector de alta toma el control por inventario aunque la densidad esté baja; evita sobrecargar las rastras.</li>
+        <li><b>Inventario / nivel de cama.</b> Modo alternativo: mantiene la cama en su consigna y deja flotar la densidad.</li>
+        <li><b>Razón floculante / sólidos.</b> La bomba dosificadora sigue la dosis en g/t por los sólidos medidos (caudal × densidad de alimentación).</li>
+        <li><b>Levante de rastras.</b> Sube con torque sobre 60 % y baja bajo 35 %; las rastras se disparan al 100 %.</li>
+        <li><b>Bombas duty / standby.</b> Si la bomba en servicio falla, parte la de respaldo a los 15 s.</li>
+        <li><b>Agua recuperada.</b> El nivel del estanque regula la velocidad de las bombas y arranca o detiene unidades.</li>
+      </ol></div>
+    </div>
+    <div class="blk"><h2>Parámetros del espesador y de la descarga</h2><div class="form" id="pParam"></div><p class="peq">Se guardan en la configuración de planta del proyecto activo.</p></div>
+  </section>
+
+  <section data-t="planta" hidden>
+    <p class="intro">Tags de equipos e instrumentos que usa el simulador. Importa la configuración extraída del modelo 3D de tu proyecto (archivo JSON); queda guardada solo en el proyecto activo de este navegador y no se publica.</p>
+    <div class="herr" style="margin-bottom:10px"><button type="button" class="pri" id="bImportar">Importar configuración (JSON)</button><input type="file" id="fImportar" accept=".json,application/json" hidden><button type="button" id="bExportar">Exportar</button><button type="button" id="bGenerica">Restablecer genérica</button><span class="peq" id="cfgEstado" aria-live="polite"></span></div>
+    <p class="meta" id="cfgNombre"></p>
+    <div class="dos">
+      <div class="tscroll" style="max-height:none"><table class="t" id="tPlanta"><thead><tr><th>Tag</th><th>Descripción</th><th>Fuente en el modelo</th><th>Rol en el simulador</th></tr></thead><tbody></tbody></table></div>
+      <div class="blk"><h2>Notas de la configuración</h2><ul class="lst" id="cfgNotas"></ul></div>
+    </div>
+  </section>
+</main>
+<script src="../proyectos.js"></script>
+<script src="modelo.js"></script>
+<script src="planta.js"></script>
+<script src="../lib3d.js" defer></script>
+<script src="vista3d.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
