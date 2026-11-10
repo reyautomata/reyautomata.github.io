@@ -357,5 +357,13 @@
     return s.join('\r\n') + '\r\n';
   }
 
-  window.LAZOS_DIBUJO = { hojas: hojas, svg: svg, dxf: dxf, conexionado: conexionado, W: W, H: H };
+  // Bornes de la bornera y de la tarjeta de una señal, con la misma numeración que el diagrama
+  function terminales(s, cfg) {
+    var c = conexionado(s, cfg || {}), base = (s.canal || 0) * 4, k = 0, tb = [], tj = [];
+    c.filas.forEach(function (f) { if (f.it) tb.push(f.fu ? 'FU' + pad((s.canal || 0) + 1, 2) : String(base + (++k))); });
+    if (tb.length && (s.tipo === 'AI' || s.tipo === 'AO')) tb.push('SH');
+    c.filas.forEach(function (f) { if (f.card && tj.indexOf(f.card.n) < 0) tj.push(f.card.n); });
+    return { tb: tb, tarjeta: tj };
+  }
+  window.LAZOS_DIBUJO = { hojas: hojas, svg: svg, dxf: dxf, conexionado: conexionado, terminales: terminales, W: W, H: H };
 })();

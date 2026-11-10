@@ -10,6 +10,7 @@
  *       { tabla: { anchos: [mm...], filas: [[...]], cab: n } }  // cab = filas de encabezado
  *       { indice: true }                                // tabla de contenido (Word la actualiza al abrir)
  *       { salto: true }                                 // salto de página
+ *       { seccion: { papel: 'A3', orient: 'h' } }       // nueva sección (papel u orientación distintos)
  *     ]
  *   });
  */
@@ -101,7 +102,7 @@
         for (var k = 0; k < cs; k++) w += anchos[col + k] || 0;
         col += cs;
         var fill = c.fill || (esCab ? AZUL : null), color = c.color || (esCab ? 'FFFFFF' : null);
-        x.push('<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/>' + (cs > 1 ? '<w:gridSpan w:val="' + cs + '"/>' : '') +
+        x.push('<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/>' + (cs > 1 ? '<w:gridSpan w:val="' + cs + '"/>' : '') + (c.vm === 'start' ? '<w:vMerge w:val="restart"/>' : c.vm ? '<w:vMerge/>' : '') +
           (fill ? '<w:shd w:val="clear" w:color="auto" w:fill="' + fill + '"/>' : '') + '<w:vAlign w:val="center"/></w:tcPr>' +
           parrafo(c.t, { b: c.b || esCab, c: c.c || esCab, color: color, sz: c.sz || 18, esp: 0, img: c.img }) + '</w:tc>');
       });
@@ -123,8 +124,16 @@
     return x.join('');
   }
 
+  // Secciones: { seccion: { papel: 'A4'|'A3', orient: 'v'|'h' } } cierra la sección anterior y cambia el papel
+  var SEC = { cur: { papel: 'A4', orient: 'v' }, n: 0 };
+  function sectPr(c, primera) {
+    var d = c.papel === 'A3' ? [16838, 23811] : [11906, 16838], hz = c.orient === 'h';
+    return '<w:sectPr><w:headerReference w:type="default" r:id="rIdH1"/><w:footerReference w:type="default" r:id="rIdF1"/>' + (primera ? '<w:titlePg/>' : '') +
+      '<w:pgSz w:w="' + (hz ? d[1] : d[0]) + '" w:h="' + (hz ? d[0] : d[1]) + '"' + (hz ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="454" w:gutter="0"/></w:sectPr>';
+  }
   function cuerpo(bloques) {
     return bloques.map(function (b) {
+      if (b.seccion) { var x = '<w:p><w:pPr>' + sectPr(SEC.cur, SEC.n === 0) + '</w:pPr></w:p>'; SEC.n++; SEC.cur = b.seccion; return x; }
       if (b.salto) return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
       if (b.indice) return indice(bloques);
       if (b.h) return parrafo((b.num ? b.num + '\t' : '') + b.t, { estilo: 'Titulo' + b.h });
@@ -164,9 +173,9 @@
     IMG = doc.logo && doc.logo.bytes ? doc.logo : null; idDib = 1;
     var ancho = 170; // mm útiles en A4 con márgenes de 20 mm
     var cab = doc.encabezado ? tabla({ anchos: doc.anchosEncabezado || [45, 80, 45], filas: doc.encabezado.map(function (f) { return f.map(function (c) { return typeof c === 'object' && c ? Object.assign({ sz: 15 }, c) : { t: c, sz: 15 }; }); }) }) : '';
-    var sect = '<w:sectPr><w:headerReference w:type="default" r:id="rIdH1"/><w:footerReference w:type="default" r:id="rIdF1"/><w:titlePg/>' +
-      '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="454" w:gutter="0"/></w:sectPr>';
-    var documento = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document ' + NS + '><w:body>' + cuerpo(doc.bloques) + sect + '</w:body></w:document>';
+    SEC = { cur: { papel: 'A4', orient: 'v' }, n: 0 };
+    var contenido = cuerpo(doc.bloques), sect = sectPr(SEC.cur, SEC.n === 0);
+    var documento = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document ' + NS + '><w:body>' + contenido + sect + '</w:body></w:document>';
     var header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr ' + NS + '>' + (cab || '<w:p/>') + '</w:hdr>';
     var footer = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:ftr ' + NS + '>' + parrafo((doc.pie || '') + '   ·   {PAG}', { c: true, sz: 14, color: '5A6573', esp: 0 }) + '</w:ftr>';
     var fecha = new Date().toISOString().replace(/\.\d+Z$/, 'Z');

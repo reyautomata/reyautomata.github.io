@@ -118,6 +118,42 @@ code { font-family: var(--f-mono); color: var(--accent-ink); }
 
 #imp { display: none; }
 
+/* Documento E/S */
+.docio { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; align-items: start; }
+.dform { display: grid; gap: 10px; position: sticky; top: 128px; max-height: calc(100vh - 150px); overflow: auto; padding-right: 4px; }
+.dform fieldset { grid-template-columns: 1fr 1fr; }
+.dform .ancho { grid-column: 1 / -1; }
+.dform textarea { font-family: var(--f-body); font-size: 13px; }
+.dform label.chk { display: flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 500; }
+.dform label.chk input { width: 18px; min-height: 18px; }
+.dprev { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.pg { background: #fff; color: #17212C; box-shadow: 0 6px 30px rgba(0,0,0,.45); padding: 12mm 14mm; font: 10pt/1.4 Arial, Helvetica, sans-serif; color-scheme: light; }
+.pg.v { width: 210mm; min-height: 297mm; max-width: 100%; }
+.pg.h { width: 100%; overflow-x: auto; padding: 8mm; }
+.pg table { border-collapse: collapse; width: 100%; }
+.pg td, .pg th { border: 0.6pt solid #1F2A36; padding: 1mm 1.4mm; vertical-align: middle; }
+.pg th, .pg td.lb { background: #022A55; color: #fff; font-weight: 700; font-size: 8pt; text-align: center; }
+.pg td.cl { background: #DCE3EB; color: #022A55; font-weight: 700; }
+.pg .logo { height: 14mm; }
+.pg .cab { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #9FB0C3; padding-bottom: 3mm; margin-bottom: 6mm; }
+.pg .cab span { font-size: 8pt; color: #5A6573; font-style: italic; }
+.pg h2 { color: #022A55; font-size: 13pt; margin: 6mm 0 3mm; }
+.pg h3 { color: #022A55; font-size: 11pt; margin: 5mm 0 2mm; text-transform: uppercase; }
+.pg .tit { text-align: center; color: #022A55; font-size: 15pt; font-weight: 700; margin: 8mm 0 6mm; }
+.pg .datos td:first-child { font-weight: 700; width: 38mm; border: 0; }
+.pg .datos td { border: 0; padding: 0.6mm 1mm; }
+.pg p { margin: 0 0 3mm; text-align: justify; }
+.pg .anexo { text-align: center; padding-top: 90mm; }
+.pg .anexo b { display: block; color: #022A55; font-size: 18pt; margin-bottom: 6mm; }
+table.io2 { font: 6.6pt/1.2 Arial, Helvetica, sans-serif; table-layout: auto; }
+table.io2 th { font-size: 6.4pt; padding: 0.8mm; }
+table.io2 td { padding: 0.6mm 0.9mm; text-align: center; }
+table.io2 td.izq { text-align: left; }
+table.io2 tr.grp td { background: #DCE3EB; color: #022A55; font-weight: 700; text-align: left; font-size: 7pt; }
+table.io2 tr.res td { color: #6B7785; }
+table.encio td { font-size: 7.4pt; padding: 0.8mm 1.2mm; }
+@media (max-width: 980px) { .docio { grid-template-columns: 1fr; } .dform { position: static; max-height: none; } }
+
 /* Vista previa flotante */
 .flota { position: fixed; right: 16px; bottom: 16px; z-index: 30; width: min(720px, calc(100vw - 32px)); height: min(500px, calc(100vh - 140px)); min-width: 320px; min-height: 220px;
   background: var(--panel); border: 1.5px solid var(--accent); border-radius: 10px; box-shadow: 0 12px 40px rgba(0, 0, 0, .55); display: flex; flex-direction: column; resize: both; overflow: hidden; }
@@ -147,12 +183,21 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 }
 @media print {
   @page { size: 420mm 297mm; margin: 0; }
-  html, body { background: #fff; }
+  :root { color-scheme: light; }
+  html, body { background: #fff !important; }
   body > *:not(#imp) { display: none !important; }
   #imp { display: block; }
   .hojaImp { width: 420mm; height: 297mm; page-break-after: always; break-after: page; overflow: hidden; }
   .hojaImp:last-child { page-break-after: auto; break-after: auto; }
   .hojaImp svg { width: 420mm; height: 297mm; display: block; }
+  @page vert { size: A4 portrait; margin: 10mm; }
+  @page hori { size: A3 landscape; margin: 8mm; }
+  #imp .pg { box-shadow: none; padding: 0; width: auto; min-height: 0; max-width: none; overflow: visible; }
+  #imp .pg.v { page: vert; break-after: page; }
+  #imp .pg.h { page: hori; break-after: page; }
+  #imp .pg:last-child { break-after: auto; }
+  #imp table.io2 thead { display: table-header-group; }
+  #imp table.io2 tr { break-inside: avoid; }
 }
 </style>
 </head>
@@ -168,6 +213,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="lazos" aria-selected="true">Diagramas de lazo</button>
     <button type="button" role="tab" data-v="io" aria-selected="false">Listado de E/S</button>
     <button type="button" role="tab" data-v="mod" aria-selected="false">Tarjetas y canales</button>
+    <button type="button" role="tab" data-v="doc" aria-selected="false">Documento E/S</button>
     <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
   </nav>
 </header>
@@ -233,6 +279,21 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <div id="modulos"></div>
   </section>
 
+  <section id="v-doc" hidden>
+    <p class="intro">Documento "Listado de entradas y salidas" del proyecto: portada con control y revisiones, introducción, alcance, antecedentes y referencias, y el Anexo A con todas las señales agrupadas por módulo (con canales de reserva). Se genera desde el listado de E/S y las tarjetas; exporta a Excel (Anexo A), Word y PDF.</p>
+    <div class="herr">
+      <button type="button" class="pri" id="dExcel">Excel · Anexo A</button>
+      <button type="button" id="dWord">Word · documento completo</button>
+      <button type="button" id="dPdf">Imprimir / PDF</button>
+      <button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button>
+      <span class="esp"></span><span class="estado" id="dEstado"></span>
+    </div>
+    <div class="docio">
+      <form id="dForm" class="dform" onsubmit="return false"></form>
+      <div class="dprev" id="dPrev"></div>
+    </div>
+  </section>
+
   <section id="v-cfg" hidden>
     <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
     <div class="herr"><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
@@ -276,6 +337,8 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="isa.js"></script>
 <script src="tarjetas.js"></script>
 <script src="dibujo.js"></script>
+<script src="../especificaciones/docx.js"></script>
 <script src="app.js"></script>
+<script src="docio.js"></script>
 </body>
 </html>

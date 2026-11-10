@@ -24,7 +24,7 @@
     var d = P.leer('lazos', null);
     if (!d) d = ejemplo();
     d.cfg = Object.assign({}, CFG0, d.cfg || {}); d.cfg.modelos = Object.assign({}, CFG0.modelos, (d.cfg || {}).modelos || {});
-    d.modulos = d.modulos || []; d.senales = d.senales || []; d.lazos = d.lazos || {}; d.revs = d.revs || []; d.over = d.over || {};
+    d.doc = d.doc || {}; d.modulos = d.modulos || []; d.senales = d.senales || []; d.lazos = d.lazos || {}; d.revs = d.revs || []; d.over = d.over || {};
     E = d;
   }
   var tGuardar = 0;
@@ -138,7 +138,7 @@
     vista = v;
     $$('.tabs button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.v === v)); });
     $$('main > section').forEach(function (s) { s.hidden = s.id !== 'v-' + v; });
-    ({ lazos: pintarLazos, io: pintarIO, mod: pintarModulos, cfg: pintarCfg })[v]();
+    var fn = ({ lazos: pintarLazos, io: pintarIO, mod: pintarModulos, cfg: pintarCfg })[v] || (window.LAZOS_VISTAS || {})[v]; if (fn) fn();
     try { localStorage.setItem('reyengi-lazos-vista', v); } catch (e) {}
     if (v === 'lazos' && FL.lazo && FL.abierta) sel = sel || FL.lazo;
     refrescarFlota(true);
@@ -176,7 +176,14 @@
     { k: 'rango', l: 'Rango', w: 80 }, { k: 'senal', l: 'Señal', w: 92, ph: function (s) { return E.cfg['senal' + s.tipo]; } },
     { k: 'jb', l: 'Caja (JB)', w: 90 }, { k: 'cable', l: 'Cable', w: 130, ph: function (s) { return resolver(s).cable; } },
     { k: 'mod', l: 'Módulo', w: 110, mod: true }, { k: 'canal', l: 'Canal', w: 64, canal: true },
-    { k: 'hmi', l: 'HMI', w: 80, ph: function (s) { return resolver(s).hmi.join(','); } }, { k: 'marca', l: 'Marca', w: 90 }, { k: 'modeloInst', l: 'Modelo', w: 90 }
+    { k: 'hmi', l: 'HMI', w: 80, ph: function (s) { return resolver(s).hmi.join(','); } },
+    { k: 'tagSenal', l: 'Tag señal', w: 130, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.tagSenal(s) : ''; } },
+    { k: 'descSenal', l: 'Descripción de la señal', w: 220, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.descSenal(s) : ''; } },
+    { k: 'pid', l: 'P&ID', w: 150 }, { k: 'unidad', l: 'Unidad', w: 70, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.rangoUnidad(s)[1] : ''; } },
+    { k: 'aLL', l: 'LL', w: 52, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.alarma(s, 'LL') : ''; } }, { k: 'aL', l: 'L', w: 52, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.alarma(s, 'L') : ''; } },
+    { k: 'aH', l: 'H', w: 52, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.alarma(s, 'H') : ''; } }, { k: 'aHH', l: 'HH', w: 52, ph: function (s) { return window.LAZOS_DOC ? window.LAZOS_DOC.alarma(s, 'HH') : ''; } },
+    { k: 'obs', l: 'Observaciones', w: 180 }, { k: 'rev', l: 'Rev.', w: 50 },
+    { k: 'marca', l: 'Marca', w: 90 }, { k: 'modeloInst', l: 'Modelo', w: 90 }
   ];
   function opcionesCanal(s) {
     var m = modulo(s.mod); if (!m) return '<option value="">—</option>';
@@ -213,7 +220,7 @@
     var modelos = T.lista.filter(function (x) { return x.tipo === m.tipo; });
     var cab = '<div class="modcab"><label>Nombre<input data-m="nombre" value="' + esc(m.nombre) + '"></label>' +
       '<label class="ancho">Tarjeta<select data-m="modelo">' + T.proveedores.map(function (p) { var ls = modelos.filter(function (x) { return x.prov === p.id; }); return ls.length ? '<optgroup label="' + esc(p.nombre) + '">' + ls.map(function (x) { return '<option value="' + esc(x.modelo) + '"' + (x.modelo === m.modelo ? ' selected' : '') + '>' + esc(x.modelo + ' · ' + x.desc) + '</option>'; }).join('') + '</optgroup>' : ''; }).join('') + '</select></label>' +
-      '<label>Chasis<input data-m="chasis" value="' + esc(m.chasis) + '"></label><label>Slot<input data-m="slot" value="' + esc(m.slot) + '"></label><label>Bornera<input data-m="tb" value="' + esc(m.tb || '') + '"></label>' +
+      '<label>Chasis<input data-m="chasis" value="' + esc(m.chasis) + '"></label><label>Columna<input data-m="columna" value="' + esc(m.columna || '') + '"></label><label>Slot<input data-m="slot" value="' + esc(m.slot) + '"></label><label>Bornera<input data-m="tb" value="' + esc(m.tb || '') + '"></label>' +
       '<label class="ancho">Gabinete (opcional)<input data-m="gabinete" value="' + esc(m.gabinete || '') + '" placeholder="' + esc(E.cfg.gabinete) + '"></label>' +
       '<button type="button" class="mini" data-bornes="' + m.id + '">Editar bornes</button><button type="button" class="mini peligro" data-borrar="' + m.id + '">Quitar</button></div>' +
       '<p class="fuente">' + (tj ? (tj.verificado ? '✓ Bornes verificados: ' : 'Bornes referenciales: ') + esc(tj.fuente) + (tj.rtb ? ' · Bornera ' + esc(tj.rtb) : '') + ' · Alimentación del lazo ' + tj.alim + (tj.tension ? ' · ' + tj.tension : '') : 'Modelo no encontrado en la biblioteca') + '</p>';
@@ -549,7 +556,7 @@
       if (/\.xlsx$/i.test(f.name)) f.arrayBuffer().then(leerXlsx).then(function (filas) { resultadoImport(importarFilas(filas)); }).catch(function (e) { alert('No se pudo leer el archivo: ' + e.message); });
       else f.text().then(function (t) { resultadoImport(importarFilas(parseTabla(t))); });
     });
-    $('#bExcel').addEventListener('click', exportarExcel); $('#bCsv').addEventListener('click', exportarCsv);
+    $('#bExcel').addEventListener('click', function () { if (window.LAZOS_DOC) window.LAZOS_DOC.excel(); else exportarExcel(); }); $('#bCsv').addEventListener('click', exportarCsv);
     // Tarjetas y canales
     $('#modulos').addEventListener('change', function (e) {
       var t = e.target, art = t.closest('.modulo');
@@ -601,7 +608,7 @@
   enlazar();
   enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
-  if (/^#(io|mod|cfg|lazos)$/.test(location.hash)) v0 = location.hash.slice(1);
+  if (/^#(io|mod|cfg|lazos|doc)$/.test(location.hash)) v0 = location.hash.slice(1);
   mostrar(v0);
-  window.__LAZOS = { E: function () { return E; }, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
+  window.__LAZOS = { E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
 })();
