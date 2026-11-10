@@ -106,8 +106,9 @@
       ['05', 'Diagramas de lazo', 'ISA-5.4 desde terreno hasta la sala de control, en lámina A3 con rótulo.', ['PDF', 'DXF']],
       ['06', 'Listado de circuitos', 'Cables de señal, troncales y alimentación con origen, destino y largo.', ['Excel', 'Word']],
       ['07', 'Unilineales TDI', 'Tableros de instrumentos con protecciones, conductores y caída de tensión calculados según el RIC.', ['PDF', 'DXF', 'Excel']],
-      ['08', 'Detalles típicos de montaje', 'Visores 3D por instrumento con lista de materiales, notas y plano A3.', ['PDF', 'DXF', 'PNG', 'STL']],
-      ['09', 'Emulaciones y procesos', 'Plantas y procesos en 3D con PLC, variadores e instrumentos para practicar y capacitar.', ['3D', 'Simulación']]];
+      ['08', 'Diagrama de bloques de control y comunicaciones', 'Arquitectura del sistema de control por niveles con sus redes y buses, y análisis de qué se pierde si falla un equipo.', ['PDF', 'DXF', 'Excel']],
+      ['09', 'Detalles típicos de montaje', 'Visores 3D por instrumento con lista de materiales, notas y plano A3.', ['PDF', 'DXF', 'PNG', 'STL']],
+      ['10', 'Emulaciones y procesos', 'Plantas y procesos en 3D con PLC, variadores e instrumentos para practicar y capacitar.', ['3D', 'Simulación']]];
     var CAR = [['visor-3d', 'Visor 3D de montaje: válvula de control con actuador de diafragma y simulación de la señal'],
       ['plano-a3', 'Plano de montaje A3 generado desde el modelo, con lista de materiales y rótulo'],
       ['diagrama-lazo', 'Diagrama de lazo ISA-5.4 generado automáticamente desde el listado de E/S'],
@@ -139,7 +140,7 @@
       '<button type="button" class="car-b car-prev" aria-label="Ejemplo anterior">‹</button><button type="button" class="car-b car-next" aria-label="Ejemplo siguiente">›</button></div>' +
       '<figcaption><span class="car-t" aria-live="polite">' + CAR[0][1] + '</span><span class="car-n">1 / ' + CAR.length + '</span></figcaption><div class="car-d" role="group" aria-label="Elegir ejemplo">' +
       CAR.map(function (c, i) { return '<button type="button" aria-label="' + (i + 1) + ': ' + c[1] + '"' + (i ? '' : ' aria-current="true"') + '></button>'; }).join('') + '</div></figure></section>' +
-      '<div class="cifras"><div><b>10</b><span>entregables enlazados</span></div><div><b>40+</b><span>visores 3D de montaje y procesos</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div><div><b>ISA · RIC</b><span>ISA-5.1, 5.4, TR20 y RIC (SEC)</span></div></div>' +
+      '<div class="cifras"><div><b>11</b><span>entregables enlazados</span></div><div><b>40+</b><span>visores 3D de montaje y procesos</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div><div><b>ISA · RIC</b><span>ISA-5.1, 5.4, TR20 y RIC (SEC)</span></div></div>' +
       '<section class="sec"><h2>Qué puedes hacer</h2><p class="sub">Los entregables de un proyecto de I&amp;C, en el orden en que se desarrollan, conectados entre sí.</p><ul class="ents">' +
       ENT.map(function (e) { return '<li><b>' + e[0] + '</b><h3>' + e[1] + '</h3><p>' + e[2] + '</p><div class="fm">' + e[3].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></li>'; }).join('') + '</ul></section>' +
       '<section class="sec"><h2>Cómo funciona</h2><p class="sub">Menos horas en tareas repetitivas y documentos que no se contradicen.</p><ol class="pasos">' +

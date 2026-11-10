@@ -215,6 +215,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
   #imp table.io2 thead { display: table-header-group; }
   #imp table.io2 tr { break-inside: avoid; }
 }
+#bqRes code { font: 600 12px var(--f-mono); background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
@@ -236,6 +237,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="inst" aria-selected="false">Listado de instrumentos</button>
     <button type="button" role="tab" data-v="circ" aria-selected="false">Listado de circuitos</button>
     <button type="button" role="tab" data-v="uni" aria-selected="false">Unilineal TDI</button>
+    <button type="button" role="tab" data-v="blq" aria-selected="false">Bloques de control</button>
     <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
   </nav>
 </header>
@@ -395,6 +397,46 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <div class="tscroll"><table class="io" id="tablaUni"><thead></thead><tbody></tbody></table></div>
   </section>
 
+  <section id="v-blq" hidden>
+    <p class="intro">Diagrama de bloques de la arquitectura de control y comunicaciones por niveles: gestión, supervisión (servidores, estaciones y switch núcleo), control (PLC, I/O remotas y switches por sala) y terreno (CCM, variadores, paquetes de proveedores e instrumentos agrupados por gabinete con sus señales del listado de E/S). Se genera desde el proyecto y se ajusta en las tablas; las consultas muestran qué se pierde si falla un equipo y por dónde viaja la señal.</p>
+    <div class="herr">
+      <button type="button" id="bGenerar">Generar desde el proyecto</button>
+      <button type="button" id="bConteos" title="Actualiza la cantidad de señales de cada grupo de instrumentos con el listado de E/S">Actualizar señales</button>
+      <span class="esp"></span>
+      <button type="button" class="pri" id="bkPdf">Imprimir / PDF</button>
+      <button type="button" id="bkDxf">Descargar DXF</button>
+      <button type="button" id="bkExcel">Excel · equipos y enlaces</button>
+    </div>
+    <div class="uni">
+      <div>
+        <form id="bForm" class="dform" onsubmit="return false" style="position:static;max-height:none">
+          <fieldset><legend>Plano</legend>
+            <label class="ancho">Título<input data-b="titulo"></label>
+            <label>N° de plano<input data-b="plano"></label>
+            <label>Revisión<input data-b="rev" placeholder="del proyecto"></label>
+            <label class="ancho">Referencias adicionales<input data-b="ref" placeholder="Ej.: P757D-0000-IN-PLA-0003"></label>
+            <label class="ancho">Notas propias (una por línea)<textarea data-b="notas" rows="3"></textarea></label>
+          </fieldset>
+          <fieldset><legend>Consultas sobre la arquitectura</legend>
+            <label class="ancho">¿Qué se pierde si falla…?<select id="bqFalla"></select></label>
+            <div class="ancho"><button type="button" class="mini" id="bqFallaBtn">Analizar falla</button></div>
+            <label>Ruta desde<select id="bqA"></select></label>
+            <label>hasta<select id="bqB"></select></label>
+            <div class="ancho"><button type="button" class="mini" id="bqRutaBtn">Ver ruta</button> <button type="button" class="mini" id="bqLimpiar">Limpiar</button></div>
+            <p class="ancho peq" id="bqRes" aria-live="polite" style="margin:0;line-height:1.5"></p>
+          </fieldset>
+        </form>
+      </div>
+      <div><p class="estado" id="bCuenta"></p><div class="hojas" id="bHojas"></div></div>
+    </div>
+    <h2 class="grupo" style="margin-top:22px">Equipos</h2>
+    <div class="herr"><button type="button" class="pri" id="bNodo">+ Agregar equipo</button><button type="button" class="peligro" id="bQuitarN">Quitar seleccionados</button></div>
+    <div class="tscroll"><table class="io" id="bNodos"><thead></thead><tbody></tbody></table></div>
+    <h2 class="grupo" style="margin-top:22px">Enlaces de comunicación</h2>
+    <div class="herr"><button type="button" class="pri" id="bEnlace">+ Agregar enlace</button><button type="button" class="peligro" id="bQuitarL">Quitar seleccionados</button></div>
+    <div class="tscroll"><table class="io" id="bEnlaces"><thead></thead><tbody></tbody></table></div>
+  </section>
+
   <section id="v-cfg" hidden>
     <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
     <div class="herr"><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
@@ -450,5 +492,6 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="docio.js"></script>
 <script src="ric.js"></script>
 <script src="unilineal.js"></script>
+<script src="bloques.js"></script>
 </body>
 </html>
