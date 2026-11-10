@@ -1,7 +1,7 @@
 {
-  "name": "Visores 3D ReyEngi",
-  "short_name": "Visores 3D",
-  "description": "Visores 3D de montaje de instrumentación y equipos de demostración. Funciona sin internet.",
+  "name": "Suite ReyEngi · Ingeniería de Instrumentación y Control",
+  "short_name": "Suite ReyEngi",
+  "description": "Ingeniería de instrumentación, control y automatización: hojas de datos, especificaciones, listados, diagramas de lazo, unilineales y visores 3D de montaje. Funciona sin internet.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
