@@ -166,76 +166,6 @@
     var V = {};
 
     // Temperatura
-    V['temp-cabezal'] = function () {
-      var r = 11, y = 90, root = G();
-      var tub = linea(220, r, y); tub.add(soporteTubo(-80, y, r)); tub.add(soporteTubo(80, y, r));
-      var nozzle = G(cyl(2.8, 16, mats.pipe, 0, y + r + 8, 0, 'y'), brida(2.8, 0, y + r + 16, 0, 'y'));
-      var tw = G(cyl(1.2, 30, mats.ss, 0, y + r + 2, 0, 'y'), brida(2.8, 0, y + r + 18.4, 0, 'y'), cyl(1.6, 6, mats.ss, 0, y + r + 22, 0, 'y'));
-      var elem = G(cyl(0.45, 44, mats.steel, 0, y + r + 8, 0, 'y'));
-      var tx = G(cyl(5, 7, mats.inst, 0, y + r + 30, 0, 'y'), cyl(5.3, 1.6, mats.inst, 0, y + r + 34.5, 0, 'y'), cyl(3.4, 0.4, mats.lcd, 0, y + r + 35.4, 0, 'y'), cyl(1, 3, mats.inst, 5.5, y + r + 30, 0, 'x'));
-      var cond = G(conduit([[7, y + r + 30, 0], [24, y + r + 28, 0], [40, y + r + 10, 0], [46, 80, 30], [46, 40, 60]]), caja(16, 20, 10, mats.ss, 46, 40, 72));
-      root.add(tub, nozzle, tw, elem, tx, cond, flecha(-60, y + r + 6, 0));
-      return { root: root, partes: [
-        [1, 'Tubería de proceso con boquilla bridada', 1, tub, [0, 0, 0], [-60, y, r]],
-        [2, 'Termopozo bridado (barra perforada)', 1, tw, [0, 30, 0], [0, y + r + 18, 3]],
-        [3, 'Elemento RTD Pt100 / termocupla', 1, elem, [0, 60, 0], [0, y + r + 40, 0]],
-        [4, 'Transmisor de temperatura en cabezal', 1, tx, [0, 85, 0], [0, y + r + 36, 0]],
-        [5, 'Conduit flexible y caja de conexiones', 1, cond, [40, 0, 20], [46, 52, 72]],
-        [6, 'Boquilla de la tubería', 1, nozzle, [0, 0, 0], [0, y + r + 10, 3]]
-      ] };
-    };
-    V['temp-remoto'] = function () {
-      var r = 11, y = 90, root = G(), out = V['temp-cabezal']();
-      var p = out.partes.filter(function (q) { return q[0] !== 4 && q[0] !== 5; });
-      var cabeza = G(cyl(4, 6, mats.ss, 0, y + r + 28, 0, 'y'), cyl(4.4, 1.2, mats.ss, 0, y + r + 31.5, 0, 'y'));
-      var ped = pedestal(120, 90, 50);
-      var tx = cabezal(90, 112, 50);
-      var cable = conduit([[4, y + r + 28, 0], [30, y + r + 26, 0], [70, 118, 40], [84, 106, 50]]);
-      var g = G(); out.partes.forEach(function (q) { if (q[0] !== 4 && q[0] !== 5) g.add(q[3]); }); root.add(g, cabeza, ped, tx, cable);
-      return { root: root, partes: p.concat([
-        [4, 'Cabezal de conexiones del elemento', 1, cabeza, [0, 60, 0], [0, y + r + 32, 0]],
-        [5, 'Transmisor remoto en pedestal de 2"', 1, tx, [30, 20, 0], [90, 120, 50]],
-        [7, 'Pedestal de tubo de 2" con placa base', 1, ped, [30, 0, 0], [90, 60, 50]],
-        [8, 'Cable de extensión en conduit flexible', 1, cable, [20, 30, 0], [60, 120, 30]]
-      ]) };
-    };
-    V['temp-switch'] = function () {
-      var r = 8, y = 90, root = G();
-      var tub = linea(180, r, y); tub.add(soporteTubo(-60, y, r)); tub.add(soporteTubo(60, y, r));
-      var tw = G(cyl(1, 18, mats.ss, 0, y + r - 4, 0, 'y'), cyl(1.8, 6, mats.ss, 0, y + r + 6, 0, 'y'), cyl(2.4, 2, mats.ss, 0, y + r + 9, 0, 'y'));
-      var sw = G(rbox(14, 16, 9, 1.5, mats.cab, 0, y + r + 20, 0), box(12, 2, 1, mats.yellow, 0, y + r + 25, 4.8), cyl(1.6, 4, mats.ss, 0, y + r + 11, 0, 'y'), cyl(1, 3, mats.cab, 7.5, y + r + 20, 0, 'x'));
-      var cond = conduit([[9, y + r + 20, 0], [24, y + r + 18, 0], [30, 60, 20], [30, 20, 40]]);
-      root.add(tub, tw, sw, cond, flecha(-45, y + r + 6, 0));
-      return { root: root, partes: [[1, 'Tubería de proceso', 1, tub, [0, 0, 0], [-50, y, r]], [2, 'Termopozo roscado', 1, tw, [0, 25, 0], [0, y + r + 8, 3]],
-        [3, 'Interruptor de temperatura (TSH)', 1, sw, [0, 50, 0], [0, y + r + 28, 0]], [4, 'Conduit flexible', 1, cond, [25, 0, 0], [30, 60, 20]]] };
-    };
-
-    // Flujo vortex y térmico
-    V['vortex'] = function () {
-      var r = 8, y = 80, root = G();
-      var aguas = G(linea(150, r, y), soporteTubo(-40, y, r)); aguas.position.x = -95;
-      var abajo = G(linea(90, r, y), soporteTubo(20, y, r)); abajo.position.x = 65;
-      var cuerpo = G(cyl(r * 1.6, 12, mats.ss, 0, y, 0, 'x'), cyl(2.2, 16, mats.ss, 0, y + r + 6, 0, 'y'));
-      var tx = cabezal(0, y + r + 20, 0);
-      var tramos = G(box(150, 0.4, 1, mats.yellow, -95, y - r - 6, 12), box(90, 0.4, 1, mats.yellow, 65, y - r - 6, 12));
-      var cond = conduit([[6, y + r + 20, 0], [20, y + r + 18, 0], [30, 70, 30], [30, 20, 50]]);
-      root.add(aguas, abajo, cuerpo, tx, tramos, cond, flecha(-120, y + r + 6, 0));
-      return { root: root, partes: [[1, 'Tramo recto aguas arriba (≥ 10 DN)', 1, aguas, [-20, 0, 0], [-120, y + r, 0]], [2, 'Tramo recto aguas abajo (≥ 5 DN)', 1, abajo, [20, 0, 0], [80, y + r, 0]],
-        [3, 'Cuerpo vortex tipo wafer / bridado', 1, cuerpo, [0, 20, 0], [0, y, r * 1.6]], [4, 'Transmisor integrado', 1, tx, [0, 50, 0], [0, y + r + 26, 0]], [5, 'Conduit flexible', 1, cond, [20, 0, 20], [30, 70, 30]]] };
-    };
-    V['termico'] = function () {
-      var r = 15, y = 80, root = G();
-      var tub = linea(240, r, y); tub.add(soporteTubo(-90, y, r)); tub.add(soporteTubo(90, y, r));
-      var hot = G(cyl(3, 12, mats.pipe, 0, y + r + 5, 0, 'y'), valvulaBola(2.2, 0, y + r + 15, 0, 'y'), cyl(2.4, 10, mats.ss, 0, y + r + 24, 0, 'y'));
-      var sonda = G(cyl(1, 60, mats.ss, 0, y + r + 6, 0, 'y'), sph(1.4, mats.ss, 0, y - r + 6, 0));
-      var tx = G(rbox(16, 12, 10, 2, mats.inst, 0, y + r + 42, 0), box(8, 4, 0.4, mats.lcd, 0, y + r + 43, 5.2), cyl(1, 3, mats.inst, 9, y + r + 42, 0, 'x'));
-      var cond = conduit([[10, y + r + 42, 0], [28, y + r + 40, 0], [40, 70, 30], [40, 20, 50]]);
-      root.add(tub, hot, sonda, tx, cond, flecha(-70, y + r + 6, 0));
-      return { root: root, partes: [[1, 'Tubería de aire / gas', 1, tub, [0, 0, 0], [-80, y, r]], [2, 'Válvula de inserción en caliente (hot tap)', 1, hot, [0, 15, 0], [0, y + r + 15, 4]],
-        [3, 'Sonda de dispersión térmica', 1, sonda, [0, 45, 0], [0, y, 2]], [4, 'Transmisor', 1, tx, [0, 70, 0], [0, y + r + 48, 0]], [5, 'Conduit flexible', 1, cond, [20, 0, 20], [40, 70, 30]]] };
-    };
-
-    // Nivel ultrasónico y vibratorio
     function estanque(R, H) {
       var g = G(tubo(R, H, mats.tank, 0, H / 2, 0, 'y'), cyl(R, 1, mats.tank, 0, 0.5, 0, 'y'), cyl(R * 0.98, H * 0.55, mats.liquid, 0, H * 0.275, 0, 'y'));
       var bar = G(); for (var i = 0; i < 24; i++) { var a = i / 24 * Math.PI * 2; bar.add(cyl(0.8, 30, mats.yellow, Math.cos(a) * (R - 2), H + 15, Math.sin(a) * (R - 2), 'y', 8)); }
@@ -243,83 +173,6 @@
       g.add(M(new THREE.TorusGeometry(R, 1.5, 8, 64).rotateX(Math.PI / 2), mats.galv, 0, H, 0));
       return g;
     }
-    V['ultrasonico'] = function () {
-      var R = 90, H = 200, root = G(), est = estanque(R, H);
-      var brazo = G(box(60, 5, 5, mats.galv, R - 40, H + 6, 0), box(5, 12, 5, mats.galv, R - 8, H + 1, 0));
-      var sensor = G(cyl(5.5, 14, mats.white, R - 62, H - 1, 0, 'y'), brida(4, R - 62, H + 7, 0, 'y'));
-      var cono = M(new THREE.ConeGeometry(R * 0.38, H * 0.45, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xef5a05, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false }), R - 62, H - 8 - H * 0.225, 0);
-      var tx = G(rbox(20, 22, 12, 2, mats.cab, 0, 0, 0), box(10, 5, 0.5, mats.lcd, 0, 4, 6.3), box(26, 2, 18, mats.galv, 0, 14, 2)); tx.position.set(R + 50, 140, 0);
-      var ped = pedestal(150, R + 50, 0);
-      var cable = conduit([[R - 62, H + 12, 0], [R - 20, H + 20, 0], [R + 20, 170, 0], [R + 44, 150, 0]]);
-      root.add(est, brazo, sensor, cono, tx, ped, cable);
-      return { root: root, partes: [[1, 'Estanque', 1, est, [0, 0, 0], [-R, H * 0.6, 0]], [2, 'Sensor ultrasónico con brida', 1, sensor, [0, 40, 0], [R - 62, H + 8, 6]],
-        [3, 'Soporte del sensor (fuera de la zona muerta)', 1, brazo, [0, 25, 0], [R - 40, H + 8, 3]], [4, 'Transmisor remoto con protección solar', 1, tx, [40, 0, 0], [R + 50, 155, 0]],
-        [5, 'Pedestal de tubo de 2"', 1, ped, [40, 0, 0], [R + 50, 70, 0]], [6, 'Cable sensor–transmisor en conduit', 1, cable, [20, 20, 0], [R + 20, 172, 0]]] };
-    };
-    V['vibratorio'] = function () {
-      var R = 70, H = 220, root = G(), est = estanque(R, H);
-      function horquilla(yb) {
-        var g = G(cyl(3.6, 4, mats.flange, R + 4, yb, 0, 'x'), brida(2.6, R + 7, yb, 0, 'x'), cyl(1.2, 14, mats.ss, R - 4, yb, 0, 'x'), box(8, 0.6, 2, mats.ss, R - 13, yb, 1), box(8, 0.6, 2, mats.ss, R - 13, yb, -1),
-          rbox(10, 12, 10, 2, mats.cab, R + 16, yb + 2, 0), cyl(1, 3, mats.cab, R + 16, yb - 6, 0, 'y'));
-        return g;
-      }
-      var alto = horquilla(H * 0.85), bajo = horquilla(H * 0.2);
-      var c1 = conduit([[R + 16, H * 0.85 - 8, 0], [R + 30, H * 0.7, 0], [R + 34, 60, 10], [R + 34, 10, 20]]), c2 = conduit([[R + 16, H * 0.2 - 8, 0], [R + 26, 30, 4], [R + 34, 10, 20]]);
-      root.add(est, alto, bajo, c1, c2);
-      return { root: root, partes: [[1, 'Estanque', 1, est, [0, 0, 0], [-R, H * 0.6, 0]], [2, 'Interruptor vibratorio de alto nivel (LSH)', 1, alto, [40, 0, 0], [R + 16, H * 0.85 + 8, 0]],
-        [3, 'Interruptor vibratorio de bajo nivel (LSL)', 1, bajo, [40, 0, 0], [R + 16, H * 0.2 + 8, 0]], [4, 'Conduit flexible', 2, G(c1, c2), [30, 0, 0], [R + 34, 60, 10]]] };
-    };
-
-    // Interruptor de presión
-    V['presion-sw'] = function () {
-      var r = 8, y = 90, root = G();
-      var tub = linea(180, r, y); tub.add(soporteTubo(-60, y, r)); tub.add(soporteTubo(60, y, r));
-      var toma = G(cyl(1.6, 10, mats.pipe, 0, y + r + 4, 0, 'y'), valvulaBola(1.4, 0, y + r + 12, 0, 'y'), cyl(1, 12, mats.ss, 0, y + r + 22, 0, 'y'), valvulaBola(1, 6, y + r + 26, 0, 'x'));
-      var sw = G(rbox(14, 16, 10, 1.5, mats.cab, 0, y + r + 38, 0), box(12, 2, 1, mats.yellow, 0, y + r + 43, 5.2), cyl(2.2, 3, mats.ss, 0, y + r + 29, 0, 'y'));
-      var cond = conduit([[7, y + r + 38, 0], [26, y + r + 36, 0], [34, 60, 20], [34, 20, 40]]);
-      root.add(tub, toma, sw, cond, flecha(-45, y + r + 6, 0));
-      return { root: root, partes: [[1, 'Tubería de proceso', 1, tub, [0, 0, 0], [-50, y, r]], [2, 'Toma con válvula de bloqueo y purga', 1, toma, [0, 15, 0], [0, y + r + 14, 3]],
-        [3, 'Interruptor de presión (PSH / PSL)', 1, sw, [0, 45, 0], [0, y + r + 46, 0]], [4, 'Conduit flexible', 1, cond, [25, 0, 0], [34, 60, 20]]] };
-    };
-
-    // Analizadores
-    function canalOEstanque(R, H) { return estanque(R, H); }
-    function sondaInmersion(x, H, y0, color) {
-      return G(cyl(1.6, H, mats.galv, x, y0 + H / 2, 0, 'y'), cyl(2.4, 14, color || mats.black, x, y0 - 6, 0, 'y'), box(30, 3, 6, mats.galv, x - 12, y0 + H, 0));
-    }
-    V['conductividad'] = function () {
-      var r = 10, y = 80, root = G();
-      var tub = linea(200, r, y); tub.add(soporteTubo(-75, y, r)); tub.add(soporteTubo(75, y, r));
-      var sensor = G(cyl(4, 10, mats.pipe, 0, y + r + 3, 0, 'y'), brida(4, 0, y + r + 8, 0, 'y'), M(new THREE.TorusGeometry(3.2, 1.6, 12, 32).rotateX(Math.PI / 2), mats.black, 0, y, 0), cyl(1.4, 24, mats.black, 0, y + r - 2, 0, 'y'));
-      var tx = G(rbox(20, 22, 12, 2, mats.cab, 0, 0, 0), box(10, 5, 0.5, mats.lcd, 0, 4, 6.3), box(26, 2, 18, mats.galv, 0, 14, 2)); tx.position.set(60, 130, 50);
-      var ped = pedestal(140, 60, 50);
-      var cable = conduit([[0, y + r + 12, 0], [20, y + r + 16, 0], [50, 128, 40], [56, 120, 50]]);
-      root.add(tub, sensor, tx, ped, cable, flecha(-60, y + r + 6, 0));
-      return { root: root, partes: [[1, 'Tubería de proceso', 1, tub, [0, 0, 0], [-70, y, r]], [2, 'Sensor de conductividad toroidal en te bridada', 1, sensor, [0, 35, 0], [0, y + r + 10, 4]],
-        [3, 'Transmisor con relés de alarma', 1, tx, [30, 0, 0], [60, 140, 50]], [4, 'Pedestal de tubo de 2"', 1, ped, [30, 0, 0], [60, 70, 50]], [5, 'Cable del sensor en conduit', 1, cable, [20, 20, 0], [30, 120, 30]]] };
-    };
-    function analizadorInmersion(nombreSensor, colorSensor) {
-      var R = 80, H = 160, root = G(), est = canalOEstanque(R, H);
-      var sonda = sondaInmersion(R - 30, 150, 40, colorSensor);
-      var tx = G(rbox(20, 22, 12, 2, mats.cab, 0, 0, 0), box(10, 5, 0.5, mats.lcd, 0, 4, 6.3), box(26, 2, 18, mats.galv, 0, 14, 2)); tx.position.set(R + 50, 140, 0);
-      var ped = pedestal(150, R + 50, 0);
-      var cable = conduit([[R - 30, 192, 0], [R, 200, 0], [R + 30, 160, 0], [R + 44, 140, 0]]);
-      root.add(est, sonda, tx, ped, cable);
-      return { root: root, partes: [[1, 'Estanque / cajón', 1, est, [0, 0, 0], [-R, H * 0.6, 0]], [2, nombreSensor + ' con tubo de inmersión', 1, sonda, [0, 60, 0], [R - 30, 30, 4]],
-        [3, 'Transmisor con relés de alarma', 1, tx, [40, 0, 0], [R + 50, 155, 0]], [4, 'Pedestal de tubo de 2"', 1, ped, [40, 0, 0], [R + 50, 70, 0]], [5, 'Cable del sensor en conduit', 1, cable, [20, 20, 0], [R + 20, 175, 0]]] };
-    }
-    V['turbidez'] = function () { return analizadorInmersion('Sensor óptico de turbidez con limpieza automática', mats.ss); };
-    V['orp'] = function () { return analizadorInmersion('Sensor de ORP (electrodo de platino)', mats.black); };
-    V['gases'] = function () {
-      var root = G(), pared = G(muro(300, 280, 0, -8), losa(300, 160, 0, 60));
-      var det = G(rbox(14, 16, 10, 2, mats.yellow, 0, 0, 0), cyl(3, 6, mats.dark, 0, -11, 0, 'y'), cyl(2, 0.6, mats.black, 0, -14.2, 0, 'y'), box(8, 4, 0.4, mats.lcd, 0, 3, 5.2)); det.position.set(-60, 45, 6);
-      var baliza = G(cyl(5, 8, mats.dark, 0, 0, 0, 'y'), cyl(4.6, 9, mats.red, 0, 8, 0, 'y'), box(10, 2, 6, mats.dark, 0, -5, -3)); baliza.position.set(60, 220, 8);
-      var caja2 = caja(20, 24, 12, mats.cab, 60, 150, 6);
-      var cond = G(conduit([[-60, 58, 6], [-60, 120, 4], [-20, 150, 4], [48, 150, 4]]), conduit([[60, 164, 6], [60, 205, 6]]));
-      root.add(pared, det, baliza, caja2, cond);
-      return { root: root, partes: [[1, 'Muro de la sala / área', 1, pared, [0, 0, 0], [-120, 200, 0]], [2, 'Detector fijo de gases (montaje bajo, gases densos)', 1, det, [0, 0, 30], [-60, 55, 12]],
-        [3, 'Baliza y alarma audible local', 1, baliza, [0, 0, 30], [60, 230, 12]], [4, 'Caja de conexiones', 1, caja2, [0, 0, 30], [60, 162, 12]], [5, 'Conduit', 1, cond, [0, 0, 20], [-20, 150, 6]]] };
-    };
     V['densimetro'] = function () {
       var r = 9, y = 90, root = G();
       var tub = linea(220, r, y); tub.add(soporteTubo(-80, y, r)); tub.add(soporteTubo(80, y, r));
@@ -347,16 +200,6 @@
     };
 
     // Válvula solenoide y tablero neumático
-    V['solenoide'] = function () {
-      var r = 3, y = 90, root = G();
-      var tub = linea(200, r, y, false); tub.add(soporteTubo(-80, y, r)); tub.add(soporteTubo(80, y, r));
-      var v1 = valvulaBola(2.4, -45, y, 0), v2 = valvulaBola(2.4, 45, y, 0);
-      var sol = G(rbox(16, 10, 9, 1.5, mats.ss, 0, y, 0), cyl(4.4, 12, mats.black, 0, y + 11, 0, 'y'), box(9, 7, 4, mats.black, 0, y + 11, 6.4), cyl(1, 2, mats.cab, 0, y + 11, 9, 'z'));
-      var cond = conduit([[0, y + 11, 9.5], [0, y + 30, 20], [20, 60, 40], [24, 20, 50]]);
-      root.add(tub, v1, v2, sol, cond, flecha(-75, y + 8, 0));
-      return { root: root, partes: [[1, 'Línea de proceso (agua de sello / servicio)', 1, tub, [0, 0, 0], [-70, y, r]], [2, 'Válvulas de aislamiento', 2, G(v1, v2), [0, 15, 0], [-45, y + 8, 3]],
-        [3, 'Válvula solenoide de 2 vías (NC)', 1, sol, [0, 35, 0], [0, y + 20, 0]], [4, 'Conduit flexible a la bobina', 1, cond, [20, 10, 20], [20, 60, 40]]] };
-    };
     V['tablero-neumatico'] = function () {
       var root = G(), base = G(box(10, 220, 10, mats.galv, -60, 110, 0), box(10, 220, 10, mats.galv, 60, 110, 0), box(140, 8, 10, mats.galv, 0, 180, 0), box(140, 8, 10, mats.galv, 0, 90, 0), box(160, 10, 40, mats.concrete, 0, -5, 0));
       var gab = G(gabAbierto(100, 120, 40, mats.ss), box(98, 4, 2, mats.ss, 0, 61, 0)); gab.position.set(0, 140, 25);
@@ -383,15 +226,6 @@
       g.add(M(new THREE.BoxGeometry(largo + 40, 10, 90), mats.ore, 0, 117, 0));
       return g;
     }
-    V['desalineamiento'] = function () {
-      var root = G(), cv = correa(360);
-      function par(z) { var s = z > 0 ? 1 : -1; return G(box(12, 22, 10, mats.yellow, 0, 98, z + s * 12), cyl(0.8, 26, mats.steel, 0, 118, z + s * 4, 'y'), cyl(3.4, 16, mats.red, 0, 128, z - s * 2, 'y'), box(10, 4, 20, mats.galv, 0, 86, z + s * 10)); }
-      var p1 = par(76), p2 = par(-76);
-      var cond = G(conduit([[0, 90, 92], [0, 60, 100], [40, 20, 110]]), conduit([[0, 90, -92], [0, 60, -100], [40, 20, -110]]));
-      root.add(cv, p1, p2, cond);
-      return { root: root, partes: [[1, 'Correa transportadora (estación de polines)', 1, cv, [0, 0, 0], [-160, 120, 0]], [2, 'Interruptor de desalineamiento lado izquierdo', 1, p1, [0, 0, 40], [0, 132, 74]],
-        [3, 'Interruptor de desalineamiento lado derecho', 1, p2, [0, 0, -40], [0, 132, -74]], [4, 'Conduit flexible', 2, cond, [0, -10, 0], [40, 40, 110]]] };
-    };
     V['velocidad-cero'] = function () {
       var root = G();
       var polea = G(cyl(40, 150, mats.steel, 0, 100, 0, 'z'), cyl(6, 200, mats.steel, 0, 100, 0, 'z'), box(24, 100, 20, mats.galv, 0, 50, 90), box(24, 100, 20, mats.galv, 0, 50, -90), box(30, 14, 30, mats.dark, 0, 100, 92), box(30, 14, 30, mats.dark, 0, 100, -92));
@@ -417,19 +251,6 @@
       return { root: root, partes: [[1, 'Chute de traspaso (vista transparente)', 1, chute, [0, 0, 0], [-60, 200, 40]], [2, 'Sonda tilt colgante de acero inoxidable', 1, sonda, [0, 0, 40], [0, 150, 6]],
         [3, 'Unidad electrónica con filtro antirrebote', 1, unidad, [30, 0, 0], [110, 176, 6]], [4, 'Cable de la sonda', 1, cable, [0, 20, 0], [40, 202, 0]], [5, 'Material acumulado (atollo)', 1, mineral, [0, 0, 0], [30, 100, 30]]] };
     };
-    V['contrapeso'] = function () {
-      var root = G();
-      var torre = G(box(10, 400, 10, mats.galv, -60, 200, -60), box(10, 400, 10, mats.galv, 60, 200, -60), box(10, 400, 10, mats.galv, -60, 200, 60), box(10, 400, 10, mats.galv, 60, 200, 60), box(130, 10, 130, mats.galv, 0, 400, 0));
-      var peso = G(box(100, 80, 60, mats.concrete, 0, 200, 0), cyl(30, 100, mats.steel, 0, 270, 0, 'z'), M(new THREE.BoxGeometry(2, 150, 120), mats.belt, -30, 320, 0), M(new THREE.BoxGeometry(2, 150, 120), mats.belt, 30, 320, 0));
-      function sw(y) { return G(box(10, 14, 8, mats.yellow, 64, y, 0), box(16, 1.4, 1.4, mats.steel, 54, y + 6, 0), cyl(2, 1.6, mats.black, 46, y + 6, 0, 'z')); }
-      var alto = sw(330), bajo = sw(140);
-      var cond = conduit([[70, 140, 0], [72, 200, 0], [72, 330, 0], [74, 360, 30], [80, 380, 80]]);
-      root.add(torre, peso, alto, bajo, cond);
-      return { root: root, partes: [[1, 'Torre del tensor', 1, torre, [0, 0, 0], [-60, 380, 60]], [2, 'Contrapeso y polea tensora', 1, peso, [0, 0, 0], [0, 200, 32]],
-        [3, 'Interruptor de posición alta (ZSH)', 1, alto, [30, 0, 0], [64, 340, 4]], [4, 'Interruptor de posición baja (ZSL)', 1, bajo, [30, 0, 0], [64, 150, 4]], [5, 'Conduit', 1, cond, [20, 0, 0], [72, 250, 0]]] };
-    };
-
-    // Gabinetes PLC
     V['gabinete-plc'] = function () {
       var root = G(), z0 = 0;
       var caja0 = gabAbierto(120, 200, 60, mats.cab); caja0.position.y = 110; var cuerpo = G(caja0, box(124, 10, 64, mats.dark, 0, 5, 0), box(116, 196, 1, mats.white, 0, 110, -28.5));
@@ -482,19 +303,6 @@
     };
 
     // CCTV
-    V['cctv-ptz'] = function () {
-      var root = G();
-      var poste = G(cyl(7, 600, mats.galv, 0, 300, 0, 'y'), box(50, 3, 50, mats.galv, 0, 1.5, 0), box(80, 30, 80, mats.concrete, 0, -15, 0));
-      var brazo = G(cyl(2.4, 60, mats.white, 0, 590, 30, 'z'), box(14, 14, 4, mats.white, 0, 590, 4));
-      var cam = camaraPTZ(); cam.position.set(0, 586, 60); cam.scale.setScalar(1.3);
-      var tab = G(caja(50, 60, 22, mats.ss, 0, 0, 0)); tab.position.set(0, 160, 18);
-      var cond = G(conduit([[0, 190, 14], [0, 400, 9], [0, 575, 9]]), conduit([[0, 130, 14], [0, 40, 12], [0, -2, 30]]));
-      var pararrayo = G(cyl(0.6, 80, mats.ss, 0, 640, 0, 'y')); var tierra1 = tierra(30, 30);
-      root.add(poste, brazo, cam, tab, cond, pararrayo, tierra1);
-      return { root: root, partes: [[1, 'Poste de acero galvanizado con fundación', 1, poste, [0, 0, 0], [0, 300, 8]], [2, 'Brazo soporte de la cámara', 1, brazo, [0, 30, 20], [0, 598, 30]],
-        [3, 'Cámara IP tipo domo PTZ', 1, cam, [0, 20, 60], [0, 560, 60]], [4, 'Tablero de terreno CCTV (switch PoE, conversor, fuente)', 1, tab, [0, 0, 40], [0, 196, 30]],
-        [5, 'Conduit de señal y alimentación', 2, cond, [20, 0, 0], [0, 400, 12]], [6, 'Punta captora y puesta a tierra', 1, G(pararrayo, tierra1), [0, 20, 0], [0, 660, 0]]] };
-    };
     V['cctv-fija'] = function () {
       var root = G(), pared = G(muro(320, 420, 0, -8), losa(320, 200, 0, 80));
       var sop = G(box(12, 18, 4, mats.white, 0, 0, 0), cyl(2, 14, mats.white, 0, 0, 8, 'z')); sop.position.set(0, 340, 2);
@@ -508,23 +316,6 @@
     };
 
     // Control de acceso
-    V['puerta'] = function () {
-      var root = G(), pared = G(box(130, 260, 15, mats.wall, -135, 130, 0), box(130, 260, 15, mats.wall, 135, 130, 0), box(140, 40, 15, mats.wall, 0, 240, 0), losa(400, 240, 0, 40));
-      var marco = G(box(6, 220, 18, mats.dark, -73, 110, 0), box(6, 220, 18, mats.dark, 73, 110, 0), box(152, 6, 18, mats.dark, 0, 223, 0));
-      var hoja = G(box(140, 214, 5, mats.housing, 70, 0, 0), box(4, 14, 4, mats.ss, 128, 0, 4)); hoja.position.set(-70, 109, 0); hoja.rotation.y = -0.45;
-      var iman = G(box(50, 7, 5, mats.ss, 0, 0, 0)); iman.position.set(40, 215, 10);
-      var lector = G(rbox(8, 13, 3, 1, mats.black, 0, 0, 0), box(5, 5, 0.4, mats.inst, 0, 2, 1.6), box(4, 0.8, 0.4, mats.led, 0, -4, 1.6)); lector.position.set(100, 120, 9);
-      var salida = G(rbox(8, 8, 2, 1, mats.white, 0, 0, 0), cyl(2.4, 1, mats.green, 0, 0, 1.4, 'z')); salida.position.set(100, 120, -9); salida.rotation.y = Math.PI;
-      var emergencia = G(box(9, 9, 3, mats.green, 0, 0, 0), box(6, 6, 0.4, mats.white, 0, 0, 1.6)); emergencia.position.set(100, 145, -9.5); emergencia.rotation.y = Math.PI;
-      var sensor = G(box(6, 2, 2, mats.white, 0, 0, 0)); sensor.position.set(60, 221, 10);
-      var ctrl = G(caja(30, 36, 10, mats.cab, 0, 0, 0)); ctrl.position.set(110, 230, -16);
-      var cond = conduit([[110, 212, -16], [110, 200, -9], [100, 128, -9]]);
-      root.add(pared, marco, hoja, iman, lector, salida, emergencia, sensor, ctrl, cond);
-      return { root: root, partes: [[1, 'Muro y marco de puerta', 1, G(pared, marco), [0, 0, 0], [-150, 250, 10]], [2, 'Hoja de puerta con cierrapuertas', 1, hoja, [0, 0, 30], [-40, 160, 30]],
-        [3, 'Electroimán de falla segura', 1, iman, [0, 15, 20], [40, 222, 14]], [4, 'Sensor magnético de puerta', 1, sensor, [0, 20, 20], [60, 226, 12]],
-        [5, 'Lector de credenciales (OSDP)', 1, lector, [20, 0, 20], [100, 132, 12]], [6, 'Pulsador de salida (lado interior)', 1, salida, [20, 0, -20], [100, 128, -14]],
-        [7, 'Pulsador de emergencia rompe vidrio', 1, emergencia, [20, 0, -20], [100, 154, -14]], [8, 'Controlador de acceso con batería', 1, ctrl, [20, 0, -30], [110, 252, -20]], [9, 'Conduit', 1, cond, [10, 0, -10], [106, 170, -9]]] };
-    };
     V['torniquete'] = function () {
       var root = G(), piso = losa(500, 400);
       function torno(x) {
@@ -556,6 +347,440 @@
       root.add(ped, ic, techo, baliza, bocina, cond);
       return { root: root, partes: [[1, 'Pedestal de tubo de 2"', 1, ped, [0, 0, 0], [0, 80, 6]], [2, 'Intercomunicador IP manos libres', 1, ic, [0, 0, 30], [0, 168, 12]],
         [3, 'Techo de protección', 1, techo, [0, 20, 0], [0, 194, 20]], [4, 'Baliza de llamada', 1, baliza, [0, 20, 0], [0, 206, 0]], [5, 'Parlante bocina para ruido alto', 1, bocina, [30, 0, 20], [16, 186, 18]], [6, 'Conduit PoE', 1, cond, [0, 0, 20], [10, 40, 20]]] };
+    };
+
+    // ── Componentes con proporciones de hojas de datos de fabricantes (cm) ──
+    // Bridas ASME B16.5 clase 150 [OD, círculo de pernos, n° pernos, espesor, cara realzada] y OD de cañería ASME B36.10
+    var DN_OD = { 0.5: 2.13, 0.75: 2.67, 1: 3.34, 1.5: 4.83, 2: 6.03, 3: 8.89, 4: 11.43, 6: 16.83, 8: 21.91, 10: 27.3, 12: 32.39 };
+    var B150 = { 0.5: [8.89, 6.05, 4, 1.11, 3.49], 1: [10.8, 7.94, 4, 1.43, 5.08], 1.5: [12.7, 9.86, 4, 1.75, 7.3], 2: [15.24, 12.07, 4, 1.9, 9.2], 3: [19.05, 15.24, 4, 2.38, 12.7],
+      4: [22.86, 19.05, 8, 2.38, 15.7], 6: [27.94, 24.13, 8, 2.54, 21.6], 8: [34.29, 29.85, 8, 2.86, 27], 10: [40.64, 36.2, 12, 3.02, 32.4], 12: [48.26, 43.18, 12, 3.18, 38.1] };
+    var mAlu = std(0x8d9caa, 0.7, 0.38), mBronce = std(0xc79a3f, 0.85, 0.35), mPA = std(0x2b3036, 0.1, 0.65), mPc = std(0xd3d8dc, 0.05, 0.45), mRojo = std(0xa8221c, 0.3, 0.45), mFdu = std(0x9aa3ab, 0.1, 0.5);
+    function pos(o, x, y, z) { o.position.set(x || 0, y || 0, z || 0); return o; }
+    function vertical(o) { o.rotation.z = Math.PI / 2; return o; } // pieza armada sobre +x llevada a +y
+    function orient(o, eje) { // la pieza se arma sobre +y; orient la gira hacia el eje pedido
+      if (eje === 'x') o.rotation.z = -Math.PI / 2; else if (eje === '-x') o.rotation.z = Math.PI / 2;
+      else if (eje === 'z') o.rotation.x = Math.PI / 2; else if (eje === '-z') o.rotation.x = -Math.PI / 2; else if (eje === '-y') o.rotation.x = Math.PI;
+      return o;
+    }
+    function hexN(af, h, mat, y) { return cyl(af / Math.sqrt(3), h, mat, 0, y || 0, 0, 'y', 6); } // hexágono definido entre caras
+    function rosca(r, h, y0) { var g = G(cyl(r, h, mats.steel, 0, y0 + h / 2, 0, 'y')); for (var i = 0.25; i < h; i += 0.32) g.add(M(new THREE.TorusGeometry(r, 0.07, 6, 24).rotateX(Math.PI / 2), mats.steel, 0, y0 + i, 0)); return g; }
+    function bridaB(dn, conCuello) { // brida B16.5 cl. 150: cara realzada hacia +y, cuello soldable hacia −y
+      var b = B150[dn] || B150[2], od = DN_OD[dn] || 6.03, g = G(cyl(b[0] / 2, b[3], mats.flange, 0, -b[3] / 2, 0, 'y'), cyl(b[4] / 2, 0.16, mats.flange, 0, 0.08, 0, 'y'));
+      if (conCuello !== false) g.add(cone(Math.min(b[4] / 2, od / 2 + 1.1), od / 2 + 0.2, b[3] * 1.5, mats.flange, 0, -b[3] * 1.75, 0));
+      var rp = dn <= 1.5 ? 0.64 : dn <= 4 ? 0.8 : 0.95;
+      for (var i = 0; i < b[2]; i++) {
+        var a = (i + 0.5) / b[2] * Math.PI * 2, x = Math.cos(a) * b[1] / 2, z = Math.sin(a) * b[1] / 2;
+        g.add(cyl(rp, b[3] + 1.4, mats.steel, x, -b[3] / 2 + 0.7, z, 'y', 10), pos(hexN(rp * 3.3, rp * 1.25, mats.steel), x, -b[3] - rp * 0.6, z));
+      }
+      return g;
+    }
+    function lineaDN(dn, largo, y, bridas) { // cañería en X con bridas de cuello en los extremos (cara hacia afuera)
+      var r = (DN_OD[dn] || 6.03) / 2, g = G(tubo(r, largo, mats.pipe, 0, y, 0, 'x'));
+      if (bridas !== false) g.add(pos(orient(bridaB(dn), '-x'), -largo / 2, y, 0), pos(orient(bridaB(dn), 'x'), largo / 2, y, 0));
+      return g;
+    }
+    function boquilla(dn, alto) { // boquilla soldada con brida hacia +y; base en y = 0
+      var r = (DN_OD[dn] || 4.83) / 2, b = B150[dn] || B150[1.5];
+      return G(cyl(r, alto - b[3] * 2.5, mats.pipe, 0, (alto - b[3] * 2.5) / 2, 0, 'y'), pos(bridaB(dn), 0, alto, 0));
+    }
+    function lcdTex(lineas, w, h) { // pantalla con texto fijo
+      var c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w);
+      var x = c.getContext('2d'); x.fillStyle = '#a9dcb2'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#0d2a14';
+      var fs = Math.round(c.height / (lineas.length + 0.6)); x.font = 'bold ' + fs + 'px monospace';
+      lineas.forEach(function (t, i) { x.fillText(t, 10, fs * (i + 1)); });
+      var tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+      return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tx }));
+    }
+    // Carcasa de campo de doble compartimiento (aluminio): tapa con visor en +z, tapa ciega en −z, cuello hacia −y, entradas ½" NPT a los lados
+    function carcasaCampo(lineas) {
+      var g = G(cyl(3.9, 8.6, mats.inst, 0, 0, 0, 'z'),
+        cyl(4.15, 2.2, mats.inst, 0, 0, 5.3, 'z'), pos(M(new THREE.TorusGeometry(3.9, 0.3, 8, 40), mats.inst), 0, 0, 6.35), cyl(3.05, 0.25, mats.glass, 0, 0, 6.42, 'z'),
+        cyl(4.15, 2.0, mats.inst, 0, 0, -5.2, 'z'), pos(M(new THREE.TorusGeometry(3.9, 0.3, 8, 40), mats.inst), 0, 0, -6.2),
+        cyl(1.9, 5, mats.inst, 0, -5.8, 0, 'y'), pos(hexN(3.4, 1.4, mats.ss), 0, -8.6, 0),
+        cyl(1.25, 2.4, mats.inst, 4.6, 0.8, 0, 'x'), pos(orient(hexN(2.2, 0.8, mats.steel), 'x'), 6.1, 0.8, 0),
+        cyl(1.25, 2.4, mats.inst, -4.6, 0.8, 0, 'x'), box(3.4, 0.15, 2.2, mats.ss, 0, 3.95, 0), cyl(0.35, 0.8, mats.ss, 2.8, -2.6, -3.6, 'x'));
+      var p = lcdTex(lineas || ['12.5 mA', 'PV 48.2'], 4.6, 2.8); p.position.set(0, 0, 6.3); g.add(p);
+      return g;
+    }
+    // Cabezal DIN B de aluminio (Ø 80 mm) con tapa roscada y prensaestopas M20; base en y = 0
+    function cabezaDIN() {
+      return G(cyl(1.6, 1.4, mAlu, 0, 0.7, 0, 'y'), cyl(4, 4.2, mAlu, 0, 3.5, 0, 'y'), cyl(4.1, 1.3, mAlu, 0, 6.2, 0, 'y'),
+        cyl(1.0, 2.2, mPA, 4.6, 3.4, 0, 'x'), pos(orient(hexN(2.4, 0.8, mPA), 'x'), 5.5, 3.4, 0), box(1.2, 0.6, 0.4, mats.steel, 0, 6.9, 0));
+    }
+    function cupulaDIN() { var m = M(new THREE.SphereGeometry(4.1, 32, 10, 0, Math.PI * 2, 0, Math.PI / 2), mAlu); m.scale.set(1, 0.32, 1); return m; }
+    // Extensión niple–unión–niple ½" NPT de largo L sobre +y
+    function cuelloNUN(L) {
+      return G(cyl(1.07, L, mats.ss, 0, L / 2, 0, 'y'), pos(hexN(2.7, 1, mats.ss), 0, 0.5, 0), pos(hexN(3.3, 1.3, mats.ss), 0, L * 0.5, 0), cyl(1.95, 0.9, mats.ss, 0, L * 0.5 + 1.1, 0, 'y', 28), pos(hexN(2.7, 1, mats.ss), 0, L - 0.5, 0));
+    }
+    // Vaina bridada cónica (ASME PTC 19.3 TW-2016): cara de brida en y = 0 hacia −y, cuello T de 5 cm, vástago U hacia −y
+    function vainaBridada(U, dn) {
+      var b = B150[dn] || B150[1.5], g = G(cyl(b[0] / 2, b[3], mats.ss, 0, b[3] / 2, 0, 'y'), cyl(b[4] / 2, 0.16, mats.ss, 0, -0.08, 0, 'y'),
+        cyl(1.6, 5, mats.ss, 0, b[3] + 2.5, 0, 'y'), cone(1.35, 0.95, U, mats.ss, 0, -U / 2, 0), sph(0.95, mats.ss, 0, -U, 0));
+      g.userData.alto = b[3] + 5; return g;
+    }
+    // Vaina roscada de barra perforada ¾" NPT: hexágono en y = 0, vástago hacia −y
+    function vainaRoscada(U) { return G(pos(hexN(3.2, 1.6, mats.ss), 0, 0.8, 0), cyl(1.3, 3, mats.ss, 0, 3, 0, 'y'), rosca(1.33, 1.8, -1.8), cone(1.1, 0.85, U, mats.ss, 0, -1.8 - U / 2, 0), sph(0.85, mats.ss, 0, -1.8 - U, 0)); }
+    // Caja de interruptor de proceso (fundición de aluminio, conduit ¾" NPT lateral, tapa con 4 tornillos); centro en el origen
+    function cajaSwitch() {
+      var g = G(rbox(9.5, 15, 8.5, 0.8, mats.cab, 0, 0, 0), rbox(9.9, 15.4, 1.2, 0.6, mats.cab, 0, 0, 4.6), box(5.5, 2.8, 0.2, mats.ss, 0, 3.5, 5.25),
+        cyl(1.6, 2.4, mats.cab, 5.6, 4, 0, 'x'), pos(orient(hexN(3.3, 0.9, mats.cab), 'x'), 7, 4, 0), cyl(1.4, 1.2, mats.dark, 0, 8.1, 0, 'y'));
+      [[-4, -6.7], [4, -6.7], [-4, 6.7], [4, 6.7]].forEach(function (p) { g.add(cyl(0.35, 0.4, mats.steel, p[0], p[1], 5.3, 'z', 10)); });
+      return g;
+    }
+    // Válvula de bola de ½" roscada con manilla (cuerpo en el origen, paso en x)
+    function bolaRoscada(r) {
+      r = r || 1.07; return G(pos(orient(hexN(r * 3.1, r * 1.6, mats.ss), 'x'), -r * 2.1, 0, 0), pos(orient(hexN(r * 3.1, r * 1.6, mats.ss), 'x'), r * 2.1, 0, 0),
+        cyl(r * 1.55, r * 2.6, mats.ss, 0, 0, 0, 'x'), cyl(0.35, r * 1.6, mats.steel, 0, r * 2.2, 0, 'y'), box(r * 6.5, 0.4, 1.1, mats.red, r * 3.2, r * 3, 0));
+    }
+    // Manifold de 2 válvulas (bloqueo y purga) con manillas en T
+    function manifold2() {
+      return G(box(4.2, 6.5, 3.2, mats.ss, 0, 0, 0), cyl(0.5, 4.5, mats.ss, 0, 0, 3.8, 'z'), box(4.5, 0.6, 0.6, mats.steel, 0, 0, 6.2),
+        cyl(0.5, 3.6, mats.ss, 3.6, -1.5, 0, 'x'), box(0.6, 3.6, 0.6, mats.steel, 5.5, -1.5, 0), cyl(0.5, 1.6, mats.ss, -2.6, -1.5, 0, 'x'));
+    }
+    // Transmisor de campo de pared (policarbonato/aluminio) con pantalla, teclas, prensaestopas inferiores, placa y techo de protección
+    function transmisorPared(o) {
+      o = o || {}; var w = o.w || 21.5, h = o.h || 18, d = o.d || 15.3, g = G();
+      g.add(rbox(w, h, d * 0.55, 1.2, o.mat || mPc, 0, 0, -d * 0.22), rbox(w, h, d * 0.45, 1.2, o.tapa || mats.inst, 0, 0, d * 0.28));
+      var pan = o.pantalla || lcdTex(o.lineas || ['FIT-101', '48.2 L/s'], w * 0.42, h * 0.26); pan.position.set(-w * 0.1, h * 0.12, d * 0.51); g.add(pan);
+      for (var i = 0; i < 3; i++) g.add(cyl(0.8, 0.4, mats.dark, -w * 0.25 + i * w * 0.15, -h * 0.22, d * 0.51, 'z', 16));
+      for (var j = 0; j < 4; j++) g.add(cyl(0.3, 0.2, j ? mats.dark : mats.led, w * 0.3, h * 0.25 - j * 1.4, d * 0.51, 'z', 10));
+      for (var k = 0; k < (o.glands || 5); k++) g.add(cyl(0.95, 1.6, mPA, -w * 0.36 + k * (w * 0.72 / Math.max(1, (o.glands || 5) - 1)), -h / 2 - 0.8, 0, 'y', 6));
+      if (o.techo !== false) { // techo de protección de acero inoxidable
+        var tw = w + 1.4, th = h * 1.45, td = d * 1.27;
+        g.add(box(tw, 0.3, td, mats.ss, 0, h / 2 + 2.6, td / 2 - d * 0.5 - 2.2), box(tw, th, 0.3, mats.ss, 0, h / 2 + 2.6 - th / 2, -d * 0.5 - 2.2),
+          box(0.3, th * 0.55, td, mats.ss, -tw / 2, h / 2 + 2.6 - th * 0.275, td / 2 - d * 0.5 - 2.2), box(0.3, th * 0.55, td, mats.ss, tw / 2, h / 2 + 2.6 - th * 0.275, td / 2 - d * 0.5 - 2.2));
+      }
+      g.add(box(w * 0.98, 11, 0.4, mats.ss, 0, 0, -d * 0.5 - 1.8)); // placa de montaje en tubo
+      return g;
+    }
+    // Abrazaderas en U a un tubo vertical de 2" (eje y), del lado −z de la placa
+    function abrazaderas(x, zc, y0, sep) { var g = G(); [-1, 1].forEach(function (s) { g.add(pos(M(new THREE.TorusGeometry(3.4, 0.45, 8, 24, Math.PI).rotateX(-Math.PI / 2), mats.steel), x, y0 + s * sep / 2, zc)); }); return g; }
+    // Sensor ultrasónico (Ø 72 × 110 mm, rosca G 1" en la parte superior, contratuerca de 41 mm, haz de 9°)
+    function sensorUS(conTecho) {
+      var g = G(cyl(3.6, 9.2, mFdu, 0, 4.6, 0, 'y'), cyl(3.4, 0.4, mats.dark, 0, 0.1, 0, 'y'), rosca(1.67, 3.2, 9.2), pos(hexN(4.1, 1.2, mPA), 0, 11.2, 0), cyl(0.5, 4, mats.black, 0, 13.8, 0, 'y'));
+      if (conTecho) g.add(cyl(5.4, 0.4, mats.white, 0, 13, 0, 'y'), tubo(5.4, 6, mats.white, 0, 10, 0, 'y'));
+      return g;
+    }
+    // Brazo voladizo de acero inoxidable con soporte de pivote (500/1000 mm) entre (x0,z0) y el sensor en (x1,z1) a la altura y
+    function brazoVoladizo(x0, z0, x1, z1, y) {
+      var dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), g = G();
+      var b = box(L + 8, 4, 4, mats.ss, (x0 + x1) / 2, y, (z0 + z1) / 2); b.rotation.y = -Math.atan2(dz, dx); g.add(b);
+      g.add(box(8, 1, 8, mats.ss, x1, y - 2.5, z1), cyl(1.5, 6, mats.ss, x0, y - 3, z0, 'y'), box(10, 14, 1, mats.ss, x0, y - 6, z0));
+      return g;
+    }
+    // Interruptor vibratorio (horquilla de 40 mm, rosca G 1", carcasa de aluminio de una cámara Ø 101 mm), montado sobre +y
+    function horquillaVib() {
+      var g = G(rosca(1.65, 2, 0), pos(hexN(4.1, 1.5, mats.ss), 0, 2.75, 0), cyl(1.7, 3.5, mats.ss, 0, 5.2, 0, 'y'), cyl(5.05, 7.5, mAlu, 0, 10.7, 0, 'y'),
+        cyl(5.1, 2.2, mAlu, 0, 15.5, 0, 'y'), cyl(3.8, 0.6, mAlu, 0, 16.9, 0, 'y'), cyl(1.0, 2.4, mPA, 5.8, 10.8, 0, 'x'), pos(orient(hexN(2.4, 0.8, mPA), 'x'), 6.8, 10.8, 0));
+      var t1 = rbox(1.7, 4, 0.3, 0.12, mats.ss, 0, -2.1, 0.55), t2 = rbox(1.7, 4, 0.3, 0.12, mats.ss, 0, -2.1, -0.55);
+      g.add(cyl(1.2, 0.8, mats.ss, 0, -0.1, 0, 'y'), t1, t2);
+      return g;
+    }
+
+    // ── Temperatura (vaina bridada, extensión NUN, cabezal DIN B y transmisor) ──
+    function temperaturaBase(dnL) {
+      var r = DN_OD[dnL] / 2, y = 90, hN = 16, yF = y + r + hN, b = B150[1.5];
+      var tub = lineaDN(dnL, 220, y); tub.add(soporteTubo(-80, y, r), soporteTubo(80, y, r));
+      var noz = pos(boquilla(1.5, hN), 0, y + r - 0.5, 0); // cara de brida en yF − 0.5
+      var yC = yF - 0.5 + 0.16 + 0.32; // cara de la vaina sobre la empaquetadura
+      var U = yC - (y + 0.15 * r), vaina = pos(vainaBridada(U, 1.5), 0, yC, 0);
+      var yT = yC + vaina.userData.alto, junta = cyl(b[4] / 2, 0.3, mats.black, 0, yF - 0.5 + 0.31, 0, 'y');
+      return { y: y, r: r, tub: tub, noz: noz, vaina: vaina, junta: junta, yT: yT, U: U, yC: yC };
+    }
+    V['temp-cabezal'] = function () {
+      var t = temperaturaBase(8), L = 15, yH = t.yT + L;
+      var nun = pos(cuelloNUN(L), 0, t.yT, 0), cab = G(pos(cabezaDIN(), 0, yH, 0), pos(cupulaDIN(), 0, yH + 6.85, 0));
+      var elem = G(cyl(0.3, t.U + L + 8, mats.steel, 0, t.yC - t.U + (t.U + L + 8) / 2 + 0.6, 0, 'y'), cyl(2.1, 0.5, mats.cream, 0, yH + 2.4, 0, 'y'), cyl(0.5, 3, mats.steel, 0, yH + 0.9, 0, 'y'));
+      var tx = G(cyl(2.2, 1.6, mats.inst, 0, yH + 3.6, 0, 'y'), box(2.4, 0.3, 1.2, mats.white, 0, yH + 4.5, 0));
+      var cond = G(conduit([[6.1, yH + 3.4, 0], [20, yH + 2, 0], [36, t.y + 20, 0], [46, 70, 30], [46, 48, 60]]), caja(16, 20, 10, mats.ss, 46, 38, 66));
+      var root = G(t.tub, t.noz, t.junta, t.vaina, elem, nun, cab, tx, cond, flecha(-60, t.y + t.r + 6, 0));
+      return { root: root, foco: [0, t.yT, 0, 48], partes: [
+        [1, 'Tubería de 8" con boquilla bridada de 1½" cl. 150', 1, G(t.tub, t.noz), [0, 0, 0], [-60, t.y, t.r]],
+        [2, 'Vaina bridada cónica 1½" cl. 150 (ASME PTC 19.3 TW)', 1, t.vaina, [0, 28, 0], [0, t.yC + 4, 7]],
+        [3, 'Empaquetadura espirometálica', 1, t.junta, [0, 14, 0], [7, t.yC - 0.4, 0]],
+        [4, 'Extensión niple–unión–niple ½" NPT', 1, nun, [0, 46, 0], [0, t.yT + L / 2, 3]],
+        [5, 'Elemento RTD Pt100 de 6 mm con resorte', 1, elem, [0, 90, 0], [0, yH + 2, 0]],
+        [6, 'Transmisor de temperatura en cabezal (4–20 mA HART)', 1, tx, [0, 110, 0], [0, yH + 4.6, 2]],
+        [7, 'Cabezal DIN B de aluminio con tapa roscada', 1, cab, [0, 70, 0], [0, yH + 8.5, 3]],
+        [8, 'Conduit flexible y caja de conexiones', 1, cond, [40, 0, 20], [46, 50, 66]]
+      ] };
+    };
+    V['temp-remoto'] = function () {
+      var t = temperaturaBase(8), L = 15, yH = t.yT + L;
+      var nun = pos(cuelloNUN(L), 0, t.yT, 0), cab = G(pos(cabezaDIN(), 0, yH, 0), pos(cupulaDIN(), 0, yH + 6.85, 0));
+      var elem = G(cyl(0.3, t.U + L + 8, mats.steel, 0, t.yC - t.U + (t.U + L + 8) / 2 + 0.6, 0, 'y'), cyl(2.1, 0.5, mats.cream, 0, yH + 2.4, 0, 'y'));
+      var xP = 110, zP = 75, ped = pedestal(125, xP, zP);
+      var tx = pos(carcasaCampo(['TT-101', '64.3 C']), xP, 128, zP + 12); tx.rotation.y = -0.3;
+      var sop = G(box(12, 14, 0.5, mats.ss, xP, 124, zP + 4), abrazaderas(xP, zP, 124, 8));
+      var cable = conduit([[6.1, yH + 3.4, 0], [24, yH + 2, 0], [60, 140, 30], [xP - 6, 130, zP + 12]]);
+      var root = G(t.tub, t.noz, t.junta, t.vaina, elem, nun, cab, ped, tx, sop, cable, flecha(-60, t.y + t.r + 6, 0));
+      return { root: root, foco: [55, t.yT - 15, 35, 95], partes: [
+        [1, 'Tubería de 8" con boquilla bridada de 1½" cl. 150', 1, G(t.tub, t.noz, t.junta), [0, 0, 0], [-60, t.y, t.r]],
+        [2, 'Vaina bridada cónica 1½" cl. 150', 1, t.vaina, [0, 28, 0], [0, t.yC + 4, 7]],
+        [3, 'Elemento RTD Pt100 de 4 hilos', 1, elem, [0, 80, 0], [0, yH + 2, 0]],
+        [4, 'Extensión NUN y cabezal DIN B con bornera', 1, G(nun, cab), [0, 50, 0], [0, yH + 8.5, 3]],
+        [5, 'Transmisor de campo de doble compartimiento', 1, tx, [25, 15, 15], [xP, 138, zP + 12]],
+        [6, 'Soporte con abrazaderas en U para tubo de 2"', 1, sop, [25, 0, 0], [xP + 8, 118, zP + 4]],
+        [7, 'Pedestal de tubo de 2" con placa base', 1, ped, [25, 0, 0], [xP, 60, zP]],
+        [8, 'Cable de extensión en conduit flexible', 1, cable, [15, 20, 0], [56, 140, 28]]
+      ] };
+    };
+    V['temp-switch'] = function () {
+      var dn = 3, r = DN_OD[dn] / 2, y = 90, root = G();
+      var tub = lineaDN(dn, 180, y); tub.add(soporteTubo(-60, y, r), soporteTubo(60, y, r));
+      var cpl = G(cyl(1.9, 2.5, mats.pipe, 0, y + r + 0.6, 0, 'y'), pos(hexN(4.2, 2, mats.pipe), 0, y + r + 2, 0)); // coupling ¾" NPT
+      var yv = y + r + 3, vaina = pos(vainaRoscada(r + 1.2), 0, yv, 0);
+      var sw = G(pos(cajaSwitch(), 0, yv + 16, 0), cyl(1.3, 4, mats.ss, 0, yv + 6.5, 0, 'y'), pos(hexN(2.7, 1, mats.ss), 0, yv + 4.6, 0));
+      var cond = conduit([[7.5, yv + 20, 0], [22, yv + 18, 0], [30, 60, 20], [30, 20, 40]]);
+      root.add(tub, cpl, vaina, sw, cond, flecha(-45, y + r + 6, 0));
+      return { root: root, foco: [0, yv + 10, 0, 38], partes: [[1, 'Tubería de 3" con copla ¾" NPT', 1, G(tub, cpl), [0, 0, 0], [-50, y, r]], [2, 'Vaina roscada de barra perforada ¾" NPT', 1, vaina, [0, 25, 0], [0, yv + 2, 3]],
+        [3, 'Interruptor de temperatura de bulbo rígido (TSH)', 1, sw, [0, 50, 0], [0, yv + 25, 0]], [4, 'Conduit flexible ¾"', 1, cond, [25, 0, 0], [30, 60, 20]]] };
+    };
+
+    // ── Vortex bridado 3" (Rosemount 8800D: largo cara a cara ≈ 234 mm cl. 150, carcasa Ø 78 mm sobre tubo soporte) ──
+    V['vortex'] = function () {
+      var dn = 3, r = DN_OD[dn] / 2, b = B150[dn], y = 80, A = 23.4, Lup = 10 * 7.8, Ldn = 5 * 7.8, root = G();
+      var aguas = G(lineaDN(dn, Lup, y)); aguas.position.x = -A / 2 - Lup / 2 - 0.3; aguas.add(soporteTubo(-Lup / 2 + 12, y, r));
+      var abajo = G(lineaDN(dn, Ldn, y)); abajo.position.x = A / 2 + Ldn / 2 + 0.3;
+      var extra1 = G(lineaDN(dn, 60, y)); extra1.position.x = -A / 2 - Lup - 30.6; extra1.add(soporteTubo(0, y, r));
+      var extra2 = G(lineaDN(dn, 40, y)); extra2.position.x = A / 2 + Ldn + 20.6; extra2.add(soporteTubo(0, y, r));
+      var cuerpo = G(cyl(r + 0.9, A - 2 * b[3], mats.ss, 0, y, 0, 'x'), pos(orient(G(cyl(b[0] / 2, b[3], mats.ss, 0, -b[3] / 2, 0, 'y')), '-x'), -A / 2, y, 0),
+        pos(orient(G(cyl(b[0] / 2, b[3], mats.ss, 0, -b[3] / 2, 0, 'y')), 'x'), A / 2, y, 0), box(1.2, 1.4, 2 * r - 0.6, mats.ss, -1.5, y, 0)); // barra generadora horizontal
+      // Tubo soporte y carcasa hacia el costado (+z): barra generadora en plano horizontal, recomendado para líquidos
+      var zs = r + 0.9, cab = G(cyl(1.6, 12, mats.ss, 0, y, zs + 6, 'z'));
+      var hz = G(carcasaCampo(['FT-201', '96.5 m3/h'])); hz.children[0].rotation.x = Math.PI / 2; hz.rotation.z = Math.PI / 2; hz.position.set(0, y, zs + 12 + 8.6);
+      cab.add(hz);
+      var gasket = G(cyl(b[4] / 2, 0.3, mats.black, -A / 2 - 0.15, y, 0, 'x'), cyl(b[4] / 2, 0.3, mats.black, A / 2 + 0.15, y, 0, 'x'));
+      var tramos = G(box(Lup, 0.4, 1, mats.yellow, -A / 2 - Lup / 2, y - r - 7, r + 6), box(Ldn, 0.4, 1, mats.yellow, A / 2 + Ldn / 2, y - r - 7, r + 6));
+      var cond = conduit([[0, y - 7, zs + 21.3], [-4, y - 16, zs + 24], [-26, 50, zs + 32], [-30, 20, zs + 40]]);
+      root.add(aguas, abajo, extra1, extra2, cuerpo, cab, gasket, tramos, cond, flecha(-A / 2 - Lup - 40, y + r + 8, 0));
+      return { root: root, foco: [0, y + 4, 10, 60], partes: [[1, 'Tramo recto aguas arriba 10 D mínimo (35 D sin corrección del factor K)', 1, aguas, [-20, 0, 0], [-A / 2 - Lup / 2, y + r + 4, 0]],
+        [2, 'Tramo recto aguas abajo 5 D', 1, abajo, [20, 0, 0], [A / 2 + Ldn / 2, y + r + 4, 0]],
+        [3, 'Cuerpo vortex bridado 3" cl. 150 con barra generadora', 1, cuerpo, [0, 25, 0], [0, y + b[0] / 2, 0]],
+        [4, 'Empaquetaduras centradas (sin sobresalir al flujo)', 2, gasket, [0, 12, 0], [A / 2 + 1, y - b[0] / 2, 0]],
+        [5, 'Transmisor integral sobre tubo soporte, girado al costado', 1, cab, [0, 0, 30], [0, y + 6, zs + 21]],
+        [6, 'Conduit flexible con dren', 1, cond, [-15, 0, 20], [-26, 60, zs + 30]]] };
+    };
+    // ── Másico térmico de inserción con válvula de bola 1" y prensaestopas de compresión ──
+    V['termico'] = function () {
+      var dn = 8, r = DN_OD[dn] / 2, y = 80, root = G();
+      var tub = lineaDN(dn, 240, y); tub.add(soporteTubo(-90, y, r), soporteTubo(90, y, r));
+      var base = y + r;
+      var hot = G(cyl(2.2, 3, mats.pipe, 0, base + 1, 0, 'y'), pos(hexN(4.4, 2, mats.pipe), 0, base + 3, 0), pos(vertical(bolaRoscada(1.67)), 0, base + 8.5, 0),
+        cyl(1.67, 3, mats.ss, 0, base + 14.5, 0, 'y'), pos(hexN(3.6, 2.4, mats.ss), 0, base + 17, 0), pos(hexN(2.9, 1.6, mats.ss), 0, base + 19, 0));
+      var sonda = G(cyl(0.95, base + 40 - y, mats.ss, 0, (base + 40 + y) / 2, 0, 'y'), cyl(0.95, 3, mats.ss, 0, y - 1.5, 0, 'y'), cyl(0.25, 3, mats.steel, 0.4, y - 4, 0, 'y'), cyl(0.25, 3, mats.steel, -0.4, y - 4, 0, 'y'));
+      var tx = pos(carcasaCampo(['FT-301', '612 Nm3/h']), 0, base + 49, 0);
+      var cadena = camino([[0, base + 38, 1], [3, base + 28, 3], [2, base + 19, 2]], 0.25, mats.steel);
+      var cond = conduit([[-6.4, base + 49.8, 0], [-18, base + 48, 0], [-40, 70, 30], [-40, 20, 50]]);
+      root.add(tub, hot, sonda, tx, cadena, cond, flecha(-70, base + 6, 0));
+      return { root: root, foco: [0, base + 18, 0, 52], partes: [[1, 'Tubería de aire de 8" con copla 1" NPT', 1, tub, [0, 0, 0], [-80, y, r]],
+        [2, 'Válvula de bola 1" de paso total y prensaestopas de compresión', 1, hot, [0, 15, 12], [0, base + 9, 4]],
+        [3, 'Sonda de dispersión térmica Ø 19 mm en el eje de la tubería', 1, sonda, [0, 48, 0], [0, y + 6, 2]],
+        [4, 'Transmisor integral de doble compartimiento', 1, tx, [0, 70, 0], [0, base + 55, 0]],
+        [5, 'Cadena de retención de la sonda', 1, cadena, [0, 30, 15], [3, base + 30, 4]],
+        [6, 'Conduit flexible', 1, cond, [-20, 0, 20], [-40, 70, 30]]] };
+    };
+
+    // ── Nivel ultrasónico (sensor Ø 72 mm, distancia de bloqueo 0,3 m, brazo voladizo) y vibratorio (horquilla 40 mm) ──
+    V['ultrasonico'] = function () {
+      var R = 90, H = 200, root = G(), est = estanque(R, H);
+      var xs = R - 2 * R / 6, yS = H + 26; // a 1/6 del diámetro desde la pared
+      var brazo = brazoVoladizo(R + 6, 0, xs, 0, yS + 14), piv = G(box(4, 30, 4, mats.ss, R + 6, H + 8, 0), box(10, 10, 1, mats.ss, R + 2, H - 3, 0));
+      var sensor = pos(sensorUS(true), xs, yS, 0);
+      var cono = M(new THREE.ConeGeometry(Math.tan(4.5 * Math.PI / 180) * (yS - H * 0.55), yS - H * 0.55, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xef5a05, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false }), xs, (yS + H * 0.55) / 2, 0);
+      var bloqueo = M(new THREE.CylinderGeometry(4.5, 4.5, 30, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xc0392b, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }), xs, yS - 15, 0);
+      var xT = R + 60, tx = pos(transmisorPared({ lineas: ['LIT-401', '1.12 m'] }), xT, 140, 13.3);
+      var ped = G(pedestal(160, xT, 0), abrazaderas(xT, 0, 140, 8));
+      var cable = conduit([[xs, yS + 14, 0], [xs + 20, yS + 20, 2], [R + 20, H + 24, 2], [xT - 6, 160, 4], [xT - 6, 128, 10]]);
+      root.add(est, brazo, piv, sensor, cono, bloqueo, tx, ped, cable);
+      return { root: root, foco: [R * 0.55, H - 10, 0, 140], partes: [[1, 'Estanque', 1, est, [0, 0, 0], [-R, H * 0.6, 0]],
+        [2, 'Sensor ultrasónico G 1" con techo de protección', 1, sensor, [0, 40, 0], [xs, yS + 16, 6]],
+        [3, 'Brazo voladizo de acero inoxidable 1000 mm con pivote', 1, G(brazo, piv), [0, 25, 0], [R - 10, yS + 18, 3]],
+        [4, 'Distancia de bloqueo 0,3 m (nivel máximo bajo esta zona)', 1, bloqueo, [0, 0, 0], [xs, yS - 30, 6]],
+        [5, 'Transmisor de pared con techo de protección', 1, tx, [40, 0, 20], [xT, 160, 12]],
+        [6, 'Pedestal de tubo de 2" con abrazaderas', 1, ped, [40, 0, 0], [xT, 70, 0]],
+        [7, 'Cable del sensor en conduit', 1, cable, [20, 20, 0], [R + 25, H + 26, 2]]] };
+    };
+    V['vibratorio'] = function () {
+      var R = 70, H = 220, root = G(), est = estanque(R, H);
+      function punto(yb) {
+        var cpl = G(cyl(2.5, 2.5, mats.ss, R + 0.2, yb, 0, 'x')), sw = horquillaVib();
+        sw.rotation.z = -Math.PI / 2; sw.position.set(R + 1, yb, 0); // carcasa afuera, horquilla hacia −x (dentro del estanque); paletas verticales
+        return { cpl: cpl, sw: sw };
+      }
+      var a = punto(H * 0.85), b = punto(H * 0.2);
+      var c1 = conduit([[R + 11.8, H * 0.85 - 7.6, 0], [R + 24, H * 0.8, 0], [R + 30, 60, 10], [R + 30, 10, 20]]), c2 = conduit([[R + 11.8, H * 0.2 - 7.6, 0], [R + 24, 40, 4], [R + 30, 10, 20]]);
+      root.add(est, a.cpl, a.sw, b.cpl, b.sw, c1, c2);
+      return { root: root, partes: [[1, 'Estanque con coplas soldadas G 1"', 1, G(est, a.cpl, b.cpl), [0, 0, 0], [-R, H * 0.6, 0]],
+        [2, 'Interruptor vibratorio de alto nivel (LSH), paletas verticales', 1, a.sw, [35, 0, 0], [R + 11, H * 0.85 + 9, 0]],
+        [3, 'Interruptor vibratorio de bajo nivel (LSL)', 1, b.sw, [35, 0, 0], [R + 11, H * 0.2 + 9, 0]], [4, 'Conduit flexible', 2, G(c1, c2), [25, 0, 0], [R + 30, 60, 10]]] };
+    };
+
+    // ── Interruptor de presión con válvula raíz y manifold de 2 válvulas ──
+    V['presion-sw'] = function () {
+      var dn = 3, r = DN_OD[dn] / 2, y = 90, root = G();
+      var tub = lineaDN(dn, 180, y); tub.add(soporteTubo(-60, y, r), soporteTubo(60, y, r));
+      var b = y + r, toma = G(cyl(1.4, 2, mats.pipe, 0, b + 0.6, 0, 'y'), pos(hexN(3.2, 1.6, mats.pipe), 0, b + 1.8, 0), cyl(1.07, 4, mats.ss, 0, b + 4.5, 0, 'y'),
+        pos(vertical(bolaRoscada()), 0, b + 9, 0), cyl(1.07, 3, mats.ss, 0, b + 13.5, 0, 'y'));
+      var man = pos(manifold2(), 0, b + 18.5, 0);
+      var sw = G(pos(cajaSwitch(), 0, b + 33, 0), cyl(3.2, 3.2, mats.ss, 0, b + 24.4, 0, 'y'), cyl(0.7, 2.5, mats.ss, 0, b + 22, 0, 'y'));
+      var cond = conduit([[7.5, b + 37, 0], [24, b + 35, 0], [34, 60, 20], [34, 20, 40]]);
+      root.add(tub, toma, man, sw, cond, flecha(-45, b + 6, 0));
+      return { root: root, foco: [0, b + 20, 0, 36], partes: [[1, 'Tubería de proceso de 3"', 1, tub, [0, 0, 0], [-50, y, r]], [2, 'Copla ½" NPT y válvula raíz de bola', 1, toma, [0, 12, 0], [0, b + 9, 4]],
+        [3, 'Manifold de 2 válvulas (bloqueo y purga)', 1, man, [0, 25, 0], [5, b + 19, 4]], [4, 'Interruptor de presión con elemento de diafragma (PSH / PSL)', 1, sw, [0, 45, 0], [0, b + 42, 0]],
+        [5, 'Conduit flexible ¾"', 1, cond, [25, 0, 0], [34, 60, 20]]] };
+    };
+
+    // ── Analizadores: transmisor de pared con techo de protección y sensores con portasondas ──
+    function txAnalisis(xT, zT, lineas) {
+      var tx = pos(transmisorPared({ w: 19.4, h: 23.7, d: 16.8, lineas: lineas, glands: 6 }), xT, 140, zT + 14);
+      var ped = G(pedestal(165, xT, zT), abrazaderas(xT, zT, 140, 10));
+      return { tx: tx, ped: ped };
+    }
+    V['conductividad'] = function () {
+      var dn = 4, r = DN_OD[dn] / 2, y = 80, root = G();
+      var tub = lineaDN(dn, 200, y); tub.add(soporteTubo(-75, y, r), soporteTubo(75, y, r));
+      var noz = pos(boquilla(2, 12), 0, y + r - 0.5, 0), yF = y + r + 11.5;
+      var sensor = G(pos(orient(G(cyl(B150[2][0] / 2, 1.9, mats.ss, 0, 0.95, 0, 'y')), '-y'), 0, yF + 2.3, 0), cyl(1.9, yF - y + 1, mPA, 0, (yF + y) / 2, 0, 'y'),
+        pos(M(new THREE.TorusGeometry(2.6, 1.3, 14, 32).rotateY(Math.PI / 2), mPA), 0, y - 1.5, 0), cyl(1.4, 4, mats.ss, 0, yF + 4.3, 0, 'y'), pos(hexN(2.6, 1, mPA), 0, yF + 6.5, 0));
+      var t = txAnalisis(95, 70, ['AIT-501', '1.85 mS/cm']);
+      var cable = camino([[0, yF + 7, 0], [6, yF + 14, 4], [50, 130, 50], [88, 128, 80]], 0.45, mats.black);
+      root.add(tub, noz, sensor, t.tx, t.ped, cable, flecha(-60, y + r + 6, 0));
+      return { root: root, foco: [40, y + 25, 35, 90], partes: [[1, 'Tubería de 4" con boquilla bridada 2"', 1, G(tub, noz), [0, 0, 0], [-70, y, r]],
+        [2, 'Sensor toroidal (inductivo) con brida 2", toroide dentro del flujo', 1, sensor, [0, 35, 0], [0, yF + 6, 4]],
+        [3, 'Transmisor de análisis con techo de protección', 1, t.tx, [30, 0, 0], [95, 156, 84]], [4, 'Pedestal de 2" con abrazaderas', 1, t.ped, [30, 0, 0], [95, 70, 70]],
+        [5, 'Cable fijo del sensor', 1, cable, [20, 20, 0], [30, 116, 30]]] };
+    };
+    // Portasondas pendular: tubo de inmersión Ø 40 mm colgado de la baranda con abrazadera cruzada
+    function portasondas(R, H, sensor) {
+      var x0 = R - 4, ang = 0.22, Lt = 170, g = G();
+      var tubo1 = G(cyl(2, Lt, mats.ss, 0, -Lt / 2, 0, 'y'));
+      tubo1.add(pos(sensor, 0, -Lt, 0));
+      tubo1.position.set(x0 - 2, H + 30, 0); tubo1.rotation.z = -ang;
+      var abr = G(box(6, 6, 6, mats.ss, x0 - 2, H + 30, 0), cyl(1, 30, mats.ss, x0 - 2, H + 30, 0, 'z'), box(4, 3, 4, mats.ss, x0 - 2, H + 30, 6), box(4, 3, 4, mats.ss, x0 - 2, H + 30, -6));
+      g.add(tubo1, abr);
+      return { g: g, tubo: tubo1, abr: abr, punta: new THREE.Vector3(x0 - 2 - Math.sin(ang) * Lt, H + 30 - Math.cos(ang) * Lt, 0) };
+    }
+    function analizadorInmersion(nombre, sensor, lineas) {
+      var R = 80, H = 160, root = G(), est = estanque(R, H), ps = portasondas(R, H, sensor);
+      var t = txAnalisis(R + 55, 0, lineas);
+      var cable = camino([[R - 2, H + 32, 0], [R + 10, H + 40, 0], [R + 40, 160, 4], [R + 52, 132, 12]], 0.45, mats.black);
+      root.add(est, ps.g, t.tx, t.ped, cable);
+      return { root: root, partes: [[1, 'Estanque / cajón', 1, est, [0, 0, 0], [-R, H * 0.6, 0]], [2, nombre, 1, ps.tubo, [0, 50, 0], [ps.punta.x, ps.punta.y + 6, 5]],
+        [3, 'Portasondas pendular con abrazadera cruzada a la baranda', 1, ps.abr, [0, 30, 0], [R - 6, H + 36, 6]],
+        [4, 'Transmisor de análisis con techo de protección', 1, t.tx, [40, 0, 0], [R + 55, 156, 10]], [5, 'Pedestal de 2" con abrazaderas', 1, t.ped, [40, 0, 0], [R + 55, 70, 0]],
+        [6, 'Cable fijo del sensor', 1, cable, [20, 20, 0], [R + 25, H + 40, 0]]] };
+    }
+    V['turbidez'] = function () { // sensor óptico Ø 60 mm con limpiador
+      return analizadorInmersion('Sensor de turbidez Ø 60 mm con limpiador automático', G(cyl(3, 18, mats.ss, 0, -9, 0, 'y'), cyl(3.05, 0.6, mPA, 0, -17.6, 0, 'y'), box(0.4, 0.6, 5, mPA, 0, -18.2, 0)), ['AIT-502', '12.4 FNU']);
+    };
+    V['orp'] = function () { // electrodo Ø 12 mm en tubo de inmersión con canastillo de protección
+      var cana = G(cyl(1.8, 4, mats.ss, 0, -2, 0, 'y'), cyl(0.6, 12, mats.glass, 0, -8, 0, 'y'), cyl(0.5, 1, mats.ss, 0, -14, 0, 'y'));
+      for (var i = 0; i < 6; i++) { var a = i / 6 * Math.PI * 2; cana.add(cyl(0.18, 12, mats.ss, Math.cos(a) * 1.8, -10, Math.sin(a) * 1.8, 'y', 6)); }
+      cana.add(M(new THREE.TorusGeometry(1.8, 0.2, 6, 24).rotateX(Math.PI / 2), mats.ss, 0, -16, 0));
+      return analizadorInmersion('Electrodo de ORP Ø 12 mm con canastillo de protección', cana, ['AIT-503', '+412 mV']);
+    };
+    // Detector de gases fijo (≈ 280 × 150 × 130 mm), sensor hacia abajo con protector contra salpicaduras
+    V['gases'] = function () {
+      var root = G(), pared = G(muro(300, 280, 0, -8), losa(300, 160, 0, 60)), yD = 45;
+      var det = G(rbox(28, 15, 10, 1.5, mats.white, 0, 0, 0), rbox(22, 11, 0.6, 0.5, mats.dark, 0, 0.5, 5.2), cyl(2.8, 6, mPA, 0, -10.5, 0, 'y'), cyl(3.2, 3, mats.dark, 0, -15, 0, 'y'),
+        box(5, 3, 0.2, mats.lcd, -4, 1.5, 5.6), cyl(0.4, 0.3, mats.led, 4, 2.5, 5.6, 'z'), cyl(0.4, 0.3, mats.yellow, 6, 2.5, 5.6, 'z'), cyl(0.4, 0.3, mats.red, 8, 2.5, 5.6, 'z'),
+        cyl(1.3, 3, mats.white, 15.5, -2, 0, 'x'), box(30, 17, 0.5, mats.ss, 0, 0, -5.4));
+      det.position.set(-60, yD, 6);
+      var baliza = G(cyl(5, 8, mats.dark, 0, 0, 0, 'y'), cyl(4.6, 9, mats.red, 0, 8, 0, 'y'), box(10, 2, 6, mats.dark, 0, -5, -3)); baliza.position.set(60, 220, 8);
+      var caja2 = caja(20, 24, 12, mats.cab, 60, 150, 6);
+      var cond = G(conduit([[-44, yD - 2, 6], [-30, yD + 10, 4], [-20, 150, 4], [48, 150, 4]]), conduit([[60, 164, 6], [60, 205, 6]]));
+      root.add(pared, det, baliza, caja2, cond);
+      return { root: root, foco: [-10, 120, 0, 160], partes: [[1, 'Muro de la sala / área', 1, pared, [0, 0, 0], [-120, 200, 0]], [2, 'Detector fijo de gases a 30–60 cm del piso (gases más densos que el aire)', 1, det, [0, 0, 30], [-60, yD + 12, 12]],
+        [3, 'Baliza y alarma audible local', 1, baliza, [0, 0, 30], [60, 230, 12]], [4, 'Caja de conexiones', 1, caja2, [0, 0, 30], [60, 162, 12]], [5, 'Conduit ¾" NPT', 1, cond, [0, 0, 20], [-20, 150, 6]]] };
+    };
+
+    // ── Válvula solenoide ½" (cuerpo de bronce 71 × 61 mm, alto 106 mm, bobina con hub ½" NPT) con filtro Y y uniones ──
+    V['solenoide'] = function () {
+      var r = 1.07, y = 90, root = G();
+      var tub = G(tubo(r, 200, mats.pipe, 0, y, 0, 'x')); tub.add(soporteTubo(-80, y, r), soporteTubo(80, y, r));
+      var v1 = pos(bolaRoscada(), -45, y, 0), v2 = pos(bolaRoscada(), 45, y, 0);
+      var filtro = G(cyl(1.8, 6, mBronce, -26, y, 0, 'x'), cyl(1.4, 6, mBronce, -26, y - 3, 1.2, 'y'), pos(hexN(3, 1, mBronce), -26, y - 6.2, 1.2)); filtro.children[1].rotation.x = 0.6;
+      var uniones = G(); [-14, 14].forEach(function (x) { uniones.add(pos(orient(hexN(3.3, 1.4, mBronce), 'x'), x - 1, y, 0), cyl(1.95, 1, mBronce, x + 0.4, y, 0, 'x', 28)); });
+      var sol = G(rbox(7.1, 3.6, 6.1, 0.5, mBronce, 0, y, 0), pos(orient(hexN(2.9, 1.2, mBronce), 'x'), -4.1, y, 0), pos(orient(hexN(2.9, 1.2, mBronce), 'x'), 4.1, y, 0),
+        cyl(1.8, 1.8, mBronce, 0, y + 2.7, 0, 'y'), cyl(1.0, 2.2, mats.ss, 0, y + 4.6, 0, 'y'), rbox(5.4, 5.6, 5.4, 0.6, mRojo, 0, y + 7.5, 0), cyl(1.3, 2, mRojo, 3.4, y + 8.3, 0, 'x'), box(2.4, 0.6, 2.4, mats.dark, 0, y + 10.5, 0));
+      var cond = conduit([[4.4, y + 8.3, 0], [14, y + 10, 0], [26, 60, 30], [28, 20, 44]]);
+      root.add(tub, v1, v2, filtro, uniones, sol, cond, flecha(-75, y + 6, 0));
+      return { root: root, foco: [0, y + 3, 0, 42], partes: [[1, 'Línea ½" de agua de sello / servicio', 1, tub, [0, 0, 0], [-70, y, r]], [2, 'Válvulas de bola de aislamiento', 2, G(v1, v2), [0, 12, 0], [-45, y + 6, 2]],
+        [3, 'Filtro Y aguas arriba de la solenoide', 1, filtro, [0, -12, 0], [-26, y - 8, 2]], [4, 'Uniones para desmontaje', 2, uniones, [0, 8, 0], [14, y + 4, 2]],
+        [5, 'Válvula solenoide 2/2 NC, cuerpo de bronce', 1, sol, [0, 25, 0], [0, y + 4, 4]], [6, 'Conduit flexible a la bobina (hub ½" NPT)', 1, cond, [15, 10, 10], [20, 70, 30]]] };
+    };
+
+    // ── Desalineamiento: interruptor con rodillo vertical a 50–75 mm del borde de la correa ──
+    V['desalineamiento'] = function () {
+      var root = G(), cv = correa(360);
+      function par(s) { // s = +1 lado +z, −1 lado −z
+        var zc = s * 92, g = G(rbox(12, 18, 11, 1, mats.yellow, 0, 100, zc), box(13, 1.2, 12, mats.yellow, 0, 109.6, zc), cyl(1.4, 4, mats.ss, 0, 113, zc, 'y'),
+          box(2, 2, 16, mats.ss, 0, 115, zc - s * 7), cyl(0.8, 20, mats.steel, 0, 124, zc - s * 15, 'y'), cyl(3.2, 15, mats.rubber, 0, 126, zc - s * 15, 'y'),
+          box(4, 30, 16, mats.galv, 0, 82, zc + s * 2), box(1, 2, 1, mats.dark, 6.2, 104, zc));
+        return g;
+      }
+      var p1 = par(1), p2 = par(-1);
+      var cond = G(conduit([[0, 96, 98], [0, 60, 104], [40, 20, 114]]), conduit([[0, 96, -98], [0, 60, -104], [40, 20, -114]]));
+      root.add(cv, p1, p2, cond);
+      return { root: root, foco: [0, 112, 70, 62], partes: [[1, 'Correa transportadora (estación de polines)', 1, cv, [0, 0, 0], [-160, 120, 0]], [2, 'Interruptor de desalineamiento con rodillo vertical, lado izquierdo', 1, p1, [0, 0, 40], [0, 136, 77]],
+        [3, 'Interruptor de desalineamiento, lado derecho', 1, p2, [0, 0, -40], [0, 136, -77]], [4, 'Conduit flexible', 2, cond, [0, -10, 0], [40, 40, 110]]] };
+    };
+
+    // ── Contrapeso: interruptores de límite de servicio pesado con palanca y rodillo ──
+    V['contrapeso'] = function () {
+      var root = G();
+      var torre = G(box(10, 400, 10, mats.galv, -60, 200, -60), box(10, 400, 10, mats.galv, 60, 200, -60), box(10, 400, 10, mats.galv, -60, 200, 60), box(10, 400, 10, mats.galv, 60, 200, 60), box(130, 10, 130, mats.galv, 0, 400, 0));
+      var peso = G(box(100, 80, 60, mats.concrete, 0, 200, 0), box(108, 6, 66, mats.galv, 0, 243, 0), cyl(30, 70, mats.steel, 0, 280, 0, 'z'), box(4, 10, 4, mats.galv, 52, 240, 0), box(30, 3, 3, mats.galv, 66, 240, 0));
+      function sw(y) {
+        return G(rbox(6.5, 11, 6, 0.6, mats.yellow, 82, y, 0), cyl(2, 2, mats.dark, 82, y + 6.2, 0, 'y'), box(1.2, 14, 1.2, mats.steel, 82, y + 7, 3.6), cyl(2.4, 1.8, mats.rubber, 82, y + 13.5, 4.6, 'z'),
+          box(10, 22, 1, mats.galv, 82, y, -3.5), box(16, 4, 4, mats.galv, 73, y, -3.5));
+      }
+      var alto = sw(330), bajo = sw(140);
+      var cond = conduit([[85.5, 136, 0], [88, 200, 0], [88, 326, 0], [90, 360, 30], [96, 380, 80]]);
+      root.add(torre, peso, alto, bajo, cond);
+      return { root: root, foco: [60, 240, 0, 150], partes: [[1, 'Torre del tensor', 1, torre, [0, 0, 0], [-60, 380, 60]], [2, 'Contrapeso con leva de accionamiento', 1, peso, [0, 0, 0], [0, 200, 32]],
+        [3, 'Interruptor de límite de posición alta (ZSH) con palanca y rodillo', 1, alto, [30, 0, 0], [82, 346, 4]], [4, 'Interruptor de límite de posición baja (ZSL)', 1, bajo, [30, 0, 0], [82, 156, 4]], [5, 'Conduit', 1, cond, [20, 0, 0], [88, 250, 0]]] };
+    };
+
+    // ── Cámara PTZ (domo ≈ Ø 23 × 33 cm) con montaje colgante, adaptador de poste y caja de conexiones ──
+    V['cctv-ptz'] = function () {
+      var root = G(), yB = 560;
+      var poste = G(cone(6, 9, 600, mats.galv, 0, 300, 0), box(50, 3, 50, mats.galv, 0, 1.5, 0), box(80, 30, 80, mats.concrete, 0, -15, 0), box(20, 30, 1, mats.galv, 0, 30, 9));
+      for (var i = 0; i < 4; i++) poste.add(cyl(1.2, 8, mats.steel, (i % 2 ? 1 : -1) * 20, 4, (i < 2 ? 1 : -1) * 20, 'y', 8));
+      var adapt = G(); [-8, 8].forEach(function (dy) { adapt.add(pos(M(new THREE.TorusGeometry(6.6, 0.6, 8, 32).rotateX(Math.PI / 2), mats.ss), 0, yB + dy, 0)); });
+      adapt.add(box(14, 26, 2, mats.white, 0, yB, 7.5));
+      var brazo = G(cyl(2.4, 34, mats.white, 0, yB + 6, 25, 'z'), cyl(3.4, 4, mats.white, 0, yB + 4, 43, 'y'), sph(3, mats.white, 0, yB + 6, 42), cyl(2.4, 14, mats.white, 0, yB - 4, 43, 'y'));
+      var cam = G(cyl(11, 2, mats.white, 0, 0, 0, 'y'), cyl(10.5, 10, mats.white, 0, -6, 0, 'y'), M(new THREE.SphereGeometry(9, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mats.glass, 0, -11, 0),
+        M(new THREE.SphereGeometry(8.2, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mats.dark, 0, -11, 0), cyl(2.3, 3, mats.black, 0, -15, 5, 'z'), cyl(12.5, 0.8, mats.white, 0, 1.4, 0, 'y'));
+      cam.position.set(0, yB - 12, 43);
+      var jb = caja(26, 32, 14, mats.ss, 0, 175, 16);
+      var cond = G(conduit([[0, 191, 12], [0, 400, 8.5], [0, yB - 14, 8.5]]), conduit([[0, 159, 12], [0, 60, 10], [0, 30, 10]]));
+      var punta = G(cyl(0.6, 80, mats.ss, 0, 640, 0, 'y')), tierra1 = tierra(30, 30);
+      root.add(poste, adapt, brazo, cam, jb, cond, punta, tierra1);
+      return { root: root, foco: [0, yB - 10, 25, 75], partes: [[1, 'Poste cónico galvanizado con placa base y fundación', 1, poste, [0, 0, 0], [0, 300, 8]], [2, 'Adaptador de poste con zunchos de acero inoxidable', 1, adapt, [0, 0, 20], [0, yB + 16, 10]],
+        [3, 'Brazo de montaje colgante', 1, brazo, [0, 20, 30], [0, yB + 12, 30]], [4, 'Cámara domo PTZ IP66 con parasol', 1, cam, [0, 15, 60], [0, yB - 30, 43]],
+        [5, 'Caja de terreno CCTV (switch PoE, protección contra sobretensiones)', 1, jb, [0, 0, 40], [0, 196, 24]], [6, 'Conduit de señal y alimentación', 2, cond, [20, 0, 0], [0, 400, 12]],
+        [7, 'Punta captora y puesta a tierra', 1, G(punta, tierra1), [0, 20, 0], [0, 660, 0]]] };
+    };
+
+    // ── Puerta controlada: lector 84 × 122 × 28 mm, electroimán 600 lb con placa de armadura, pulsadores normalizados ──
+    V['puerta'] = function () {
+      var root = G(), pared = G(box(130, 260, 15, mats.wall, -135, 130, 0), box(130, 260, 15, mats.wall, 135, 130, 0), box(140, 40, 15, mats.wall, 0, 240, 0), losa(400, 240, 0, 40));
+      var marco = G(box(6, 220, 18, mats.dark, -73, 110, 0), box(6, 220, 18, mats.dark, 73, 110, 0), box(152, 6, 18, mats.dark, 0, 223, 0));
+      var hoja = G(box(140, 214, 5, mats.housing, 70, 0, 0), box(4, 14, 4, mats.ss, 128, 0, 4), box(18, 6.1, 1.3, mats.ss, 116, 99, 3.2), box(30, 4, 4, mats.dark, 40, 102, -6)); hoja.position.set(-70, 109, 0); hoja.rotation.y = -0.45;
+      var iman = G(box(26.6, 6.8, 4.1, mats.ss, 0, 0, 0), box(26, 0.4, 3.9, mats.dark, 0, -3.5, 0), box(30, 2, 6, mats.ss, 0, 4, -1)); iman.position.set(47, 216.5, -11);
+      var lector = G(rbox(8.4, 12.2, 2.8, 0.8, mats.black, 0, 0, 0), box(5.6, 5.6, 0.3, mats.dark, 0, 1.6, 1.45), box(4, 0.6, 0.3, mats.led, 0, -4.4, 1.45)); lector.position.set(95, 110, 9);
+      var salida = G(rbox(7, 11.5, 2, 0.5, mats.ss, 0, 0, 0), cyl(2.2, 1.2, mats.green, 0, 0.5, 1.3, 'z'), box(4.5, 1, 0.2, mats.white, 0, -3.8, 1.05)); salida.position.set(95, 110, -8.5); salida.rotation.y = Math.PI;
+      var emergencia = G(rbox(8.8, 8.8, 4.5, 0.5, mats.green, 0, 0, 0), box(6.2, 6.2, 0.3, mats.white, 0, 0, 2.3)); emergencia.position.set(95, 125, -9.8); emergencia.rotation.y = Math.PI;
+      var sensor = G(cyl(1, 2.5, mats.white, 0, 0, 0, 'y')); sensor.position.set(60, 221, 0);
+      var ctrl = G(caja(30, 36, 10, mats.cab, 0, 0, 0)); ctrl.position.set(110, 230, -16);
+      var cond = conduit([[110, 212, -16], [110, 200, -9], [95, 117, -9]]);
+      root.add(pared, marco, hoja, iman, lector, salida, emergencia, sensor, ctrl, cond);
+      return { root: root, partes: [[1, 'Muro y marco de puerta', 1, G(pared, marco), [0, 0, 0], [-150, 250, 10]], [2, 'Hoja de puerta con cierrapuertas y placa de armadura', 1, hoja, [0, 0, 30], [-40, 160, 30]],
+        [3, 'Electroimán de 600 lb de falla segura en el dintel', 1, iman, [0, 15, -20], [47, 214, -14]], [4, 'Sensor magnético de puerta embutido', 1, sensor, [0, 20, 20], [60, 226, 4]],
+        [5, 'Lector de credenciales 13,56 MHz (OSDP), a 1,1 m', 1, lector, [20, 0, 20], [95, 120, 12]], [6, 'Pulsador de salida (lado interior)', 1, salida, [20, 0, -20], [95, 104, -12]],
+        [7, 'Pulsador de liberación de emergencia verde', 1, emergencia, [20, 0, -20], [95, 133, -14]], [8, 'Controlador de acceso con batería', 1, ctrl, [20, 0, -30], [110, 252, -20]], [9, 'Conduit', 1, cond, [10, 0, -10], [106, 170, -9]]] };
     };
 
     // ── Canaleta Parshall con medición de nivel y totalizador ──
@@ -641,9 +866,10 @@
       if (conPozo) zs = zPozo;
       var sensor = conPozo
         ? G(cyl(4, 9, mats.white, xw, ys + 3, zs, 'y'), cone(4.6, 3, 4, mats.white, xw, ys - 3, zs, 'y'), brida(3, xw, ys - 5, zs, 'y'))
-        : G(cyl(5.5, 14, mats.white, xw, ys + 7, zs, 'y'), brida(4, xw, ys + 15, zs, 'y'));
+        : pos(sensorUS(true), xw, ys, zs);
       var zPost = (conPozo ? zPozo : -(hwm + t)) - 22;
-      var soporte = G(pedestal(ys + 20, xw, zPost), box(5, 5, Math.abs(zPost - zs) + 8, mats.galv, xw, ys + 20, (zPost + zs) / 2));
+      var soporte = conPozo ? G(pedestal(ys + 20, xw, zPost), box(5, 5, Math.abs(zPost - zs) + 8, mats.galv, xw, ys + 20, (zPost + zs) / 2))
+        : G(pedestal(ys + 8, xw, zPost), brazoVoladizo(xw, zPost, xw, zs, ys + 14));
       var haz = M(new THREE.ConeGeometry(1, 1, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xef5a05, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
       var pozo = null, aguaPozo = null;
       if (conPozo) {
@@ -652,19 +878,19 @@
           cyl(2.5, -zPozo - hwm, mats.pipe, xw, yc + 4, (zPozo - hwm) / 2, 'z'), valvulaBola(2, xw, yc + 4, -(hwm + t + 8), 'z'));
       }
       var xT = xw + 90, zT = zPost - 30;
-      var pantalla = lcd(); pantalla.position.set(0, 3, 6.3);
-      var tx = G(rbox(22, 26, 12, 2, mats.cab, 0, 0, 0), pantalla, box(28, 2, 18, mats.galv, 0, 15, 2)); tx.position.set(xT, 140, zT);
-      var pedT = pedestal(150, xT, zT);
-      var cable = conduit([[xw, ys + 15, zs], [xw, ys + 28, zs - 6], [xw + 10, ys + 24, zPost], [xT - 10, 150, zT + 4], [xT, 126, zT]]);
+      var pantalla = lcd(); pantalla.scale.set(0.75, 0.75, 1);
+      var tx = pos(transmisorPared({ pantalla: pantalla }), xT, 140, zT + 13.3);
+      var pedT = G(pedestal(160, xT, zT), abrazaderas(xT, zT, 140, 8));
+      var cable = conduit([[xw, ys + 15, zs], [xw, ys + 28, zs - 6], [xw + 10, ys + 24, zPost], [xT - 10, 150, zT + 6], [xT - 6, 128, zT + 13]]);
       var root = G(canal, canaleta, agua, regla, sensor, soporte, haz, tx, pedT, cable, flecha(-B - Lap + 30, yc + p.hmax * 100 + 12, 0));
       if (pozo) root.add(pozo, aguaPozo);
       var partes = [
         [1, 'Canal de aproximación con tramo recto', 1, canal, [0, 0, 0], [-B - Lap / 2, yc + E + 6, p.D / 2]],
         [2, 'Canaleta Parshall de ' + SE.w + ' (convergente, garganta, divergente)', 1, canaleta, [0, -10, 0], [F + LG / 2, yc + E + 8, p.C / 2]],
         [3, 'Punto de medición Ha (2/3 de A) con regla limnimétrica', 1, regla, [0, 0, -20], [xm - 25, yc + E + 4, -hwm]],
-        [4, conPozo ? 'Sensor radar sobre el pozo de calma' : 'Sensor ultrasónico sobre el punto Ha', 1, sensor, [0, 30, 0], [xw, ys + 40, zs]],
-        [5, 'Transmisor de flujo con totalizador', 1, tx, [30, 0, 30], [xT, 178, zT]],
-        [6, 'Soporte del sensor y pedestal del transmisor', 2, G(soporte, pedT), [0, 0, 30], [xw - 10, 40, zPost]],
+        [4, conPozo ? 'Sensor radar sobre el pozo de calma' : 'Sensor ultrasónico G 1" con techo, sobre el punto Ha', 1, sensor, [0, 30, 0], [xw, ys + 40, zs]],
+        [5, 'Transmisor de flujo con curva Parshall, totalizador y techo de protección', 1, tx, [30, 0, 30], [xT, 178, zT]],
+        [6, conPozo ? 'Soporte del sensor y pedestal del transmisor' : 'Brazo voladizo inoxidable y pedestales', 2, G(soporte, pedT), [0, 0, 30], [xw - 10, 40, zPost]],
         [7, 'Cable sensor–transmisor en conduit', 1, cable, [10, 10, 10], [xT - 30, 165, zT + 6]]
       ];
       if (pozo) partes.push([8, 'Pozo de calma con tubo de conexión y válvula', 1, pozo, [0, 0, 30], [xw + 45, yc - 10, zPozo - 16]]);
@@ -732,13 +958,13 @@
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
     var $ = function (id) { return document.getElementById(id); };
     var estado = { v: DEF.variantes[0], etiquetas: true, explotar: false, giro: false };
-    var modelo = null, partes = [], etiquetas = [], ex = 0, exObj = 0, simAct = null, tPrev = 0;
+    var modelo = null, partes = [], etiquetas = [], ex = 0, exObj = 0, simAct = null, tPrev = 0, foco = null;
 
     function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function construir() {
       if (modelo) { scene.remove(modelo); etiquetas.forEach(function (l) { l.element.remove(); }); }
       var r = V[estado.v.m]();
-      modelo = r.root; partes = r.partes; etiquetas = []; simAct = r.sim || null;
+      modelo = r.root; partes = r.partes; etiquetas = []; simAct = r.sim || null; foco = r.foco || null;
       $('simSec').hidden = !simAct; if (simAct) $('sim').innerHTML = simAct.html;
       modelo.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       partes.forEach(function (p) {
@@ -758,6 +984,7 @@
       partes.forEach(function (p) { p[3].position.copy(p[3].userData.base); });
       var box3 = new THREE.Box3().setFromObject(modelo);
       var c = box3.getCenter(new THREE.Vector3()), r = box3.getSize(new THREE.Vector3()).length() / 2;
+      if (foco) { c.set(foco[0], foco[1], foco[2]); r = foco[3]; }
       var dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (estado.v.zoom || 1);
       var cd = estado.v.cam || [0.65, 0.42, 1], dir = new THREE.Vector3(cd[0], cd[1], cd[2]).normalize();
       controls.target.copy(c); camera.position.copy(c).addScaledVector(dir, dist);
