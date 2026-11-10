@@ -17,8 +17,9 @@
   Lienzo.prototype.r = function (x, y, w, h, c, o) { this.p.push({ t: 'r', x: x, y: y, w: w, h: h, c: c || 'MARCO', d: o && o.d, w2: o && o.w, f: o && o.f }); return this; };
   Lienzo.prototype.c = function (x, y, r, c, o) { this.p.push({ t: 'c', x: x, y: y, r: r, c: c || 'INSTRUMENTO', f: o && o.f }); return this; };
   Lienzo.prototype.a = function (x, y, r, a1, a2, c) { this.p.push({ t: 'a', x: x, y: y, r: r, a1: a1, a2: a2, c: c || 'CABLES' }); return this; };
-  Lienzo.prototype.tx = function (x, y, s, h, c, o) { if (s === '' || s == null) return this; this.p.push({ t: 'tx', x: x, y: y, s: String(s), h: h || 2, c: c || 'TEXTO', al: (o && o.al) || 'l', va: (o && o.va) || 'b', rot: (o && o.rot) || 0, b: o && o.b }); return this; };
+  Lienzo.prototype.tx = function (x, y, s, h, c, o) { if (s === '' || s == null) return this; h = h || 2; if (o && o.va === 'm' && !o.rot) y += h / 2; this.p.push({ t: 'tx', x: x, y: y, s: String(s), h: h || 2, c: c || 'TEXTO', al: (o && o.al) || 'l', va: (o && o.va) || 'b', rot: (o && o.rot) || 0, b: o && o.b }); return this; };
   Lienzo.prototype.pl = function (pts, c, o) { this.p.push({ t: 'pl', pts: pts, c: c || 'CABLES', f: o && o.f, cerrada: o && o.cerrada }); return this; };
+  Lienzo.prototype.pill = function (x, y, w, h, c) { this.p.push({ t: 'pill', x: x, y: y, w: w, h: h, c: c || 'CABLES' }); return this; };
   Lienzo.prototype.img = function (x, y, w, h, href) { this.p.push({ t: 'img', x: x, y: y, w: w, h: h, href: href }); return this; };
   Lienzo.prototype.flecha = function (x, y, dir, c) { var s = 1.6; this.pl(dir > 0 ? [[x, y], [x - s * 1.6, y - s * 0.6], [x - s * 1.6, y + s * 0.6]] : [[x, y], [x + s * 1.6, y - s * 0.6], [x + s * 1.6, y + s * 0.6]], c, { f: true, cerrada: true }); return this; };
 
@@ -66,7 +67,7 @@
       if (h === 4) {
         var ka = 'KA-' + pad(s.canal + 1, 2);
         f({ card: bc.out, busCard: 'BOBINA ' + ka + ' A1' }); if (bc.com) f({ card: bc.com, busCard: porCanal ? 'BOBINA ' + ka + ' A2' : v0 });
-        f({ it: 'C', busTB: 'CONTACTO ' + ka + ' 11' }); f({ it: 'NA', busTB: 'CONTACTO ' + ka + ' 14' });
+        f({ it: 'C', busTB: ka + ' (11)' }); f({ it: 'NA', busTB: ka + ' (14)' });
         notas.push('RELÉ DE INTERPOSICIÓN ' + ka + ' EN GABINETE (BOBINA 24 VDC, CONTACTO 11-14 HACIA EL EQUIPO).');
       } else {
         f({ it: '+', card: bc.out });
@@ -79,117 +80,126 @@
   }
 
   // ── Bloque de una señal ──
-  var X = { inst: 32, instR: 76, s1: 92, s2: 184, jb: 150, tb: 232, tbW: 15, card: 270, cardW: 20, tab: 293, hmi: 352, zona1: 215, zona2: 340 };
+  // Columnas (mm): instrumento · cable de campo · bornera · tarjeta · HMI. Todos los textos de cajetines van centrados en su celda.
+  var X = { inst: 32, instR: 76, cA: 106, cB: 184, jb: 140, tb: 230, tbW: 16, card: 262, cardW: 48, hmi: 352, zona1: 215, zona2: 340 };
+  var TXT = { celda: 1.8, chico: 1.5, hilo: 1.4, tag: 2.3 };
+  function anchoTexto(s, h) { return String(s).length * h * 0.78; }
+  // Cajetín: rectángulo con texto centrado (horizontal y vertical)
+  function celda(L, x, y, w, h, s, c, o) { o = o || {}; L.r(x, y, w, h, c, o.f ? { f: o.f } : null); if (s !== '' && s != null) L.tx(o.al === 'l' ? x + 1.2 : o.al === 'r' ? x + w - 1.2 : x + w / 2, y + h / 2, s, o.h || TXT.celda, c, { al: o.al || 'c', va: 'm', b: o.b }); return L; }
+  // Cable: los conductores convergen a una línea con el cajetín del cable al centro (señal arriba, especificación abajo)
+  function cable(L, ys, xA, xB, num, arriba, abajo, capa, alExtremo) {
+    var yc = ys.length ? (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2 : 0, k = 3.2;
+    ys.forEach(function (y) {
+      L.l(xA, y, xA + k, yc, capa);
+      if (alExtremo !== false) L.l(xB - k, yc, xB, y, capa);
+    });
+    L.l(xA + k, yc, alExtremo === false ? xB : xB - k, yc, capa);
+    var w = Math.max(24, anchoTexto(num, TXT.celda) + 6), cx = (xA + (alExtremo === false ? xB - 18 : xB)) / 2;
+    L.pill(cx - w / 2, yc - 2.2, w, 4.4, capa).tx(cx, yc, num, TXT.celda, capa, { al: 'c', va: 'm' });
+    if (arriba) L.tx(cx, yc - 3.6, arriba, TXT.chico, 'TEXTO', { al: 'c' });
+    if (abajo) L.tx(cx, yc + 5.4, abajo, TXT.chico, 'TEXTO', { al: 'c' });
+    return yc;
+  }
   function bloque(L, s, y0, alto, cfg, num) {
     var c = conexionado(s, cfg), filas = c.filas, analog = s.tipo === 'AI' || s.tipo === 'AO';
-    var nIt = filas.filter(function (f) { return f.it; }).length, pot = c.potencia;
-    var nFil = filas.length + (analog ? 1 : 0) + (pot ? 3 : 0);
-    var top = y0 + 11, dy = Math.min(5, (alto - 15) / Math.max(nFil, 1));
-    // Orden: primero las filas con borne de instrumento, después las internas del gabinete, al final la pantalla
-    var orden = filas.filter(function (f) { return f.it; }).concat(filas.filter(function (f) { return !f.it; }));
+    var pot = c.potencia;
+    var deCampo = filas.filter(function (f) { return f.it; }), deGabinete = filas.filter(function (f) { return !f.it; });
+    // Si ningún conductor de terreno llega a la tarjeta (relé de interposición), la tarjeta va arriba y la bornera abajo
+    var orden = filas.some(function (f) { return f.it && f.card; }) || !deGabinete.length ? deCampo.concat(deGabinete) : deGabinete.concat(deCampo);
+    var nFil = orden.length + (analog ? 1 : 0) + (pot ? 3.6 : 0);
+    var top = y0 + 21, dy = Math.max(3.4, Math.min(5, (alto - 24) / Math.max(nFil, 1)));
     orden.forEach(function (f, i) { f.y = top + i * dy; });
-    var ySh = analog ? top + orden.length * dy : null, yPot = top + (orden.length + (analog ? 1 : 0)) * dy;
-    var itF = orden.filter(function (f) { return f.it; }), yIt0 = top - dy * 0.5, yIt1 = (itF.length ? itF[itF.length - 1].y : top) + dy * 0.5;
+    var ySh = analog ? top + orden.length * dy : null, yPot = top + (orden.length + (analog ? 1 : 0) + 0.6) * dy;
+    var itF = orden.filter(function (f) { return f.it; });
     var tag = s.tag, tc = ISA.compacto(tag), tb = s.modulo ? s.modulo.tb : 'TB', tbc = ISA.compacto(tb);
     var a = ISA.analizar(tag);
 
-    // Instrumento: caja con tag, descripción vertical, símbolo ISA y bornes
-    var bx = X.inst, bw = X.instR - X.inst, by = y0 + 2, ult = pot ? yPot + 2 * dy : (itF.length ? itF[itF.length - 1].y : top);
-    var bh = Math.min(alto - 3, Math.max(38, ult + dy / 2 + 7 - by));
-    L.r(bx, by, bw, bh, 'INSTRUMENTO').r(bx, by, bw - 10, 5, 'INSTRUMENTO').tx(bx + (bw - 10) / 2, by + 3.6, tag, 2.3, 'INSTRUMENTO', { al: 'c', b: true });
-    cortar(s.desc, 22).slice(0, 3).forEach(function (t, i) { L.tx(bx - 6.2 + i * 2.6, by + bh, t, 1.8, 'TEXTO', { rot: 90 }); });
-    var cx = bx + 11, cy = by + 15;
-    L.c(cx, cy, 5.2, 'INSTRUMENTO').tx(cx, cy - 0.4, a.letras || '', 2.1, 'INSTRUMENTO', { al: 'c' }).tx(cx, cy + 2.8, (a.numero || '') + (a.sufijo || ''), 1.8, 'INSTRUMENTO', { al: 'c' });
-    L.tx(bx + 1.5, by + bh - 4.6, 'MARCA: ' + (s.marca || ''), 1.5, 'TEXTO').tx(bx + 1.5, by + bh - 1.8, 'MODELO: ' + (s.modeloInst || ''), 1.5, 'TEXTO');
-    if (s.rango) L.tx(bx + 1.5, by + 23.6, 'RANGO: ' + s.rango, 1.5, 'TEXTO');
-    if (s.senalTxt) L.tx(bx + 1.5, by + 26.4, s.senalTxt, 1.5, 'TEXTO');
+    // Instrumento: cabecera con tag, símbolo ISA, datos y bornes alineados con los conductores
+    var bx = X.inst, bw = X.instR - X.inst, by = y0 + 3, ult = pot ? yPot + 2 * dy : (itF.length ? itF[itF.length - 1].y : top);
+    var bh = Math.min(alto - 4, Math.max(40, ult + dy / 2 + 8 - by));
+    L.r(bx, by, bw, bh, 'INSTRUMENTO');
+    celda(L, bx, by, bw, 5, tag, 'INSTRUMENTO', { h: TXT.tag, b: true });
+    cortar(s.desc, 24).slice(0, 3).forEach(function (t, i) { L.tx(bx - 6.4 + i * 2.6, by + bh, t, TXT.chico, 'TEXTO', { rot: 90 }); });
+    var cx = bx + 10, cy = by + 13;
+    L.c(cx, cy, 5.2, 'INSTRUMENTO').tx(cx, cy - 1.3, a.letras || '', 2, 'INSTRUMENTO', { al: 'c', va: 'm' }).tx(cx, cy + 1.9, (a.numero || '') + (a.sufijo || ''), 1.6, 'INSTRUMENTO', { al: 'c', va: 'm' });
+    var datos = [['RANGO', s.rango], ['SEÑAL', s.senalTxt], ['MARCA', s.marca], ['MODELO', s.modeloInst]];
+    datos.forEach(function (d, i) { var y = by + bh - 2 - (datos.length - 1 - i) * 2.7; L.tx(bx + 1.5, y, d[0] + ':', TXT.chico, 'TEXTO').tx(bx + 12, y, d[1] || '', TXT.chico, 'TEXTO'); });
     var tx0 = X.instR - 8;
-    itF.forEach(function (f) { L.r(tx0, f.y - dy / 2, 8, dy, 'BORNES').tx(tx0 + 4, f.y + 0.7, f.it, 1.8, 'BORNES', { al: 'c' }); });
+    itF.forEach(function (f) { celda(L, tx0, f.y - dy / 2, 8, dy, f.it, 'BORNES'); });
 
-    // Cables de campo
-    var jb = s.jb, xFin = X.tb;
-    function lblHilo(f) { return tc + (f.it === '+' ? '+' : f.it === '−' ? '−' : f.it) + '/' + tbc + '-' + (f.tbn || ''); }
-    // Bornera del gabinete: asigna bornes correlativos por canal (4 por canal) y fusibles en la fila de alimentación
+    // Bornera del gabinete: bornes correlativos por canal (4 por canal) y fusible en la alimentación del lazo
     var base = (s.canal || 0) * 4, k = 0;
-    orden.forEach(function (f) { if (f.it) { f.tbn = f.fu ? 'FU' + pad((s.canal || 0) + 1, 2) : String(base + (++k)); } });
+    orden.forEach(function (f) { if (f.it) f.tbn = f.fu ? 'FU' + pad((s.canal || 0) + 1, 2) : String(base + (++k)); });
+    function lblHilo(f) { return tc + (f.it === '+' || f.it === '−' ? f.it : f.it) + '/' + tbc + '-' + f.tbn; }
+
+    // Cable de campo (y caja de conexiones si existe)
+    var jb = s.jb;
     if (itF.length) {
-      var sx1 = X.s1, sx2 = jb ? X.jb - 8 : X.s2;
+      var ys = itF.map(function (f) { return f.y; });
       itF.forEach(function (f) {
-        L.l(X.instR, f.y, jb ? X.jb : xFin, f.y, 'CABLES');
-        L.tx(X.s1 + 4, f.y - 0.7, lblHilo(f), 1.45, 'TEXTO');
+        L.l(X.instR, f.y, X.cA, f.y, 'CABLES').tx(X.instR + 1.2, f.y - 0.7, lblHilo(f), TXT.hilo, 'TEXTO');
+        L.l(X.cB, f.y, X.tb, f.y, 'CABLES').tx(X.zona1 - 1.5, f.y - 0.7, lblHilo(f), TXT.hilo, 'TEXTO', { al: 'r' });
       });
-      [sx1, sx2].forEach(function (sx, i) { L.a(sx + (i ? -2 : 2), (yIt0 + yIt1) / 2, Math.max(2.5, (yIt1 - yIt0) / 2 + 0.6), i ? -60 : 120, i ? 60 : 240, 'CABLES'); });
-      var bxC = jb ? 104 : 118, bwC = 30, byC = yIt0 - 8.2;
-      L.r(bxC, byC, bwC, 4.2, 'CABLES').tx(bxC + bwC / 2, byC + 3.1, s.cable, 1.8, 'CABLES', { al: 'c' });
-      L.tx(bxC + bwC / 2, byC - 1, s.senalTxt || '', 1.6, 'TEXTO', { al: 'c' });
-      if (s.cableSpec) { if (jb) L.tx(bxC + bwC / 2, byC - 3.6, s.cableSpec, 1.5, 'TEXTO', { al: 'c' }); else L.tx(bxC + bwC + 2, byC + 3.1, s.cableSpec, 1.6, 'TEXTO'); }
-      if (jb) { // caja de conexiones en terreno
-        var jy = yIt0 - 1, jh = yIt1 - yIt0 + 2;
-        L.r(X.jb, jy - 6, 14, 5, 'BORNES').tx(X.jb + 7, jy - 2.4, jb, 1.8, 'BORNES', { al: 'c', b: true });
-        itF.forEach(function (f, i) { var n = (s.jbBorne ? +s.jbBorne : (s.canal || 0) * 3) + i + 1; L.r(X.jb, f.y - dy / 2, 14, dy, 'BORNES').tx(X.jb + 7, f.y + 0.7, n, 1.8, 'BORNES', { al: 'c' }); L.l(X.jb + 14, f.y, xFin, f.y, 'CABLES'); });
-        [X.jb + 20, X.zona1 - 8].forEach(function (sx, i) { L.a(sx + (i ? -2 : 2), (yIt0 + yIt1) / 2, Math.max(2.5, (yIt1 - yIt0) / 2 + 0.6), i ? -60 : 120, i ? 60 : 240, 'CABLES'); });
-        var cx2 = X.jb + 22, cw2 = 28, cy2 = yIt1 + 2.6;
-        L.r(cx2, cy2, cw2, 4.2, 'CABLES').tx(cx2 + cw2 / 2, cy2 + 3.1, s.cable2 || ('C-' + ISA.compacto(jb)), 1.7, 'CABLES', { al: 'c' });
-        L.tx(cx2 + cw2 / 2, cy2 + 6.6, (s.cable2Spec || cfg.cableMultipar || '') + (s.par ? ' · PAR ' + s.par : ''), 1.5, 'TEXTO', { al: 'c' });
-      } else {
-        itF.forEach(function (f) { L.tx(X.tb - 9, f.y - 0.7, lblHilo(f), 1.45, 'TEXTO', { al: 'r' }); });
-      }
-      if (analog) { // pantalla: conectada sólo en el gabinete
-        L.l(sx1 + 2, ySh, X.tb, ySh, 'PANTALLA', { d: 1 }).tx(sx1 + 4, ySh + 2.6, 'PANTALLA (SH) AISLADA EN TERRENO', 1.4, 'PANTALLA');
-        L.r(X.tb, ySh - dy / 2, X.tbW, dy, 'BORNES').tx(X.tb + X.tbW / 2, ySh + 0.7, 'SH', 1.7, 'BORNES', { al: 'c' });
+      if (jb) {
+        var xj = X.jb, xjB = xj + 14;
+        cable(L, ys, X.cA, xj - 2, s.cable, s.senalTxt, s.cableSpec, 'CABLES');
+        celda(L, xj, ys[0] - dy / 2 - 4.4, 14, 4.4, jb, 'BORNES', { b: true, h: TXT.chico });
+        itF.forEach(function (f, i) { var n = (s.jbBorne ? +s.jbBorne : (s.canal || 0) * 3) + i + 1; L.l(xj - 2, f.y, xj, f.y, 'CABLES'); celda(L, xj, f.y - dy / 2, 14, dy, n, 'BORNES'); L.l(xjB, f.y, xjB + 2, f.y, 'CABLES'); });
+        cable(L, ys, xjB + 2, X.cB, s.cable2 || ('C-' + ISA.compacto(jb)), s.par ? 'PAR ' + s.par : '', s.cable2Spec || cfg.cableMultipar || '', 'CABLES');
+      } else cable(L, ys, X.cA, X.cB, s.cable, s.senalTxt, s.cableSpec, 'CABLES');
+      if (analog) { // pantalla: aislada en terreno, a tierra sólo en el gabinete
+        L.l(X.cA + 4, ySh, X.tb, ySh, 'PANTALLA', { d: 1 }).tx(X.cA + 5, ySh + 2.6, 'PANTALLA AISLADA EN TERRENO', TXT.hilo, 'PANTALLA');
+        celda(L, X.tb, ySh - dy / 2, X.tbW, dy, 'SH', 'BORNES');
         tierra(L, X.tb + X.tbW + 3, ySh);
       }
     }
     // Bornera
-    L.r(X.tb, top - dy / 2 - 5, X.tbW, 5, 'BORNES').tx(X.tb + X.tbW / 2, top - dy / 2 - 1.5, tb, 1.7, 'BORNES', { al: 'c', b: true });
-    orden.forEach(function (f) {
-      if (f.it) {
-        L.r(X.tb, f.y - dy / 2, X.tbW, dy, 'BORNES').tx(X.tb + X.tbW / 2, f.y + 0.7, f.tbn, 1.8, 'BORNES', { al: 'c' });
-        if (f.fu) { L.r(X.tb - 5.5, f.y - 0.8, 3.6, 1.6, 'BORNES').l(X.tb - 5.5, f.y, X.tb - 1.9, f.y, 'BORNES'); }
-        if (f.card) L.l(X.tb + X.tbW, f.y, X.card, f.y, 'CABLES');
-        if (f.busTB) { L.l(X.tb + X.tbW, f.y, X.tb + X.tbW + 3, f.y, 'ALIMENTACION').tx(X.tb + X.tbW + 3.6, f.y + 0.6, f.busTB, 1.5, 'ALIMENTACION'); }
-      }
+    var tbF = orden.filter(function (f) { return f.it; });
+    if (tbF.length) celda(L, X.tb, tbF[0].y - dy / 2 - 4.4, X.tbW, 4.4, tb, 'BORNES', { b: true, h: TXT.chico });
+    tbF.forEach(function (f) {
+      celda(L, X.tb, f.y - dy / 2, X.tbW, dy, f.tbn, 'BORNES');
+      if (f.fu) L.r(X.tb - 5.4, f.y - 0.8, 3.6, 1.6, 'BORNES').l(X.tb - 5.4, f.y, X.tb - 1.8, f.y, 'BORNES');
+      if (f.card) L.l(X.tb + X.tbW, f.y, X.card, f.y, 'CABLES');
+      if (f.busTB) L.l(X.tb + X.tbW, f.y, X.tb + X.tbW + 2.5, f.y, 'ALIMENTACION').tx(X.tb + X.tbW + 3, f.y, f.busTB, TXT.chico, 'ALIMENTACION', { va: 'm' });
     });
-    // Tarjeta: bornes, puentes y datos de ubicación
+    // Tarjeta: un solo cajetín con tipo, chasis/slot/canal y la lista de bornes alineada con los conductores
     var mod = s.modulo || {}, tj = s.tarjeta || {}, cardF = orden.filter(function (f) { return f.card; });
     if (cardF.length) {
-      var cy0 = cardF[0].y - dy / 2, cy1 = cardF[cardF.length - 1].y + dy / 2;
-      L.r(X.card, cy0 - 5, X.cardW, 5, 'TARJETA').tx(X.card + X.cardW / 2, cy0 - 1.5, 'BORNE', 1.6, 'TARJETA', { al: 'c', b: true });
+      var x = X.card, w = X.cardW, wn = 11, hr = 4.2, yb0 = cardF[0].y - dy / 2, ht = yb0 - 4 * hr;
+      L.tx(x, ht - 1.2, mod.nombre ? 'MÓDULO ' + mod.nombre : '', TXT.chico, 'TARJETA');
+      celda(L, x, ht, 13, hr, 'TIPO', 'TARJETA', { b: true, h: TXT.chico }); celda(L, x + 13, ht, w - 13, hr, s.tipo + ' · ' + (tj.modelo || mod.modelo || ''), 'TARJETA', { h: TXT.chico });
+      ['CHASIS', 'SLOT', 'CANAL'].forEach(function (t, i) { celda(L, x + i * w / 3, ht + hr, w / 3, hr, t, 'TARJETA', { b: true, h: TXT.chico }); });
+      [mod.chasis, mod.slot, s.canalVista != null ? s.canalVista : s.canal].forEach(function (t, i) { celda(L, x + i * w / 3, ht + 2 * hr, w / 3, hr, t == null ? '' : t, 'TARJETA'); });
+      celda(L, x, ht + 3 * hr, wn, hr, 'BORNE', 'TARJETA', { b: true, h: TXT.chico }); celda(L, x + wn, ht + 3 * hr, w - wn, hr, 'SEÑAL', 'TARJETA', { b: true, h: TXT.chico });
+      var prev = null;
       cardF.forEach(function (f) {
-        L.r(X.card, f.y - dy / 2, X.cardW, dy, 'TARJETA').tx(X.card + 1.2, f.y + 0.7, f.card.n, 1.8, 'TARJETA').tx(X.card + X.cardW - 1, f.y + 0.6, f.card.s, 1.4, 'TARJETA', { al: 'r' });
-        if (!f.it && f.busCard) L.l(X.card - 3, f.y, X.card, f.y, 'ALIMENTACION').tx(X.card - 3.6, f.y + 0.6, f.busCard, 1.5, 'ALIMENTACION', { al: 'r' });
+        var yt = f.y - dy / 2, yTop = prev == null ? yb0 : prev;
+        if (yt > yTop + 0.05) { celda(L, x, yTop, wn, yt - yTop, '', 'TARJETA'); celda(L, x + wn, yTop, w - wn, yt - yTop, '', 'TARJETA'); }
+        celda(L, x, yt, wn, dy, f.card.n, 'TARJETA'); celda(L, x + wn, yt, w - wn, dy, f.card.s, 'TARJETA', { al: 'l', h: TXT.chico });
+        prev = yt + dy;
+        if (!f.it && f.busCard) L.l(x - 2.5, f.y, x, f.y, 'ALIMENTACION').tx(x - 3, f.y, f.busCard, TXT.chico, 'ALIMENTACION', { al: 'r', va: 'm' });
       });
-      c.puentes.forEach(function (p) { var ya = orden[orden.indexOf(filas[p[0]])].y, yb = orden[orden.indexOf(filas[p[1]])].y; L.pl([[X.card, ya], [X.card - 1.8, ya], [X.card - 1.8, yb], [X.card, yb]], 'TARJETA'); });
-      // Tabla tipo / chasis / slot / canal
-      var tx1 = X.tab, tw = 40, ty = y0 + 3;
-      L.r(tx1, ty, 12, 4, 'TARJETA').tx(tx1 + 6, ty + 2.9, 'TIPO', 1.6, 'TARJETA', { al: 'c', b: true }).r(tx1 + 12, ty, tw - 12, 4, 'TARJETA').tx(tx1 + 12 + (tw - 12) / 2, ty + 2.9, s.tipo + ' (' + (tj.modelo || mod.modelo || '') + ')', 1.5, 'TARJETA', { al: 'c' });
-      ['CHASIS', 'SLOT', 'CANAL'].forEach(function (t, i) { L.r(tx1 + i * tw / 3, ty + 4, tw / 3, 4, 'TARJETA').tx(tx1 + i * tw / 3 + tw / 6, ty + 6.9, t, 1.5, 'TARJETA', { al: 'c', b: true }); });
-      [mod.chasis, mod.slot, s.canalVista != null ? s.canalVista : s.canal].forEach(function (t, i) { L.r(tx1 + i * tw / 3, ty + 8, tw / 3, 4, 'TARJETA').tx(tx1 + i * tw / 3 + tw / 6, ty + 10.9, t == null ? '' : t, 1.8, 'TARJETA', { al: 'c' }); });
-      L.tx(tx1, ty + 15, mod.nombre ? 'MÓDULO ' + mod.nombre : '', 1.5, 'TARJETA');
+      c.puentes.forEach(function (p) { var ya = filas[p[0]].y, yb = filas[p[1]].y; L.pl([[x, ya], [x - 1.6, ya], [x - 1.6, yb], [x, yb]], 'TARJETA'); });
       // Enlace a la HMI (línea de software ISA-5.1: línea con círculos)
-      var ym = (cy0 + cy1) / 2, xa = X.card + X.cardW, entrada = s.tipo === 'AI' || s.tipo === 'DI';
-      L.l(xa, ym, tx1 - 0.5, ym, 'HMI');
-      var fun = s.hmi || [], xh = X.hmi;
-      L.l(tx1 + tw, ym, xh, ym, 'HMI');
-      for (var xx = tx1 + tw + 3; xx < xh - 2; xx += 5) L.c(xx, ym, 0.6, 'HMI');
+      var cy0 = cardF[0].y, cy1 = cardF[cardF.length - 1].y, ym = (cy0 + cy1) / 2, xa = x + w, entrada = s.tipo === 'AI' || s.tipo === 'DI';
+      var fun = s.hmi || [], xh = X.hmi, nF = Math.min(fun.length, 3), y1 = ym - (nF - 1) * 5.6;
+      L.l(xa, ym, xh, ym, 'HMI');
+      for (var xx = xa + 4; xx < xh - 2; xx += 5) L.c(xx, ym, 0.6, 'HMI');
       fun.slice(0, 3).forEach(function (fn, i) {
-        var yh = ym - (Math.min(fun.length, 3) - 1) * 5.6 + i * 11.2;
+        var yh = y1 + i * 11.2;
         if (i > 0) L.l(xh - 3, ym, xh - 3, yh, 'HMI').l(xh - 3, yh, xh, yh, 'HMI');
         L.r(xh, yh - 4.6, 9.2, 9.2, 'HMI').c(xh + 4.6, yh, 4.6, 'HMI').l(xh, yh, xh + 9.2, yh, 'HMI')
-          .tx(xh + 4.6, yh - 1.1, fn, fn.length > 3 ? 1.6 : 1.9, 'HMI', { al: 'c' }).tx(xh + 4.6, yh + 2.9, (a.numero || '') + (a.sufijo || ''), 1.6, 'HMI', { al: 'c' });
+          .tx(xh + 4.6, yh - 1.9, fn, fn.length > 3 ? 1.5 : 1.8, 'HMI', { al: 'c', va: 'm' }).tx(xh + 4.6, yh + 2, (a.numero || '') + (a.sufijo || ''), 1.5, 'HMI', { al: 'c', va: 'm' });
       });
-      if (fun.length) { if (entrada) L.flecha(xh, ym - (Math.min(fun.length, 3) - 1) * 5.6, 1, 'HMI'); else L.flecha(xa + 0.2, ym, -1, 'HMI'); }
-      cortar(s.servicio || '', 26).slice(0, 3).forEach(function (t, i) { L.tx(xh + 11.5, ym - 4 + i * 2.6 - (Math.min(fun.length, 3) - 1) * 5.6, t, 1.7, 'TEXTO'); });
+      if (fun.length) { if (entrada) L.flecha(xh, ym, 1, 'HMI'); else L.flecha(xa + 0.2, ym, -1, 'HMI'); }
+      cortar(s.servicio || '', 28).slice(0, 3).forEach(function (t, i) { L.tx(xh + 11.5, y1 - 2.2 + i * 2.6, t, TXT.celda, 'TEXTO', { va: 'm' }); });
     }
-    // Alimentación de instrumentos de 4 hilos
+    // Alimentación de instrumentos de 4 hilos (cable propio hacia el tablero)
     if (pot) {
-      pot.terms.forEach(function (t, i) {
-        var y = yPot + i * dy; L.r(tx0, y - dy / 2, 8, dy, 'BORNES').tx(tx0 + 4, y + 0.7, t, 1.8, 'BORNES', { al: 'c' }).l(X.instR, y, X.s2 - 20, y, 'ALIMENTACION');
-      });
-      var ym2 = yPot + dy, cbx = 112;
-      L.r(cbx, ym2 - 2.1, 30, 4.2, 'ALIMENTACION', { f: 'w' }).tx(cbx + 15, ym2 + 0.9, tc + '-P01', 1.7, 'ALIMENTACION', { al: 'c' });
-      L.l(X.s2 - 20, yPot, X.s2 - 20, yPot + 2 * dy, 'ALIMENTACION').l(X.s2 - 20, ym2, X.s2 - 14, ym2, 'ALIMENTACION').flecha(X.s2 - 13.5, ym2, 1, 'ALIMENTACION')
-        .tx(X.s2 - 12, ym2 + 0.6, 'A ' + pot.texto, 1.5, 'ALIMENTACION');
+      var yP = [];
+      pot.terms.forEach(function (t, i) { var y = yPot + i * dy; yP.push(y); celda(L, tx0, y - dy / 2, 8, dy, t, 'BORNES'); L.l(X.instR, y, X.cA, y, 'ALIMENTACION'); });
+      var ymP = cable(L, yP, X.cA, 196, tc + '-P01', '', pot.texto, 'ALIMENTACION', false);
+      L.flecha(196.5, ymP, 1, 'ALIMENTACION').tx(197.5, ymP, 'A ' + (s.alimTab || cfg.tableroAlim || 'TABLERO'), TXT.chico, 'ALIMENTACION', { va: 'm' });
     }
     return c.notas;
   }
@@ -275,12 +285,13 @@
   var COL = { MARCO: '#111', ROTULO: '#111', TEXTO: '#111', ZONAS: '#111', INSTRUMENTO: '#0b3d91', CABLES: '#111', BORNES: '#111', TARJETA: '#111', PANTALLA: '#666', HMI: '#0b3d91', ALIMENTACION: '#9a3a00', NOTAS: '#111' };
   function svg(h, op) {
     op = op || {};
-    var o = ['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' + W + ' ' + H + '"' + (op.mm !== false ? ' width="' + W + 'mm" height="' + H + 'mm"' : '') + ' font-family="Arial Narrow, Arial, Helvetica, sans-serif">',
+    var o = ['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' + W + ' ' + H + '"' + (op.mm !== false ? ' width="' + W + 'mm" height="' + H + 'mm"' : '') + ' font-family="Arial, Helvetica, Liberation Sans, sans-serif">',
       '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fff"/>'];
     h.prims.forEach(function (p) {
       var col = COL[p.c] || '#111', sw = (p.t === 'r' ? p.w2 : p.w) || 0.22;
       if (p.t === 'l') o.push('<line x1="' + p.x1.toFixed(2) + '" y1="' + p.y1.toFixed(2) + '" x2="' + p.x2.toFixed(2) + '" y2="' + p.y2.toFixed(2) + '" stroke="' + col + '" stroke-width="' + sw + '"' + (p.d ? ' stroke-dasharray="1.6 0.8"' : '') + '/>');
       else if (p.t === 'r') o.push('<rect x="' + p.x.toFixed(2) + '" y="' + p.y.toFixed(2) + '" width="' + p.w.toFixed(2) + '" height="' + p.h.toFixed(2) + '" fill="' + (p.f === 'w' ? '#fff' : p.f ? col : 'none') + '" stroke="' + col + '" stroke-width="' + sw + '"' + (p.d ? ' stroke-dasharray="1.6 0.8"' : '') + '/>');
+      else if (p.t === 'pill') o.push('<rect x="' + p.x.toFixed(2) + '" y="' + p.y.toFixed(2) + '" width="' + p.w.toFixed(2) + '" height="' + p.h.toFixed(2) + '" rx="' + (p.h / 2).toFixed(2) + '" fill="#fff" stroke="' + col + '" stroke-width="0.25"/>');
       else if (p.t === 'c') o.push('<circle cx="' + p.x.toFixed(2) + '" cy="' + p.y.toFixed(2) + '" r="' + p.r + '" fill="' + (p.f ? col : '#fff') + '" stroke="' + col + '" stroke-width="0.22"/>');
       else if (p.t === 'a') { var r1 = p.a1 * Math.PI / 180, r2 = p.a2 * Math.PI / 180; o.push('<path d="M' + (p.x + p.r * Math.cos(r1)).toFixed(2) + ' ' + (p.y + p.r * Math.sin(r1)).toFixed(2) + ' A' + p.r + ' ' + p.r + ' 0 ' + ((p.a2 - p.a1) % 360 > 180 ? 1 : 0) + ' 1 ' + (p.x + p.r * Math.cos(r2)).toFixed(2) + ' ' + (p.y + p.r * Math.sin(r2)).toFixed(2) + '" fill="none" stroke="' + col + '" stroke-width="0.22"/>'); }
       else if (p.t === 'pl') o.push('<path d="M' + p.pts.map(function (q) { return q[0].toFixed(2) + ' ' + q[1].toFixed(2); }).join(' L') + (p.cerrada ? ' Z' : '') + '" fill="' + (p.f ? col : 'none') + '" stroke="' + col + '" stroke-width="0.22"/>');
@@ -322,6 +333,8 @@
       h.prims.forEach(function (p) {
         if (p.t === 'l') linea(p.x1, p.y1, p.x2, p.y2, p.c, p.d);
         else if (p.t === 'r') { linea(p.x, p.y, p.x + p.w, p.y, p.c, p.d); linea(p.x + p.w, p.y, p.x + p.w, p.y + p.h, p.c, p.d); linea(p.x + p.w, p.y + p.h, p.x, p.y + p.h, p.c, p.d); linea(p.x, p.y + p.h, p.x, p.y, p.c, p.d); }
+        else if (p.t === 'pill') { var rr = p.h / 2; linea(p.x + rr, p.y, p.x + p.w - rr, p.y, p.c); linea(p.x + rr, p.y + p.h, p.x + p.w - rr, p.y + p.h, p.c);
+          [[p.x + rr, 90, 270], [p.x + p.w - rr, 270, 90]].forEach(function (q) { n(0, 'ARC'); n(8, p.c); n(10, X(q[0])); n(20, Y(p.y + rr)); n(30, 0); n(40, rr); n(50, q[1]); n(51, q[2]); }); }
         else if (p.t === 'c') { n(0, 'CIRCLE'); n(8, p.c); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); }
         else if (p.t === 'a') { n(0, 'ARC'); n(8, p.c); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); n(50, ((-p.a2 % 360) + 360) % 360); n(51, ((-p.a1 % 360) + 360) % 360); }
         else if (p.t === 'pl') {
