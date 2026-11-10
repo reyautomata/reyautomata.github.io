@@ -99,7 +99,7 @@ class OrbitControls extends EventDispatcher {
 		this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' };
 
 		// Mouse buttons
-		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
+		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.PAN, RIGHT: - 1 }; domElement.addEventListener( 'mousedown', function ( e ) { if ( e.button === 1 ) e.preventDefault(); } ); domElement.addEventListener( 'auxclick', function ( e ) { if ( e.button === 1 ) e.preventDefault(); } );
 
 		// Touch fingers
 		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };

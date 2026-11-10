@@ -1211,7 +1211,7 @@
     var datos = JSON.stringify(CAT);
     return '<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
       '<title>Visor 3D ' + def.titulo + '</title>\n<style>' + ESTILO + '</style>\n</head>\n<body>\n<div class="app">\n<header><div class="brand">Rey<span>Engi</span></div><div class="sep" aria-hidden="true"></div>' +
-      '<h1>' + def.titulo.toUpperCase() + ' <span>· VISOR 3D DE MONTAJE</span></h1><div class="howto">Arrastra para girar · rueda para acercar · clic derecho para desplazar</div></header>\n' +
+      '<h1>' + def.titulo.toUpperCase() + ' <span>· VISOR 3D DE MONTAJE</span></h1><div class="howto">Arrastra para girar · rueda para acercar · presiona la rueda y arrastra para desplazar</div></header>\n' +
       '<main><div class="stage" id="stage"><div class="badge" aria-live="polite"><b id="vCode"></b><span id="vName"></span></div><div class="stage-tools"><button type="button" class="btn" id="reset">Restablecer vista</button></div></div>\n' +
       '<aside><div class="group"><h2>Tipo de montaje</h2><div class="types" id="types"></div></div>' +
       '<div class="group"><h2>Vista</h2><div class="toggles"><button type="button" class="tg" id="tLabels">Etiquetas</button><button type="button" class="tg" id="tExplode">Despiece</button><button type="button" class="tg" id="tSpin">Giro automático</button></div></div>' +
