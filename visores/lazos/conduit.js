@@ -29,7 +29,7 @@
 
   // ── Criterios de ocupación ──
   var CRIT = {
-    RIC: { n: 'RIC N°04 (Chile, vigente) · Tabla N°4.21', p: [50, 33, 33], niple: 60 },
+    RIC: (function () { var o = (window.RE_NORMAS && window.RE_NORMAS.P.ocupacionDucto) || { uno: 50, dos: 33, tresOMas: 33, niple: 60 }; return { n: 'RIC N°04 (Chile, vigente) · Tabla N°4.21', p: [o.uno, o.dos, o.tresOMas], niple: o.niple }; })(),
     NEC: { n: 'NEC 2023 Cap. 9 Tabla 1 (referencia)', p: [53, 31, 40], niple: 60 }
   };
   var COND = [['normal', 'Tramo normal (≤ 20 m, ≤ 2 curvas, desviación ≤ 180°)'], ['niple', 'Tubería de unión entre gabinetes de hasta 1 m'], ['subt', 'Ducto subterráneo']];
@@ -178,6 +178,12 @@
     var avisos = [];
     if (!n) avisos.push('Agrega los cables que van por este ducto.');
     if (n && !elegido) avisos.push('Ningún tamaño de ' + T.c + ' alcanza: divide los cables en dos ductos o usa bandeja / escalerilla (RIC N°04 7.10.19: ocupación ≤ 40 % en bandejas).');
+    // Clase de cada cable: señal (instrumentación y comunicaciones), control o fuerza
+    var CLASE = { par: 'senal', mpar: 'senal', mtri: 'senal', pvicp: 'senal', pvict: 'senal', gfip: 'senal', gfit: 'senal', xtcc: 'control', cvtc: 'control', gfc: 'control', dlx: 'control', otro: '' };
+    var cls = {}, nFuerza = 0; dc.cables.forEach(function (c) { var k = CATI[c.cat]; if (!k) return; var cl = CLASE[k.f] === undefined ? 'fuerza' : CLASE[k.f]; if (!cl) return; cls[cl] = 1; if (cl === 'fuerza') nFuerza += Math.max(1, Math.round(+c.n || 1)); });
+    if (cls.senal && (cls.fuerza || cls.control)) avisos.push('RIC N°04 7.1.7: el ducto mezcla cables de señal con ' + (cls.fuerza ? 'fuerza' : 'control') + '; las canalizaciones de fuerza y de comunicación o control se separan para evitar influencias electromagnéticas. Usa ductos separados.');
+    if (nFuerza > 1 && dc.cond !== 'niple') avisos.push('RIC N°04 5.27: en una misma tubería solo van conductores de un mismo circuito; hay ' + nFuerza + ' cables de fuerza. Si son circuitos distintos, sepáralos o usa bandeja / escalerilla.');
+    if (dc.cond === 'normal' && +dc.largo > 15 && !(+dc.curvas > 0)) avisos.push('RIC N°04 7.16.1.7: en tramos rectos los registros no pueden quedar a más de 15 m entre sí.');
     if (dc.cond === 'normal' && (+dc.largo > 20 || +dc.curvas > 2)) avisos.push('RIC N°04 7.16.1.13: los valores valen para tramos de hasta 20 m con no más de dos curvas (desviación total ≤ 180°); coloca cajas de paso intermedias.');
     if (dc.cond === 'subt' && +dc.largo > 90) avisos.push('RIC N°04 7.9.7.8: distancia máxima entre cámaras de 90 m (hasta 120 m en tramos rectos con ductos ≥ 50 mm).');
     if (elegido && n === 3 && Object.keys(dist).length === 1) { var rz = elegido.s[2] / lista[0].d; if (rz >= 2.8 && rz <= 3.2) avisos.push('Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con 3 cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar (NEC Cap. 9, nota informativa). Considera el tamaño siguiente.'); }

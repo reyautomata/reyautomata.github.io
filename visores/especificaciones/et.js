@@ -96,8 +96,8 @@
       if (!c.h && !c.gen) c.k = k(cap);
       B.push(c);
     }
-    function cap(id, titulo, bloques) { B.push({ h: 1, t: titulo }); (bloques || []).forEach(function (b) { add(id, b); }); }
-    function sub(id, n, titulo, bloques) { B.push({ h: n, t: titulo }); (bloques || []).forEach(function (b) { add(id, b); }); }
+    function cap(id, titulo, bloques) { B.push({ h: 1, t: titulo }); (bloques || []).filter(Boolean).forEach(function (b) { add(id, b); }); }
+    function sub(id, n, titulo, bloques) { B.push({ h: n, t: titulo }); (bloques || []).filter(Boolean).forEach(function (b) { add(id, b); }); }
     var P = function (t) { return { p: t }; }, U = function (a) { return { ul: a }; };
 
     cap('intro', 'Introducción', [P('{intro}'), P('El presente documento corresponde a la especificación técnica de ' + f.objeto + ' del proyecto {proyecto}, en adelante el Proyecto. En este documento, {cliente} se denomina el Cliente.')]);
@@ -130,6 +130,9 @@
       P('El diseño, la fabricación y las pruebas de los equipos cumplirán con las normas, códigos y estándares siguientes, en su última edición:'),
       U(['NEMA: National Electrical Manufacturers Association', 'NEC / NFPA 70: National Electrical Code', 'IEC: International Electrotechnical Commission', 'ISA: International Society of Automation', 'ANSI / ASME: American National Standards Institute / American Society of Mechanical Engineers', 'ASTM: American Society for Testing and Materials', 'ISO: International Organization for Standardization', 'IEEE: Institute of Electrical and Electronics Engineers', 'UL: Underwriters Laboratories', 'NCh: Normas Chilenas Oficiales (NCh 2369 Of. 2003, diseño sísmico)', 'SEC: Superintendencia de Electricidad y Combustibles; Pliegos Técnicos Normativos RIC']
         .concat(f.normas || [])),
+      window.RE_NORMAS ? P('Normativa chilena aplicable (Superintendencia de Electricidad y Combustibles y otros organismos):') : null,
+      window.RE_NORMAS ? U(window.RE_NORMAS.citasDocumento('04', { minero: true })) : null,
+      window.RE_NORMAS ? P('Las pruebas de resistencia de aislamiento de la instalación cumplirán la Tabla N°19.1 del RIC N°19: circuitos MBTS ≥ 0,25 MΩ a 250 VCC, hasta 500 V ≥ 0,5 MΩ a 500 VCC y sobre 500 V ≥ 1,0 MΩ a 1000 VCC.') : null,
       P('Adicionalmente, el diseño satisfará todas las leyes, reglamentos y ordenanzas locales. Ante conflictos entre normas se aplicará la de mayor rigor, y la decisión final corresponderá al Cliente. Ante discrepancias entre los códigos, las hojas de datos y los productos ofrecidos, el proveedor las informará al Cliente para su evaluación.'),
       P('Cualquier omisión en las normas o en esta especificación no libera al proveedor de la responsabilidad de que lo suministrado sea apto para el fin al que será destinado.')
     ]);
