@@ -1,9 +1,7 @@
 /* Suite ReyEngi · menú de entregables en las páginas internas (mismo orden que la portada). */
 (function () {
   'use strict';
-  var ENT = [['00', 'Proyecto', 'proyectos/'], ['01', 'Listado de instrumentos', 'lazos/#inst'], ['02', 'Hojas de datos', 'hojas-datos/'],
-    ['03', 'Especificaciones técnicas', 'especificaciones/'], ['04', 'Listado de entradas y salidas', 'lazos/#doc'], ['05', 'Diagramas de lazo', 'lazos/#lazos'],
-    ['06', 'Listado de circuitos', 'lazos/#circ'], ['07', 'Unilineales TDI', 'lazos/#uni'], ['08', 'Detalles típicos de montaje', '#montajes']];
+  var ENT = [['00', 'Proyecto', 'proyectos/'], ['01', 'Análisis de P&ID', 'pid/'], ['02', 'Listado de instrumentos', 'lazos/#inst'], ['03', 'Hojas de datos', 'hojas-datos/'], ['04', 'Especificaciones técnicas', 'especificaciones/'], ['05', 'Listado de entradas y salidas', 'lazos/#doc'], ['06', 'Diagramas de lazo', 'lazos/#lazos'], ['07', 'Listado de circuitos', 'lazos/#circ'], ['08', 'Unilineales TDI', 'lazos/#uni'], ['09', 'Detalles típicos de montaje', '#montajes']];
   function iniciar() {
     var v = document.querySelector('.barra .volver'); if (!v || document.querySelector('.rg-ent')) return;
     var base = v.getAttribute('href') || '../';
