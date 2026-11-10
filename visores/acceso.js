@@ -73,7 +73,7 @@
     o.innerHTML = '<form class="caja" autocomplete="off"><h2 id="rg-tit">Debe esperar 24 hrs para ingresar nuevamente</h2><p>Terminó tu tiempo de vista de prueba de 30 minutos en la Suite ReyEngi.</p>' +
       '<p class="espera">Podrás volver a ingresar en <b id="rg-faltan">' + faltan() + '</b>.</p><p style="margin:16px 0 8px;color:#E6EDF5;font-weight:600">¿Tienes clave de acceso?</p>' +
       '<input id="rg-clave" type="password" placeholder="REY-XXXX-XXXX-XXXX" aria-label="Clave de acceso" spellcheck="false"><button type="submit">Ingresar</button><p class="err" id="rg-err" role="alert"></p>' +
-      '<p style="margin:10px 0 0;font-size:12px">¿No tienes clave? Solicítala en <a href="https://reyautomata.cl" style="color:#FF9A5C">reyautomata.cl</a></p></form>';
+      '<p style="margin:10px 0 0;font-size:12px">¿No tienes clave? Solicítala al administrador de la Suite ReyEngi.</p></form>';
     document.body.appendChild(o);
     var f = o.querySelector('form'), inp = o.querySelector('#rg-clave'), btn = o.querySelector('button'), err = o.querySelector('#rg-err'), fallos = 0;
     setTimeout(function () { inp.focus(); }, 50);
