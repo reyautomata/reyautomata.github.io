@@ -152,6 +152,18 @@ table.io2 td.izq { text-align: left; }
 table.io2 tr.grp td { background: #DCE3EB; color: #022A55; font-weight: 700; text-align: left; font-size: 7pt; }
 table.io2 tr.res td { color: #6B7785; }
 .uni { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
+#kDuctos tbody tr { cursor: pointer; } #kDuctos tr.sel td { background: rgba(47,109,179,.35); font-weight: 600; } .kduct td, .ktam td { padding: 4px 8px; white-space: nowrap; } td.num { text-align: right; }
+.kmal { color: #ff6b5e; font-weight: 600; } .kpasos, .kavisos { grid-column: 1 / -1; } .kpasos { margin: 0; padding-left: 4px; list-style: none; font-size: 12px; line-height: 1.5; } .kpasos li { margin-bottom: 6px; }
+.kavisos { margin: 8px 0 0; padding: 8px 10px 8px 22px; background: rgba(240,198,116,.12); border: 1px solid rgba(240,198,116,.6); border-radius: 6px; font-size: 11.5px; line-height: 1.45; }
+.kres { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 14px; align-items: start; } .kdib svg { width: 100%; height: auto; display: block; background: #fff; border-radius: 8px; }
+.kbar { position: relative; height: 12px; background: #e3e8ee; border-radius: 6px; margin: 8px 0 4px; } .kbar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; } .kbar i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #0b1828; }
+.kley { margin: 0; padding: 0; list-style: none; font-size: 11.5px; line-height: 1.6; max-height: 430px; overflow: auto; } .kdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.ktam tbody tr { cursor: pointer; } .ktam tr.usar td { background: rgba(46,125,50,.32); } .ktam tr.visto td:nth-child(2) { outline: 2px solid #2f6db3; outline-offset: -2px; }
+.kdlg { width: min(760px, 94vw); border: 0; border-radius: 10px; padding: 16px; box-shadow: 0 16px 50px rgba(0,0,0,.35); } .kdlg::backdrop { background: rgba(5,12,22,.55); } .kdlg h3 { margin: 0 0 10px; font-size: 15px; }
+.kdlg input[type=search] { width: 100%; margin-bottom: 8px; } .kselista { max-height: 55vh; overflow: auto; border: 1px solid #dde3ea; border-radius: 6px; }
+.kdlg { background: #0f1f33; color: #e8eef5; } .kselista { border-color: #2c4866 !important; } .ksel { border-bottom-color: #1f3550 !important; } .ksel { display: grid; grid-template-columns: 22px 1fr; column-gap: 6px; padding: 6px 10px; border-bottom: 1px solid #eef1f4; font-size: 12px; cursor: pointer; } .ksel input { grid-row: span 4; margin-top: 2px; } .ksel span { grid-column: 2; }
+@media (max-width: 760px) { .kres { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { #v-cond .uni { grid-template-columns: minmax(0, 1fr); } } #v-cond .uni > div, #kForm fieldset { min-width: 0; } #kForm select, #kForm input { min-width: 0; max-width: 100%; }
 .ricbox { border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: var(--panel, transparent); }
 .ricbox h3 { margin: 0 0 6px; font-size: 15px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .ricbox ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
@@ -236,6 +248,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="doc" aria-selected="false">Documento E/S</button>
     <button type="button" role="tab" data-v="inst" aria-selected="false">Listado de instrumentos</button>
     <button type="button" role="tab" data-v="circ" aria-selected="false">Listado de circuitos</button>
+    <button type="button" role="tab" data-v="cond" aria-selected="false">Canalizaciones</button>
     <button type="button" role="tab" data-v="uni" aria-selected="false">Unilineal TDI</button>
     <button type="button" role="tab" data-v="blq" aria-selected="false">Bloques de control</button>
     <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
@@ -370,6 +383,61 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     </div>
   </section>
 
+  <section id="v-cond" hidden>
+    <p class="intro">Dimensionamiento de ductos (conduit) según el <b>RIC N°04</b> de la SEC (Tabla N°4.21): los cables, con su aislación y cubierta, pueden ocupar hasta el <b>50 %</b> de la sección interior con 1 conductor y el <b>33 %</b> con 2 o más. Arma cada ducto con sus cables (a mano o desde el listado de circuitos), revisa el paso a paso y el dibujo del corte con el espacio libre, y escribe el tamaño en el listado de circuitos para los planos de rutas de canalización.</p>
+    <div class="herr">
+      <button type="button" class="pri" id="kNuevo">+ Nuevo ducto</button>
+      <button type="button" id="kDuplicar">Duplicar</button>
+      <button type="button" class="peligro" id="kBorrar">Eliminar ducto</button>
+      <span class="esp"></span>
+      <button type="button" class="pri" id="kAsignar" title="Escribe el tamaño en la columna Ducto y el tag del ducto en Ruta de canalización">Escribir en el listado de circuitos</button>
+      <button type="button" id="kPdf">Imprimir / PDF (A3)</button>
+      <button type="button" id="kDxf">DXF del corte</button>
+      <button type="button" id="kExcel">Excel · memoria</button>
+    </div>
+    <p class="estado" id="kEstado" aria-live="polite"></p>
+    <div class="tscroll"><table class="io kduct" id="kDuctos"><thead><tr><th>Ducto</th><th>Ruta / tramo</th><th>Tubería</th><th>Cables</th><th>ΣA mm²</th><th>Límite</th><th>Tamaño · ocupación</th></tr></thead><tbody></tbody></table></div>
+    <div class="uni" style="margin-top:14px">
+      <div>
+        <form id="kForm" class="dform" onsubmit="return false" style="position:static;max-height:none">
+          <fieldset><legend>Ducto</legend>
+            <label>Tag<input data-k="tag"></label>
+            <label>Ruta / tramo<input data-k="ruta" placeholder="Ej.: JB-101 → SALA ELÉCTRICA"></label>
+            <label class="ancho">Tipo de tubería<select data-k="tubo"></select></label>
+            <label class="ancho">Criterio de ocupación<select data-k="crit"></select></label>
+            <label class="ancho">Condición del tramo<select data-k="cond"></select></label>
+            <label>Tamaño mínimo<select data-k="min"></select></label>
+            <label>Reserva futura [%]<input data-k="reserva" type="number" min="0" max="100" step="5"></label>
+            <label>Largo del tramo [m]<input data-k="largo" type="number" min="0" step="1"></label>
+            <label>N° de curvas<input data-k="curvas" type="number" min="0" step="1"></label>
+          </fieldset>
+          <fieldset><legend>Cómo se calcula</legend>
+            <ol class="kpasos" id="kPasos"></ol>
+            <ul class="kavisos" id="kAvisos" hidden></ul>
+          </fieldset>
+        </form>
+      </div>
+      <div>
+        <div class="kres">
+          <div class="kdib"><div id="kDibujo"></div><div id="kMedidor"></div></div>
+          <ol class="kley" id="kLeyenda"></ol>
+        </div>
+        <p class="peq" style="margin:6px 0">Toca un tamaño de la tabla para ver cómo quedan los cables en él. Verde rayado: espacio libre dentro del tubo.</p>
+        <div class="tscroll"><table class="io ktam" id="kTam"><thead><tr><th></th><th>Tamaño</th><th>Ø ext. mm</th><th>Ø int. mm</th><th>Área int. mm²</th><th>Área útil mm²</th><th>Ocupación</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+        <p class="peq" id="kFuente"></p>
+      </div>
+    </div>
+    <h2 class="grupo" style="margin-top:18px">Cables del ducto</h2>
+    <div class="herr"><button type="button" class="pri" id="kAgregar">+ Agregar cable</button><button type="button" id="kDesde">+ Desde el listado de circuitos…</button></div>
+    <div class="tscroll"><table class="io" id="kCables"><thead><tr><th>N°</th><th style="min-width:150px">Tag circuito</th><th style="min-width:320px">Cable (catálogo)</th><th>Cant.</th><th>Ø mm</th><th>Área mm²</th><th></th></tr></thead><tbody></tbody></table></div>
+    <dialog id="kSel" class="kdlg" aria-labelledby="kSelTit">
+      <h3 id="kSelTit">Cables desde el listado de circuitos</h3>
+      <input id="kSelFiltro" type="search" placeholder="Filtrar por tag, cable, gabinete o ruta" aria-label="Filtrar circuitos">
+      <div id="kSelLista" class="kselista"></div>
+      <div class="herr" style="justify-content:flex-end"><button type="button" id="kSelCerrar">Cancelar</button><button type="button" class="pri" id="kSelOk">Agregar seleccionados</button></div>
+    </dialog>
+  </section>
+
   <section id="v-uni" hidden>
     <p class="intro">Diagrama unilineal del tablero de distribución de instrumentación (TDI) en el formato típico: alimentación, interruptor general, luz piloto, supresor de transientes, medidor opcional, barra, circuitos con protección termomagnética y diferencial, cargas, barra de tierra, simbología, notas y cuadro de cargas. Los instrumentos de 4 hilos del listado de E/S se traen como circuitos (en azul) y quedan vinculados al listado de circuitos.</p>
     <div class="herr">
@@ -493,5 +561,6 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="ric.js"></script>
 <script src="unilineal.js"></script>
 <script src="bloques.js"></script>
+<script src="conduit.js"></script>
 </body>
 </html>

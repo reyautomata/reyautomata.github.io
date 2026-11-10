@@ -614,9 +614,9 @@
   enlazar();
   enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
-  if (/^#(io|mod|cfg|lazos|doc|inst|circ|uni|blq)$/.test(location.hash)) v0 = location.hash.slice(1);
+  if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) v0 = location.hash.slice(1);
   mostrar(v0);
-  window.addEventListener('hashchange', function () { if (/^#(io|mod|cfg|lazos|doc|inst|circ|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
+  window.addEventListener('hashchange', function () { if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
   window.__LAZOS = { mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
 })();
