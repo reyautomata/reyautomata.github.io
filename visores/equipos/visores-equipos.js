@@ -955,6 +955,122 @@
     V['parshall-us'] = function () { return parshall(false); };
     V['parshall-pozo'] = function () { return parshall(true); };
 
+    // ── Válvula modulada con actuador de diafragma (plano típico 4600029931-03360-002AT-00008) ──
+    // Proporciones de referencia: globo 2" ASME cl. 150 (cara a cara 267 mm, ISA-75.08.01) con actuador de diafragma
+    // de resorte tamaño 30 (área efectiva 297 cm², carrera 19 mm, rango 0,2–1,0 bar), convertidor I/P en el yugo.
+    var SV = { mA: 12, accion: 'ato', car: 'eqp', dp: 2, cv: 46, falla: false };
+    function valvulaDiafragma() {
+      var y = 70, root = G(), od = DN_OD[2], r = od / 2, ff = 26.7, fh = ff / 2;
+      var mCuerpo = std(0x55606b, 0.65, 0.42), mAct = std(0x2c5ea8, 0.35, 0.45), mTub = std(0xc9d0d6, 0.95, 0.25);
+      // Cañería por piping, con bridas de cuello enfrentadas a la válvula
+      var lin = G(tubo(r, 70, mats.pipe, -fh - 0.2 - 35 - 1.9, y, 0, 'x'), tubo(r, 70, mats.pipe, fh + 0.2 + 35 + 1.9, y, 0, 'x'),
+        pos(orient(bridaB(2), 'x'), -fh - 0.2, y, 0), pos(orient(bridaB(2), '-x'), fh + 0.2, y, 0), soporteTubo(-80, y, r), soporteTubo(80, y, r));
+      // Cuerpo de globo con bridas integrales y bonete
+      var cuerpo = G(pos(orient(bridaB(2, false), '-x'), -fh, y, 0), pos(orient(bridaB(2, false), 'x'), fh, y, 0),
+        cyl(r + 0.3, ff - 2 * 1.9, mCuerpo, 0, y, 0, 'x'));
+      var bulbo = sph(7.2, mCuerpo, 0, y, 0); bulbo.scale.set(1.25, 1, 1); cuerpo.add(bulbo);
+      cuerpo.add(cyl(5.4, 1.6, mCuerpo, 0, y + 7.6, 0, 'y'), cyl(4.6, 3.4, mCuerpo, 0, y + 10, 0, 'y'));
+      for (var i = 0; i < 6; i++) { var a = i / 6 * Math.PI * 2; cuerpo.add(cyl(0.45, 3.4, mats.steel, Math.cos(a) * 4.9, y + 9.6, Math.sin(a) * 4.9, 'y', 8)); }
+      cuerpo.add(cyl(2.6, 6, mCuerpo, 0, y + 14.6, 0, 'y'), pos(hexN(4.4, 1.6, mats.ss), 0, y + 18.4, 0));
+      // Yugo, actuador de diafragma (carcasa Ø 28,6 cm) y vástago
+      var yA = y + 38, act = G();
+      [-1, 1].forEach(function (s) { act.add(box(1.8, 17, 3.2, mAct, s * 5.4, y + 28.5, 0)); });
+      act.add(cyl(3.6, 2, mAct, 0, y + 20.5, 0, 'y'), cyl(3.8, 2, mAct, 0, yA - 1, 0, 'y'));
+      act.add(cone(13.6, 9.5, 5, mAct, 0, yA + 2.5, 0), cyl(14.3, 1.2, mAct, 0, yA + 5.6, 0, 'y'), cone(9.5, 13.6, 5, mAct, 0, yA + 8.7, 0), cyl(9.5, 1, mAct, 0, yA + 11.6, 0, 'y'));
+      for (var k = 0; k < 16; k++) { var b = k / 16 * Math.PI * 2; act.add(cyl(0.35, 2.4, mats.steel, Math.cos(b) * 13.6, yA + 5.6, Math.sin(b) * 13.6, 'y', 8)); }
+      act.add(cyl(0.9, 1.6, mats.steel, 0, yA + 12.9, 0, 'y'));
+      var placaTag = texto('3360-PV-320', 9, 2.2, '#eef1f4'); placaTag.position.set(0, y + 33, 1.65); act.add(placaTag);
+      var escala = G(box(0.4, 4.2, 1.6, mats.ss, 5.4 - 1.2, y + 24.5, 1.7)); act.add(escala);
+      // Vástago con conector e indicador de carrera (se mueve con la simulación)
+      var vastago = G(cyl(0.55, 18, mats.ss, 0, y + 28, 0, 'y'), box(3.2, 2.2, 2.2, mats.ss, 0, y + 24.5, 0), box(3.6, 0.3, 0.5, mats.orange, 2.4, y + 24.5, 1.7));
+      vastago.userData.y0 = 0;
+      // Convertidor I/P en el yugo (lado +x)
+      var ip = G(rbox(7, 9, 8, 0.6, mats.cab, 0, 0, 0), box(6.6, 0.4, 7.6, mats.dark, 0, 4.7, 0));
+      var et = texto('I/P', 4, 2.4, '#ffffff'); et.position.set(0, 1, 4.05); ip.add(et);
+      ip.add(cyl(0.9, 1.4, mats.cab, 0, -5.2, 0, 'y'), box(1.4, 3, 3, mats.dark, -4.2, 0, 0)); // hub ½" NPT y placa de montaje
+      ip.position.set(10.8, y + 27, 0);
+      // Item 1: conectores rectos macho 3/8" OD × 1/4" NPT
+      function conector(eje) { return orient(G(hexN(1.4, 0.7, mats.ss, 0.35), cyl(0.62, 1, mats.ss, 0, 1.2, 0, 'y'), pos(hexN(1.25, 0.6, mats.ss), 0, 1.9, 0)), eje); }
+      var c1 = pos(conector('y'), 10.8, y + 31.6, 0), c2 = pos(conector('x'), 14.4, y + 27, 0), c3 = pos(conector('x'), 12.4, yA + 1.4, 0);
+      var conectores = G(c1, c2, c3);
+      // Item 2: tubo 3/8" OD de acero inoxidable (alimentación desde el cabezal y salida del I/P al actuador)
+      var tubAlim = camino([[-75, y + 31, -3], [-30, y + 31, -3], [-27, y + 33, -3], [-26, y + 56, -3], [-23, y + 59, -3], [22, y + 59, -3], [25, y + 56, -3], [25, y + 37, -3], [22, y + 34.5, -2], [12, y + 34.5, -0.5], [10.8, y + 33.6, 0]], 0.48, mTub);
+      var tubSal = camino([[16.6, y + 27, 0], [18.5, y + 27.3, 0], [19.5, y + 29, 0], [19.5, yA - 1, 0], [18.5, yA + 1.2, 0], [14.6, yA + 1.4, 0]], 0.48, mTub);
+      var tubing = G(tubAlim, tubSal);
+      // Items 3 a 6: conduit flexible, conectores, copla y conduit rígido hacia el gabinete RIO
+      var xc = 36, zc = 10, flex = camino([[10.8, y + 20.2, 0], [10.8, y + 15, 1], [16, y + 9, 6], [28, y + 8, 10], [xc, y + 11, zc], [xc, y + 15.4, zc]], 1.25, mats.flex);
+      function conFlex(yy) { return G(pos(hexN(3.3, 0.8, mats.galv), 0, yy, 0), cyl(1.6, 1.8, mats.galv, 0, yy + 1.3, 0, 'y')); }
+      var cf1 = pos(orient(conFlex(0), '-y'), 10.8, y + 22.2, 0), cf2 = pos(conFlex(0), xc, y + 15.2, zc);
+      var copla = cyl(1.75, 4, mats.galv, xc, y + 19.6, zc, 'y');
+      var rigido = G(cyl(1.33, 100, mats.galv, xc, y + 71.6, zc, 'y'), cone(0, 2.2, 4, mats.orange, xc, y + 124, zc));
+      root.add(lin, cuerpo, act, vastago, ip, conectores, tubing, flex, cf1, cf2, copla, rigido, flecha(-62, y + 6.5, 0));
+      var partes = [
+        [1, 'Conector recto macho 3/8" OD × 1/4" NPT, AISI 316', 3, conectores, [6, 6, 8], [16, y + 41, 2]],
+        [2, 'Tubo 3/8" OD × 0,035" W.T., ASTM A269 AISI 316 (aire de instrumentos)', 'L/R', tubing, [0, 10, -10], [-26, y + 62, -3]],
+        [3, 'Conduit flexible metálico revestido en PVC ¾"', 'L/R', flex, [10, -6, 10], [26, y + 4, 10]],
+        [4, 'Conector recto para conduit flexible ¾"', 2, G(cf1, cf2), [10, -4, 10], [xc + 2, y + 13, zc]],
+        [5, 'Copla galvanizada ¾", ANSI C80.1', 1, copla, [14, 0, 10], [xc + 2, y + 21, zc]],
+        [6, 'Conduit rígido de acero galvanizado ¾", ANSI C80.1, hacia gabinete RIO', 'L/R', rigido, [18, 0, 10], [xc, y + 52, zc]],
+        [7, 'Válvula globo 2" cl. 150 con bonete y empaquetadura (por proveedor)', 1, cuerpo, [0, -14, 0], [-4, y - 12, 6]],
+        [8, 'Actuador de diafragma con resorte, yugo e indicador de carrera', 1, G(act, vastago), [0, 22, 0], [-16, yA + 14, 4]],
+        [9, 'Convertidor I/P 4–20 mA / 0,2–1,0 bar', 1, ip, [16, 0, 12], [14, y + 28, 4]],
+        [10, 'Línea de proceso bridada (por piping)', 1, lin, [0, 0, 0], [-62, y - 4, 4]]
+      ];
+
+      // ── Simulación: 4–20 mA → I/P → presión → carrera → apertura → caudal ──
+      function calc() {
+        var p = SV.falla ? 0 : 3 + 12 * (Math.min(20, Math.max(4, SV.mA)) - 4) / 16;  // psig
+        var carrera = Math.min(1, Math.max(0, (p - 3) / 12));                         // fracción de la carrera nominal (resorte 3–15 psig)
+        var ap = SV.accion === 'ato' ? carrera : 1 - carrera;                           // aire abre (falla cerrada) o aire cierra (falla abierta)
+        var f = ap <= 0 ? 0 : SV.car === 'lin' ? ap : Math.pow(50, ap - 1);             // característica inherente (R = 50 en igual porcentaje)
+        var cv = SV.cv * f, kv = cv * 0.865, q = kv * Math.sqrt(Math.max(0, SV.dp) / 1.0);
+        return { p: p, bar: p * 0.0689476, carrera: carrera, ap: ap, cv: cv, q: q };
+      }
+      var sim = {
+        html: '<div class="simg">' +
+          '<label>Señal de control <output id="oMa"></output><input type="range" id="sMa" min="4" max="20" step="0.1"></label>' +
+          '<label>Acción ante falla de aire<select id="sAc"><option value="ato">Aire abre · falla cerrada (FC)</option><option value="atc">Aire cierra · falla abierta (FO)</option></select></label>' +
+          '<label>Característica inherente<select id="sCar"><option value="eqp">Igual porcentaje (R = 50)</option><option value="lin">Lineal</option></select></label>' +
+          '<label>Presión diferencial ΔP <output id="oDp"></output><input type="range" id="sDp" min="0.2" max="8" step="0.1"></label>' +
+          '<label>Cv nominal del trim <output id="oCv"></output><input type="range" id="sCv" min="5" max="80" step="1"></label></div>' +
+          '<dl class="lect" id="lectV"></dl><p class="eq" id="eqV"></p><button type="button" id="sFalla" class="tg" aria-pressed="false">Simular falla de aire</button>',
+        montar: function () {
+          $('sMa').value = SV.mA; $('sAc').value = SV.accion; $('sCar').value = SV.car; $('sDp').value = SV.dp; $('sCv').value = SV.cv;
+          $('sMa').addEventListener('input', function () { SV.mA = +this.value; sim.pintar(); });
+          $('sAc').addEventListener('change', function () { SV.accion = this.value; sim.pintar(); });
+          $('sCar').addEventListener('change', function () { SV.car = this.value; sim.pintar(); });
+          $('sDp').addEventListener('input', function () { SV.dp = +this.value; sim.pintar(); });
+          $('sCv').addEventListener('input', function () { SV.cv = +this.value; sim.pintar(); });
+          $('sFalla').setAttribute('aria-pressed', String(SV.falla));
+          $('sFalla').addEventListener('click', function () { SV.falla = !SV.falla; this.setAttribute('aria-pressed', String(SV.falla)); sim.pintar(); });
+          sim.pintar();
+        },
+        pintar: function () {
+          var h = calc(), n = function (v, d) { return v.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d }); };
+          $('oMa').textContent = n(SV.mA, 1) + ' mA'; $('oDp').textContent = n(SV.dp, 1) + ' bar'; $('oCv').textContent = n(SV.cv, 0);
+          vastago.userData.meta = h.ap * 1.9;   // el tapón sube al abrir (cuerpo de empuje hacia abajo para cerrar)
+          var filas = [
+            ['Salida del I/P', SV.falla ? '<span class="warn">0 psig · sin aire</span>' : n(h.p, 1) + ' psig · ' + n(h.bar, 2) + ' bar'],
+            ['Carrera del vástago', n(h.carrera * 19, 1) + ' mm de 19 mm'],
+            ['Apertura de la válvula', n(h.ap * 100, 0) + ' %'],
+            ['Posición ante falla de aire', SV.accion === 'ato' ? 'Cerrada (el resorte cierra)' : 'Abierta (el resorte abre)'],
+            ['Cv efectivo', n(h.cv, 1)],
+            ['Caudal de agua (SG = 1)', n(h.q, 1) + ' m³/h · ' + n(h.q / 3.6, 2) + ' L/s']
+          ];
+          if (h.ap > 0 && h.ap < 0.1) filas.push(['Alerta', '<span class="warn">Apertura bajo 10 %: control inestable, revisar el dimensionamiento</span>']);
+          if (h.ap > 0.9) filas.push(['Alerta', '<span class="warn">Apertura sobre 90 %: válvula sin margen de control</span>']);
+          $('lectV').innerHTML = filas.map(function (f) { return '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd>'; }).join('');
+          $('eqV').innerHTML = 'P = 3 + 12·(I − 4)/16 psig · carrera = (P − 3)/12 · Q = Kv·√(ΔP/SG) con Kv = 0,865·Cv·f(x), f(x) = x (lineal) o R<sup>x−1</sup> (igual %). Valores de Cv y carrera referenciales para una válvula globo de 2"; usar los del proveedor.';
+        },
+        tick: function () { // el vástago se mueve suave hacia la posición calculada
+          var m = vastago.userData.meta || 0, yv = vastago.position.y - (vastago.userData.base ? vastago.userData.base.y : 0);
+          if (Math.abs(m - yv) > 0.005) { vastago.position.y += (m - yv) * 0.15; }
+        }
+      };
+      return { root: root, foco: [4, y + 22, 0, 62], partes: partes, sim: sim };
+    }
+    V['valvula-diafragma'] = valvulaDiafragma;
+
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
     var $ = function (id) { return document.getElementById(id); };
     var estado = { v: DEF.variantes[0], etiquetas: true, explotar: false, giro: false };
@@ -1065,6 +1181,8 @@
     { id: 'eq-parshall', num: '24', tab: 'ic', titulo: 'Canaleta Parshall', sub: 'Medición de flujo en canal abierto con nivel ultrasónico o radar y totalizador.', variantes: [
       { c: '24-A', t: 'Sensor ultrasónico sobre la canaleta', m: 'parshall-us', cam: [-0.7, 1.4, 1], zoom: 0.72, d: 'Canaleta Parshall con sensor ultrasónico sobre el punto de medición Ha y transmisor que calcula el caudal con la curva Q = K·Ha^n y lo totaliza. Cambia el ancho de garganta, el caudal y el nivel aguas abajo para ver la medición, la señal 4–20 mA y el efecto de la sumergencia.', n: ['Medir Ha a 2/3 de la longitud de la pared convergente (A) aguas arriba de la cresta (ISO 9826 / ASTM D1941).', 'Piso de la sección convergente nivelado en ambos sentidos; el cero del transmisor es la cota de la cresta.', 'Canal de aproximación recto, sin oleaje ni turbulencia y con velocidad baja.', 'Verificar que Hb/Ha no supere el límite de sumergencia (60 % en 6"–9", 70 % en 1–8 pies); si lo supera, medir Hb y corregir.', 'Sensor fuera de su zona muerta, con protección solar y sin espuma bajo el haz.'] },
       { c: '24-B', t: 'Sensor radar sobre pozo de calma', m: 'parshall-pozo', cam: [-0.7, 1.4, 1], zoom: 0.72, d: 'El nivel se mide en un pozo de calma conectado a la pared de la canaleta en el punto Ha, útil con oleaje, espuma o viento. Usa la misma simulación de caudal y totalizador.', n: ['Tubo de conexión al ras de la pared interior y a la altura del piso de la sección convergente.', 'Válvula para limpiar sedimentos del tubo y del pozo.', 'Pozo con protección contra heladas si corresponde.'] }] },
+    { id: 'eq-valvula-control', num: '25', tab: 'ic', titulo: 'Válvula modulada con actuador de diafragma', sub: 'Válvula globo con actuador de resorte y diafragma, convertidor I/P, tubing de aire y canalización.', variantes: [
+      { c: '25-A', t: 'Actuador de diafragma con I/P', m: 'valvula-diafragma', cam: [0.32, 0.22, 1], d: 'Detalle típico 4600029931-03360-002AT-00008: válvula modulada bridada con actuador de diafragma y convertidor I/P en el yugo. El aire de instrumentos llega en tubo 3/8" OD de acero inoxidable y la señal 4–20 mA desde el gabinete RIO por conduit rígido y flexible de ¾". Mueve la señal para ver la presión del I/P, la carrera, la apertura y el caudal.', n: ['La cantidad de material es solo para un instrumento.', 'La forma y dimensiones pueden variar según la información certificada del proveedor.', 'El contratista de montaje verificará el lugar de instalación para dar buen acceso a la operación, lectura y mantención.', 'Usar unión recta tubo a tubo cuando el largo del tubo de 3/8" OD supere 3 m.', 'Dejar el actuador vertical sobre la cañería horizontal y espacio libre para retirar el actuador y el bonete.'] }] },
     { id: 'eq-plc', num: 'CP', tab: 'tb', titulo: 'Gabinete PLC y E/S remotas', sub: 'Gabinete de control con PLC, fuentes redundantes y borneras, y E/S remotas en terreno.', variantes: [
       { c: 'CP-A', t: 'Gabinete de control en sala', m: 'gabinete-plc', d: 'Gabinete autosoportado con PLC, módulos de E/S, fuentes redundantes, switch, canaletas y borneras.', n: ['Reserva de 20 % en E/S y borneras.', 'Llenado de canaletas ≤ 40 %.'] },
       { c: 'CP-B', t: 'E/S remotas en terreno', m: 'rio-terreno', d: 'Gabinete NEMA 4X en estructura de terreno con techo de protección solar y prensaestopas.', n: ['Entradas de cables solo por la parte inferior.'] }] },
