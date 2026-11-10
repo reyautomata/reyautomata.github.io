@@ -81,6 +81,26 @@ label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 @media (max-width: 1000px) { .simgrid { grid-template-columns: 1fr; } .lect { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .dos, .tres { grid-template-columns: 1fr; } }
 @media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
+
+tr[data-v3d]{cursor:pointer}tr[data-v3d]:hover td,tr[data-v3d]:focus td{background:#eef4fb}tr[data-v3d]:focus{outline:2px solid #2f6db3;outline-offset:-2px}
+.v3dbtn{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;background:#1f4e85;color:#fff;font-size:10.5px;font-weight:600;white-space:nowrap}
+#dlg3d{width:min(1100px,96vw);height:min(720px,92vh);padding:0;border:0;border-radius:10px;background:#0b1828;color:#e8eef5;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}
+#dlg3d::backdrop{background:rgba(5,12,22,.7)}
+#dlg3d .v3dcab{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #1f3550}
+#dlg3d h3{margin:0;font-size:15px;flex:1;color:#fff}
+#v3dCerrar{background:none;border:1px solid #3a5674;color:#fff;border-radius:6px;width:30px;height:28px;font-size:16px;cursor:pointer}
+#dlg3d .v3dcuerpo{display:grid;grid-template-columns:1fr 270px;height:calc(100% - 48px)}
+#v3dLienzo{position:relative;min-height:0;overflow:hidden}#v3dLienzo canvas{display:block}
+.v3dlab{position:absolute;inset:0;pointer-events:none}
+.v3dtag{font:600 10.5px system-ui,sans-serif;color:#dbe8f5;background:rgba(11,24,40,.78);border:1px solid #35587d;padding:2px 6px;border-radius:4px;white-space:nowrap}
+#dlg3d aside{padding:12px 14px;border-left:1px solid #1f3550;overflow:auto;font-size:12.5px;line-height:1.5}
+#dlg3d aside label{display:block;margin:10px 0 4px;color:#9fb6cc;font-size:11.5px}
+#v3dAp{width:100%}#dlg3d input[type=checkbox]{display:inline-block;width:auto;height:auto;margin:0 6px 0 0;vertical-align:-2px;appearance:auto;-webkit-appearance:checkbox}#dlg3d aside label:has(input[type=checkbox]){color:#cfe0f0;cursor:pointer}#v3dApOut{font-weight:700;color:#7fd3ff}
+#v3dTipos{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
+#v3dTipos button{flex:1 1 45%;background:#14263c;color:#cfe0f0;border:1px solid #2c4866;border-radius:5px;padding:5px 4px;font-size:11px;cursor:pointer}
+#v3dTipos button[aria-pressed=true]{background:#2f6db3;color:#fff;border-color:#2f6db3}
+.v3dnota{color:#8aa3bb;font-size:11px;margin-top:12px}
+@media(max-width:760px){#dlg3d{width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;border-radius:0}#dlg3d .v3dcuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,58%) minmax(0,42%)}#dlg3d aside{border-left:0;border-top:1px solid #1f3550}.v3dtag{font-size:9px;padding:1px 4px}}
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
@@ -185,12 +205,12 @@ label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 
   <div class="blk"><h2>Qué válvula usar</h2>
     <div class="tscroll" style="max-height:none"><table class="t"><thead><tr><th>Tipo</th><th>Bueno para</th><th>Evitar en</th><th>Característica · rangeabilidad</th></tr></thead><tbody>
-      <tr><td><b>Globo (asiento simple / jaula)</b></td><td>Control fino de líquidos limpios, gases y vapor; ΔP altas con trim anticavitación.</td><td>Pulpas y sólidos; diámetros sobre 12" (costo, peso).</td><td>Igual % o lineal · 50:1</td></tr>
-      <tr><td><b>Bola segmentada (V-port)</b></td><td>Control con sólidos en suspensión, pulpas finas, fibras; alta capacidad.</td><td>ΔP muy altas con cavitación severa.</td><td>Igual % modificada · 100:1 o más</td></tr>
-      <tr><td><b>Mariposa alto desempeño</b></td><td>Grandes caudales de agua, aire y gases con ΔP bajas; liviana y económica.</td><td>Pulpas abrasivas; control bajo 20 % de apertura.</td><td>Aprox. igual % · 20:1 a 30:1</td></tr>
-      <tr><td><b>Cuchillo (knife gate)</b></td><td>On/off en pulpas y relaves (minería).</td><td>Regulación fina.</td><td>On/off</td></tr>
-      <tr><td><b>Pinch / manga</b></td><td>Pulpas muy abrasivas; control grueso o on/off.</td><td>Altas presiones y temperaturas.</td><td>Aprox. lineal · 10:1</td></tr>
-      <tr><td><b>Bola paso total</b></td><td>Aislamiento on/off con mínima pérdida de carga.</td><td>Regulación (desgaste de asientos).</td><td>On/off</td></tr>
+      <tr data-v3d="globo"><td><b>Globo (asiento simple / jaula)</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>Control fino de líquidos limpios, gases y vapor; ΔP altas con trim anticavitación.</td><td>Pulpas y sólidos; diámetros sobre 12" (costo, peso).</td><td>Igual % o lineal · 50:1</td></tr>
+      <tr data-v3d="segmento"><td><b>Bola segmentada (V-port)</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>Control con sólidos en suspensión, pulpas finas, fibras; alta capacidad.</td><td>ΔP muy altas con cavitación severa.</td><td>Igual % modificada · 100:1 o más</td></tr>
+      <tr data-v3d="mariposa"><td><b>Mariposa alto desempeño</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>Grandes caudales de agua, aire y gases con ΔP bajas; liviana y económica.</td><td>Pulpas abrasivas; control bajo 20 % de apertura.</td><td>Aprox. igual % · 20:1 a 30:1</td></tr>
+      <tr data-v3d="cuchillo"><td><b>Cuchillo (knife gate)</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>On/off en pulpas y relaves (minería).</td><td>Regulación fina.</td><td>On/off</td></tr>
+      <tr data-v3d="pinch"><td><b>Pinch / manga</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>Pulpas muy abrasivas; control grueso o on/off.</td><td>Altas presiones y temperaturas.</td><td>Aprox. lineal · 10:1</td></tr>
+      <tr data-v3d="bola"><td><b>Bola paso total</b> <span class="v3dbtn">▶ Ver en 3D</span></td><td>Aislamiento on/off con mínima pérdida de carga.</td><td>Regulación (desgaste de asientos).</td><td>On/off</td></tr>
     </tbody></table></div>
     <p class="peq" style="margin-top:6px">Regla práctica: el Cv calculado al caudal máximo debe quedar entre 70 % y 80 % de la apertura, y al caudal mínimo sobre 10–20 %. El cuerpo suele ser igual o un diámetro menor que la línea; si sale menos de la mitad, revisa el diseño.</p>
   </div>
@@ -302,5 +322,26 @@ label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 </main>
 <script src="piping.js"></script>
 <script src="sim.js"></script>
+<dialog id="dlg3d" aria-labelledby="v3dTit">
+  <div class="v3dcab"><h3 id="v3dTit">Válvula</h3><button id="v3dCerrar" type="button" aria-label="Cerrar">✕</button></div>
+  <div class="v3dcuerpo">
+    <div id="v3dLienzo"></div>
+    <aside>
+      <p id="v3dDesc"></p>
+      <label for="v3dAp">Apertura: <span id="v3dApOut">60 %</span></label>
+      <input type="range" id="v3dAp" min="0" max="100" value="60">
+      <label><input type="checkbox" id="v3dCiclo" checked> Animar apertura y cierre</label>
+      <label><input type="checkbox" id="v3dCorte" checked> Vista en corte</label>
+      <div id="v3dTipos">
+        <button type="button" data-v="globo">Globo</button><button type="button" data-v="segmento">Bola segmentada</button>
+        <button type="button" data-v="mariposa">Mariposa</button><button type="button" data-v="cuchillo">Cuchillo</button>
+        <button type="button" data-v="pinch">Pinch</button><button type="button" data-v="bola">Bola paso total</button>
+      </div>
+      <p class="v3dnota">Arrastre para girar, rueda para acercar. Las partículas celestes muestran el flujo: pasan más y más rápido a mayor apertura. Modelo referencial, no a escala de fabricante.</p>
+    </aside>
+  </div>
+</dialog>
+<script src="../lib3d.js" defer></script>
+<script src="valvula3d.js" defer></script>
 </body>
 </html>
