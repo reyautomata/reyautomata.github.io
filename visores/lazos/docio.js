@@ -208,7 +208,7 @@
       if (+s.hilos === 4 && analog) {
         out.push({ key: 'p:' + s.id, clase: 'p', lazo: lz, senales: [s], auto: {
           tagC: ISA.compacto(s.tag) + '-P01', equipo: s.tag, desc: up(r.desc), servicio: up(s.servicio), funcion: 'ALIMENTACIÓN ELÉCTRICA', tipo: 'CABLE MULTICONDUCTOR',
-          diseno: up(cfg.cableAlim || '1x3C #14 AWG'), senal: up(cfg.tension4h || '120 VAC'), dGab: up(s.alimTab || cfg.tableroAlim || 'TABLERO DE DISTRIBUCIÓN'), dEq: NA, hGab: s.tag, hEq: NA,
+          diseno: up(cfg.cableAlim || '1x3C #14 AWG'), senal: up((window.LAZOS_UNI && (window.LAZOS_UNI.circuitoDe(s.tag) || {}).tension) || cfg.tension4h || '120 VAC'), dGab: up(s.alimTab || cfg.tableroAlim || 'TABLERO DE DISTRIBUCIÓN'), dEq: (function () { var u = window.LAZOS_UNI && window.LAZOS_UNI.circuitoDe(s.tag); return u ? 'CIRCUITO ' + u.cb : NA; })(), hGab: s.tag, hEq: NA,
           largo: '', ducto: '', ruta: '', planos: planosS.join('\n'), suministro: '', obs: '' } });
       }
     });

@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   var W = 420, H = 297, ISA = window.ISA;
-  var CAPAS = { MARCO: 7, ROTULO: 7, TEXTO: 7, ZONAS: 8, INSTRUMENTO: 3, CABLES: 1, BORNES: 5, TARJETA: 4, PANTALLA: 6, HMI: 2, ALIMENTACION: 30, NOTAS: 7 };
+  var CAPAS = { MARCO: 7, ROTULO: 7, TEXTO: 7, ZONAS: 8, INSTRUMENTO: 3, CABLES: 1, BORNES: 5, TARJETA: 4, PANTALLA: 6, HMI: 2, ALIMENTACION: 30, NOTAS: 7, FUERZA: 7, PROTECCIONES: 7, TIERRA: 3, EQUIPOS: 4, TABLAS: 7 };
 
   // ── Primitivas ──
   function Lienzo() { this.p = []; }
@@ -205,13 +205,60 @@
   }
   function tierra(L, x, y) { L.l(x - 3, y, x, y, 'PANTALLA').l(x, y, x, y + 2, 'PANTALLA').l(x - 1.6, y + 2, x + 1.6, y + 2, 'PANTALLA').l(x - 1, y + 2.7, x + 1, y + 2.7, 'PANTALLA').l(x - 0.4, y + 3.4, x + 0.4, y + 3.4, 'PANTALLA'); }
 
-  // ── Hoja completa ──
-  function hoja(lazo, senales, ctx, n, de) {
-    var L = new Lienzo(), cfg = ctx.cfg || {}, P = ctx.proyecto || {};
-    // Marco con referencias de zona
+  // Marco A3 con referencias de zona
+  function marco(L) {
     L.r(5, 5, W - 10, H - 10, 'MARCO').r(10, 10, W - 20, H - 20, 'MARCO', { w: 0.5 });
     for (var i = 0; i < 8; i++) { var x = 10 + i * 50; if (i) { L.l(x, 5, x, 10, 'MARCO').l(x, H - 10, x, H - 5, 'MARCO'); } L.tx(x + 25, 8.6, i + 1, 2.2, 'MARCO', { al: 'c' }).tx(x + 25, H - 6.4, i + 1, 2.2, 'MARCO', { al: 'c' }); }
     'ABCDEF'.split('').forEach(function (ch, i) { var y = 10 + i * 46.17; if (i) { L.l(5, y, 10, y, 'MARCO').l(W - 10, y, W - 5, y, 'MARCO'); } L.tx(7.5, y + 24, ch, 2.2, 'MARCO', { al: 'c' }).tx(W - 7.5, y + 24, ch, 2.2, 'MARCO', { al: 'c' }); });
+  }
+  // Cuadro de revisiones y viñeta (rótulo) inferior: o = { refs, titulo, lineas, pie, plano, rev, n, de }
+  function rotulo(L, ctx, o) {
+    var P = ctx.proyecto || {}, yZ = 224;
+    // Referencias y revisiones
+    var yR = 257;
+    L.l(10, yR - 1.5, 250, yR - 1.5, 'ROTULO').tx(13, yR + 1.6, o.refs || '', 1.6, 'ROTULO');
+    var cols = [10, 20, 40, 170, 190, 210, 230, 250], yT = 260, hr = 5.4;
+    L.r(10, yT, 240, 27, 'ROTULO');
+    var revs = (ctx.revisiones || []).slice(-3);
+    for (var r = 0; r < 4; r++) L.l(10, yT + hr * (r + 1), 250, yT + hr * (r + 1), 'ROTULO');
+    cols.slice(1, -1).forEach(function (cx) { L.l(cx, yT, cx, H - 10, 'ROTULO'); });
+    ['REV', 'FECHA', 'DESCRIPCIÓN', 'POR', 'REVISÓ', 'APROBÓ', 'CLIENTE'].forEach(function (t, i) { L.tx((cols[i] + cols[i + 1]) / 2, H - 10 - 1.6, t, 1.6, 'ROTULO', { al: 'c', b: true }); });
+    revs.forEach(function (rv, k) {
+      var y = H - 10 - hr * (k + 1) - 1.6;
+      [rv.rev, rv.fecha, rv.desc, rv.por, rv.reviso, rv.aprobo, rv.cliente].forEach(function (t, i) { L.tx(i === 2 ? cols[i] + 1.5 : (cols[i] + cols[i + 1]) / 2, y, t || '', 1.6, 'ROTULO', { al: i === 2 ? 'l' : 'c' }); });
+    });
+    // Rótulo
+    var x0 = 250, x1 = 410;
+    L.r(x0, yZ, x1 - x0, H - 10 - yZ, 'ROTULO', { w: 0.5 });
+    L.l(x0, 238, x1, 238, 'ROTULO').l(x0 + 46, yZ, x0 + 46, 238, 'ROTULO');
+    if (ctx.logo) L.img(x0 + 3, yZ + 2.5, 40, 9, ctx.logo); else L.tx(x0 + 23, yZ + 9, 'ReyEngi', 5, 'ROTULO', { al: 'c', b: true });
+    var cli = (P.cliente || '').toUpperCase(), hc = cli.length > 40 ? 2.3 : 3.2;
+    L.tx(x0 + 46 + 57, yZ + 6, cli.length > 62 ? cli.slice(0, 60) + '…' : cli, hc, 'ROTULO', { al: 'c', b: true });
+    cortar((P.proyecto || '').toUpperCase(), 62).slice(0, 2).forEach(function (t, i) { L.tx(x0 + 46 + 57, yZ + 9.8 + i * 2.7, t, 1.9, 'ROTULO', { al: 'c' }); });
+    L.l(x0, 256, x1, 256, 'ROTULO');
+    L.tx((x0 + x1) / 2, 242.6, o.titulo, 3.2, 'ROTULO', { al: 'c', b: true });
+    (o.lineas || []).forEach(function (t, i) { L.tx((x0 + x1) / 2, 247.4 + i * 3, t, 2.2, 'ROTULO', { al: 'c' }); });
+    L.tx((x0 + x1) / 2, 254.2, o.pie || '', 1.7, 'ROTULO', { al: 'c' });
+    // Responsables y datos
+    var xm = x0 + 80;
+    L.l(xm, 256, xm, 272, 'ROTULO').l(x0, 272, x1, 272, 'ROTULO');
+    [['ELABORÓ', P.por, P.porFecha], ['REVISÓ', P.reviso, P.revisoFecha], ['APROBÓ', P.aprobo, P.aproboFecha]].forEach(function (rw, i) {
+      var y = 260.2 + i * 4.6; L.tx(x0 + 2, y, rw[0], 1.6, 'ROTULO', { b: true }).tx(x0 + 22, y, rw[1] || '', 1.7, 'ROTULO').tx(x0 + 52, y, rw[2] || '', 1.6, 'ROTULO');
+      if (i < 2) L.l(x0, y + 1.6, xm, y + 1.6, 'ROTULO');
+    });
+    [['N° PROYECTO', P.numero || ''], ['ESCALA', 'S/E'], ['HOJA', o.n + ' DE ' + o.de]].forEach(function (rw, i) {
+      var y = 260.2 + i * 4.6; L.tx(xm + 2, y, rw[0], 1.6, 'ROTULO', { b: true }).tx(xm + 26, y, rw[1], 1.8, 'ROTULO');
+      if (i < 2) L.l(xm, y + 1.6, x1, y + 1.6, 'ROTULO');
+    });
+    L.l(x1 - 22, 272, x1 - 22, H - 10, 'ROTULO');
+    L.tx(x0 + 2, 275.6, 'PLANO N°', 1.6, 'ROTULO', { b: true }).tx(x0 + 64, 283.2, o.plano + (o.de > 1 ? ' (' + o.n + '/' + o.de + ')' : ''), 3.4, 'ROTULO', { al: 'c', b: true });
+    L.tx(x1 - 20, 275.6, 'REV.', 1.6, 'ROTULO', { b: true }).tx(x1 - 11, 283.4, o.rev || P.rev || '', 3.4, 'ROTULO', { al: 'c', b: true });
+  }
+
+  // ── Hoja completa ──
+  function hoja(lazo, senales, ctx, n, de) {
+    var L = new Lienzo(), cfg = ctx.cfg || {}, P = ctx.proyecto || {};
+    marco(L);
     // Zonas
     var yZ = 224;
     L.l(10, 17, 410, 17, 'ZONAS').l(10, 23, 410, 23, 'ZONAS').l(X.zona1, 10, X.zona1, yZ, 'ZONAS', { w: 0.5 }).l(X.zona2, 10, X.zona2, yZ, 'ZONAS', { w: 0.5 });
@@ -233,45 +280,8 @@
     L.tx(13, yZ + 4.5, 'NOTAS:', 2.2, 'NOTAS', { b: true });
     var yn = yZ + 8.2;
     nt.slice(0, 8).forEach(function (t, i) { cortar((i + 1) + '.- ' + t, 128).slice(0, 2).forEach(function (l2, j) { if (yn < 255) { L.tx(j ? 17 : 13, yn, l2, 1.75, 'NOTAS'); yn += 2.9; } }); });
-    // Referencias y revisiones
-    var yR = 257;
-    L.l(10, yR - 1.5, 250, yR - 1.5, 'ROTULO').tx(13, yR + 1.6, 'REFERENCIAS: ' + [cfg.docIO && ('LISTADO E/S ' + cfg.docIO), cfg.docCables && ('LISTADO DE CABLES ' + cfg.docCables), cfg.docPid && ('P&ID ' + cfg.docPid)].filter(Boolean).join(' · '), 1.6, 'ROTULO');
-    var cols = [10, 20, 40, 170, 190, 210, 230, 250], yT = 260, hr = 5.4;
-    L.r(10, yT, 240, 27, 'ROTULO');
-    var revs = (ctx.revisiones || []).slice(-3);
-    for (var r = 0; r < 4; r++) L.l(10, yT + hr * (r + 1), 250, yT + hr * (r + 1), 'ROTULO');
-    cols.slice(1, -1).forEach(function (cx) { L.l(cx, yT, cx, H - 10, 'ROTULO'); });
-    ['REV', 'FECHA', 'DESCRIPCIÓN', 'POR', 'REVISÓ', 'APROBÓ', 'CLIENTE'].forEach(function (t, i) { L.tx((cols[i] + cols[i + 1]) / 2, H - 10 - 1.6, t, 1.6, 'ROTULO', { al: 'c', b: true }); });
-    revs.forEach(function (rv, k) {
-      var y = H - 10 - hr * (k + 1) - 1.6;
-      [rv.rev, rv.fecha, rv.desc, rv.por, rv.reviso, rv.aprobo, rv.cliente].forEach(function (t, i) { L.tx(i === 2 ? cols[i] + 1.5 : (cols[i] + cols[i + 1]) / 2, y, t || '', 1.6, 'ROTULO', { al: i === 2 ? 'l' : 'c' }); });
-    });
-    // Rótulo
-    var x0 = 250, x1 = 410;
-    L.r(x0, yZ, x1 - x0, H - 10 - yZ, 'ROTULO', { w: 0.5 });
-    L.l(x0, 238, x1, 238, 'ROTULO').l(x0 + 46, yZ, x0 + 46, 238, 'ROTULO');
-    if (ctx.logo) L.img(x0 + 3, yZ + 2.5, 40, 9, ctx.logo); else L.tx(x0 + 23, yZ + 9, 'ReyEngi', 5, 'ROTULO', { al: 'c', b: true });
-    var cli = (P.cliente || '').toUpperCase(), hc = cli.length > 40 ? 2.3 : 3.2;
-    L.tx(x0 + 46 + 57, yZ + 6, cli.length > 62 ? cli.slice(0, 60) + '…' : cli, hc, 'ROTULO', { al: 'c', b: true });
-    cortar((P.proyecto || '').toUpperCase(), 62).slice(0, 2).forEach(function (t, i) { L.tx(x0 + 46 + 57, yZ + 9.8 + i * 2.7, t, 1.9, 'ROTULO', { al: 'c' }); });
-    L.l(x0, 256, x1, 256, 'ROTULO');
-    L.tx((x0 + x1) / 2, 242.6, 'DIAGRAMA DE LAZO', 3.2, 'ROTULO', { al: 'c', b: true });
-    cortar((lazo.servicio || '').toUpperCase(), 70).slice(0, 2).forEach(function (t, i) { L.tx((x0 + x1) / 2, 247.4 + i * 3, t, 2.2, 'ROTULO', { al: 'c' }); });
-    L.tx((x0 + x1) / 2, 254.2, 'LAZO ' + lazo.id + (lazo.tags ? ' · ' + lazo.tags : ''), 1.7, 'ROTULO', { al: 'c' });
-    // Responsables y datos
-    var xm = x0 + 80;
-    L.l(xm, 256, xm, 272, 'ROTULO').l(x0, 272, x1, 272, 'ROTULO');
-    [['ELABORÓ', P.por, P.porFecha], ['REVISÓ', P.reviso, P.revisoFecha], ['APROBÓ', P.aprobo, P.aproboFecha]].forEach(function (rw, i) {
-      var y = 260.2 + i * 4.6; L.tx(x0 + 2, y, rw[0], 1.6, 'ROTULO', { b: true }).tx(x0 + 22, y, rw[1] || '', 1.7, 'ROTULO').tx(x0 + 52, y, rw[2] || '', 1.6, 'ROTULO');
-      if (i < 2) L.l(x0, y + 1.6, xm, y + 1.6, 'ROTULO');
-    });
-    [['N° PROYECTO', P.numero || ''], ['ESCALA', 'S/E'], ['HOJA', n + ' DE ' + de]].forEach(function (rw, i) {
-      var y = 260.2 + i * 4.6; L.tx(xm + 2, y, rw[0], 1.6, 'ROTULO', { b: true }).tx(xm + 26, y, rw[1], 1.8, 'ROTULO');
-      if (i < 2) L.l(xm, y + 1.6, x1, y + 1.6, 'ROTULO');
-    });
-    L.l(x1 - 22, 272, x1 - 22, H - 10, 'ROTULO');
-    L.tx(x0 + 2, 275.6, 'PLANO N°', 1.6, 'ROTULO', { b: true }).tx(x0 + 64, 283.2, lazo.plano + (de > 1 ? ' (' + n + '/' + de + ')' : ''), 3.4, 'ROTULO', { al: 'c', b: true });
-    L.tx(x1 - 20, 275.6, 'REV.', 1.6, 'ROTULO', { b: true }).tx(x1 - 11, 283.4, lazo.rev || P.rev || '', 3.4, 'ROTULO', { al: 'c', b: true });
+    rotulo(L, ctx, { refs: 'REFERENCIAS: ' + [cfg.docIO && ('LISTADO E/S ' + cfg.docIO), cfg.docCables && ('LISTADO DE CABLES ' + cfg.docCables), cfg.docPid && ('P&ID ' + cfg.docPid)].filter(Boolean).join(' · '),
+      titulo: 'DIAGRAMA DE LAZO', lineas: cortar((lazo.servicio || '').toUpperCase(), 70).slice(0, 2), pie: 'LAZO ' + lazo.id + (lazo.tags ? ' · ' + lazo.tags : ''), plano: lazo.plano, rev: lazo.rev, n: n, de: de });
     return { prims: L.p, n: n, de: de, plano: lazo.plano };
   }
   function hojas(lazo, ctx) {
@@ -282,7 +292,7 @@
 
   // ── SVG ──
   function e(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  var COL = { MARCO: '#111', ROTULO: '#111', TEXTO: '#111', ZONAS: '#111', INSTRUMENTO: '#0b3d91', CABLES: '#111', BORNES: '#111', TARJETA: '#111', PANTALLA: '#666', HMI: '#0b3d91', ALIMENTACION: '#9a3a00', NOTAS: '#111' };
+  var COL = { MARCO: '#111', ROTULO: '#111', TEXTO: '#111', ZONAS: '#111', INSTRUMENTO: '#0b3d91', CABLES: '#111', BORNES: '#111', TARJETA: '#111', PANTALLA: '#666', HMI: '#0b3d91', ALIMENTACION: '#9a3a00', NOTAS: '#111', FUERZA: '#111', PROTECCIONES: '#111', TIERRA: '#2f7d32', EQUIPOS: '#0b3d91', TABLAS: '#111' };
   function svg(h, op) {
     op = op || {};
     var o = ['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' + W + ' ' + H + '"' + (op.mm !== false ? ' width="' + W + 'mm" height="' + H + 'mm"' : '') + ' font-family="Arial, Helvetica, Liberation Sans, sans-serif">',
@@ -365,5 +375,5 @@
     c.filas.forEach(function (f) { if (f.card && tj.indexOf(f.card.n) < 0) tj.push(f.card.n); });
     return { tb: tb, tarjeta: tj };
   }
-  window.LAZOS_DIBUJO = { hojas: hojas, svg: svg, dxf: dxf, conexionado: conexionado, terminales: terminales, W: W, H: H };
+  window.LAZOS_DIBUJO = { Lienzo: Lienzo, marco: marco, rotulo: rotulo, cortar: cortar, CAPAS: CAPAS, COL: COL, hojas: hojas, svg: svg, dxf: dxf, conexionado: conexionado, terminales: terminales, W: W, H: H };
 })();
