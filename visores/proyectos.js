@@ -80,7 +80,7 @@
     nombre: 'Proyecto tipo',
     proyecto: 'INSTRUMENTACIÓN TIPO · PLANTA CONCENTRADORA',
     cliente: 'REYENGI · AUTOMATIZACIÓN Y CONTROL INDUSTRIAL',
-    contratista: 'REYAUTOMATA',
+    contratista: 'REYENGI',
     ubicacion: 'CHILE',
     idCliente: '',
     numero: 'RE-001',
