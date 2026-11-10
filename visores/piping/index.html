@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Piping y válvulas · ReyEngi</title>
+<meta name="description" content="Piping para leer P&amp;ID (normas, simbología, designación de líneas, cañerías y bridas) y dimensionamiento de válvulas de control y actuadores según IEC 60534, FCI 70-2 e ISO 5211.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --panel2: #13284A; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544; --bad: #FF8C8F; --sym-bg: #0F2036;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; line-height: 1.5; }
+[hidden] { display: none !important; }
+a { color: var(--accent-ink); }
+button { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 5px 11px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, select, textarea { font: 13px var(--f-body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 32px; width: 100%; }
+label { display: grid; gap: 3px; align-content: start; font: 600 11.5px var(--f-body); color: var(--muted); }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 3px solid var(--accent); padding: 8px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1400px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 17px; font-weight: 700; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 12px var(--f-mono); text-decoration: none; }
+.tabs { max-width: 1400px; margin: 8px auto 0; display: flex; gap: 2px; overflow-x: auto; }
+.tabs button { border: 0; border-radius: 6px 6px 0 0; min-height: 36px; color: var(--muted); background: transparent; white-space: nowrap; font-size: 13px; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--fg); box-shadow: inset 0 3px 0 var(--accent); }
+main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1400px; margin: 0 auto; }
+.intro { color: var(--muted); max-width: 100ch; margin: 0 0 14px; }
+.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px 14px; margin: 0 0 14px; }
+.blk > h2 { margin: 0 0 8px; font: 700 12px var(--f-mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--accent-ink); }
+.blk p { margin: 0 0 8px; max-width: 110ch; }
+h3.sub { margin: 14px 0 8px; font: 600 12px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+ol.pasos { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 110ch; }
+ol.pasos b { color: #fff; }
+table.t { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.t th { text-align: left; font: 600 11px var(--f-mono); color: var(--muted); padding: 6px 7px; border-bottom: 1px solid var(--line); background: var(--panel2); position: sticky; top: 0; }
+table.t td { padding: 5px 7px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t td b { color: #fff; }
+.tscroll { overflow: auto; max-height: 460px; border: 1px solid var(--line); border-radius: 8px; }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.sym { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; align-items: center; }
+.sym svg { width: 80px; height: 60px; color: #DCE6F1; }
+.sym figcaption b { display: block; font-size: 12.5px; color: #fff; }
+.sym figcaption span { font-size: 11.5px; color: var(--muted); line-height: 1.35; display: block; }
+.linea { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; margin: 8px 0; font: 700 18px var(--f-mono); }
+.seg { padding: 3px 8px; border-radius: 5px; background: var(--panel2); border: 1px solid var(--line); }
+.seg.area { border-color: #3F7FBF; } .seg.serv { border-color: #3FBF7F; } .seg.nps { border-color: #F2B544; } .seg.spec { border-color: #EF5A05; } .seg.corr { border-color: #A98BFF; } .seg.aisl { border-color: #FF8C8F; }
+.guion { color: var(--muted); }
+ul.lst { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; align-items: end; }
+.res { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--bg); }
+.res.bien { border-color: #2A8C5E; } .res.av { border-color: #8C6A1F; } .res.mal { border-color: #8C2A2E; }
+.res .big { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--muted); }
+.res .big b { display: block; font: 700 18px var(--f-mono); color: #fff; }
+b.mal { color: var(--bad); } b.av { color: var(--warn); }
+.peq { font-size: 11.5px; color: var(--muted); }
+textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margin-top: 8px; }
+@media (max-width: 900px) { .dos, .tres { grid-template-columns: 1fr; } }
+@media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Suite ReyEngi</a>
+    <h1>Piping y válvulas<small>Aprender a leer P&amp;ID · dimensionar válvulas y actuadores</small></h1>
+  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <button type="button" data-t="aprender" aria-selected="true">Piping para leer P&amp;ID</button>
+    <button type="button" data-t="valvulas" aria-selected="false">Válvulas: tamaño y actuador</button>
+  </nav>
+</header>
+<main>
+<section data-t="aprender">
+  <p class="intro">Lo esencial de mecánica de cañerías para leer un P&amp;ID como lo lee el especialista de piping: qué norma manda en cada cosa, cómo se lee el número de una línea, qué significa cada símbolo y cómo verificar diámetro, velocidad y clase de bridas.</p>
+
+  <div class="blk"><h2>Cómo leer un P&amp;ID en 7 pasos</h2>
+    <ol class="pasos">
+      <li><b>Empieza por la hoja de simbología y leyenda</b> del proyecto (por ejemplo P757D-0100-PI-PID-0001/0002): cada cliente ajusta símbolos, códigos de servicio y especificaciones.</li>
+      <li><b>Sigue el flujo principal</b> (línea gruesa) desde la entrada al área hasta su salida; los conectores de continuación indican la hoja de origen o destino.</li>
+      <li><b>Identifica los equipos</b> por su tag (2100-BN-001 tolva, 2100-CV-001 correa, PP bomba, TK estanque) y su ficha arriba de la hoja: capacidad, potencia, material.</li>
+      <li><b>Lee cada línea</b>: área, servicio, diámetro, especificación (pipe class) y correlativo. La especificación te dice material, clase de bridas y tipo de válvulas.</li>
+      <li><b>Ubica válvulas y accesorios</b>: aislamiento (compuerta, bola, cuchillo), regulación (globo, mariposa), retención, alivio, reducciones y bridas ciegas o figura 8.</li>
+      <li><b>Lee la instrumentación</b> (ISA-5.1): burbujas en terreno, en panel o en PLC; las líneas de señal unen el elemento primario con el transmisor, el controlador y el elemento final. Un lazo comparte el mismo número.</li>
+      <li><b>Revisa notas y revisiones</b>: las nubes y triángulos marcan cambios; las notas fijan pendientes, posiciones de falla (FC/FO) y referencias a otros planos.</li>
+    </ol>
+  </div>
+
+  <div class="blk"><h2>Normas que mandan en piping e instrumentación</h2>
+    <div class="tscroll" style="max-height:none"><table class="t"><thead><tr><th>Norma</th><th>Qué define</th><th>Dónde la ves en el P&amp;ID</th></tr></thead><tbody>
+      <tr><td><b>ANSI/ISA-5.1</b></td><td>Identificación y símbolos de instrumentación (letras, burbujas, líneas de señal).</td><td>Tags de instrumentos y tipo de burbuja.</td></tr>
+      <tr><td><b>ISO 10628-2 / ISO 14617</b></td><td>Símbolos gráficos de diagramas de flujo y P&amp;ID (equipos, válvulas, cañerías).</td><td>Simbología de equipos y válvulas en proyectos con estándar ISO.</td></tr>
+      <tr><td><b>ASME B31.3</b></td><td>Cañerías de proceso: diseño por presión y temperatura, materiales, soldadura, pruebas.</td><td>Condiciones de diseño de la especificación de cañerías.</td></tr>
+      <tr><td><b>ASME B36.10M / B36.19M</b></td><td>Diámetros y espesores (Schedule) de cañería de acero al carbono e inoxidable.</td><td>Diámetro nominal de la línea (NPS) y espesor de la spec.</td></tr>
+      <tr><td><b>ASME B16.5 / B16.47</b></td><td>Bridas y su clase de presión-temperatura (150, 300, 600…).</td><td>Rating de la especificación; cambios de clase en el P&amp;ID.</td></tr>
+      <tr><td><b>ASME B16.34</b></td><td>Válvulas bridadas, roscadas y soldadas: rating del cuerpo, espesores, pruebas.</td><td>Clase de las válvulas de la spec.</td></tr>
+      <tr><td><b>ASME B16.9 / B16.11</b></td><td>Accesorios soldados a tope (codos, tees, reducciones) y de enchufe/roscados.</td><td>Reducciones concéntricas y excéntricas.</td></tr>
+      <tr><td><b>AWWA C906 / ISO 4427</b></td><td>Cañería de HDPE (PE100, SDR) para agua, relaves y pulpas en minería.</td><td>Líneas de HDPE en especificaciones de relaves y agua.</td></tr>
+      <tr><td><b>IEC 60534 / ISA-75</b></td><td>Válvulas de control: dimensionamiento (Kv/Cv), cara a cara, ruido.</td><td>Válvulas de control (FV, LV, PV) y su hoja de datos.</td></tr>
+      <tr><td><b>API 520 / 526 · ASME VIII</b></td><td>Válvulas de alivio y seguridad: dimensionamiento y tamaños de orificio.</td><td>PSV con presión de disparo.</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <div class="blk"><h2>Designación de líneas</h2>
+    <p>Escribe un número de línea como aparece en el P&amp;ID para ver qué significa cada parte. Ejemplos de tu proyecto: <code>2610-WFR-2"-AA1B-372</code>, <code>2100-AP-2"-LA1-902</code>.</p>
+    <label style="max-width:420px">Número de línea<input id="lineaTxt" value='2610-WFR-2"-AA1B-372' spellcheck="false" style="font-family:var(--f-mono)"></label>
+    <div id="lineaRes" aria-live="polite"></div>
+  </div>
+
+  <div class="blk"><h2>Simbología</h2>
+    <p class="peq">Dibujos simplificados según ISA-5.1 e ISO 10628. Cada proyecto los ajusta en su hoja de simbología, que siempre manda.</p>
+    <div id="simbolos"></div>
+  </div>
+
+  <div class="blk"><h2>Especificación de cañerías (pipe class)</h2>
+    <div class="dos">
+      <div><p>La especificación agrupa todo lo que lleva una línea: <b>material</b> de cañería y accesorios, <b>clase de bridas</b>, <b>espesor</b> (schedule o SDR), <b>tipo de unión</b>, <b>empaquetaduras y pernos</b>, y los <b>modelos de válvulas</b> permitidos para cada diámetro. Por eso, al ver «AA1B» en una línea, el especialista ya sabe de qué está hecha y qué válvula corresponde.</p>
+        <table class="t"><thead><tr><th>Unión</th><th>Uso típico</th></tr></thead><tbody>
+          <tr><td><b>Bridada RF / FF</b></td><td>Equipos, válvulas e instrumentos desmontables. RF (cara con resalte) en acero; FF (cara plana) contra hierro fundido o HDPE.</td></tr>
+          <tr><td><b>RTJ</b></td><td>Alta presión (clase 600 y superiores) con anillo metálico.</td></tr>
+          <tr><td><b>Soldada a tope (BW)</b></td><td>Diámetros de 2" y mayores en acero.</td></tr>
+          <tr><td><b>Socket weld (SW) / roscada (NPT)</b></td><td>Diámetros pequeños (≤ 1½"), conexiones de instrumentos y venteos.</td></tr>
+          <tr><td><b>Termofusión / electrofusión</b></td><td>HDPE en agua y relaves.</td></tr>
+          <tr><td><b>Acople ranurado (Victaulic)</b></td><td>Pulpas y agua en minería, montaje rápido y revestidas.</td></tr>
+        </tbody></table></div>
+      <div><table class="t"><thead><tr><th>Material</th><th>Servicio típico en minería</th></tr></thead><tbody>
+        <tr><td><b>ASTM A106 Gr. B / A53 Gr. B</b></td><td>Acero al carbono sin costura o con costura: agua, aire, vapor.</td></tr>
+        <tr><td><b>API 5L Gr. B / X52</b></td><td>Acueductos y concentraductos de gran longitud.</td></tr>
+        <tr><td><b>ASTM A312 TP304L / 316L</b></td><td>Reactivos, agua desmineralizada, servicios corrosivos.</td></tr>
+        <tr><td><b>Acero revestido en caucho / poliuretano</b></td><td>Pulpas abrasivas, descargas de molinos y ciclones.</td></tr>
+        <tr><td><b>HDPE PE100 (SDR 11, 17…)</b></td><td>Relaves, agua de proceso, agua recuperada; resistente a la abrasión y corrosión.</td></tr>
+        <tr><td><b>Acero galvanizado</b></td><td>Aire de planta e instrumentos, agua potable y contra incendio.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="blk"><h2>Diámetros, espesores y velocidad</h2>
+    <div class="dos">
+      <div><div class="tscroll"><table class="t" id="tTubos"></table></div><p class="peq">ASME B36.10M (Sch 40, 80, 160) y B36.19M (10S para 1/2" a 12"). DE = diámetro exterior, e = espesor, DI = diámetro interior.</p></div>
+      <div>
+        <h3 class="sub" style="margin-top:0">Velocidad en la cañería</h3>
+        <div class="form"><label>Caudal [m³/h]<input id="vQ" type="number" value="60" step="any"></label><label>Diámetro<select id="vNps"></select></label><label>Schedule<select id="vSch"></select></label><label style="grid-column:1/-1">Servicio<select id="vServ"></select></label></div>
+        <div id="vRes" aria-live="polite"></div>
+        <p class="peq" style="margin-top:8px">Rangos referenciales de práctica de diseño; en pulpas la velocidad debe superar la de depósito (Durand) calculada para la granulometría y concentración reales.</p>
+        <h3 class="sub">Clase de bridas ASME B16.5 (grupo 1.1: A105, WCB)</h3>
+        <div class="form"><label>Presión de diseño [bar g]<input id="cP" type="number" value="16" step="any"></label><label>Temperatura de diseño [°C]<input id="cT" type="number" value="60" step="any"></label></div>
+        <div id="cRes" aria-live="polite"></div>
+        <div class="tscroll" style="margin-top:8px"><table class="t" id="tPT"></table></div>
+        <p class="peq">Presión de trabajo máxima [bar g] por clase. Valores de ASME B16.5 para el grupo de materiales 1.1; verifica con la edición vigente y el grupo de tu material.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-t="valvulas" hidden>
+  <p class="intro">Preselección de válvulas de control y on/off: coeficiente de flujo (IEC 60534-2-1 / ISA-75.01.01), tamaño de cuerpo, riesgo de cavitación o flujo crítico, y actuador lineal o de cuarto de vuelta con su empuje, torque, acople y potencia. El resultado se confirma con el software o el catálogo del fabricante antes de emitir la hoja de datos.</p>
+
+  <div class="blk"><h2>Qué válvula usar</h2>
+    <div class="tscroll" style="max-height:none"><table class="t"><thead><tr><th>Tipo</th><th>Bueno para</th><th>Evitar en</th><th>Característica · rangeabilidad</th></tr></thead><tbody>
+      <tr><td><b>Globo (asiento simple / jaula)</b></td><td>Control fino de líquidos limpios, gases y vapor; ΔP altas con trim anticavitación.</td><td>Pulpas y sólidos; diámetros sobre 12" (costo, peso).</td><td>Igual % o lineal · 50:1</td></tr>
+      <tr><td><b>Bola segmentada (V-port)</b></td><td>Control con sólidos en suspensión, pulpas finas, fibras; alta capacidad.</td><td>ΔP muy altas con cavitación severa.</td><td>Igual % modificada · 100:1 o más</td></tr>
+      <tr><td><b>Mariposa alto desempeño</b></td><td>Grandes caudales de agua, aire y gases con ΔP bajas; liviana y económica.</td><td>Pulpas abrasivas; control bajo 20 % de apertura.</td><td>Aprox. igual % · 20:1 a 30:1</td></tr>
+      <tr><td><b>Cuchillo (knife gate)</b></td><td>On/off en pulpas y relaves (minería).</td><td>Regulación fina.</td><td>On/off</td></tr>
+      <tr><td><b>Pinch / manga</b></td><td>Pulpas muy abrasivas; control grueso o on/off.</td><td>Altas presiones y temperaturas.</td><td>Aprox. lineal · 10:1</td></tr>
+      <tr><td><b>Bola paso total</b></td><td>Aislamiento on/off con mínima pérdida de carga.</td><td>Regulación (desgaste de asientos).</td><td>On/off</td></tr>
+    </tbody></table></div>
+    <p class="peq" style="margin-top:6px">Regla práctica: el Cv calculado al caudal máximo debe quedar entre 70 % y 80 % de la apertura, y al caudal mínimo sobre 10–20 %. El cuerpo suele ser igual o un diámetro menor que la línea; si sale menos de la mitad, revisa el diseño.</p>
+  </div>
+
+  <div class="blk" id="vKv"><h2>1 · Coeficiente de flujo y tamaño del cuerpo</h2>
+    <div class="form">
+      <label>Fluido<select id="kFase"><option value="liq">Líquido</option><option value="gas">Gas / vapor</option></select></label>
+      <label>Tipo de válvula<select id="kTipo"></select></label>
+      <label>Diámetro de la línea<select id="kLinea"></select></label>
+      <label id="kQlbl">Caudal máximo [m³/h]<input id="kQ" type="number" value="120" step="any"></label>
+      <label>P1 entrada [bar g]<input id="kP1" type="number" value="6" step="any"></label>
+      <label>P2 salida [bar g]<input id="kP2" type="number" value="4.5" step="any"></label>
+      <label class="liq">Gravedad específica (agua = 1)<input id="kG" type="number" value="1" step="any"></label>
+      <label class="liq">Presión de vapor [bar a]<input id="kPv" type="number" value="0.032" step="any"></label>
+      <label class="liq">Presión crítica [bar a]<input id="kPc" type="number" value="221.2" step="any"></label>
+      <label class="liq">FL (recuperación)<input id="kFL" type="number" value="0.9" step="any"></label>
+      <label class="gas" hidden>Peso molecular [kg/kmol]<input id="kM" type="number" value="28.97" step="any"></label>
+      <label class="gas" hidden>Temperatura [°C]<input id="kT" type="number" value="20" step="any"></label>
+      <label class="gas" hidden>k = cp/cv<input id="kk" type="number" value="1.4" step="any"></label>
+      <label class="gas" hidden>Z (compresibilidad)<input id="kZ" type="number" value="1" step="any"></label>
+      <label class="gas" hidden>xT (factor de ΔP crítica)<input id="kxT" type="number" value="0.72" step="any"></label>
+    </div>
+    <div id="kRes" aria-live="polite"></div>
+    <p class="peq" style="margin-top:6px">Ecuaciones IEC 60534-2-1 para flujo turbulento sin reductores (FP = 1): líquido Kv = Q·√(G/ΔP), con ΔP limitado a FL²·(P1 − FF·Pv); gas Kv = Q/(N9·P1·Y)·√(M·T·Z/x), con x limitado a Fγ·xT. Cv = 1,156·Kv. FL y xT se cargan con valores típicos del tipo elegido.</p>
+  </div>
+
+  <div class="dos">
+    <div class="blk" id="vAct"><h2>2 · Actuador lineal (válvula de globo)</h2>
+      <div class="form">
+        <label>Ø de asiento [mm]<input id="aDs" type="number" value="80" step="any"></label>
+        <label>ΔP de cierre [bar]<input id="aDp" type="number" value="6" step="any"></label>
+        <label>Clase de fuga (FCI 70-2)<select id="aClase"><option>II</option><option>III</option><option selected>IV</option><option>V</option><option>VI</option></select></label>
+        <label>Carga de asiento [lbf/in]<input id="aSeat" type="number" value="40" step="any"></label>
+        <label>Fricción de empaquetadura [kgf]<input id="aFric" type="number" value="23" step="any"></label>
+        <label>Factor de seguridad<input id="aSF" type="number" value="1.25" step="any"></label>
+        <label>Posición de falla<select id="aFalla"><option value="FC">Falla cierra (aire abre)</option><option value="FO">Falla abre (aire cierra)</option></select></label>
+        <label>Suministro de aire [bar g]<input id="aPs" type="number" value="4" step="any"></label>
+        <label>Resorte: inicio [bar]<input id="aR1" type="number" value="0.4" step="any"></label>
+        <label>Resorte: fin [bar]<input id="aR2" type="number" value="2" step="any"></label>
+      </div>
+      <div id="aRes" aria-live="polite"></div>
+      <p class="peq" style="margin-top:6px">Empuje = ΔP × área de asiento (desbalance) + fricción de empaquetadura + carga de asiento por circunferencia según la clase de fuga ANSI/FCI 70-2 (20 lbf/in clase II, 40 lbf/in clases III y IV en asiento metálico; V y VI según fabricante). La fricción depende del vástago y la empaquetadura (PTFE o grafito): pídela al fabricante.</p>
+    </div>
+    <div class="blk" id="vRot"><h2>3 · Actuador de cuarto de vuelta y eléctrico</h2>
+      <div class="form">
+        <label>Torque de despegue BTO [N·m]<input id="rBto" type="number" value="180" step="any"></label>
+        <label>Factor de seguridad<input id="rSF" type="number" value="1.3" step="any"></label>
+        <label>Tipo de actuador<select id="rTipo"><option value="rp">Neumático piñón-cremallera (doble efecto)</option><option value="sr">Neumático con retorno por resorte</option><option value="sy">Neumático yugo escocés</option><option value="el">Eléctrico de cuarto de vuelta</option></select></label>
+        <label>Tiempo de maniobra 90° [s]<input id="rTiempo" type="number" value="30" step="any"></label>
+        <label>Eficiencia del reductor [%]<input id="rEta" type="number" value="50" step="any"></label>
+        <label>Clase EN 15714-2<select id="rClase"><option>A · on/off</option><option>B · posicionamiento (inching)</option><option>C · modulante</option><option>D · modulante continuo</option></select></label>
+      </div>
+      <div id="rRes" aria-live="polite"></div>
+      <p class="peq" style="margin-top:6px">El torque de la válvula (BTO, RTO, ETO, BTC…) lo entrega el fabricante para la ΔP y el fluido; se aplica un factor de 1,25 a 1,5 (mayor en pulpas o con baja frecuencia de maniobra). El acople se elige con el torque máximo de las bridas ISO 5211; la potencia del motor sale del torque y del tiempo de maniobra.</p>
+    </div>
+  </div>
+
+  <div class="blk"><h2>Resumen para la hoja de datos</h2>
+    <button type="button" class="pri" id="bResumen">Copiar resumen</button> <span class="peq" id="msgRes" role="status"></span>
+    <textarea id="txtRes" hidden readonly aria-label="Resumen"></textarea>
+  </div>
+
+  <div class="blk"><h2>Referencias</h2>
+    <ul class="lst">
+      <li>IEC 60534-2-1 / ANSI/ISA-75.01.01: ecuaciones de dimensionamiento de válvulas de control. <a href="https://standards.iteh.ai/catalog/standards/iec/f9e49ced-842f-47b5-aa00-51c6aab45344/iec-60534-2-1-2011" target="_blank" rel="noopener">Ficha IEC 60534-2-1</a> · <a href="https://www.valmet.com/flowcontrol/valves/flow-control-manual/liquid-flow/" target="_blank" rel="noopener">Valmet, manual de control de flujo</a> · <a href="https://www.emerson.com/is/content/emerson/en/final-control/flow-controls/documents/cat12_s2.pdf" target="_blank" rel="noopener">Emerson Fisher, catálogo 12 (sizing)</a></li>
+      <li>Empuje de actuadores lineales y carga de asiento: <a href="https://www.processingmagazine.com/valves-actuators/article/15584319/size-control-valve-actuators-to-overcome-the-force" target="_blank" rel="noopener">Processing, «Size control-valve actuators to overcome the force»</a></li>
+      <li>ISO 5211, bridas de acople y torque máximo: <a href="https://tameson.com/pages/iso-5211-for-valves" target="_blank" rel="noopener">Tameson, ISO 5211 for valves</a></li>
+      <li>ASME B31.3, B36.10M/B36.19M, B16.5, B16.34; ANSI/FCI 70-2; EN 15714-2; ISA-5.1; ISO 10628.</li>
+    </ul>
+  </div>
+</section>
+</main>
+<script src="piping.js"></script>
+</body>
+</html>
