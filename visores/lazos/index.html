@@ -117,11 +117,31 @@ dialog .pie { padding: 12px 18px; border-top: 1px solid var(--line); display: fl
 code { font-family: var(--f-mono); color: var(--accent-ink); }
 
 #imp { display: none; }
+
+/* Vista previa flotante */
+.flota { position: fixed; right: 16px; bottom: 16px; z-index: 30; width: min(720px, calc(100vw - 32px)); height: min(500px, calc(100vh - 140px)); min-width: 320px; min-height: 220px;
+  background: var(--panel); border: 1.5px solid var(--accent); border-radius: 10px; box-shadow: 0 12px 40px rgba(0, 0, 0, .55); display: flex; flex-direction: column; resize: both; overflow: hidden; }
+.flcab { display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: var(--brand); cursor: move; touch-action: none; }
+.flcab select { width: auto; max-width: 260px; min-height: 30px; font-size: 13px; padding: 2px 6px; }
+.flcab .esp { flex: 1; }
+button.ico { min-height: 30px; min-width: 30px; padding: 2px 8px; font-size: 15px; justify-content: center; }
+.flinfo { font: 600 12px var(--f-mono); color: var(--muted); padding: 0 4px; white-space: nowrap; }
+.flvista { flex: 1; overflow: hidden; background: #fff; position: relative; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.flvista.arrastra { cursor: grabbing; }
+.fllienzo { transform-origin: 0 0; }
+.fllienzo svg { display: block; }
+.flpie { margin: 0; padding: 4px 10px; font: 500 11px var(--f-mono); color: var(--muted); border-top: 1px solid var(--line); }
+button.bVista[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-ink); }
+fieldset.rotulo { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+fieldset.rotulo label.ancho { grid-column: span 2; }
+fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
+@media (max-width: 700px) { .flcab { flex-wrap: wrap; } .flcab select { max-width: 100%; flex: 1 1 100%; } .flota { left: 8px !important; right: 8px; top: auto !important; bottom: 8px; width: auto !important; height: 46vh !important; resize: none; } .flpie { display: none; } }
 @media (max-width: 980px) {
   .barra { position: static; }
   .lazos { grid-template-columns: 1fr; }
   .lista { position: static; max-height: 260px; }
   .modcab { grid-template-columns: 1fr 1fr; }
+  fieldset.rotulo { grid-template-columns: 1fr 1fr; }
   fieldset { grid-template-columns: 1fr; }
   .datosLazo, .fila3 { grid-template-columns: 1fr; }
 }
@@ -199,6 +219,7 @@ code { font-family: var(--f-mono); color: var(--accent-ink); }
       <button type="button" id="bExcel">Exportar Excel</button>
       <button type="button" id="bCsv">Exportar CSV</button>
       <button type="button" class="peligro" id="bQuitar">Quitar seleccionadas</button>
+      <button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button>
       <span class="esp"></span>
       <input id="buscarIO" type="search" placeholder="Filtrar" aria-label="Filtrar listado" style="max-width:220px">
     </div>
@@ -208,13 +229,15 @@ code { font-family: var(--f-mono); color: var(--accent-ink); }
 
   <section id="v-mod" hidden>
     <p class="intro">Cada tarjeta muestra sus canales con los bornes de la biblioteca del proveedor. Elige en cada canal el instrumento que va conectado y el diagrama se actualiza. "Editar bornes" permite corregir la numeración de cualquier modelo para este proyecto.</p>
-    <div class="herr"><button type="button" id="bAsignar2">Asignar canales automáticamente</button><button type="button" id="bLiberar">Liberar todos los canales</button></div>
+    <div class="herr"><button type="button" id="bAsignar2">Asignar canales automáticamente</button><button type="button" id="bLiberar">Liberar todos los canales</button><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
     <div id="modulos"></div>
   </section>
 
   <section id="v-cfg" hidden>
     <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
-    <div id="cfgForm"></div>
+    <div class="herr"><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
+    <fieldset id="rotulo" class="rotulo"></fieldset>
+    <div id="cfgForm" style="margin-top:14px"></div>
     <div class="herr" style="margin-top:14px"><button type="button" id="bAplicarProv">Aplicar tarjetas por defecto a todas las tarjetas existentes</button></div>
     <fieldset style="display:block;margin-top:14px"><legend>Revisiones (cuadro de revisiones de los planos)</legend>
       <table class="revs" id="revs"></table>
@@ -231,6 +254,20 @@ code { font-family: var(--f-mono); color: var(--accent-ink); }
     <div class="pie"><button value="cancel" formnovalidate>Cancelar</button><button value="ok" class="pri" id="dlgOk">Aceptar</button></div>
   </form>
 </dialog>
+
+<aside id="flota" class="flota" hidden aria-label="Vista previa del lazo">
+  <div class="flcab" id="flCab">
+    <select id="flLazo" aria-label="Lazo a mostrar"></select>
+    <button type="button" class="ico" id="flPrev" aria-label="Hoja anterior">‹</button><span id="flHoja" class="flinfo"></span><button type="button" class="ico" id="flNext" aria-label="Hoja siguiente">›</button>
+    <span class="esp"></span>
+    <button type="button" class="ico" id="flMenos" aria-label="Alejar">−</button><span id="flZoom" class="flinfo">100%</span><button type="button" class="ico" id="flMas" aria-label="Acercar">+</button>
+    <button type="button" class="ico" id="flAjustar" aria-label="Ajustar a la ventana" title="Ajustar">⤢</button>
+    <button type="button" class="ico" id="flAbrir" aria-label="Abrir en Diagramas de lazo" title="Abrir en Diagramas de lazo">↗</button>
+    <button type="button" class="ico" id="flCerrar" aria-label="Cerrar vista previa">✕</button>
+  </div>
+  <div class="flvista" id="flVista"><div id="flLienzo" class="fllienzo"></div></div>
+  <p class="flpie">Rueda o +/− para acercar · arrastra para desplazar · doble clic para ampliar · arrastra la barra para mover y la esquina para cambiar el tamaño</p>
+</aside>
 
 <div id="imp"></div>
 

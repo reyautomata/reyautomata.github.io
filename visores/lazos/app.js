@@ -28,7 +28,7 @@
     E = d;
   }
   var tGuardar = 0;
-  function guardar() { clearTimeout(tGuardar); tGuardar = setTimeout(function () { P.escribir('lazos', E); estado('Guardado en este navegador · ' + new Date().toLocaleTimeString('es-CL')); }, 250); }
+  function guardar() { if (typeof refrescarFlota === 'function') refrescarFlota(); clearTimeout(tGuardar); tGuardar = setTimeout(function () { P.escribir('lazos', E); estado('Guardado en este navegador · ' + new Date().toLocaleTimeString('es-CL')); }, 250); }
   function estado(t) { var e = $('#estado'); if (e) e.textContent = t; }
 
   // Ejemplo inicial (dos lazos típicos) para que la sección no parta vacía
@@ -140,6 +140,8 @@
     $$('main > section').forEach(function (s) { s.hidden = s.id !== 'v-' + v; });
     ({ lazos: pintarLazos, io: pintarIO, mod: pintarModulos, cfg: pintarCfg })[v]();
     try { localStorage.setItem('reyengi-lazos-vista', v); } catch (e) {}
+    if (v === 'lazos' && FL.lazo && FL.abierta) sel = sel || FL.lazo;
+    refrescarFlota(true);
   }
 
   // Lazos: lista y hojas
@@ -235,7 +237,11 @@
   ];
   function getK(k) { var p = k.split('.'); return p.length > 1 ? E.cfg[p[0]][p[1]] : E.cfg[k]; }
   function setK(k, v) { var p = k.split('.'); if (p.length > 1) E.cfg[p[0]][p[1]] = v; else E.cfg[k] = v; }
+  var ROTULO = [['cliente', 'Cliente'], ['proyecto', 'Título del proyecto'], ['numero', 'N° de proyecto'], ['rev', 'Revisión vigente'], ['por', 'Elaboró'], ['porFecha', 'Fecha'], ['reviso', 'Revisó'], ['revisoFecha', 'Fecha'], ['aprobo', 'Aprobó'], ['aproboFecha', 'Fecha']];
   function pintarCfg() {
+    var pr = P.activo();
+    $('#rotulo').innerHTML = '<legend>Viñeta (rótulo de los planos)</legend>' + ROTULO.map(function (r) { return '<label' + (r[0] === 'proyecto' || r[0] === 'cliente' ? ' class="ancho"' : '') + '>' + r[1] + '<input data-p="' + r[0] + '" value="' + esc(pr[r[0]] || '') + '"></label>'; }).join('') +
+      '<p class="ayuda ancho">Estos datos son los del proyecto activo y también los usan las hojas de datos y las especificaciones técnicas.</p>';
     $('#cfgForm').innerHTML = CAMPOS_CFG.map(function (g) {
       return '<fieldset><legend>' + g.g + '</legend>' + g.c.map(function (c) {
         var v = getK(c.k);
@@ -247,6 +253,77 @@
     $('#revs').innerHTML = '<tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th><th>Cliente</th><th></th></tr>' + E.revs.map(function (r, i) {
       return '<tr>' + ['rev', 'fecha', 'desc', 'por', 'reviso', 'aprobo', 'cliente'].map(function (k) { return '<td><input data-r="' + i + '" data-k="' + k + '" value="' + esc(r[k] || '') + '"></td>'; }).join('') + '<td><button type="button" class="mini peligro" data-rq="' + i + '" aria-label="Quitar revisión">×</button></td></tr>';
     }).join('');
+  }
+
+  // ── Vista previa flotante (se actualiza mientras se edita el listado, las tarjetas o la viñeta) ──
+  var FL = { abierta: false, lazo: null, hoja: 0, z: 1, x: 0, y: 0, ancho: 0 };
+  try { var gu = JSON.parse(localStorage.getItem('reyengi-lazos-flota') || '{}'); FL.abierta = !!gu.abierta; FL.pos = gu.pos; } catch (e) {}
+  function guardarFlota() { var f = $('#flota'); try { localStorage.setItem('reyengi-lazos-flota', JSON.stringify({ abierta: FL.abierta, pos: { l: f.style.left, t: f.style.top, w: f.style.width, h: f.style.height } })); } catch (e) {} }
+  function lazoDeSenal(id) { var s = senal(id); return s && s.tag ? lazoId(s) : null; }
+  function flotaVisible() { return FL.abierta && vista !== 'lazos'; }
+  var tFlota = 0;
+  function refrescarFlota(inmediato) { clearTimeout(tFlota); if (!flotaVisible()) { $('#flota').hidden = true; actualizarBotones(); return; } tFlota = setTimeout(pintarFlota, inmediato ? 0 : 160); }
+  function pintarFlota() {
+    var f = $('#flota'); f.hidden = !flotaVisible(); actualizarBotones(); if (f.hidden) return;
+    var Ls = lazos(); if (!Ls.length) { $('#flLienzo').innerHTML = '<p class="vacio" style="padding:12px">Sin lazos para mostrar.</p>'; return; }
+    if (!FL.lazo || !Ls.some(function (l) { return l.id === FL.lazo; })) FL.lazo = sel && Ls.some(function (l) { return l.id === sel; }) ? sel : Ls[0].id;
+    var L = Ls.filter(function (l) { return l.id === FL.lazo; })[0], hs = D.hojas(L, ctx());
+    if (FL.hoja >= hs.length) FL.hoja = 0;
+    $('#flLazo').innerHTML = Ls.map(function (l) { return '<option value="' + esc(l.id) + '"' + (l.id === L.id ? ' selected' : '') + '>' + esc(l.id + (l.servicio ? ' · ' + l.servicio : '')) + '</option>'; }).join('');
+    $('#flHoja').textContent = hs.length > 1 ? 'Hoja ' + (FL.hoja + 1) + '/' + hs.length : '';
+    $('#flPrev').hidden = $('#flNext').hidden = hs.length < 2;
+    var vis = $('#flVista'), w = vis.clientWidth || 600;
+    $('#flLienzo').innerHTML = D.svg(hs[FL.hoja], { mm: false }).replace('<svg ', '<svg width="' + w + '" height="' + (w * D.H / D.W).toFixed(0) + '" ');
+    FL.ancho = w; aplicarZoom();
+  }
+  function aplicarZoom() { $('#flLienzo').style.transform = 'translate(' + FL.x + 'px,' + FL.y + 'px) scale(' + FL.z + ')'; $('#flZoom').textContent = Math.round(FL.z * 100) + '%'; }
+  function zoomEn(fac, cx, cy) {
+    var z2 = Math.min(8, Math.max(0.5, FL.z * fac)); fac = z2 / FL.z;
+    FL.x = cx - (cx - FL.x) * fac; FL.y = cy - (cy - FL.y) * fac; FL.z = z2; aplicarZoom();
+  }
+  function ajustar() { FL.z = 1; FL.x = 0; FL.y = 0; aplicarZoom(); }
+  function mirarSenal(id) { // centra la vista en el bloque de la señal editada
+    var s = senal(id); if (!s) return;
+    var nuevo = lazoDeSenal(id); if (nuevo && nuevo !== FL.lazo) { FL.lazo = nuevo; FL.hoja = 0; pintarFlota(); }
+    var L = lazos().filter(function (l) { return l.id === FL.lazo; })[0]; if (!L) return;
+    var i = L.crudas.indexOf(s); if (i < 0) return;
+    if (Math.floor(i / 4) !== FL.hoja) { FL.hoja = Math.floor(i / 4); pintarFlota(); }
+    if (FL.z <= 1.05) return;
+    var esc2 = FL.ancho / D.W, yBloque = (26 + (i % 4) * 49.5 + 25) * esc2 * FL.z, vis = $('#flVista');
+    FL.y = vis.clientHeight / 2 - yBloque; aplicarZoom();
+  }
+  function actualizarBotones() { $$('.bVista').forEach(function (b) { b.setAttribute('aria-pressed', String(FL.abierta)); b.textContent = FL.abierta ? 'Ocultar vista previa' : 'Vista previa del lazo'; }); }
+  function enlazarFlota() {
+    var f = $('#flota'), vis = $('#flVista');
+    if (FL.pos && FL.pos.l) { f.style.left = FL.pos.l; f.style.top = FL.pos.t; if (FL.pos.w) f.style.width = FL.pos.w; if (FL.pos.h) f.style.height = FL.pos.h; }
+    $$('.bVista').forEach(function (b) { b.addEventListener('click', function () { FL.abierta = !FL.abierta; guardarFlota(); refrescarFlota(true); }); });
+    $('#flCerrar').addEventListener('click', function () { FL.abierta = false; guardarFlota(); refrescarFlota(true); });
+    $('#flLazo').addEventListener('change', function () { FL.lazo = this.value; FL.hoja = 0; ajustar(); pintarFlota(); });
+    $('#flPrev').addEventListener('click', function () { FL.hoja = Math.max(0, FL.hoja - 1); pintarFlota(); });
+    $('#flNext').addEventListener('click', function () { FL.hoja++; pintarFlota(); });
+    $('#flMas').addEventListener('click', function () { zoomEn(1.4, vis.clientWidth / 2, vis.clientHeight / 2); });
+    $('#flMenos').addEventListener('click', function () { zoomEn(1 / 1.4, vis.clientWidth / 2, vis.clientHeight / 2); });
+    $('#flAjustar').addEventListener('click', ajustar);
+    $('#flAbrir').addEventListener('click', function () { sel = FL.lazo; mostrar('lazos'); });
+    vis.addEventListener('wheel', function (e) { e.preventDefault(); var r = vis.getBoundingClientRect(); zoomEn(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    vis.addEventListener('dblclick', function (e) { var r = vis.getBoundingClientRect(); zoomEn(2, e.clientX - r.left, e.clientY - r.top); });
+    var arr = null;
+    vis.addEventListener('pointerdown', function (e) { e.preventDefault(); arr = { x: e.clientX - FL.x, y: e.clientY - FL.y }; vis.setPointerCapture(e.pointerId); vis.classList.add('arrastra'); });
+    vis.addEventListener('pointermove', function (e) { if (!arr) return; FL.x = e.clientX - arr.x; FL.y = e.clientY - arr.y; aplicarZoom(); });
+    vis.addEventListener('pointerup', function () { arr = null; vis.classList.remove('arrastra'); });
+    // Mover la ventana desde su barra de título
+    var mov = null, cab = $('#flCab');
+    cab.addEventListener('pointerdown', function (e) { if (e.target.closest('button,select')) return; var r = f.getBoundingClientRect(); mov = { dx: e.clientX - r.left, dy: e.clientY - r.top }; cab.setPointerCapture(e.pointerId); });
+    cab.addEventListener('pointermove', function (e) { if (!mov) return; f.style.left = Math.max(0, Math.min(innerWidth - 120, e.clientX - mov.dx)) + 'px'; f.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - mov.dy)) + 'px'; f.style.right = 'auto'; f.style.bottom = 'auto'; });
+    cab.addEventListener('pointerup', function () { if (mov) { mov = null; guardarFlota(); } });
+    if (window.ResizeObserver) new ResizeObserver(function () { if (!f.hidden && Math.abs(vis.clientWidth - FL.ancho) > 8) { guardarFlota(); refrescarFlota(); } }).observe(f);
+    // Seguir la fila que se está editando
+    $('#tablaIO').addEventListener('focusin', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr && flotaVisible()) mirarSenal(tr.dataset.id); });
+    $('#tablaIO').addEventListener('input', function (e) {
+      var t = e.target, tr = t.closest('tr[data-id]'); if (!tr || t.tagName !== 'INPUT' || !t.dataset.k) return;
+      var s = senal(tr.dataset.id); if (!s) return; s[t.dataset.k] = t.dataset.k === 'tag' ? t.value.toUpperCase().trim() : t.value; refrescarFlota();
+    });
+    $('#modulos').addEventListener('focusin', function (e) { var sl = e.target.closest('select[data-canal]'); if (sl && sl.value && flotaVisible()) mirarSenal(sl.value); });
   }
 
   // ── Exportar ──
@@ -501,6 +578,12 @@
       E.modulos.forEach(function (m) { m.modelo = E.cfg.modelos[m.tipo]; var tj = T.buscar(m.modelo); E.senales.forEach(function (s) { if (s.mod === m.id && +s.canal >= tj.canales) s.canal = ''; }); });
       guardar(); estado('Tarjetas actualizadas'); asignarAuto(); guardar();
     });
+    $('#rotulo').addEventListener('input', function (e) {
+      var t = e.target; if (!t.dataset.p) return;
+      var id = P.activoId(), d = P.datos(id); d[t.dataset.p] = t.value; P.guardar(id, d); refrescarFlota();
+    });
+    $('#cfgForm').addEventListener('input', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.dataset.c) { setK(t.dataset.c, t.value); guardar(); } });
+    $('#revs').addEventListener('input', function (e) { var t = e.target; if (t.dataset.r == null) return; E.revs[+t.dataset.r][t.dataset.k] = t.value; guardar(); });
     $('#revs').addEventListener('change', function (e) { var t = e.target; if (t.dataset.r == null) return; E.revs[+t.dataset.r][t.dataset.k] = t.value; guardar(); });
     $('#revs').addEventListener('click', function (e) { var t = e.target; if (t.dataset.rq == null) return; E.revs.splice(+t.dataset.rq, 1); guardar(); pintarCfg(); });
     $('#bRev').addEventListener('click', function () { var u = E.revs[E.revs.length - 1]; E.revs.push({ rev: u ? String.fromCharCode((u.rev || 'A').charCodeAt(0) + 1) : 'A', fecha: P.hoy ? P.hoy() : '', desc: '', por: '' }); guardar(); pintarCfg(); });
@@ -516,6 +599,7 @@
   // ── Inicio ──
   cargar();
   enlazar();
+  enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
   if (/^#(io|mod|cfg|lazos)$/.test(location.hash)) v0 = location.hash.slice(1);
   mostrar(v0);
