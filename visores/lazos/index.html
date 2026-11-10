@@ -152,6 +152,13 @@ table.io2 td.izq { text-align: left; }
 table.io2 tr.grp td { background: #DCE3EB; color: #022A55; font-weight: 700; text-align: left; font-size: 7pt; }
 table.io2 tr.res td { color: #6B7785; }
 .uni { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
+.ricbox { border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: var(--panel, transparent); }
+.ricbox h3 { margin: 0 0 6px; font-size: 15px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ricbox ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
+.ricbox li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: baseline; }
+.ricbox li small { color: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.ricbox .bien, td.ric.bien { color: #2f9e55; } .ricbox .av, td.ric.av { color: #d98a12; } .ricbox .mal, td.ric.mal { color: #e0483e; }
+td.ric { font-size: 12px; padding: 4px 8px; line-height: 1.3; }
 .selTab { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .selTab select { min-width: 260px; }
 @media (max-width: 980px) { .uni { grid-template-columns: 1fr; } }
@@ -371,13 +378,14 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     </div>
     <div class="uni">
       <form id="uForm" class="dform" onsubmit="return false"></form>
-      <div class="hojas" id="uHojas"></div>
+      <div><div class="ricbox" id="uRic"></div><div class="hojas" id="uHojas"></div></div>
     </div>
     <h2 class="grupo" style="margin-top:22px">Circuitos</h2>
     <div class="herr">
       <button type="button" class="pri" id="uAgregar">+ Agregar circuito</button>
       <button type="button" id="uInst">Traer instrumentos de 4 hilos</button>
       <button type="button" id="uReserva">+ 2 reservas</button>
+      <button type="button" id="uReservaRic">Completar reservas 25 % (RIC N°02)</button>
       <button type="button" class="peligro" id="uQuitar">Quitar seleccionados</button>
     </div>
     <p class="estado" id="uCuenta"></p>
@@ -437,6 +445,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="../especificaciones/plantillas-et3.js"></script>
 <script src="app.js"></script>
 <script src="docio.js"></script>
+<script src="ric.js"></script>
 <script src="unilineal.js"></script>
 </body>
 </html>
