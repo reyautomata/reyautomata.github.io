@@ -1210,6 +1210,372 @@
     V['soporte-inst3'] = function () { return soporte({ tipo: 'inst', n: 3 }); };
     V['soporte-plataforma'] = function () { return soporte({ tipo: 'inst', n: 1, plataforma: true }); };
 
+    // ── Escalerillas portaconductores (ES) ──────────────────────────────────────────
+    // Geometría según catálogo de escalerillas autosoportantes: laterales C de alto H con pestañas de 19 mm,
+    // palillos cada 230 mm (normal, lateral 2,0 mm) o 150 mm (reforzada, lateral 2,5 mm), tiras de 3 m,
+    // curvas de radio interior R, eclisas apernadas en cada unión y soportación con riel 42×42.
+    var ES = { A: 60, H: 10, R: 30, paso: 23, esp: 0.2, pest: 1.9 };
+    var V3 = function (x, y, z) { return new THREE.Vector3(x, y, z); };
+    var matLat = mats.galv, matPal = std(0xb7bfc6, 0.75, 0.5);
+    // Tramo de lateral entre a y b (borde inferior), alto H, con las pestañas hacia "adentro"
+    function segLat(a, b, up, adentro, H, g) {
+      var T = b.clone().sub(a), len = T.length(); if (len < 0.01) return; T.normalize();
+      var U = up.clone().sub(T.clone().multiplyScalar(up.dot(T))).normalize(), Z = T.clone().cross(U);
+      var s = Z.dot(adentro) >= 0 ? 1 : -1, e = ES.esp, p = ES.pest;
+      var q = G(box(len + 0.05, H, e, matLat, len / 2, H / 2, 0), box(len + 0.05, e, p, matLat, len / 2, e / 2, s * p / 2), box(len + 0.05, e, p, matLat, len / 2, H - e / 2, s * p / 2));
+      q.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(T, U, Z)); q.position.copy(a); g.add(q);
+    }
+    // Lateral a lo largo de una polilínea de muestras {p (centro), t, u, n}; lado s = ±1
+    function lateral(M_, s, A, H) {
+      var g = G();
+      for (var i = 0; i < M_.length - 1; i++) {
+        var a = M_[i].p.clone().addScaledVector(M_[i].n, s * A / 2), b = M_[i + 1].p.clone().addScaledVector(M_[i + 1].n, s * A / 2);
+        segLat(a, b, M_[i].u, M_[i].n.clone().multiplyScalar(-s), H, g);
+      }
+      return g;
+    }
+    function palillo(p, t, u, n, A) { // perfil U de 1,5 mm entre laterales, apoyado sobre la pestaña inferior
+      var q = G(box(2.6, 0.15, A - 0.6, matPal, 0, 0.32, 0), box(0.15, 1.3, A - 0.6, matPal, -1.22, 0.9, 0), box(0.15, 1.3, A - 0.6, matPal, 1.22, 0.9, 0));
+      q.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(t, u, t.clone().cross(u))); q.position.copy(p); return q;
+    }
+    function palillos(M_, A, paso, desde, hasta) {
+      var g = G(), acum = 0, sig = paso / 2;
+      for (var i = 0; i < M_.length - 1; i++) {
+        var a = M_[i], b = M_[i + 1], d = a.p.distanceTo(b.p);
+        while (sig <= acum + d) {
+          var f = (sig - acum) / d, p = a.p.clone().lerp(b.p, f), t = b.p.clone().sub(a.p).normalize(), u = a.u.clone().lerp(b.u, f).normalize();
+          if ((desde === undefined || sig >= desde) && (hasta === undefined || sig <= hasta)) g.add(palillo(p, t, u, t.clone().cross(u), A));
+          sig += paso;
+        }
+        acum += d;
+      }
+      return g;
+    }
+    // Muestras de trayectorias (centro del fondo de la escalerilla), en coordenadas locales
+    function trRecta(L, n) { var m = []; n = n || 2; for (var i = 0; i <= n; i++) m.push({ p: V3(L * i / n, 0, 0), t: V3(1, 0, 0), u: V3(0, 1, 0), n: V3(0, 0, 1) }); return m; }
+    function trCH(Rc, ang) { var m = []; for (var i = 0; i <= 24; i++) { var th = ang * i / 24, c = Math.cos(th), s = Math.sin(th); m.push({ p: V3(Rc * s, 0, Rc * (1 - c)), t: V3(c, 0, s), u: V3(0, 1, 0), n: V3(-s, 0, c) }); } return m; }
+    function trCV(R, ang, sube) { var m = [], k = sube ? 1 : -1; for (var i = 0; i <= 24; i++) { var th = ang * i / 24, c = Math.cos(th), s = Math.sin(th); m.push({ p: V3(R * s, k * R * (1 - c), 0), t: V3(c, k * s, 0), u: V3(-k * s, c, 0), n: V3(0, 0, 1) }); } return m; }
+    function pieza(M_, A, H, paso, inv) { // escalerilla completa sobre una trayectoria
+      return G(lateral(M_, 1, A, H), lateral(M_, -1, A, H), palillos(M_, A, paso));
+    }
+    // Eclisa: plancha en la cara exterior del lateral con 4 pernos de cabeza redonda y tuercas
+    function eclisa(p, t, u, nOut, H) {
+      var Z = t.clone().cross(u), s = Z.dot(nOut) >= 0 ? 1 : -1;
+      var q = G(box(18, H * 0.62, 0.25, mats.steel, 0, H * 0.5, s * 0.25));
+      [-6.5, -2.5, 2.5, 6.5].forEach(function (x) { q.add(cyl(0.75, 0.5, mats.dark, x, H * 0.5, s * 0.6, 'z', 12), cyl(0.62, 0.55, mats.dark, x, H * 0.5, -s * 0.35, 'z', 6)); });
+      q.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(t, u, Z)); q.position.copy(p); return q;
+    }
+    function eclisasEn(M_, i, A, H) { var m = M_[i], g = G(); [1, -1].forEach(function (s) { g.add(eclisa(m.p.clone().addScaledVector(m.n, s * A / 2), m.t, m.u, m.n.clone().multiplyScalar(s), H)); }); return g; }
+    // Riel 42×42 (perfil C con labios), largo L sobre el eje X, abierto hacia +Y
+    function riel(L, h) {
+      h = h || 4.1; var w = 4.1, e = 0.25;
+      return G(box(L, e, w, mats.galv, 0, e / 2, 0), box(L, h, e, mats.galv, 0, h / 2, w / 2 - e / 2), box(L, h, e, mats.galv, 0, h / 2, -w / 2 + e / 2),
+        box(L, e, 1.0, mats.galv, 0, h - e / 2, w / 2 - 0.5), box(L, e, 1.0, mats.galv, 0, h - e / 2, -w / 2 + 0.5), box(L, 0.9, e, mats.galv, 0, h - 0.45, w / 2 - 0.95), box(L, 0.9, e, mats.galv, 0, h - 0.45, -w / 2 + 0.95));
+    }
+    function mordaza(x, y, z, sz) { // mordaza sobre la pestaña inferior del lateral, perno a la tuerca riel
+      var g = G(box(3.2, 0.3, 4, mats.steel, 0, 0.6, 0), box(0.3, 0.9, 4, mats.steel, 1.6, 0.25, 0), cyl(0.48, 3.4, mats.dark, -0.4, 0.2, 0, 'y', 10), cyl(0.85, 0.5, mats.dark, -0.4, 1.0, 0, 'y', 6), box(1.6, 0.6, 2.4, mats.dark, -0.4, -2.5, 0));
+      if (sz < 0) g.rotation.y = Math.PI; g.position.set(x, y, z); return g;
+    }
+    function hilo(x, y0, y1, z) { return cyl(0.48, Math.abs(y1 - y0), mats.steel, x, (y0 + y1) / 2, z, 'y', 12); }
+    function tuerca(x, y, z) { return G(cyl(0.9, 0.7, mats.dark, x, y, z, 'y', 6), cyl(1.2, 0.15, mats.steel, x, y - 0.45, z, 'y', 16)); }
+    function cables(M_, A, n, mat) { // cables sobre los palillos, para ver el llenado
+      var g = G(), r = 0.9;
+      for (var k = 0; k < n; k++) {
+        var off = -A / 2 + 2 + r + k * (2 * r + 0.3); if (off > A / 2 - 2) break;
+        var pts = M_.map(function (m) { return m.p.clone().addScaledVector(m.n, off).addScaledVector(m.u, 2.1 + r); });
+        g.add(M(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(8, pts.length * 3), r, 8, false), k % 3 === 0 ? mats.black : k % 3 === 1 ? mat || mats.cableBlue : mats.cableGrey));
+      }
+      return g;
+    }
+    function transf(g, x, y, z, ry, rz) { g.position.set(x || 0, y || 0, z || 0); if (ry) g.rotation.y = ry; if (rz) g.rotation.z = rz; return g; }
+    function aplicar(M_, x, y, z, ry) { // lleva muestras locales al mundo (traslación + giro en Y)
+      var q = new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), ry || 0), o = V3(x || 0, y || 0, z || 0);
+      return M_.map(function (m) { return { p: m.p.clone().applyQuaternion(q).add(o), t: m.t.clone().applyQuaternion(q), u: m.u.clone().applyQuaternion(q), n: m.n.clone().applyQuaternion(q) }; });
+    }
+
+    // ── Dimensionamiento (simulación compartida por todas las variantes) ──
+    function simEscalerilla(base) {
+      var S = Object.assign({ A: 600, H: 100, ver: 'n', L: 60, d: 1.5, ch: 4, cv: 2, ct: 1, sop: 'trap', susp: 1.0, niv: 1, ac: 0, llen: 40 }, base || {});
+      function calc() {
+        var A = S.A / 1000, H = S.H / 1000, tiras = Math.ceil(S.L / 3), acc = S.ch + S.cv + S.ct;
+        var nSop = (Math.ceil(S.L / S.d) + 1 + 2 * acc) * (S.sop === 'muro' ? 1 : 1);
+        var eL = S.ver === 'r' ? 2.5 : 2.0, paso = S.ver === 'r' ? 0.15 : 0.23, pal = S.ver === 'r' ? 20 : 13;
+        var kgLat = (H + 2 * 0.019) * eL * 7.85, kgPal = (0.026 + 2 * 0.013) * 1.5 * 7.85 * (A - 0.006); // kg/m lateral, kg por palillo
+        var kgm = 2 * kgLat + kgPal / paso;
+        var rielU = S.sop === 'muro' ? A + 0.1 : A + 0.2;
+        var n = S.niv, r = {
+          tiras: tiras * n, pal: tiras * pal * n, eclRect: (tiras + acc) * n, pernos: (tiras + acc) * 8 * n, sop: nSop, rielM: nSop * rielU * n, rielT: Math.ceil(nSop * rielU * n / 3),
+          mord: nSop * 2 * n, kg: kgm * S.L * n, kgm: kgm,
+          area: A * 1000 * (H * 1000 - 19), acc: acc * n
+        };
+        if (S.sop === 'trap') { r.hilo = nSop * 2 * (S.susp + 0.1 * (n - 1) + 0.15); r.bases = nSop; r.omegas = nSop * 2; r.tRes = nSop * 2 * n; r.tHex = nSop * (4 * n + 2); }
+        else { r.mens = nSop * n; r.anc = nSop * n * 2; }
+        r.llenado = S.ac > 0 ? 100 * S.ac / r.area : 0;
+        return r;
+      }
+      function f(v, d) { return v.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+      function sel(id, ops, v) { return '<select id="' + id + '">' + ops.map(function (o) { return '<option value="' + o[0] + '"' + (String(o[0]) === String(v) ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>'; }
+      var sim = {
+        html: '<div class="simg">' +
+          '<label>Ancho A' + sel('eA', [100, 150, 200, 300, 400, 450, 500, 600, 750, 800, 900, 1000].map(function (x) { return [x, x + ' mm']; }), S.A) + '</label>' +
+          '<label>Alto lateral H' + sel('eH', [50, 75, 100, 125, 150, 200].map(function (x) { return [x, x + ' mm']; }), S.H) + '</label>' +
+          '<label>Versión' + sel('eV', [['n', 'Normal: lateral 2,0 mm, palillos cada 230 mm'], ['r', 'Reforzada: lateral 2,5 mm, palillos cada 150 mm']], S.ver) + '</label>' +
+          '<label>Largo recto del recorrido <output id="oL"></output><input type="range" id="eL" min="3" max="600" step="3"></label>' +
+          '<label>Distancia entre soportes <output id="oD"></output><input type="range" id="eD" min="0.9" max="3" step="0.1"></label>' +
+          '<label>Curvas horizontales <output id="oCh"></output><input type="range" id="eCh" min="0" max="30" step="1"></label>' +
+          '<label>Curvas verticales (C.V.I. / C.V.E.) <output id="oCv"></output><input type="range" id="eCv" min="0" max="30" step="1"></label>' +
+          '<label>Tees, cruces y reducciones <output id="oCt"></output><input type="range" id="eCt" min="0" max="20" step="1"></label>' +
+          '<label>Soportación' + sel('eS', [['trap', 'Trapecio suspendido (riel 42×42 + hilo corrido)'], ['muro', 'Ménsula en muro o columna (soporte muro riel 42×42)']], S.sop) + '</label>' +
+          '<label>Niveles de escalerilla en el mismo soporte' + sel('eN', [[1, '1 nivel'], [2, '2 niveles (fuerza / instrumentación)'], [3, '3 niveles']], S.niv) + '</label>' +
+          '<label>Largo de suspensión <output id="oSu"></output><input type="range" id="eSu" min="0.3" max="3" step="0.1"></label>' +
+          '<label>Sección de cables a tender [mm²]<input type="number" id="eAc" min="0" step="100" inputmode="numeric"></label>' +
+          '<label>Llenado máximo del proyecto [%]<input type="number" id="eLl" min="10" max="100" step="5" inputmode="numeric"></label></div>' +
+          '<dl class="lect" id="lectE"></dl><p class="eq" id="eqE"></p>',
+        montar: function () {
+          var $$ = function (id) { return document.getElementById(id); };
+          $$('eL').value = S.L; $$('eD').value = S.d; $$('eCh').value = S.ch; $$('eCv').value = S.cv; $$('eCt').value = S.ct; $$('eSu').value = S.susp; $$('eAc').value = S.ac || ''; $$('eLl').value = S.llen;
+          [['eA', 'A'], ['eH', 'H'], ['eV', 'ver'], ['eS', 'sop'], ['eN', 'niv']].forEach(function (k) { $$(k[0]).addEventListener('change', function () { S[k[1]] = /^[0-9.]+$/.test(this.value) ? +this.value : this.value; sim.pintar(); }); });
+          [['eL', 'L'], ['eD', 'd'], ['eCh', 'ch'], ['eCv', 'cv'], ['eCt', 'ct'], ['eSu', 'susp'], ['eAc', 'ac'], ['eLl', 'llen']].forEach(function (k) { $$(k[0]).addEventListener('input', function () { S[k[1]] = +this.value || 0; sim.pintar(); }); });
+          sim.pintar();
+        },
+        pintar: function () {
+          var $$ = function (id) { return document.getElementById(id); }, r = calc();
+          $$('oL').textContent = f(S.L) + ' m'; $$('oD').textContent = f(S.d, 1) + ' m'; $$('oCh').textContent = S.ch; $$('oCv').textContent = S.cv; $$('oCt').textContent = S.ct; $$('oSu').textContent = f(S.susp, 1) + ' m';
+          $$('eSu').closest('label').hidden = S.sop !== 'trap';
+          var tag = 'ESC ' + S.A + '×' + S.H + (S.ver === 'r' ? ' reforzada' : ' normal');
+          var F = [['Escalerilla recta ' + tag + ', tira de 3 m', f(r.tiras) + ' tiras'], ['Palillos incluidos (' + (S.ver === 'r' ? 20 : 13) + ' por tira)', f(r.pal)],
+            ['Curvas y derivaciones del mismo ancho y alto', f(r.acc) + ' c/u'], ['Pares de eclisa recta (uno por tira y por curva, incluidos)', f(r.eclRect)], ['Pernos y tuercas de eclisa (8 por par)', f(r.pernos)],
+            ['Soportes (cada ' + f(S.d, 1) + ' m + 2 por accesorio)', f(r.sop)], ['Riel 42×42×2,5 mm', f(r.rielM, 1) + ' m · ' + f(r.rielT) + ' tiras de 3 m'], ['Mordazas 42 con perno y tuerca riel', f(r.mord)]];
+          if (S.sop === 'trap') F.push(['Hilo corrido 3/8"', f(r.hilo, 1) + ' m'], ['Base de anclaje a losa o viga', f(r.bases)], ['Omegas', f(r.omegas)], ['Tuercas riel 42 con resorte 3/8"', f(r.tRes)], ['Tuercas hexagonales y golillas 3/8"', f(r.tHex)]);
+          else F.push(['Soporte muro simple riel 42×42, L = ' + (S.A + 100) + ' mm', f(r.mens)], ['Pernos de anclaje de expansión 3/8"', f(r.anc)]);
+          F.push(['Peso de la escalerilla', f(r.kgm, 2) + ' kg/m · ' + f(r.kg) + ' kg'], ['Sección útil A × (H − 19 mm)', f(r.area) + ' mm²']);
+          if (r.llenado) F.push(['Llenado de la sección', '<span class="' + (r.llenado > S.llen ? 'warn' : '') + '">' + f(r.llenado, 1) + ' %' + (r.llenado > S.llen ? ' · sobre el ' + S.llen + ' % del proyecto: subir A o H' : ' · cumple') + '</span>']);
+          $$('lectE').innerHTML = F.map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('');
+          $$('eqE').innerHTML = 'Cantidades para ' + S.niv + ' nivel(es) de ' + f(S.L) + ' m. Cada tira recta y cada curva trae su par de eclisas con pernos y tuercas. Distancia entre soportes según la carga de cables y la versión (normal ≤ 1,5 m típico, reforzada hasta 3 m); poner un soporte a menos de 600 mm de cada lado de curvas, tees y cruces. Peso con acero 7,85 kg/dm³ sin recubrimiento.';
+        }
+      };
+      return sim;
+    }
+
+    // Variantes de escalerilla y accesorios
+    function esRecta(reforzada) {
+      var A = ES.A, H = ES.H, paso = reforzada ? 15 : ES.paso, root = G();
+      var m1 = trRecta(300, 2), m2 = aplicar(trRecta(120, 2), 300, 0, 0);
+      var t1 = pieza(m1, A, H, paso), t2 = pieza(m2, A, H, paso), ecl = eclisasEn(m2, 0, A, H);
+      root.add(t1, t2, ecl);
+      var y0 = -4.1, sop = G(); [40, 260, 380].forEach(function (x) { var r = transf(riel(A + 20), x, y0, 0, Math.PI / 2); sop.add(r, mordaza(x, 0, A / 2 + 1.4, 1), mordaza(x, 0, -A / 2 - 1.4, -1)); });
+      var cab = cables(m1.concat(m2.slice(1)), A, 12);
+      root.add(sop, cab);
+      return { root: root, foco: [200, 6, 0, 125], partes: [
+        [1, 'Escalerilla recta ' + (reforzada ? 'reforzada' : 'normal') + ' 600×100 mm, tira de 3.000 mm', 1, t1, [0, 25, 0], [80, H + 4, A / 2]],
+        [2, 'Lateral C de ' + (reforzada ? '2,5' : '2,0') + ' mm con pestañas de 19 mm', 2, G(), [0, 0, 0], [150, H, -A / 2]],
+        [3, 'Palillo de 1,5 mm cada ' + paso * 10 + ' mm (' + (reforzada ? 20 : 13) + ' por tira)', reforzada ? 20 : 13, G(), [0, 0, 0], [120, 2, 0]],
+        [4, 'Tira siguiente (continuación del tramo)', 1, t2, [40, 0, 0], [360, H + 4, A / 2]],
+        [5, 'Par de eclisas recta normal con 8 pernos y tuercas', 1, ecl, [0, 0, 30], [300, H + 6, A / 2 + 2]],
+        [6, 'Riel 42×42 de soporte', 3, sop, [0, -25, 0], [260, -6, A / 2 + 10]],
+        [7, 'Mordaza 42 con perno 3/8" y tuerca riel', 6, G(), [0, 0, 0], [40, 2, -A / 2 - 6]],
+        [8, 'Cables de instrumentación y control (referencial)', 1, cab, [0, 35, 0], [200, 6, 0]]] };
+    }
+    V['esc-recta'] = function () { var r = esRecta(false); r.sim = simEscalerilla(); return r; };
+    V['esc-reforzada'] = function () { var r = esRecta(true); r.sim = simEscalerilla({ ver: 'r', d: 2.5 }); return r; };
+    function esCurva(tipo, ang) {
+      var A = ES.A, H = ES.H, R = ES.R, root = G(), m, ent, sal, et;
+      if (tipo === 'ch') { m = trCH(R + A / 2, ang); et = 'Curva horizontal (C.H.) ' + Math.round(ang * 180 / Math.PI) + '°, R = 300 mm'; }
+      else if (tipo === 'cvi') { m = trCV(R + 10, ang, true); et = 'Curva vertical interior (C.V.I.) 90°, R = 300 mm'; }
+      else { m = trCV(R + 10, ang, false); et = 'Curva vertical exterior (C.V.E.) 90°, R = 300 mm'; }
+      var curva = pieza(m, A, H, ES.paso);
+      var u = m[m.length - 1], mEnt = aplicar(trRecta(80, 2), -80, 0, 0);
+      var mSal = trRecta(80, 2).map(function (x) { var q = new THREE.Quaternion().setFromUnitVectors(V3(1, 0, 0), u.t); return { p: x.p.clone().applyQuaternion(q).add(u.p), t: u.t.clone(), u: u.u.clone(), n: u.n.clone() }; });
+      if (tipo === 'ch') mSal = mSal.map(function (x) { return Object.assign(x, { n: u.n.clone() }); });
+      ent = pieza(mEnt, A, H, ES.paso); sal = pieza(mSal, A, H, ES.paso);
+      var ecl = G(eclisasEn(m, 0, A, H), eclisasEn(m, m.length - 1, A, H));
+      var cab = cables(mEnt.concat(m.slice(1), mSal.slice(1)), A, 10);
+      root.add(curva, ent, sal, ecl, cab);
+      var sop = G();
+      if (tipo === 'ch') { [[-50, 0, 0, Math.PI / 2], [u.p.x + u.t.x * 50, 0, u.p.z + u.t.z * 50, Math.PI / 2 + Math.atan2(-u.t.z, u.t.x)]].forEach(function (s) { sop.add(transf(riel(A + 20), s[0], -4.1, s[2], s[3])); }); }
+      else { sop.add(transf(riel(A + 20), -50, -4.1, 0, Math.PI / 2)); }
+      root.add(sop);
+      var mid = m[12];
+      return { root: root, partes: [[1, 'Escalerilla ' + et + ', A = 600 mm, H = 100 mm', 1, curva, [0, 25, 0], [mid.p.x, mid.p.y + H + 4, mid.p.z]],
+        [2, 'Tramo recto de entrada', 1, ent, [-30, 0, 0], [-60, H + 4, A / 2]], [3, 'Tramo recto de salida', 1, sal, [u.t.x * 30, u.t.y * 30, u.t.z * 30], [u.p.x + u.t.x * 60, u.p.y + u.t.y * 60 + H, u.p.z + u.t.z * 60]],
+        [4, 'Par de eclisas recta normal con 8 pernos y tuercas (incluido con la curva)', 2, ecl, [0, 0, 20], [m[0].p.x, H + 8, A / 2 + 4]],
+        [5, 'Soporte riel 42×42 a menos de 600 mm de la curva', sop.children.length, sop, [0, -20, 0], [-50, -8, A / 2 + 10]], [6, 'Cables (radio de curvatura ≥ el mínimo del cable)', 1, cab, [0, 30, 0], [mid.p.x, mid.p.y + 6, mid.p.z]]] };
+    }
+    V['esc-ch90'] = function () { var r = esCurva('ch', Math.PI / 2); r.sim = simEscalerilla(); return r; };
+    V['esc-ch45'] = function () { var r = esCurva('ch', Math.PI / 4); r.sim = simEscalerilla(); return r; };
+    V['esc-cvi'] = function () { var r = esCurva('cvi', Math.PI / 2); r.sim = simEscalerilla(); return r; };
+    V['esc-cve'] = function () { var r = esCurva('cve', Math.PI / 2); r.sim = simEscalerilla(); return r; };
+    // Tee y cruz: lateral pasante continuo y curvas de radio R hacia la derivación
+    function esDerivacion(cruz) {
+      var A = ES.A, H = ES.H, R = ES.R, L = A + 2 * R, root = G(), lat = G(), y = V3(0, 1, 0);
+      function arco(cx, cz, a0, a1, s) { // lateral en arco horizontal, pestañas hacia el centro del arco (s=-1) o fuera (s=1)
+        var pts = []; for (var i = 0; i <= 16; i++) { var a = a0 + (a1 - a0) * i / 16; pts.push(V3(cx + R * Math.cos(a), 0, cz + R * Math.sin(a))); }
+        for (var k = 0; k < pts.length - 1; k++) { var mid = pts[k].clone().add(pts[k + 1]).multiplyScalar(0.5), dir = V3(cx, 0, cz).sub(mid).normalize().multiplyScalar(s); segLat(pts[k], pts[k + 1], y, dir, H, lat); }
+      }
+      // lado pasante (z = -A/2) continuo
+      if (!cruz) segLat(V3(-L / 2, 0, -A / 2), V3(L / 2, 0, -A / 2), y, V3(0, 0, 1), H, lat);
+      [1, cruz ? -1 : null].forEach(function (s) {
+        if (s === null) return;
+        var z0 = s * A / 2;
+        arco(-A / 2 - R, z0 + s * R, s > 0 ? -Math.PI / 2 : Math.PI / 2, 0, -1);
+        arco(A / 2 + R, z0 + s * R, s > 0 ? -Math.PI / 2 : Math.PI / 2, s > 0 ? -Math.PI : Math.PI, -1);
+        segLat(V3(-A / 2, 0, z0 + s * R), V3(-A / 2, 0, z0 + s * (R + 40)), y, V3(1, 0, 0), H, lat);
+        segLat(V3(A / 2, 0, z0 + s * R), V3(A / 2, 0, z0 + s * (R + 40)), y, V3(-1, 0, 0), H, lat);
+      });
+      var pal = G(), mMain = aplicar(trRecta(L, 2), -L / 2, 0, 0);
+      pal.add(palillos(mMain, A, ES.paso));
+      [1, cruz ? -1 : 0].forEach(function (s) { if (!s) return; var mb = trRecta(R + 40 - 2, 2).map(function (x) { return { p: V3(0, 0, s * (A / 2 + 2) + s * x.p.x), t: V3(0, 0, s), u: V3(0, 1, 0), n: V3(s, 0, 0) }; }); pal.add(palillos(mb, A, ES.paso)); });
+      var ent = pieza(aplicar(trRecta(60, 2), -L / 2 - 60, 0, 0), A, H, ES.paso), sal = pieza(aplicar(trRecta(60, 2), L / 2, 0, 0), A, H, ES.paso);
+      var ecl = G(eclisasEn(aplicar(trRecta(1, 1), -L / 2, 0, 0), 0, A, H), eclisasEn(aplicar(trRecta(1, 1), L / 2, 0, 0), 0, A, H));
+      root.add(lat, pal, ent, sal, ecl);
+      var cab = cables(aplicar(trRecta(L + 120, 6), -L / 2 - 60, 0, 0), A, 8);
+      root.add(cab);
+      return { root: root, partes: [[1, 'Escalerilla ' + (cruz ? 'curva cruz (C.C.)' : 'curva tee (C.T.)') + ' A = S = P = 600 mm, R = 300 mm', 1, G(lat, pal), [0, 20, 0], [0, H + 4, -A / 2]],
+        [2, 'Tramo recto entrante (A)', 1, ent, [-30, 0, 0], [-L / 2 - 30, H + 4, A / 2]], [3, 'Tramo recto pasante (P)', 1, sal, [30, 0, 0], [L / 2 + 30, H + 4, A / 2]],
+        [4, 'Par de eclisas recta normal con 8 pernos y tuercas', cruz ? 4 : 3, ecl, [0, 0, 25], [-L / 2, H + 8, -A / 2 - 4]], [5, 'Cables pasantes (referencial)', 1, cab, [0, 30, 0], [0, 6, -10]]] };
+    }
+    V['esc-tee'] = function () { var r = esDerivacion(false); r.sim = simEscalerilla(); return r; };
+    V['esc-cruz'] = function () { var r = esDerivacion(true); r.sim = simEscalerilla(); return r; };
+    V['esc-reduccion'] = function () {
+      var A = ES.A, B = 30, H = ES.H, root = G(), lat = G(), y = V3(0, 1, 0), Lr = 48;
+      [1, -1].forEach(function (s) { segLat(V3(0, 0, s * A / 2), V3(16, 0, s * A / 2), y, V3(0, 0, -s), H, lat); segLat(V3(16, 0, s * A / 2), V3(Lr - 16, 0, s * B / 2), y, V3(0, 0, -s), H, lat); segLat(V3(Lr - 16, 0, s * B / 2), V3(Lr, 0, s * B / 2), y, V3(0, 0, -s), H, lat); });
+      var pal = G(palillo(V3(8, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), A), palillo(V3(Lr - 8, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), B), palillo(V3(Lr / 2, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), (A + B) / 2));
+      var ent = pieza(aplicar(trRecta(100, 2), -100, 0, 0), A, H, ES.paso), sal = pieza(aplicar(trRecta(100, 2), Lr, 0, 0), B, H, ES.paso);
+      var ecl = G(eclisasEn(aplicar(trRecta(1, 1), 0, 0, 0), 0, A, H), eclisasEn(aplicar(trRecta(1, 1), Lr, 0, 0), 0, B, H));
+      root.add(lat, pal, ent, sal, ecl);
+      return { root: root, partes: [[1, 'Escalerilla curva reducción central A = 600 → B = 300 mm (480 mm, tramos de 160 mm)', 1, G(lat, pal), [0, 25, 0], [Lr / 2, H + 4, A / 2]],
+        [2, 'Tramo recto ancho A = 600 mm', 1, ent, [-30, 0, 0], [-60, H + 4, A / 2]], [3, 'Tramo recto ancho B = 300 mm', 1, sal, [30, 0, 0], [Lr + 60, H + 4, B / 2]],
+        [4, 'Par de eclisas recta normal con 8 pernos y tuercas', 2, ecl, [0, 0, 25], [0, H + 8, -A / 2 - 4]]] };
+    };
+    V['esc-reduccion'] = (function (f) { return function () { var r = f(); r.sim = simEscalerilla(); return r; }; })(V['esc-reduccion']);
+
+    // ── Soportación ──
+    function trapecio(x, z, yTecho, niveles, A, H, sep) { // base, omegas, hilo corrido, riel 42×42 por nivel, tuercas
+      var g = G(), w = A + 20, xs = [-w / 2 + 4, w / 2 - 4];
+      var base = G(box(w + 8, 0.8, 16, mats.galv, 0, yTecho - 0.4, 0)); [-1, 1].forEach(function (s) { [-1, 1].forEach(function (k) { base.add(cyl(0.9, 1.2, mats.dark, s * (w / 2 - 6), yTecho - 1, k * 5, 'y', 6)); }); });
+      var omegas = G(); xs.forEach(function (xx) { omegas.add(box(5, 0.3, 4, mats.galv, xx, yTecho - 1, 0), box(0.3, 4, 4, mats.galv, xx - 2.5, yTecho - 3, 0), box(0.3, 4, 4, mats.galv, xx + 2.5, yTecho - 3, 0), box(5, 0.3, 4, mats.galv, xx, yTecho - 5, 0)); });
+      var rieles = G(), hilos = G(), tuer = G(), yInf = 0;
+      for (var k = 0; k < niveles; k++) {
+        var yr = -k * sep; rieles.add(transf(riel(w + 8), 0, yr - 4.1, 0));
+        xs.forEach(function (xx) { tuer.add(tuerca(xx, yr - 4.6, 0), tuerca(xx, yr + 0.3, 0)); });
+        yInf = yr - 6;
+      }
+      xs.forEach(function (xx) { hilos.add(hilo(xx, yInf, yTecho - 1, 0)); tuer.add(tuerca(xx, yTecho - 5.6, 0)); });
+      g.add(base, omegas, rieles, hilos, tuer); g.position.set(x, 0, z); g.rotation.y = Math.PI / 2;
+      return { g: g, base: base, omegas: omegas, rieles: rieles, hilos: hilos, tuer: tuer };
+    }
+    V['esc-trapecio'] = function (niveles) {
+      niveles = niveles || 1;
+      var A = ES.A, H = ES.H, sep = 30, root = G(), yT = 70, techo = G(box(320, 12, 70, mats.concrete, 150, yT + 6, 0), box(320, 30, 20, mats.concrete, 150, yT - 3, 0));
+      techo.children[1].visible = false;
+      var tr = [trapecio(40, 0, yT, niveles, A, H, sep), trapecio(260, 0, yT, niveles, A, H, sep)];
+      var escs = G(), mords = G(), cab = G();
+      for (var k = 0; k < niveles; k++) {
+        var m = aplicar(trRecta(300, 2), 0, -k * sep, 0); escs.add(pieza(m, A, H, ES.paso)); cab.add(cables(m, A, k === 0 ? 14 : 8, k === 0 ? mats.cableBlue : mats.red));
+        [40, 260].forEach(function (x) { mords.add(mordaza(x, -k * sep, A / 2 + 1.4, 1), mordaza(x, -k * sep, -A / 2 - 1.4, -1)); });
+      }
+      tr.forEach(function (t) { t.g.updateMatrix(); ['base', 'omegas', 'rieles', 'hilos', 'tuer'].forEach(function (k) { t[k].applyMatrix4(t.g.matrix); }); });
+      root.add(techo, escs, mords, cab);
+      var sepTxt = niveles > 1 ? ' · ' + niveles + ' niveles separados 300 mm (fuerza arriba, instrumentación abajo)' : '';
+      return { root: root, foco: [150, 20 - (niveles - 1) * 15, 0, 150 + niveles * 15], partes: [
+        [1, 'Losa o viga de techo (estructura existente)', 1, techo, [0, 30, 0], [0, yT + 12, 35]],
+        [2, 'Base de anclaje con 4 pernos de expansión 3/8"', 2, G(tr[0].base, tr[1].base), [0, 18, 0], [40, yT - 2, A / 2 + 14]],
+        [3, 'Omega para hilo corrido', 4, G(tr[0].omegas, tr[1].omegas), [0, 10, 0], [260, yT - 6, A / 2 + 6]],
+        [4, 'Hilo corrido 3/8" UNC (largo según suspensión)', 4, G(tr[0].hilos, tr[1].hilos), [0, 0, 0], [40, 35, A / 2 + 6]],
+        [5, 'Conjunto soporte recto riel 42×42, L = ' + (A * 10 + 280) + ' mm', 2 * niveles, G(tr[0].rieles, tr[1].rieles), [0, -10, 0], [260, -6, -A / 2 - 10]],
+        [6, 'Tuerca riel 42 con resorte, tuercas hexagonales y golillas 3/8"', 2 * (4 * niveles + 2), G(tr[0].tuer, tr[1].tuer), [0, 0, 0], [40, -6, A / 2 + 10]],
+        [7, 'Escalerilla recta normal 600×100 mm' + sepTxt, niveles, escs, [0, 0, 0], [150, H + 4, A / 2]],
+        [8, 'Mordaza 42 con perno y tuerca riel (una por lateral)', 4 * niveles, mords, [0, 8, 0], [40, 3, -A / 2 - 6]],
+        [9, 'Cables (referencial)', 1, cab, [0, 25, 0], [150, 6, 0]]], sim: simEscalerilla({ sop: 'trap', niv: niveles, susp: 0.7 }) };
+    };
+    V['esc-trapecio2'] = function () { return V['esc-trapecio'](2); };
+    V['esc-mensula'] = function () {
+      var A = ES.A, H = ES.H, root = G(), L = A + 10, pared = box(300, 110, 15, mats.wall, 115, 25, -A / 2 - 13);
+      var mens = G(), anc = G(), mords = G();
+      [40, 190].forEach(function (x) {
+        var g = G(box(0.6, 30, 4.4, mats.galv, 0, -10, 0), transf(riel(L), L / 2, -4.1, 0));
+        g.children[1].rotation.y = 0; g.rotation.y = -Math.PI / 2; g.position.set(x, 0, -A / 2 - 5.5);
+        mens.add(g);
+        anc.add(cyl(0.9, 1.2, mats.dark, x, 1, -A / 2 - 4.9, 'z', 6), cyl(0.9, 1.2, mats.dark, x, -21, -A / 2 - 4.9, 'z', 6));
+        mords.add(mordaza(x, 0, A / 2 + 1.4, 1), mordaza(x, 0, -A / 2 - 1.4, -1));
+      });
+      var m = trRecta(240, 2), esc = pieza(m, A, H, ES.paso), cab = cables(m, A, 12);
+      root.add(pared, mens, anc, mords, esc, cab);
+      return { root: root, partes: [[1, 'Muro o columna (estructura existente)', 1, pared, [0, 0, -20], [10, 100, -A / 2 - 5]],
+        [2, 'Soporte muro simple riel 42×42, L = ' + (L * 10) + ' mm, placa con 2 perforaciones', 2, mens, [0, 0, 15], [190, -18, -A / 2 + 6]],
+        [3, 'Perno de anclaje de expansión 3/8" × 3"', 4, anc, [0, 0, -10], [40, -22, -A / 2 - 2]],
+        [4, 'Escalerilla recta normal 600×100 mm', 1, esc, [0, 20, 0], [120, H + 4, A / 2]],
+        [5, 'Mordaza 42 con perno y tuerca riel', 4, mords, [0, 6, 0], [40, 3, A / 2 + 6]], [6, 'Cables (referencial)', 1, cab, [0, 25, 0], [120, 6, 0]]], sim: simEscalerilla({ sop: 'muro' }) };
+    };
+    V['esc-vertical'] = function () {
+      var A = ES.A, H = ES.H, root = G(), pared = box(160, 360, 15, mats.wall, 0, 160, -H - 13.1), losa_ = box(220, 10, 160, mats.concrete, 0, -5, 50);
+      var m = trRecta(300, 2).map(function (x) { return { p: V3(0, 20 + x.p.x, -H - 1.5), t: V3(0, 1, 0), u: V3(0, 0, 1), n: V3(1, 0, 0) }; });
+      m.forEach(function (x) { x.p.z = -1.5 - 0; });
+      var mm = m.map(function (x) { return { p: V3(0, x.p.y, -H - 1.5 + 0), t: x.t, u: x.u, n: x.n }; });
+      var esc = pieza(mm, A, H, ES.paso), sop = G(), ab = G();
+      [60, 180, 290].forEach(function (y) { var r = transf(riel(A + 20), 0, y, -H - 1.5); r.rotation.x = -Math.PI / 2; sop.add(r); sop.add(cyl(0.9, 1.2, mats.dark, -A / 2 - 6, y, -H - 1.5, 'z', 6), cyl(0.9, 1.2, mats.dark, A / 2 + 6, y, -H - 1.5, 'z', 6)); });
+      for (var y = 40; y < 320; y += 30) for (var k = 0; k < 3; k++) ab.add(M(new THREE.TorusGeometry(3.2, 0.25, 6, 18), mats.black, -18 + k * 18, y, -H + 4));
+      var cabs = G(); for (var k2 = 0; k2 < 10; k2++) cabs.add(cyl(0.9, 300, k2 % 2 ? mats.cableBlue : mats.black, -A / 2 + 4 + k2 * 2.2, 170, -H + 3, 'y', 10));
+      root.add(pared, losa_, esc, sop, ab, cabs);
+      return { root: root, partes: [[1, 'Muro (estructura existente)', 1, pared, [0, 0, -20], [60, 330, -H - 1]],
+        [2, 'Escalerilla recta normal 600×100 mm en vertical', 1, esc, [0, 0, 15], [A / 2, 250, -H + 4]],
+        [3, 'Riel 42×42 adosado al muro cada 1.200 mm máx. con 2 pernos de expansión 3/8"', 3, sop, [0, 0, -8], [-A / 2 - 8, 180, -H]],
+        [4, 'Amarras de cables a los palillos cada 300 mm (cables en vertical)', 1, ab, [0, 0, 20], [0, 220, -H + 8]], [5, 'Cables (referencial)', 1, cabs, [0, 0, 30], [10, 120, -H + 6]]], sim: simEscalerilla({ sop: 'muro', d: 1.2 }) };
+    };
+
+    // ── Recorrido típico con entrada a tablero (como el esquema del catálogo) ──
+    V['esc-recorrido'] = function () {
+      var A = 40, H = ES.H, R = 30, root = G(), y0 = 230, P = ES.paso;
+      var save = ES.A; ES.A = A;
+      var piezas = [], partes = [];
+      function add(M_, et) { var g = pieza(M_, A, H, P); root.add(g); piezas.push([g, et, M_]); return M_; }
+      // 1) recta de 3 m a lo largo de X
+      var m1 = add(aplicar(trRecta(300, 2), 0, y0, 0), 'recta');
+      // 2) curva horizontal hacia +Z
+      var m2 = add(aplicar(trCH(R + A / 2, Math.PI / 2), 300, y0, 0), 'ch');
+      var e2 = m2[m2.length - 1];
+      // 3) recta en Z
+      var m3 = add(trRecta(200, 2).map(function (x) { return { p: V3(e2.p.x, y0, e2.p.z + x.p.x), t: V3(0, 0, 1), u: V3(0, 1, 0), n: V3(-1, 0, 0) }; }), 'recta');
+      // 4) curva vertical exterior hacia abajo al final de m1 en el otro extremo (x=0, bajando)
+      var mCve = trCV(R + 10, Math.PI / 2, false).map(function (x) { return { p: V3(-x.p.x, y0 + x.p.y, 0), t: V3(-x.t.x, x.t.y, 0), u: V3(-x.u.x, x.u.y, 0), n: V3(0, 0, -1) }; });
+      add(mCve, 'cve'); var eC = mCve[mCve.length - 1];
+      var mBaj = add(trRecta(eC.p.y - 152, 2).map(function (x) { return { p: V3(eC.p.x, eC.p.y - x.p.x, 0), t: V3(0, -1, 0), u: V3(-1, 0, 0), n: V3(0, 0, -1) }; }), 'bajada');
+      var eB = mBaj[mBaj.length - 1];
+      // tablero con entrada superior
+      var tab = G(caja(70, 100, 30, mats.cab, 0, 0, 0)); tab.position.set(eB.p.x - 5, 100, 0);
+      var entrada = G(box(H + 8, 2, A + 8, mats.galv, eB.p.x - 5, eB.p.y - 1, 0));
+      // 5) curva vertical interior que sube al final de m3
+      var e3 = m3[m3.length - 1];
+      var mCvi = trCV(R + 10, Math.PI / 2, true).map(function (x) { return { p: V3(e3.p.x, y0 + x.p.y, e3.p.z + x.p.x), t: V3(0, x.t.y, x.t.x), u: V3(0, x.u.y, x.u.x), n: V3(-1, 0, 0) }; });
+      add(mCvi, 'cvi'); var eI = mCvi[mCvi.length - 1];
+      add(trRecta(80, 2).map(function (x) { return { p: V3(eI.p.x, eI.p.y + x.p.x, eI.p.z), t: V3(0, 1, 0), u: V3(0, 0, -1), n: V3(-1, 0, 0) }; }), 'subida');
+      // 6) tee en la recta m1 hacia -Z (derivación)
+      ES.A = save;
+      // eclisas en todas las uniones
+      var ecl = G(); piezas.forEach(function (p) { ecl.add(eclisasEn(p[2], 0, A, H)); });
+      // soportes trapecio bajo los tramos horizontales
+      var sopG = G(); [[60, 0, 0], [240, 0, 0], [e2.p.x, e2.p.z + 60, 1], [e2.p.x, e2.p.z + 170, 1]].forEach(function (s) {
+        ES.A = A; var t = trapecio(0, 0, 320 - y0, 1, A, H, 30); ES.A = save;
+        t.g.position.set(s[0], y0, s[1]); t.g.rotation.y = s[2] ? 0 : Math.PI / 2; sopG.add(t.g);
+      });
+      var losa_ = box(500, 12, 420, mats.concrete, 150, 326, 120); losa_.visible = false;
+      var piso = box(400, 6, 320, mats.concrete, 140, -3, 100);
+      var cab = cables(m1.slice().reverse().concat([]), A, 6);
+      root.add(tab, entrada, ecl, sopG, piso, cab);
+      ES.A = save;
+      return { root: root, foco: [140, 165, 90, 215], partes: [
+        [1, 'Escalerilla recta 400×100 normal, tiras de 3 m', 3, G(piezas[0][0], piezas[2][0]), [0, 20, 0], [150, y0 + H + 4, A / 2]],
+        [2, 'Escalerilla curva horizontal (C.H.) 90°', 1, piezas[1][0], [20, 20, 0], [e2.p.x - 30, y0 + H + 4, 40]],
+        [3, 'Escalerilla curva vertical exterior (C.V.E.) 90° hacia el tablero', 1, piezas[3][0], [-20, 0, 0], [-20, y0 + 6, -A / 2]],
+        [4, 'Bajada vertical a tablero', 1, piezas[4][0], [-20, 0, 0], [eB.p.x - 30, 178, -A / 2]],
+        [5, 'Entrada de tablero', 1, entrada, [0, 10, 0], [eB.p.x + 25, eB.p.y + 2, A / 2 + 6]],
+        [6, 'Tablero (referencial)', 1, tab, [20, 0, 0], [eB.p.x - 5, 60, 18]],
+        [7, 'Escalerilla curva vertical interior (C.V.I.) 90° de subida', 1, G(piezas[5][0], piezas[6][0]), [0, 20, 0], [e3.p.x, y0 + 40, e3.p.z + 20]],
+        [8, 'Pares de eclisa recta con pernos y tuercas', piezas.length, ecl, [0, 0, 0], [300, y0 + H + 8, -A / 2 - 4]],
+        [9, 'Trapecio suspendido riel 42×42 con hilo corrido 3/8"', 4, sopG, [0, -15, 0], [60, y0 + 50, -A / 2 - 10]],
+        [10, 'Cables (referencial)', 1, cab, [0, 25, 0], [100, y0 + 6, 0]]], sim: simEscalerilla({ A: 400, L: 15, ch: 1, cv: 2, ct: 0, susp: 0.9 }) };
+    };
+
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
     var $ = function (id) { return document.getElementById(id); };
     var estado = { v: DEF.variantes[0], etiquetas: true, explotar: false, giro: false };
@@ -1334,6 +1700,23 @@
       { c: '26-C', t: 'Soporte para dos instrumentos', m: 'soporte-inst2', cam: [0.6, 0.25, 1], d: 'El mismo poste con placa de montaje y visera de ancho suficiente para dos instrumentos, uno junto al otro.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
       { c: '26-D', t: 'Soporte para tres instrumentos', m: 'soporte-inst3', cam: [0.6, 0.25, 1], d: 'El mismo poste con placa de montaje y visera para tres instrumentos; atiesar la placa con los travesaños de canal para que no se deforme.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
       { c: '26-E', t: 'Soporte anclado a plataforma', m: 'soporte-plataforma', cam: [0.55, 0.12, 1], d: 'Soporte para instrumento fijado sobre plataforma de rejilla: la placa base se aprieta con 4 espárragos de 1/2" × 3" y 8 tuercas contra la rejilla y la viga, sin perforar el ala de la viga sin autorización.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] }] },
+    { id: 'eq-escalerillas', num: 'ES-1', tab: 'es', titulo: 'Escalerillas y accesorios', sub: 'Tramos rectos normal y reforzado, curvas horizontales y verticales, tee, cruz y reducción con eclisas.', variantes: [
+      { c: 'ES-1A', t: 'Escalerilla recta normal', m: 'esc-recta', cam: [0.45, 0.42, 1], d: 'Tira de 3.000 mm de laterales C de 2,0 mm con pestañas de 19 mm y palillos de 1,5 mm cada 230 mm (13 por tira), unida a la siguiente con un par de eclisas apernadas y fijada a los rieles con mordazas. Ancho A de 100 a 1.000 mm y alto lateral H de 50 a 200 mm.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1B', t: 'Escalerilla recta reforzada', m: 'esc-reforzada', cam: [0.45, 0.42, 1], d: 'Tira de 3.000 mm de laterales de 2,5 mm y palillos de 1,5 mm cada 150 mm (20 por tira), para cargas mayores o vanos entre soportes de hasta 3 m.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1C', t: 'Curva horizontal 90° (C.H.)', m: 'esc-ch90', cam: [0.2, 0.9, 0.6], d: 'Curva horizontal de 90° de radio interior R (200 a 900 mm), con palillos radiales y eclisas a los tramos rectos de entrada y salida.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1D', t: 'Curva horizontal 45° (C.H.)', m: 'esc-ch45', cam: [0.2, 0.9, 0.6], d: 'Curva horizontal de 45°; el catálogo la fabrica de 30° a 90°.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1E', t: 'Curva vertical interior (C.V.I.)', m: 'esc-cvi', cam: [0.3, 0.3, 1], d: 'Curva vertical cóncava de 90° para subir el recorrido, con los palillos hacia el lado exterior de la curva.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1F', t: 'Curva vertical exterior (C.V.E.)', m: 'esc-cve', cam: [0.3, 0.3, 1], d: 'Curva vertical convexa de 90° para bajar el recorrido (por ejemplo, hacia la entrada de un tablero); los cables apoyan sobre el lado exterior.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1G', t: 'Curva tee (C.T.)', m: 'esc-tee', cam: [0.2, 0.9, 0.7], d: 'Derivación en tee: lateral pasante continuo y dos curvas de radio R hacia la salida S; anchos entrante A, saliente S y pasante P de 100 a 1.000 mm.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1H', t: 'Curva cruz (C.C.)', m: 'esc-cruz', cam: [0.2, 0.9, 0.7], d: 'Cruce de cuatro vías con curvas de radio R en las cuatro esquinas.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-1I', t: 'Curva reducción central', m: 'esc-reduccion', cam: [0.3, 0.8, 0.8], d: 'Reducción de ancho A a B en 480 mm (tramos rectos de 160 mm); también existe en versión izquierda y derecha.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] }] },
+    { id: 'eq-escalerillas-soportes', num: 'ES-2', tab: 'es', titulo: 'Soportación de escalerillas', sub: 'Trapecio suspendido con riel 42×42 e hilo corrido, doble nivel, ménsula en muro y escalerilla vertical.', variantes: [
+      { c: 'ES-2A', t: 'Trapecio suspendido', m: 'esc-trapecio', cam: [0.55, 0.25, 1], d: 'Base de anclaje a la losa o viga, omegas, dos hilos corridos de 3/8", conjunto soporte recto de riel 42×42 con tuercas riel con resorte y mordazas sobre los laterales de la escalerilla.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Distancia entre soportes según la carga de cables y la versión: normal ≤ 1,5 m típico; reforzada hasta 3 m. Verificar la deflexión con la carga real.', 'Fijar la escalerilla a cada soporte con mordazas en ambos laterales; el hilo corrido lleva tuerca y golilla sobre y bajo el riel.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-2B', t: 'Trapecio de dos niveles', m: 'esc-trapecio2', cam: [0.55, 0.2, 1], d: 'Los mismos hilos corridos llevan dos rieles separados 300 mm: el nivel superior para fuerza y el inferior para instrumentación y comunicaciones.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Distancia entre soportes según la carga de cables y la versión: normal ≤ 1,5 m típico; reforzada hasta 3 m. Verificar la deflexión con la carga real.', 'Fijar la escalerilla a cada soporte con mordazas en ambos laterales; el hilo corrido lleva tuerca y golilla sobre y bajo el riel.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-2C', t: 'Ménsula en muro o columna', m: 'esc-mensula', cam: [0.6, 0.35, 1], d: 'Soporte muro simple riel 42×42 (L de 100 a 750 mm) fijado con 2 pernos de expansión; la escalerilla se fija con mordazas.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Distancia entre soportes según la carga de cables y la versión: normal ≤ 1,5 m típico; reforzada hasta 3 m. Verificar la deflexión con la carga real.', 'Fijar la escalerilla a cada soporte con mordazas en ambos laterales; el hilo corrido lleva tuerca y golilla sobre y bajo el riel.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] },
+      { c: 'ES-2D', t: 'Escalerilla vertical en muro', m: 'esc-vertical', cam: [0.7, 0.2, 1], d: 'Tramo vertical adosado al muro con rieles 42×42 cada 1.200 mm como máximo; los cables se amarran a los palillos cada 300 mm.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Distancia entre soportes según la carga de cables y la versión: normal ≤ 1,5 m típico; reforzada hasta 3 m. Verificar la deflexión con la carga real.', 'Fijar la escalerilla a cada soporte con mordazas en ambos laterales; el hilo corrido lleva tuerca y golilla sobre y bajo el riel.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] }] },
+    { id: 'eq-escalerillas-recorrido', num: 'ES-3', tab: 'es', titulo: 'Recorrido típico con entrada a tablero', sub: 'Recta, curva horizontal, curvas verticales, bajada y entrada a tablero sobre trapecios.', variantes: [
+      { c: 'ES-3A', t: 'Recorrido y entrada a tablero', m: 'esc-recorrido', cam: [0.95, 0.4, 1], d: 'Recorrido de escalerilla de 400×100 mm sobre trapecios suspendidos: recta, curva horizontal, curva vertical exterior con bajada y entrada de tablero, y curva vertical interior de subida. El panel lateral dimensiona el recorrido completo.', n: ['Dimensiones en milímetros salvo indicación contraria.', 'Escalerilla autosoportante de acero con recubrimiento electrogalvanizado (zincado), galvanizado en caliente, pintado o dúplex según la especificación del proyecto; en ambientes corrosivos usar galvanizado en caliente o acero inoxidable.', 'Cada tira recta y cada curva incluye un par de eclisas con sus pernos y tuercas; no soldar ni perforar en terreno sin reparar el recubrimiento con galvanizado en frío.', 'Respetar el radio mínimo de curvatura de los cables más rígidos al elegir el radio R de las curvas (200 a 900 mm).', 'Instalar un soporte a menos de 600 mm de cada lado de curvas, tees, cruces y reducciones.', 'Dejar continuidad eléctrica entre tramos (eclisas apretadas o puente de cobre) y conectar la escalerilla a la malla de tierra en sus extremos y cada 15 m como máximo.', 'Separar los cables de fuerza de los de instrumentación y comunicaciones con un nivel distinto o con separador de escalerilla.'] }] },
     { id: 'eq-plc', num: 'CP', tab: 'tb', titulo: 'Gabinete PLC y E/S remotas', sub: 'Gabinete de control con PLC, fuentes redundantes y borneras, y E/S remotas en terreno.', variantes: [
       { c: 'CP-A', t: 'Gabinete de control en sala', m: 'gabinete-plc', d: 'Gabinete autosoportado con PLC, módulos de E/S, fuentes redundantes, switch, canaletas y borneras.', n: ['Reserva de 20 % en E/S y borneras.', 'Llenado de canaletas ≤ 40 %.'] },
       { c: 'CP-B', t: 'E/S remotas en terreno', m: 'rio-terreno', d: 'Gabinete NEMA 4X en estructura de terreno con techo de protección solar y prensaestopas.', n: ['Entradas de cables solo por la parte inferior.'] }] },
