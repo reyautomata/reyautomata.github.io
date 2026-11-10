@@ -24,7 +24,7 @@
     var d = P.leer('lazos', null);
     if (!d) d = ejemplo();
     d.cfg = Object.assign({}, CFG0, d.cfg || {}); d.cfg.modelos = Object.assign({}, CFG0.modelos, (d.cfg || {}).modelos || {});
-    d.doc = d.doc || {}; d.modulos = d.modulos || []; d.senales = d.senales || []; d.lazos = d.lazos || {}; d.revs = d.revs || []; d.over = d.over || {}; d.inst = d.inst || []; d.docInst = d.docInst || {};
+    d.doc = d.doc || {}; d.modulos = d.modulos || []; d.senales = d.senales || []; d.lazos = d.lazos || {}; d.revs = d.revs || []; d.over = d.over || {}; d.inst = d.inst || []; d.docInst = d.docInst || {}; d.circ = d.circ || []; d.docCirc = d.docCirc || {};
     E = d;
   }
   var tGuardar = 0;
@@ -238,7 +238,7 @@
   var CAMPOS_CFG = [
     { g: 'Sistema de control', c: [{ k: 'proveedor', l: 'Proveedor / plataforma', prov: 1 }, { k: 'modelos.AI', l: 'Tarjeta AI por defecto', tipo: 'AI' }, { k: 'modelos.AO', l: 'Tarjeta AO por defecto', tipo: 'AO' }, { k: 'modelos.DI', l: 'Tarjeta DI por defecto', tipo: 'DI' }, { k: 'modelos.DO', l: 'Tarjeta DO por defecto', tipo: 'DO' }, { k: 'chasis', l: 'Chasis / rack por defecto' }, { k: 'slotInicial', l: 'Primer slot de E/S' }] },
     { g: 'Zonas del diagrama', c: [{ k: 'zonaTerreno', l: 'Zona de terreno' }, { k: 'zonaSala', l: 'Sala eléctrica' }, { k: 'gabinete', l: 'Gabinete' }, { k: 'zonaControl', l: 'Sala de control' }, { k: 'hmi', l: 'Estación de operación' }] },
-    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. 3450-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de cables (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
+    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. 3450-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de circuitos (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
     { g: 'Alimentación y cables', c: [{ k: 'fuente24', l: 'Barra positiva 24 VDC' }, { k: 'fuente0', l: 'Barra 0 VDC' }, { k: 'tableroAlim', l: 'Tablero de alimentación de 4 hilos' }, { k: 'tension4h', l: 'Tensión de equipos de 4 hilos' }, { k: 'cableAnalogico', l: 'Cable analógico 2 hilos' }, { k: 'cable3h', l: 'Cable analógico 3 hilos' }, { k: 'cableDiscreto', l: 'Cable discreto' }, { k: 'cableMultipar', l: 'Cable multipar JB–gabinete' }, { k: 'sufCableA', l: 'Sufijo de cable analógico' }, { k: 'sufCableD', l: 'Sufijo de cable discreto' }] },
     { g: 'Señales por defecto', c: [{ k: 'senalAI', l: 'Señal AI' }, { k: 'senalAO', l: 'Señal AO' }, { k: 'senalDI', l: 'Señal DI' }, { k: 'senalDO', l: 'Señal DO' }] }
   ];
@@ -325,7 +325,11 @@
     cab.addEventListener('pointerup', function () { if (mov) { mov = null; guardarFlota(); } });
     if (window.ResizeObserver) new ResizeObserver(function () { if (!f.hidden && Math.abs(vis.clientWidth - FL.ancho) > 8) { guardarFlota(); refrescarFlota(); } }).observe(f);
     // Seguir la fila que se está editando
-    $('#tablaIO').addEventListener('focusin', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr && flotaVisible()) mirarSenal(tr.dataset.id); });
+    $('#tablaIO').addEventListener('focusin', function (e) {
+      var tr = e.target.closest('tr[data-id]'); if (!tr) return;
+      if (e.target.dataset.k === 'tag') { var s0 = senal(tr.dataset.id); e.target.dataset.antes = s0 ? s0.tag : ''; }
+      if (flotaVisible()) mirarSenal(tr.dataset.id);
+    });
     $('#tablaIO').addEventListener('input', function (e) {
       var t = e.target, tr = t.closest('tr[data-id]'); if (!tr || t.tagName !== 'INPUT' || !t.dataset.k) return;
       var s = senal(tr.dataset.id); if (!s) return; s[t.dataset.k] = t.dataset.k === 'tag' ? t.value.toUpperCase().trim() : t.value; refrescarFlota();
@@ -541,7 +545,9 @@
       if (k === 'canal') v = v === '' ? '' : +v;
       if (k === 'tipo' && v !== s.tipo) { s.mod = ''; s.canal = ''; }
       if (k === 'mod') s.canal = '';
-      s[k] = v; guardar();
+      s[k] = v;
+      if (k === 'tag' && window.LAZOS_DOC && t.dataset.antes !== v) { window.LAZOS_DOC.renombrar(t.dataset.antes, v); t.dataset.antes = v; }
+      guardar();
       if (['tipo', 'mod', 'tag', 'canal'].indexOf(k) >= 0) pintarIO();
     });
     $('#bAgregar').addEventListener('click', function () { var t = E.senales.length ? E.senales[E.senales.length - 1].tipo : 'AI'; E.senales.push({ id: uid(), tag: '', tipo: t, hilos: 2, canal: '' }); guardar(); pintarIO(); var ins = $$('#tablaIO tbody tr:last-child input[data-k="tag"]'); if (ins[0]) ins[0].focus(); });
@@ -608,7 +614,7 @@
   enlazar();
   enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
-  if (/^#(io|mod|cfg|lazos|doc|inst)$/.test(location.hash)) v0 = location.hash.slice(1);
+  if (/^#(io|mod|cfg|lazos|doc|inst|circ)$/.test(location.hash)) v0 = location.hash.slice(1);
   mostrar(v0);
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
   window.__LAZOS = { mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };

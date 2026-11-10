@@ -136,7 +136,7 @@
   function autoInst(r, k) {
     var s = r.ref, cfg = E().cfg;
     switch (k) {
-      case 'desc': return up(ISA.describir(r.tag) || '');
+      case 'desc': return up((r.s && r.s.desc) || ISA.describir(r.tag) || '');
       case 'servicio': return s ? up(s.servicio) : '';
       case 'linea': return '';
       case 'pid': return (s && s.pid) || cfg.docPid || '';
@@ -167,9 +167,98 @@
     ['et', 'ESPECIFICACIÓN TÉCNICA', 'DOCUMENTOS', 18, 24], ['das', 'HOJA DE DATOS', 'DOCUMENTOS', 18, 24], ['obs', 'OBSERVACIONES', '', 28, 36], ['rev', 'REV.', '', 6, 8]
   ];
 
+
+  // ── Listado de circuitos ──
+  // Se genera desde el listado de E/S y los lazos: cable de terreno de cada señal, troncal multipar de cada caja (JB)
+  // y alimentación de los instrumentos de 4 hilos. E.circ guarda solo lo escrito por el usuario:
+  // { key, manual, oculto, tagC, equipo, desc, servicio, funcion, tipo, diseno, senal, dGab, dEq, hGab, hEq, largo, ducto, ruta, planos, suministro, obs }
+  // El tag y el diseño del cable se escriben de vuelta en las señales, así el diagrama de lazo y el listado de E/S quedan iguales.
+  function circuitos() {
+    var e = E(), cfg = e.cfg, pl = planos(), L = e.circ = e.circ || [], porKey = {}, out = [], porCable = {}, troncal = {};
+    L.forEach(function (x) { if (!x.manual && x.key) porKey[x.key] = x; });
+    var gab = function (m) { return up((m && m.gabinete) || cfg.gabinete || 'GABINETE DE CONTROL'); };
+    e.senales.forEach(function (s) {
+      if (!s.tag) return;
+      var r = A.resolver(s), m = A.modulo(s.mod), analog = s.tipo === 'AI' || s.tipo === 'AO', lz = A.lazoId(s);
+      var planosS = [s.pid || cfg.docPid, s.plano || pl[lz]].filter(Boolean);
+      // Cable de terreno (instrumento → JB o gabinete); señales que comparten el mismo N° de cable van en un solo circuito
+      var c = porCable[r.cable];
+      if (!c) {
+        c = porCable[r.cable] = { key: 'f:' + s.id, clase: 'f', lazo: lz, senales: [], auto: {
+          tagC: r.cable, equipo: s.tag, desc: up(r.desc), servicio: up(s.servicio), funcion: analog ? 'SEÑAL DE INSTRUMENTACIÓN' : 'SEÑAL DE CONTROL',
+          tipo: analog ? (r.hilos === 3 ? 'CABLE TRÍADA TRENZADA' : 'CABLE PAR TRENZADO') : 'CABLE MULTICONDUCTOR', diseno: up(r.cableSpec), senal: up(r.senalTxt),
+          dGab: s.tag, dEq: NA, hGab: s.jb ? 'CAJA DE CONEXIONES\n' + up(s.jb) : gab(m), hEq: s.jb ? NA : (m ? 'REGLETA ' + up(m.tb || ('TB' + s.tipo + '-01')) : NA),
+          largo: '', ducto: '', ruta: '', planos: planosS.join('\n'), suministro: '', obs: '' } };
+        out.push(c);
+      } else if (c.auto.equipo.split('\n').indexOf(s.tag) < 0) c.auto.equipo += '\n' + s.tag;
+      c.senales.push(s);
+      // Troncal multipar de la caja hacia el gabinete
+      if (s.jb) {
+        var tc = s.cable2 || ('C-' + ISA.compacto(s.jb)), t = troncal[tc];
+        if (!t) {
+          t = troncal[tc] = { key: 'm:' + tc, clase: 'm', lazo: lz, senales: [], tipos: {}, planos: {}, auto: {
+            tagC: tc, equipo: up(s.jb), desc: 'CAJA DE CONEXIONES', servicio: '', funcion: '', tipo: 'CABLE MULTIPAR', diseno: up(s.cable2Spec || cfg.cableMultipar || ''), senal: '',
+            dGab: 'CAJA DE CONEXIONES\n' + up(s.jb), dEq: NA, hGab: gab(m), hEq: m ? 'REGLETA ' + up(m.tb || ('TB' + s.tipo + '-01')) : NA, largo: '', ducto: '', ruta: '', planos: '', suministro: '', obs: '' } };
+          out.push(t);
+        }
+        t.senales.push(s); t.tipos[s.tipo] = 1; planosS.forEach(function (p) { t.planos[p] = 1; });
+        if (s.cable2Spec && !t.auto.diseno) t.auto.diseno = up(s.cable2Spec);
+      }
+      // Alimentación de los instrumentos de 4 hilos (tablero → instrumento)
+      if (+s.hilos === 4 && analog) {
+        out.push({ key: 'p:' + s.id, clase: 'p', lazo: lz, senales: [s], auto: {
+          tagC: ISA.compacto(s.tag) + '-P01', equipo: s.tag, desc: up(r.desc), servicio: up(s.servicio), funcion: 'ALIMENTACIÓN ELÉCTRICA', tipo: 'CABLE MULTICONDUCTOR',
+          diseno: up(cfg.cableAlim || '1x3C #14 AWG'), senal: up(cfg.tension4h || '120 VAC'), dGab: up(s.alimTab || cfg.tableroAlim || 'TABLERO DE DISTRIBUCIÓN'), dEq: NA, hGab: s.tag, hEq: NA,
+          largo: '', ducto: '', ruta: '', planos: planosS.join('\n'), suministro: '', obs: '' } });
+      }
+    });
+    Object.keys(troncal).forEach(function (k) {
+      var t = troncal[k], an = t.tipos.AI || t.tipos.AO;
+      t.auto.funcion = an ? 'SEÑAL DE INSTRUMENTACIÓN' : 'SEÑAL DE CONTROL';
+      t.auto.servicio = 'TRONCAL DE SEÑALES ' + Object.keys(t.tipos).sort().join(' / ') + ' DESDE ' + t.auto.equipo;
+      t.auto.senal = up(Object.keys(t.senales.reduce(function (o, s) { o[A.resolver(s).senalTxt] = 1; return o; }, {})).join(' / '));
+      t.auto.planos = Object.keys(t.planos).join('\n');
+      t.auto.obs = t.senales.length + ' PARES EN USO: ' + t.senales.map(function (s) { return s.tag; }).join(', ');
+    });
+    out.forEach(function (c) { c.x = porKey[c.key] || null; });
+    L.forEach(function (x) { if (x.manual) out.push({ key: 'x:' + x.key, clase: 'x', lazo: '', senales: [], x: x, manual: true, auto: { dEq: NA, hEq: NA } }); });
+    out = out.filter(function (c) { return !(c.x && c.x.oculto); });
+    var ordenC = { f: 0, p: 1, m: 2, x: 3 };
+    out.sort(function (a, b) { return (a.manual ? 1 : 0) - (b.manual ? 1 : 0) || ordenC[a.clase] - ordenC[b.clase] || (a.lazo || '').localeCompare(b.lazo || '', 'es', { numeric: true }) || String(valCirc(a, 'tagC')).localeCompare(String(valCirc(b, 'tagC')), 'es', { numeric: true }); });
+    return out;
+  }
+  function valCirc(c, k) { var v = c.x && c.x[k]; return v != null && v !== '' ? v : (c.auto[k] == null ? '' : c.auto[k]); }
+  // Campos que viven en las señales (los usa el diagrama de lazo): se escriben allí
+  function escribirCirc(c, k, v) {
+    if (c.clase === 'f' && (k === 'tagC' || k === 'diseno')) { c.senales.forEach(function (s) { s[k === 'tagC' ? 'cable' : 'cableSpec'] = v; }); return; }
+    if (c.clase === 'm' && (k === 'tagC' || k === 'diseno')) {
+      c.senales.forEach(function (s) { s[k === 'tagC' ? 'cable2' : 'cable2Spec'] = v; });
+      if (k === 'tagC' && c.x) c.x.key = 'm:' + (v || 'C-' + ISA.compacto(c.senales[0].jb));
+      return;
+    }
+    var x = c.x; if (!x) { x = c.x = { key: c.key }; E().circ.push(x); }
+    x[k] = v;
+  }
+  function gruposCirc() {
+    var filas = circuitos().map(function (c, i) {
+      var f = { n: i + 1 };
+      COLS_CIRC.forEach(function (col) { if (col[0] !== 'n') { var v = valCirc(c, col[0]); f[col[0]] = col[0] === 'largo' ? v : up(v); } });
+      ['ducto', 'ruta', 'planos', 'dEq', 'hEq', 'suministro'].forEach(function (k) { if (f[k] === '') f[k] = NA; });
+      return f;
+    });
+    return [{ titulo: '', filas: filas }];
+  }
+  var COLS_CIRC = [
+    ['n', 'ÍTEM', '', 6, 7], ['tagC', 'TAG CIRCUITO', '', 18, 22], ['equipo', 'TAG EQUIPO O INSTRUMENTO', '', 18, 22], ['desc', 'DESCRIPCIÓN', '', 22, 28], ['servicio', 'SERVICIO', '', 32, 38],
+    ['funcion', 'FUNCIÓN', 'CABLE', 18, 22], ['tipo', 'TIPO', 'CABLE', 17, 20], ['diseno', 'DISEÑO', 'CABLE', 15, 18], ['senal', 'TIPO DE SEÑAL', '', 12, 14],
+    ['dGab', 'GABINETE', 'DESDE', 19, 22], ['dEq', 'EQUIPO O CABECERA', 'DESDE', 17, 20], ['hGab', 'GABINETE', 'HASTA', 19, 22], ['hEq', 'EQUIPO O CABECERA', 'HASTA', 17, 20],
+    ['largo', 'LARGO CABLE [m]', '', 9, 10], ['ducto', 'DIMENSIONES DUCTO', 'CANALIZACIÓN', 15, 18], ['ruta', 'RUTA DE CANALIZACIONES', 'CANALIZACIÓN', 18, 22],
+    ['planos', 'PLANOS RELACIONADOS', '', 22, 26], ['suministro', 'SUMINISTRO', '', 18, 22], ['obs', 'OBSERVACIONES', '', 22, 26]
+  ];
+
   // ── Tipos de documento ──
   var K_IO = {
-    clave: 'doc', cols: COLS_IO, grupos: gruposIO, unir: ['tagInst', 'servicio'], izq: ['servicio', 'desc', 'obs'], notas: [],
+    clave: 'doc', archivo: 'Listado de entradas y salidas', cols: COLS_IO, grupos: gruposIO, unir: ['tagInst', 'servicio'], izq: ['servicio', 'desc', 'obs'], notas: [],
     titulo: 'LISTADO DE ENTRADAS Y SALIDAS', anexo: 'LISTADO DE ENTRADAS Y SALIDAS - SEÑALES ANALÓGICAS Y DIGITALES', objeto: 'listado de entradas y salidas del sistema de control',
     codigo: function () { return E().cfg.docIO; },
     alcance: 'Este documento corresponde al listado de entradas y salidas del sistema de control consideradas para el desarrollo del proyecto, con su punto de conexión (chasis, slot, canal), regleta, terminales, rango y alarmas.\n\nLa cantidad de los instrumentos o equipos y sus especificaciones particulares se encuentran en las hojas de datos respectivas.\n\nTodos los instrumentos y equipos deberán ser de diseño probado, de tipo estándar y fabricación reciente.',
@@ -185,7 +274,7 @@
     }
   };
   var K_INST = {
-    clave: 'docInst', cols: COLS_INST, grupos: gruposInst, unir: [], nw: ['tagInst', 'pid', 'plano', 'et', 'das'], izq: ['desc', 'servicio', 'linea', 'obs'], notas: ['N.A.: No Aplica.'],
+    clave: 'docInst', archivo: 'Listado de instrumentos', cols: COLS_INST, grupos: gruposInst, unir: [], nw: ['tagInst', 'pid', 'plano', 'et', 'das'], izq: ['desc', 'servicio', 'linea', 'obs'], notas: ['N.A.: No Aplica.'],
     titulo: 'LISTADO DE INSTRUMENTOS', anexo: 'LISTADO DE INSTRUMENTOS', objeto: 'listado de instrumentos',
     codigo: function () { return E().cfg.docInst; },
     alcance: 'Este documento corresponde al listado de instrumentos del proyecto.\n\nLa cantidad de los instrumentos y sus especificaciones particulares se encuentran en las hojas de datos respectivas.\n\nTodos los instrumentos deberán ser de diseño probado, de tipo estándar y fabricación reciente.',
@@ -196,7 +285,6 @@
         if (d.et !== NA && !vistos['et' + d.et]) { vistos['et' + d.et] = 1; add(d.et, '', 'Especificación técnica de instrumentos'); }
         if (d.das !== NA && !vistos[d.das]) { vistos[d.das] = 1; var p = plantillasHD().filter(function (x) { return x.id === d.hd; })[0]; add(d.das, '', 'Hoja de datos' + (p ? ' · ' + p.titulo : '')); }
       });
-      if (E().cfg.docIO) add(E().cfg.docIO, '', 'Listado de entradas y salidas');
     },
     ids: { form: '#iForm', prev: '#iPrev', estado: '#iEstado', excel: '#iExcel', word: '#iWord', pdf: '#iPdf', vista: '#v-inst' },
     estado: function (G) {
@@ -204,6 +292,18 @@
       return f.length + ' instrumentos · ' + io + ' con E/S · ' + (f.length - io) + ' sin E/S';
     },
     extraForm: function () { return '<fieldset><legend>Anexo A</legend><p class="ayuda ancho">Los instrumentos se editan en la tabla de arriba. Cliente, proyecto, responsables, prefijos de hojas de datos (DAS) y de especificaciones (ET) se toman del proyecto activo; las revisiones, de Configuración.</p></fieldset>'; }
+  };
+  var K_CIRC = {
+    clave: 'docCirc', archivo: 'Listado de circuitos', cols: COLS_CIRC, grupos: gruposCirc, unir: [], nw: ['tagC', 'largo'], izq: ['desc', 'servicio', 'obs', 'ruta', 'planos', 'dGab', 'hGab'], notas: ['N.A.: No Aplica.'],
+    titulo: 'LISTADO DE CIRCUITOS DE INSTRUMENTACIÓN Y CONTROL', anexo: 'LISTADO DE CIRCUITOS', objeto: 'listado de circuitos de instrumentación y control',
+    codigo: function () { return E().cfg.docCables; },
+    alcance: 'Este documento corresponde al listado de circuitos de instrumentación y control del proyecto: cables de señal, troncales multipar, alimentación y comunicaciones, con su origen, destino, tipo de cable, largo estimado y canalización.\n\nLos largos indicados son referenciales y deberán ser verificados en terreno antes del corte de los cables.\n\nTodos los cables deberán ser de diseño probado, de tipo estándar y fabricación reciente, según la especificación técnica de cables de instrumentación.',
+    ids: { form: '#cForm', prev: '#cPrev', estado: '#cEstado', excel: '#cExcel', word: '#cWord', pdf: '#cPdf', vista: '#v-circ' },
+    estado: function (G) {
+      var cs = circuitos(), m = 0; cs.forEach(function (c) { m += +valCirc(c, 'largo') || 0; });
+      return cs.length + ' circuitos · ' + cs.filter(function (c) { return c.clase === 'm'; }).length + ' troncales · ' + Math.round(m) + ' m de cable';
+    },
+    extraForm: function () { return '<fieldset><legend>Anexo A</legend><p class="ayuda ancho">Los circuitos se generan desde el listado de E/S y los lazos (cable de cada señal, troncal de cada caja y alimentación de 4 hilos). El N° y el diseño del cable se comparten con el diagrama de lazo; largo, canalización, suministro y observaciones se editan en la tabla de arriba.</p></fieldset>'; }
   };
   var K = K_IO;
   // Celdas de cabecera en dos filas: grupos combinados horizontalmente, el resto combinado verticalmente
@@ -247,7 +347,9 @@
     e.senales.forEach(function (s) { if (s.pid) add(s.pid, '', 'P&ID'); });
     if (e.cfg.docPid) add(e.cfg.docPid, '', 'P&ID');
     A.lazos().forEach(function (l) { add(l.plano, l.rev || rev, 'Diagrama de lazo ' + l.id + (l.servicio ? ' · ' + l.servicio : '')); });
-    if (e.cfg.docCables) add(e.cfg.docCables, '', 'Listado de cables');
+    if (e.cfg.docIO && K !== K_IO) add(e.cfg.docIO, '', 'Listado de entradas y salidas');
+    if (e.cfg.docInst && K !== K_INST) add(e.cfg.docInst, '', 'Listado de instrumentos');
+    if (e.cfg.docCables && K !== K_CIRC) add(e.cfg.docCables, '', 'Listado de circuitos de instrumentación y control');
     if (K.refs) K.refs(add);
     String((e[K.clave] || {}).refs || '').split(/\r?\n/).filter(Boolean).forEach(function (l) { var c = l.split(/\s*;\s*/); add(c[0], c[1] || '', c[2] || ''); });
     return r;
@@ -335,15 +437,15 @@
         g.filas.forEach(function (f, i) {
           var t = tr.filter(function (x) { return x[0] <= i && i <= x[1]; })[0];
           COLS.forEach(function (c, ci) {
-            var e = { sz: 8, h: K.izq.indexOf(c[0]) >= 0 ? 'left' : 'center', color: f.reserva ? '6B7785' : undefined };
+            var e = { sz: 8, h: K.izq.indexOf(c[0]) >= 0 ? 'left' : 'center', v: 'center', wrap: true, color: f.reserva ? '6B7785' : undefined };
             if (K.unir.indexOf(c[0]) >= 0 && t[1] > t[0]) { if (t[0] === i) h.combinar(r, ci, r + (t[1] - t[0]), ci, f[c[0]], e); }
             else h.celda(r, ci, f[c[0]] == null ? '' : f[c[0]], e);
           });
-          h.alto(r, 24); r++;
+          h.alto(r, Math.max(24, 4 + 11 * COLS.reduce(function (mx, c) { return Math.max(mx, String(f[c[0]] == null ? '' : f[c[0]]).split('\n').length); }, 1))); r++;
         });
       });
       if (K.notas.length) { r++; h.combinar(r, 0, r + K.notas.length, N - 1, 'NOTAS:\n' + K.notas.map(function (n, i) { return (i + 1) + '.- ' + n; }).join('\n'), { sz: 8, borde: 'none', v: 'top' }); }
-      var nom = (d.codigo ? d.codigo + (d.rev !== '' ? ' R' + d.rev : '') + ' ANEXO A' : K.titulo + ' ANEXO A').replace(/[\\/:*?"<>|]+/g, '-') + '.xlsx';
+      var nom = (d.codigo ? d.codigo + (d.rev !== '' ? ' R' + d.rev : '') + ' ANEXO A' : K.archivo + ' - Anexo A').replace(/[\\/:*?"<>|]+/g, '-') + '.xlsx';
       A.descargar(nom, X.generar(lb), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     });
   }
@@ -396,7 +498,7 @@
           [{ t: d.cliente, c: true }, { t: d.titulo, c: true, b: true }, { t: 'Rev. ' + d.rev + '  ·  {PAG}', c: true }]],
         bloques: B
       });
-      A.descargar(((d.codigo || K.titulo) + (d.rev !== '' ? ' R' + d.rev : '')).replace(/[\\/:*?"<>|]+/g, '-') + '.docx', bytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      A.descargar(((d.codigo || K.archivo) + (d.rev !== '' ? ' R' + d.rev : '')).replace(/[\\/:*?"<>|]+/g, '-') + '.docx', bytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     });
   }
 
@@ -437,7 +539,7 @@
     $(I.pdf).addEventListener('click', function () { K = KK; pdf(); });
     return { form: pintarForm, prev: pintarPrev, todo: function () { pintarForm(); pintarPrev(); } };
   }
-  var VIO = vistaDoc(K_IO), VINST = vistaDoc(K_INST);
+  var VIO = vistaDoc(K_IO), VINST = vistaDoc(K_INST), VCIRC = vistaDoc(K_CIRC);
 
   // ── Tabla editable de instrumentos ──
   var CI = [
@@ -446,6 +548,7 @@
     { k: 'hd', l: 'Hoja de datos (tipo)', w: 220, sel: true }, { k: 'das', l: 'N° hoja de datos', w: 175, ro: true }, { k: 'et', l: 'N° especificación técnica', w: 175 },
     { k: 'obs', l: 'Observaciones', w: 200 }, { k: 'rev', l: 'Rev.', w: 60 }
   ];
+  var COMPARTIDOS = ['desc', 'servicio', 'pid']; // viven en las señales del listado de E/S
   function clave(r) { return r.manual ? 'm:' + r.x.id : 'io:' + r.tag; }
   function fila(k) { return instrumentos().filter(function (r) { return clave(r) === k; })[0]; }
   function entrada(r) { // registro editable (se crea al primer cambio en un instrumento que viene del listado E/S)
@@ -467,6 +570,10 @@
             H.map(function (p) { return '<option value="' + p.id + '"' + (x.hd === p.id ? ' selected' : '') + '>' + esc(p.titulo) + '</option>'; }).join('') + '</select></td>';
         }
         if (c.ro) return '<td><input value="' + esc(d.das) + '" readonly tabindex="-1"></td>';
+        if (r.s && COMPARTIDOS.indexOf(c.k) >= 0) {
+          var phs = c.k === 'desc' ? up(ISA.describir(r.tag)) : c.k === 'pid' ? E().cfg.docPid || '' : '';
+          return '<td><input data-k="' + c.k + '" class="enlazado" title="Compartido con el listado de E/S y el diagrama de lazo" value="' + esc(r.s[c.k] || '') + '" placeholder="' + esc(phs) + '"></td>';
+        }
         var ph = c.k === 'et' ? (d.hd === '-' ? NA : numEt(d.hd) || NA) : autoInst(r, c.k);
         return '<td><input data-k="' + c.k + '" value="' + esc(x[c.k] || '') + '" placeholder="' + esc(ph || '') + '"></td>';
       }).join('') + '</tr>';
@@ -479,7 +586,8 @@
   $('#tablaInst').addEventListener('input', function (ev) {
     var x = ev.target, k = x.dataset.k, tr = x.closest('tr[data-r]'); if (!k || !tr) return;
     var r = fila(tr.dataset.r); if (!r) return;
-    entrada(r)[k] = x.value;
+    if (r.s && COMPARTIDOS.indexOf(k) >= 0) E().senales.forEach(function (s) { if (s.tag === r.tag) s[k] = x.value; });
+    else entrada(r)[k] = x.value;
     if (k === 'tag') tr.dataset.r = clave(r);
     if (k === 'hd' || k === 'tag') { var y = window.scrollY; pintarTabla(); window.scrollTo(0, y); }
     cambio();
@@ -523,11 +631,87 @@
   });
   function pintarInst() { pintarTabla(); VINST.todo(); }
 
-  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: VIO.todo, inst: pintarInst });
-  window.LAZOS_DOC = { tagSenal: tagSenal, descSenal: descSenal, rangoUnidad: rangoUnidad, alarma: alarma, grupos: gruposIO, instrumentos: instrumentos, gruposInst: gruposInst, hdSugerida: hdSugerida,
-    excel: function (k) { K = k === 'inst' ? K_INST : K_IO; return excel(); }, word: function (k) { K = k === 'inst' ? K_INST : K_IO; return word(); }, pdf: pdf,
-    html: function (k) { K = k === 'inst' ? K_INST : K_IO; return htmlDoc(); } };
+  // ── Tabla editable de circuitos ──
+  var CC = [
+    { k: 'tagC', l: 'Tag circuito', w: 150 }, { k: 'equipo', l: 'Tag equipo / instrumento', w: 140 }, { k: 'desc', l: 'Descripción', w: 190 }, { k: 'servicio', l: 'Servicio', w: 220 },
+    { k: 'funcion', l: 'Función', w: 170 }, { k: 'tipo', l: 'Tipo de cable', w: 160 }, { k: 'diseno', l: 'Diseño', w: 150 }, { k: 'senal', l: 'Tipo de señal', w: 110 },
+    { k: 'dGab', l: 'Desde · gabinete', w: 170 }, { k: 'dEq', l: 'Desde · equipo', w: 120 }, { k: 'hGab', l: 'Hasta · gabinete', w: 170 }, { k: 'hEq', l: 'Hasta · equipo', w: 130 },
+    { k: 'largo', l: 'Largo [m]', w: 76 }, { k: 'ducto', l: 'Ducto', w: 110 }, { k: 'ruta', l: 'Ruta de canalización', w: 160 }, { k: 'planos', l: 'Planos relacionados', w: 180 },
+    { k: 'suministro', l: 'Suministro', w: 150 }, { k: 'obs', l: 'Observaciones', w: 200 }
+  ];
+  var CLASE = { f: 'Señal', m: 'Troncal', p: 'Alim.', x: 'Manual' };
+  function claveC(c) { return c.key; }
+  function filaC(k) { return circuitos().filter(function (c) { return c.key === k; })[0]; }
+  function pintarTablaC() {
+    var q = ($('#cBuscar').value || '').toLowerCase(), Cs = circuitos();
+    var vis = Cs.filter(function (c) { return !q || CC.map(function (x) { return valCirc(c, x.k); }).join(' ').toLowerCase().indexOf(q) >= 0; });
+    $('#tablaCirc thead').innerHTML = '<tr><th class="chk"><input type="checkbox" id="cTodo" aria-label="Seleccionar todo"></th><th style="min-width:70px">Origen</th><th style="min-width:80px">Lazo</th>' + CC.map(function (c) { return '<th style="min-width:' + c.w + 'px">' + c.l + '</th>'; }).join('') + '</tr>';
+    $('#tablaCirc tbody').innerHTML = vis.map(function (c) {
+      var x = c.x || {};
+      return '<tr data-c="' + esc(claveC(c)) + '"><td class="chk"><input type="checkbox" class="chkf" aria-label="Seleccionar ' + esc(valCirc(c, 'tagC')) + '"></td><td><span class="orig' + (c.manual ? '' : ' io') + '">' + CLASE[c.clase] + '</span></td><td><input value="' + esc(c.lazo || '') + '" readonly tabindex="-1"></td>' + CC.map(function (col) {
+        var k = col.k, enSenal = (c.clase === 'f' || c.clase === 'm') && (k === 'tagC' || k === 'diseno');
+        if (c.clase === 'p' && k === 'tagC') return '<td><input value="' + esc(c.auto.tagC) + '" readonly title="Se forma con el tag del instrumento"></td>';
+        // Los campos compartidos con la señal muestran el valor guardado en la señal (vacío = automático)
+        var v = enSenal ? (c.clase === 'f' ? c.senales[0][k === 'tagC' ? 'cable' : 'cableSpec'] : c.senales[0][k === 'tagC' ? 'cable2' : 'cable2Spec']) : x[k];
+        var ph = c.auto[k] == null ? '' : c.auto[k];
+        if (enSenal) { var cfg = E().cfg; ph = k === 'tagC' ? (c.clase === 'f' ? ISA.compacto(c.senales[0].tag) + ((c.senales[0].tipo === 'AI' || c.senales[0].tipo === 'AO') ? cfg.sufCableA : cfg.sufCableD) : 'C-' + ISA.compacto(c.senales[0].jb)) : (c.clase === 'f' ? A.resolver(c.senales[0]).cableSpec : cfg.cableMultipar); }
+        return '<td><input data-k="' + k + '" value="' + esc(v || '') + '" placeholder="' + esc(String(ph).replace(/\n/g, ' · ')) + '"' + (enSenal ? ' class="enlazado" title="Compartido con el listado de E/S y el diagrama de lazo"' : '') + '></td>';
+      }).join('') + '</tr>';
+    }).join('') || '<tr><td colspan="' + (CC.length + 3) + '" class="vacio">Sin circuitos. Se generan al agregar señales en el listado de E/S; usa «+ Agregar circuito» para comunicaciones u otros cables.</td></tr>';
+    var m = 0; Cs.forEach(function (c) { m += +valCirc(c, 'largo') || 0; });
+    var ocultos = E().circ.filter(function (x) { return x.oculto; }).length;
+    $('#cCuenta').textContent = Cs.length + ' circuitos · ' + Cs.filter(function (c) { return c.clase === 'f'; }).length + ' de señal · ' + Cs.filter(function (c) { return c.clase === 'm'; }).length + ' troncales · ' + Cs.filter(function (c) { return c.clase === 'p'; }).length + ' de alimentación · ' + Cs.filter(function (c) { return c.manual; }).length + ' manuales · ' + Math.round(m) + ' m' + (ocultos ? ' · ' + ocultos + ' ocultos' : '');
+  }
+  var tPrevC = 0;
+  function cambioC() { A.guardar(); clearTimeout(tPrevC); tPrevC = setTimeout(VCIRC.prev, 300); }
+  $('#tablaCirc').addEventListener('input', function (ev) {
+    var x = ev.target, k = x.dataset.k, tr = x.closest('tr[data-c]'); if (!k || !tr) return;
+    var c = filaC(tr.dataset.c); if (!c) return;
+    escribirCirc(c, k, k === 'tagC' ? x.value.toUpperCase() : x.value);
+    if (k === 'tagC' && c.clase === 'm') { var y = window.scrollY; pintarTablaC(); window.scrollTo(0, y); var n = document.querySelector('#tablaCirc tr[data-c="m:' + (x.value.toUpperCase() || 'C-' + ISA.compacto(c.senales[0].jb)) + '"] input[data-k="tagC"]'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }
+    cambioC();
+  });
+  $('#tablaCirc').addEventListener('focusin', function (ev) { var tr = ev.target.closest('tr[data-c]'); if (!tr) return; var c = filaC(tr.dataset.c); if (c && A.mirarLazo) A.mirarLazo(c.lazo); });
+  $('#tablaCirc').addEventListener('change', function (ev) { if (ev.target.id === 'cTodo') document.querySelectorAll('#tablaCirc .chkf').forEach(function (c) { c.checked = ev.target.checked; }); });
+  $('#cBuscar').addEventListener('input', pintarTablaC);
+  $('#cAgregar').addEventListener('click', function () {
+    E().circ.push({ key: A.uid(), manual: true, tagC: '', funcion: 'SEÑAL DE COMUNICACIONES' }); pintarTablaC(); cambioC();
+    var ult = document.querySelectorAll('#tablaCirc tr[data-c^="x:"] input[data-k="tagC"]'); if (ult.length) ult[ult.length - 1].focus();
+  });
+  $('#cLargo').addEventListener('click', function () { // largo por defecto a los circuitos sin largo
+    var v = prompt('Largo por defecto [m] para los circuitos sin largo:', '50'); if (v == null || v === '' || isNaN(+v)) return;
+    circuitos().forEach(function (c) { if (!valCirc(c, 'largo')) escribirCirc(c, 'largo', String(+v)); });
+    pintarTablaC(); cambioC();
+  });
+  $('#cRestaurar').addEventListener('click', function () {
+    E().circ.forEach(function (x) { delete x.oculto; });
+    // quita registros de circuitos automáticos que ya no existen
+    var vivos = {}; circuitos().forEach(function (c) { vivos[c.key] = 1; });
+    E().circ = E().circ.filter(function (x) { return x.manual || vivos[x.key]; });
+    pintarTablaC(); cambioC();
+  });
+  $('#cQuitar').addEventListener('click', function () {
+    var ks = []; document.querySelectorAll('#tablaCirc .chkf:checked').forEach(function (c) { ks.push(c.closest('tr').dataset.c); });
+    ks.forEach(function (k) { var c = filaC(k); if (!c) return; if (c.manual) E().circ.splice(E().circ.indexOf(c.x), 1); else escribirCirc(c, 'oculto', true); });
+    if (ks.length) { pintarTablaC(); cambioC(); }
+  });
+  function pintarCirc() { pintarTablaC(); VCIRC.todo(); }
+
+  // Cambio de tag en el listado de E/S: se arrastra a los registros del listado de instrumentos y de circuitos
+  function renombrar(viejo, nuevo) {
+    if (!viejo || !nuevo || viejo === nuevo) return;
+    var e = E(); if (e.senales.some(function (s) { return s.tag === viejo; })) return;
+    (e.inst || []).forEach(function (x) { if (x.tag === viejo && !x.manual) x.tag = nuevo; if (x.obs) x.obs = x.obs.split(viejo).join(nuevo); });
+    (e.circ || []).forEach(function (x) { ['equipo', 'dGab', 'hGab', 'obs'].forEach(function (k) { if (x[k]) x[k] = String(x[k]).split(viejo).join(nuevo); }); });
+    A.guardar();
+  }
+
+  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: VIO.todo, inst: pintarInst, circ: pintarCirc });
+  window.LAZOS_DOC = { renombrar: renombrar, circuitos: circuitos, gruposCirc: gruposCirc, tagSenal: tagSenal, descSenal: descSenal, rangoUnidad: rangoUnidad, alarma: alarma, grupos: gruposIO, instrumentos: instrumentos, gruposInst: gruposInst, hdSugerida: hdSugerida,
+    excel: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return excel(); }, word: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return word(); }, pdf: pdf,
+    html: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return htmlDoc(); } };
   // Si la página se abrió directamente en una de estas pestañas, se pinta ahora
   if (!$('#v-doc').hidden) VIO.todo();
   if (!$('#v-inst').hidden) pintarInst();
+  if (!$('#v-circ').hidden) pintarCirc();
 })();
