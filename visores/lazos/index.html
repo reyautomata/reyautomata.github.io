@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagramas de lazo · ReyEngi</title>
+<meta name="description" content="Diagramas de lazo de instrumentos (ISA-5.4) generados desde el listado de entradas y salidas, con tarjetas por proveedor, exportables a PDF y DXF.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --panel2: #13284A; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; }
+[hidden] { display: none !important; }
+button, .btn { font: 600 14px var(--f-body); border-radius: 8px; padding: 8px 13px; min-height: 40px; cursor: pointer; border: 1.5px solid var(--line); background: transparent; color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover, .btn:hover { border-color: var(--accent); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button.mini { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+button.peligro:hover { border-color: #E5484D; color: #FF8C8F; }
+input, select, textarea { font: 14px var(--f-body); color: var(--fg); background: var(--panel); border: 1.5px solid var(--line); border-radius: 6px; padding: 6px 8px; min-height: 36px; width: 100%; }
+textarea { font-family: var(--f-mono); font-size: 13px; }
+label { display: grid; gap: 4px; align-content: start; font: 600 12.5px var(--f-body); color: var(--muted); }
+
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 4px solid var(--accent); padding: 10px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1500px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 19px; font-weight: 700; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+.barra a.volver:hover { color: var(--accent-ink); }
+.selp { display: inline-flex; grid-auto-flow: column; align-items: center; gap: 6px; font: 600 12px var(--f-mono); color: var(--muted); }
+.selp select { min-height: 40px; max-width: 220px; width: auto; }
+.tabs { max-width: 1500px; margin: 10px auto 0; display: flex; gap: 2px; overflow-x: auto; }
+.tabs button { border: 0; border-radius: 8px 8px 0 0; min-height: 42px; color: var(--muted); background: transparent; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--fg); box-shadow: inset 0 3px 0 var(--accent); }
+
+main { padding: 18px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1500px; margin: 0 auto; }
+.herr { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.herr .esp { flex: 1; }
+.estado { font: 500 12.5px var(--f-mono); color: var(--muted); }
+.vacio { color: var(--muted); }
+.ayuda { color: var(--muted); font-size: 13.5px; line-height: 1.5; margin: 0; }
+.intro { color: var(--muted); max-width: 90ch; line-height: 1.55; margin: 0 0 14px; }
+
+/* Lazos */
+.lazos { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.lazos > div { min-width: 0; }
+.lista { position: sticky; top: 128px; max-height: calc(100vh - 150px); overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+.itlazo { display: grid; justify-items: start; gap: 2px; text-align: left; background: var(--panel); padding: 10px 12px; }
+.itlazo b { font: 700 14px var(--f-mono); color: #fff; }
+.itlazo span { font-size: 13px; color: var(--fg); font-weight: 500; }
+.itlazo small { font: 500 11.5px var(--f-mono); color: var(--muted); }
+.itlazo[aria-pressed="true"] { border-color: var(--accent); background: var(--panel2); }
+.datosLazo { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px; }
+.datosLazo .ancho { grid-column: 1 / -1; }
+.aviso { border: 1.5px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; font-size: 13.5px; }
+.hojas { display: flex; flex-direction: column; gap: 14px; }
+.hoja { background: #fff; border-radius: 4px; box-shadow: 0 6px 30px rgba(0, 0, 0, .45); overflow: hidden; }
+.hoja svg { display: block; width: 100%; height: auto; }
+table.det { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+table.det th, table.det td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+table.det th { color: var(--muted); font: 600 12px var(--f-mono); }
+.peq { font-size: 12px; color: var(--muted); }
+em.ref { font-style: normal; color: var(--warn); font: 600 11px var(--f-mono); }
+
+/* Listado E/S */
+.tscroll { overflow: auto; max-height: calc(100vh - 230px); border: 1.5px solid var(--line); border-radius: 8px; }
+table.io { border-collapse: separate; border-spacing: 0; font-size: 13px; }
+table.io th { position: sticky; top: 0; z-index: 1; background: var(--brand); color: #fff; font: 600 12px var(--f-body); text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+table.io td { padding: 2px 3px; border-bottom: 1px solid var(--line); }
+table.io td input, table.io td select { min-height: 32px; border-color: transparent; background: transparent; padding: 4px 6px; font-size: 13px; }
+table.io td input:hover, table.io td select:hover { border-color: var(--line); }
+table.io td input::placeholder { color: #6E8299; }
+table.io .chk { width: 34px; text-align: center; }
+table.io .chk input { width: 18px; min-height: 18px; }
+table.io tr:hover td { background: rgba(255, 255, 255, .03); }
+table.io td:nth-child(2) input { font: 600 13px var(--f-mono); }
+
+/* Tarjetas y canales */
+h2.grupo { font: 700 13px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; display: flex; gap: 12px; align-items: center; margin: 22px 0 10px; }
+.modulo { background: var(--panel); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.modcab { display: grid; grid-template-columns: 110px minmax(240px, 2fr) 70px 70px 110px minmax(160px, 1fr) auto auto; gap: 8px; align-items: end; }
+.fuente { margin: 8px 0; font: 500 12px var(--f-mono); color: var(--muted); }
+table.canales { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.canales th { text-align: left; font: 600 12px var(--f-mono); color: var(--muted); padding: 6px; border-bottom: 1px solid var(--line); }
+table.canales td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
+table.canales td.c { font: 700 13px var(--f-mono); width: 54px; text-align: center; }
+table.canales td.bornes span { display: inline-block; margin: 2px 8px 2px 0; font: 500 12px var(--f-mono); color: var(--muted); }
+table.canales td.bornes b { color: var(--fg); }
+table.canales select { min-height: 32px; max-width: 220px; }
+label.mini2 { font-size: 11px; }
+label.mini2 input { min-height: 30px; font: 12px var(--f-mono); }
+
+/* Configuración */
+#cfgForm { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; }
+fieldset { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; align-items: end; align-content: start; }
+legend { font: 700 13px var(--f-mono); color: var(--accent-ink); padding: 0 6px; }
+table.revs { width: 100%; border-collapse: collapse; margin-top: 8px; }
+table.revs th { text-align: left; font: 600 12px var(--f-mono); color: var(--muted); padding: 4px; }
+table.revs td { padding: 2px; }
+
+/* Diálogo */
+dialog { background: var(--panel); color: var(--fg); border: 1.5px solid var(--line); border-radius: 12px; padding: 0; width: min(880px, calc(100vw - 32px)); max-height: calc(100vh - 40px); }
+dialog::backdrop { background: rgba(2, 8, 18, .7); }
+dialog form { display: flex; flex-direction: column; max-height: calc(100vh - 44px); }
+dialog h2 { margin: 0; padding: 14px 18px; font-size: 17px; border-bottom: 1px solid var(--line); }
+#dlgCuerpo { padding: 16px 18px; overflow: auto; display: grid; gap: 12px; }
+dialog .pie { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+.fila3 { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
+code { font-family: var(--f-mono); color: var(--accent-ink); }
+
+#imp { display: none; }
+@media (max-width: 980px) {
+  .barra { position: static; }
+  .lazos { grid-template-columns: 1fr; }
+  .lista { position: static; max-height: 260px; }
+  .modcab { grid-template-columns: 1fr 1fr; }
+  fieldset { grid-template-columns: 1fr; }
+  .datosLazo, .fila3 { grid-template-columns: 1fr; }
+}
+@media print {
+  @page { size: 420mm 297mm; margin: 0; }
+  html, body { background: #fff; }
+  body > *:not(#imp) { display: none !important; }
+  #imp { display: block; }
+  .hojaImp { width: 420mm; height: 297mm; page-break-after: always; break-after: page; overflow: hidden; }
+  .hojaImp:last-child { page-break-after: auto; break-after: auto; }
+  .hojaImp svg { width: 420mm; height: 297mm; display: block; }
+}
+</style>
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Visores 3D</a>
+    <h1>Diagramas de lazo<small>ISA-5.4 · listado de E/S ⇄ tarjetas ⇄ lazos</small></h1>
+    <label class="selp">Proyecto <select id="proy" aria-label="Proyecto activo"></select></label>
+    <a class="btn" href="../proyectos/">Proyectos</a>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button type="button" role="tab" data-v="lazos" aria-selected="true">Diagramas de lazo</button>
+    <button type="button" role="tab" data-v="io" aria-selected="false">Listado de E/S</button>
+    <button type="button" role="tab" data-v="mod" aria-selected="false">Tarjetas y canales</button>
+    <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
+  </nav>
+</header>
+
+<main>
+  <section id="v-lazos">
+    <div class="herr">
+      <button type="button" class="pri" id="bNuevo">+ Nuevo lazo típico</button>
+      <button type="button" id="bPdfTodos">PDF de todos</button>
+      <button type="button" id="bDxfTodos">DXF de todos (.zip)</button>
+      <span class="esp"></span><span class="estado" id="estado"></span>
+    </div>
+    <div class="lazos">
+      <div>
+        <input id="buscarLazo" type="search" placeholder="Buscar lazo, tag o servicio" aria-label="Buscar lazo" style="margin-bottom:8px">
+        <div class="lista" id="listaLazos"></div>
+      </div>
+      <div>
+        <div id="hojaVacia" class="vacio"><p>No hay lazos en este proyecto.</p><button type="button" class="pri" id="bNuevo2">+ Crear un lazo típico</button></div>
+        <div id="hojaLazo" hidden>
+          <div class="herr">
+            <h2 id="lzTitulo" style="margin:0 auto 0 0;font-size:18px"></h2>
+            <button type="button" id="bPdf">Imprimir / PDF</button>
+            <button type="button" id="bDxf">Descargar DXF</button>
+            <button type="button" id="bEditarIO">Editar señales</button>
+            <button type="button" class="peligro" id="bBorrarLazo">Quitar lazo</button>
+          </div>
+          <div class="datosLazo">
+            <label>Servicio del lazo<input id="lzServicio"></label>
+            <label>N° de plano<input id="lzPlano"></label>
+            <label class="ancho">Notas propias del lazo (una por línea)<textarea id="lzNotas" rows="2"></textarea></label>
+          </div>
+          <p class="aviso" id="avisoLazo" hidden></p>
+          <div class="hojas" id="hojas"></div>
+          <table class="det" id="tablaLazo"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-io" hidden>
+    <p class="intro">El listado de entradas y salidas es la base de los diagramas: cada tag queda en el lazo de su número (ej. FIT-7372 y FV-7372 forman el lazo 7372) y se dibuja con el conexionado típico de su tipo de señal, número de hilos y tarjeta. Los campos en gris se completan solos; escribe encima para cambiarlos.</p>
+    <div class="herr">
+      <button type="button" id="bAgregar">+ Agregar señal</button>
+      <button type="button" id="bPegar">Pegar desde Excel</button>
+      <button type="button" id="bImportar">Importar .xlsx / .csv</button>
+      <input type="file" id="archivo" accept=".xlsx,.csv,.txt" hidden>
+      <button type="button" id="bAsignar">Asignar canales automáticamente</button>
+      <button type="button" id="bExcel">Exportar Excel</button>
+      <button type="button" id="bCsv">Exportar CSV</button>
+      <button type="button" class="peligro" id="bQuitar">Quitar seleccionadas</button>
+      <span class="esp"></span>
+      <input id="buscarIO" type="search" placeholder="Filtrar" aria-label="Filtrar listado" style="max-width:220px">
+    </div>
+    <p class="estado" id="cuentaIO"></p>
+    <div class="tscroll"><table class="io" id="tablaIO"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="v-mod" hidden>
+    <p class="intro">Cada tarjeta muestra sus canales con los bornes de la biblioteca del proveedor. Elige en cada canal el instrumento que va conectado y el diagrama se actualiza. "Editar bornes" permite corregir la numeración de cualquier modelo para este proyecto.</p>
+    <div class="herr"><button type="button" id="bAsignar2">Asignar canales automáticamente</button><button type="button" id="bLiberar">Liberar todos los canales</button></div>
+    <div id="modulos"></div>
+  </section>
+
+  <section id="v-cfg" hidden>
+    <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
+    <div id="cfgForm"></div>
+    <div class="herr" style="margin-top:14px"><button type="button" id="bAplicarProv">Aplicar tarjetas por defecto a todas las tarjetas existentes</button></div>
+    <fieldset style="display:block;margin-top:14px"><legend>Revisiones (cuadro de revisiones de los planos)</legend>
+      <table class="revs" id="revs"></table>
+      <button type="button" class="mini" id="bRev" style="margin-top:8px">+ Agregar revisión</button>
+    </fieldset>
+    <div class="herr" style="margin-top:20px"><button type="button" class="peligro" id="bReiniciar">Borrar todo y cargar el ejemplo</button></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <h2 id="dlgTitulo"></h2>
+    <div id="dlgCuerpo"></div>
+    <div class="pie"><button value="cancel" formnovalidate>Cancelar</button><button value="ok" class="pri" id="dlgOk">Aceptar</button></div>
+  </form>
+</dialog>
+
+<div id="imp"></div>
+
+<script src="../proyectos.js"></script>
+<script src="../hojas-datos/xlsx.js"></script>
+<script src="isa.js"></script>
+<script src="tarjetas.js"></script>
+<script src="dibujo.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
