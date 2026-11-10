@@ -151,6 +151,9 @@ table.io2 td { padding: 0.6mm 0.9mm; text-align: center; }
 table.io2 td.izq { text-align: left; }
 table.io2 tr.grp td { background: #DCE3EB; color: #022A55; font-weight: 700; text-align: left; font-size: 7pt; }
 table.io2 tr.res td { color: #6B7785; }
+.orig { display: inline-block; font: 600 11px var(--f-mono); padding: 2px 6px; border-radius: 4px; background: var(--line); color: var(--fg); }
+.orig.io { background: #DCE3EB; color: #022A55; }
+table.io td input[readonly] { color: var(--muted); }
 table.encio td { font-size: 7.4pt; padding: 0.8mm 1.2mm; }
 @media (max-width: 980px) { .docio { grid-template-columns: 1fr; } .dform { position: static; max-height: none; } }
 
@@ -214,6 +217,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="io" aria-selected="false">Listado de E/S</button>
     <button type="button" role="tab" data-v="mod" aria-selected="false">Tarjetas y canales</button>
     <button type="button" role="tab" data-v="doc" aria-selected="false">Documento E/S</button>
+    <button type="button" role="tab" data-v="inst" aria-selected="false">Listado de instrumentos</button>
     <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
   </nav>
 </header>
@@ -294,6 +298,32 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     </div>
   </section>
 
+  <section id="v-inst" hidden>
+    <p class="intro">Listado de instrumentos del proyecto: cada tag del listado de E/S aparece aquí solo, y puedes sumar instrumentos sin E/S (manómetros, elementos primarios, balizas…). Descripción ISA, servicio, P&amp;ID, diagrama de lazo y los números de hoja de datos (DAS) y especificación técnica (ET) se completan solos en gris; escribe encima para cambiarlos.</p>
+    <div class="herr">
+      <button type="button" class="pri" id="iAgregar">+ Agregar instrumento</button>
+      <button type="button" id="iPrimarios">Agregar elementos primarios (FE, LE, TE, AE)</button>
+      <button type="button" id="iSincronizar">Sincronizar con listado E/S</button>
+      <button type="button" class="peligro" id="iQuitar">Quitar seleccionados</button>
+      <button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button>
+      <span class="esp"></span>
+      <input id="iBuscar" type="search" placeholder="Filtrar" aria-label="Filtrar instrumentos" style="max-width:220px">
+    </div>
+    <p class="estado" id="iCuenta"></p>
+    <div class="tscroll"><table class="io" id="tablaInst"><thead></thead><tbody></tbody></table></div>
+    <h2 class="grupo" style="margin-top:26px">Documento · Listado de instrumentos</h2>
+    <div class="herr">
+      <button type="button" class="pri" id="iExcel">Excel · Anexo A</button>
+      <button type="button" id="iWord">Word · documento completo</button>
+      <button type="button" id="iPdf">Imprimir / PDF</button>
+      <span class="esp"></span><span class="estado" id="iEstado"></span>
+    </div>
+    <div class="docio">
+      <form id="iForm" class="dform" onsubmit="return false"></form>
+      <div class="dprev" id="iPrev"></div>
+    </div>
+  </section>
+
   <section id="v-cfg" hidden>
     <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
     <div class="herr"><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
@@ -338,6 +368,13 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="tarjetas.js"></script>
 <script src="dibujo.js"></script>
 <script src="../especificaciones/docx.js"></script>
+<script src="../hojas-datos/plantillas.js"></script>
+<script src="../hojas-datos/plantillas2.js"></script>
+<script src="../hojas-datos/plantillas3.js"></script>
+<script src="../hojas-datos/plantillas4.js"></script>
+<script src="../especificaciones/plantillas-et.js"></script>
+<script src="../especificaciones/plantillas-et2.js"></script>
+<script src="../especificaciones/plantillas-et3.js"></script>
 <script src="app.js"></script>
 <script src="docio.js"></script>
 </body>
