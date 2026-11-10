@@ -67,6 +67,18 @@ ul.lst { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
 b.mal { color: var(--bad); } b.av { color: var(--warn); }
 .peq { font-size: 11.5px; color: var(--muted); }
 textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margin-top: 8px; }
+.simgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-items: start; }
+.simvista { padding: 0; overflow: hidden; position: relative; }
+#sCv { display: block; width: 100%; height: 420px; background: #0B1828; }
+.lect { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+.lect div { background: var(--panel); padding: 7px 10px; font-size: 11px; color: var(--muted); }
+.lect b { display: block; font: 700 16px var(--f-mono); color: #fff; }
+.lect .mal b { color: var(--bad); } .lect .av b { color: var(--warn); } .lect .ok b { color: var(--ok); }
+.herr { display: flex; gap: 6px; flex-wrap: wrap; }
+input[type=range] { accent-color: var(--accent); padding: 0; min-height: 24px; border: 0; background: none; }
+label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
+#sCurva { width: 100%; height: auto; background: #0B1828; border-radius: 8px; }
+@media (max-width: 1000px) { .simgrid { grid-template-columns: 1fr; } .lect { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .dos, .tres { grid-template-columns: 1fr; } }
 @media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
 </style>
@@ -83,6 +95,7 @@ textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margi
   <nav class="tabs" aria-label="Secciones">
     <button type="button" data-t="aprender" aria-selected="true">Piping para leer P&amp;ID</button>
     <button type="button" data-t="valvulas" aria-selected="false">Válvulas: tamaño y actuador</button>
+    <button type="button" data-t="sim" aria-selected="false">Simulación</button>
   </nav>
 </header>
 <main>
@@ -201,6 +214,7 @@ textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margi
       <label class="gas" hidden>xT (factor de ΔP crítica)<input id="kxT" type="number" value="0.72" step="any"></label>
     </div>
     <div id="kRes" aria-live="polite"></div>
+    <button type="button" class="pri" id="bSimular" style="margin-top:10px">▶ Simular esta válvula en el sistema</button>
     <p class="peq" style="margin-top:6px">Ecuaciones IEC 60534-2-1 para flujo turbulento sin reductores (FP = 1): líquido Kv = Q·√(G/ΔP), con ΔP limitado a FL²·(P1 − FF·Pv); gas Kv = Q/(N9·P1·Y)·√(M·T·Z/x), con x limitado a Fγ·xT. Cv = 1,156·Kv. FL y xT se cargan con valores típicos del tipo elegido.</p>
   </div>
 
@@ -249,7 +263,44 @@ textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margi
     </ul>
   </div>
 </section>
+<section data-t="sim" hidden>
+  <p class="intro">Simulación de la válvula instalada en un sistema típico: bomba → cañería → válvula de control → estanque. Mueve la apertura o deja que el controlador regule el caudal y observa en tiempo real el caudal, las presiones, la velocidad, la autoridad de la válvula y el régimen (normal, cavitación o flujo ahogado). La curva muestra la característica inherente frente a la instalada.</p>
+  <div class="simgrid">
+    <div class="blk simvista">
+      <canvas id="sCv" aria-label="Esquema animado del sistema bomba, cañería, válvula y estanque"></canvas>
+      <div class="lect" id="sLect" aria-live="polite"></div>
+    </div>
+    <div class="blk">
+      <h2>Operación</h2>
+      <div class="form">
+        <label style="grid-column:1/-1">Modo<select id="sModo"><option value="man">Manual: muevo la apertura</option><option value="auto">Automático: controlador PI de caudal</option></select></label>
+        <label style="grid-column:1/-1" id="sAbLbl">Apertura de la válvula <output id="sAbOut">60 %</output><input id="sAb" type="range" min="0" max="100" value="60" step="1"></label>
+        <label style="grid-column:1/-1" id="sSpLbl" hidden>Consigna de caudal [m³/h] <output id="sSpOut"></output><input id="sSp" type="range" min="0" max="300" value="100" step="1"></label>
+        <label>Característica<select id="sCar"><option value="eq">Igual porcentaje (R = 50)</option><option value="lin">Lineal</option><option value="qo">Apertura rápida</option></select></label>
+        <label>Kv a 100 % [m³/h]<input id="sKv" type="number" value="200" step="any"></label>
+      </div>
+      <h2 style="margin-top:12px">Sistema</h2>
+      <div class="form">
+        <label>Bomba: presión a caudal cero [bar g]<input id="sP0" type="number" value="8" step="any"></label>
+        <label>Bomba: presión a Q nominal [bar g]<input id="sPn" type="number" value="6" step="any"></label>
+        <label>Q nominal de la bomba [m³/h]<input id="sQn" type="number" value="120" step="any"></label>
+        <label>Pérdida de la línea a Q nominal [bar]<input id="sPl" type="number" value="1" step="any"></label>
+        <label>Presión del destino [bar g]<input id="sPd" type="number" value="0.5" step="any"></label>
+        <label>Diámetro de la línea<select id="sLin"></select></label>
+        <label>Gravedad específica<input id="sG" type="number" value="1" step="any"></label>
+        <label>Presión de vapor [bar a]<input id="sPv" type="number" value="0.032" step="any"></label>
+        <label>FL<input id="sFL" type="number" value="0.9" step="any"></label>
+      </div>
+      <div class="herr" style="margin-top:10px"><button type="button" id="sPausa">⏸ Pausa</button> <button type="button" id="sPerturba" title="Sube la presión del destino 1 bar por 8 s para ver la respuesta del controlador">Perturbación</button></div>
+    </div>
+  </div>
+  <div class="blk"><h2>Característica inherente e instalada</h2>
+    <svg id="sCurva" viewBox="0 0 1100 290" role="img" aria-label="Curva de caudal versus apertura"></svg>
+    <p class="peq">Autoridad N = ΔP de la válvula abierta / ΔP disponible del sistema. Con N bajo 0,25 la característica instalada se deforma hacia apertura rápida y el control pierde sensibilidad a altas aperturas; lo usual es buscar N entre 0,3 y 0,5.</p>
+  </div>
+</section>
 </main>
 <script src="piping.js"></script>
+<script src="sim.js"></script>
 </body>
 </html>

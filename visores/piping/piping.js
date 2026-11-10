@@ -193,6 +193,7 @@
     // pasa el diámetro de asiento sugerido al cálculo del actuador
     if (sel && !$('#aDs').dataset.manual) $('#aDs').value = String(Math.round(Math.max(0.5, dIn(sel) * 0.85) * 25.4));
     if (!$('#aDp').dataset.manual && isFinite(num('kP1'))) $('#aDp').value = String(+num('kP1').toFixed(2));
+    window.__PIPING = { Kv: Kv, Cv: Cv, sel: sel, tipo: tipo, KvSel: sel ? cvNominal(tipo, sel) / 1.156 : NaN, gas: gas, linea: linea, TUBOS: TUBOS, dIn: dIn };
     return { Kv: Kv, Cv: Cv, sel: sel };
   }
   function fase() { var g = $('#kFase').value === 'gas'; $$('.liq').forEach(function (x) { x.hidden = g; }); $$('.gas').forEach(function (x) { x.hidden = !g; }); $('#kQlbl').firstChild.textContent = g ? 'Caudal máximo [Nm³/h, 0 °C y 1 atm]' : 'Caudal máximo [m³/h]'; calcKv(); }
