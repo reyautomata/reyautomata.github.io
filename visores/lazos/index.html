@@ -160,7 +160,7 @@ table.io2 tr.res td { color: #6B7785; }
 .kley { margin: 0; padding: 0; list-style: none; font-size: 11.5px; line-height: 1.6; max-height: 430px; overflow: auto; } .kdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 .ktam tbody tr { cursor: pointer; } .ktam tr.usar td { background: rgba(46,125,50,.32); } .ktam tr.visto td:nth-child(2) { outline: 2px solid #2f6db3; outline-offset: -2px; }
 .kdlg { width: min(760px, 94vw); border: 0; border-radius: 10px; padding: 16px; box-shadow: 0 16px 50px rgba(0,0,0,.35); } .kdlg::backdrop { background: rgba(5,12,22,.55); } .kdlg h3 { margin: 0 0 10px; font-size: 15px; }
-.kdlg input[type=search] { width: 100%; margin-bottom: 8px; } .kselista { max-height: 55vh; overflow: auto; border: 1px solid #dde3ea; border-radius: 6px; }
+.kdlg input[type=search] { width: 100%; margin-bottom: 8px; } .kpref { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; font-size: 11.5px; } .kpref select { width: 100%; } @media (max-width: 560px) { .kpref { grid-template-columns: 1fr; } } .kselista { max-height: 55vh; overflow: auto; border: 1px solid #dde3ea; border-radius: 6px; }
 .kdlg { background: #0f1f33; color: #e8eef5; } .kselista { border-color: #2c4866 !important; } .ksel { border-bottom-color: #1f3550 !important; } .ksel { display: grid; grid-template-columns: 22px 1fr; column-gap: 6px; padding: 6px 10px; border-bottom: 1px solid #eef1f4; font-size: 12px; cursor: pointer; } .ksel input { grid-row: span 4; margin-top: 2px; } .ksel span { grid-column: 2; }
 @media (max-width: 760px) { .kres { grid-template-columns: 1fr; } }
 @media (max-width: 980px) { #v-cond .uni { grid-template-columns: minmax(0, 1fr); } } #v-cond .uni > div, #kForm fieldset { min-width: 0; } #kForm select, #kForm input { min-width: 0; max-width: 100%; }
@@ -433,6 +433,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <dialog id="kSel" class="kdlg" aria-labelledby="kSelTit">
       <h3 id="kSelTit">Cables desde el listado de circuitos</h3>
       <input id="kSelFiltro" type="search" placeholder="Filtrar por tag, cable, gabinete o ruta" aria-label="Filtrar circuitos">
+      <div class="kpref"><label>Instrumentación (multipares y multitríos)<select id="kPrefI"></select></label><label>Control (multiconductores)<select id="kPrefC"></select></label></div>
       <div id="kSelLista" class="kselista"></div>
       <div class="herr" style="justify-content:flex-end"><button type="button" id="kSelCerrar">Cancelar</button><button type="button" class="pri" id="kSelOk">Agregar seleccionados</button></div>
     </dialog>

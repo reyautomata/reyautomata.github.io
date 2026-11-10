@@ -34,11 +34,27 @@
   };
   var COND = [['normal', 'Tramo normal (≤ 20 m, ≤ 2 curvas, desviación ≤ 180°)'], ['niple', 'Tubería de unión entre gabinetes de hasta 1 m'], ['subt', 'Ducto subterráneo']];
 
-  // ── Catálogo de cables: [id, familia, código, descripción, Ø mm, conductores interiores, apantallado] ──
-  // Diámetros de referencia del formato original (catálogo Cocesa) y THHN/THWN-2 de NEC Cap. 9 Tabla 5.
-  var FAM = { par: 'Par / tríada apantallado (instrumentación)', mpar: 'Multipar apantallado por par y total', mtri: 'Multitríada apantallada por tríada y total', xtcc: 'Multiconductor de control XTCC 90 °C 600 V', xtmu: 'Fuerza XTMU 90 °C 1000 V', thhn: 'Unipolar THHN / THWN-2', otro: 'Otro cable (Ø manual)' };
+  // ── Catálogo de cables ──
+  // Diámetros exteriores aproximados de: Catálogo general de conductores General Cable/Cocesa 2013 y Catálogo de productos
+  // General Cable 2019 (tablas «Información técnica adicional»); se mantienen los valores del formato original (Cocesa,
+  // códigos UI/HU/EN) y THHN de NEC Cap. 9 Tabla 5. Los ids del formato original no cambian (proyectos guardados).
+  var FAM = {
+    pvicp: 'PVIC pares apantallados · GC/Cocesa 2013', pvict: 'PVIC tríos apantallados · GC/Cocesa 2013',
+    gfip: 'GenFree-Instrumentación pares (LSZH) · GC/Cocesa 2013', gfit: 'GenFree-Instrumentación tríos (LSZH) · GC/Cocesa 2013',
+    cvtc: 'CVTC control 600 V (TC-ER) · GC/Cocesa 2013', gfc: 'GenFree-control (LSZH) · GC/Cocesa 2013', dlx: 'Duralox-control armado · GC/Cocesa 2013',
+    xtu: 'XTU monoconductor 600 V · GC/Cocesa 2013', xtm3: 'XTMU 600 V · 3 fases · GC/Cocesa 2013', xtm3n: 'XTMU 600 V · 3 fases + neutro · GC/Cocesa 2013',
+    xtm3nt: 'XTMU 600 V · 3 fases + neutro + tierra · GC/Cocesa 2013', xtk3: 'XTMU 1 kV · 3 fases · GC/Cocesa 2013',
+    sfx3: 'SUPERFLEX multiconductor · 3 fases · GC/Cocesa 2013', sfx3nt: 'SUPERFLEX multiconductor · 3F + N + T · GC/Cocesa 2013',
+    rz1m: 'EXZHELLENT XXI RZ1-K multiconductor · GC 2019', rz1: 'EXZHELLENT XXI RZ1-K monoconductor · GC 2019',
+    thgc: 'THHN-PLUS (THHN/THWN-2) · GC 2019', evaf: 'EVAFLEX H07Z1-K · GC 2019', exz: 'EXZHELLENT XXI H07Z1-K · GC/Cocesa 2013',
+    genl: 'GENLIS ECO H07V-U · GC 2019', gpt: 'GPT (TAC) · GC/Cocesa 2013',
+    par: 'Par / tríada apantallado · formato original (Cocesa)', mpar: 'Multipar apantallado · formato original (Cocesa)', mtri: 'Multitríada apantallada · formato original (Cocesa)',
+    xtcc: 'Control XTCC 600 V · formato original (Cocesa)', xtmu: 'Fuerza XTMU 1000 V · formato original (Cocesa)', thhn: 'THHN / THWN-2 · NEC Cap. 9 Tabla 5',
+    otro: 'Otro cable (Ø manual)'
+  };
   var CAT = [];
-  function cat(f, cod, desc, d, nc, ap, awg) { CAT.push({ id: f + ':' + cod + ':' + CAT.length, f: f, cod: cod, desc: desc, d: d, nc: nc, ap: ap, awg: awg }); }
+  function cat(f, cod, desc, d, nc, ap, awg, id) { CAT.push({ id: id || f + ':' + cod + ':' + CAT.length, f: f, cod: cod, desc: desc, d: d, nc: nc, ap: ap, awg: awg }); }
+  // formato original (ids históricos: familia:código:índice)
   [['UI-01', 20, 1, 6.0], ['UI-26', 18, 1, 6.5], ['UI-51', 16, 1, 7.1]].forEach(function (x) { cat('par', x[0], '1 par #' + x[1] + ' AWG', x[3], 2, true, x[1]); });
   [['UI-19', 20, 6.4], ['UI-44', 18, 7.0], ['UI-70', 16, 7.7]].forEach(function (x) { cat('par', x[0], '1 tríada #' + x[1] + ' AWG', x[2], 3, true, x[1]); });
   [['UI-12', 20, 8, 14.6], ['UI-13', 20, 12, 18], ['UI-14', 20, 16, 19.6], ['UI-15', 20, 20, 22.2], ['UI-16', 20, 24, 24.7], ['UI-35', 18, 2, 10.1], ['UI-36', 18, 4, 12.7], ['UI-37', 18, 8, 16.1], ['UI-38', 18, 12, 19.8], ['UI-39', 18, 16, 23.9], ['UI-40', 18, 20, 26.8], ['UI-41', 18, 24, 27.4],
@@ -49,23 +65,74 @@
     .forEach(function (x) { cat('xtcc', 'HU' + (x[1] < 10 ? '0' : '') + x[1], x[1] + 'C #' + x[0] + ' AWG', x[2], x[1], false, x[0]); });
   [['EN31', 14, 9.8], ['EN32', 12, 10.8]].forEach(function (x) { cat('xtmu', x[0], '3C #' + x[1] + ' AWG', x[2], 3, false, x[1]); });
   [['14', 2.82], ['12', 3.30], ['10', 4.17], ['8', 5.49], ['6', 6.45], ['4', 8.23], ['3', 8.94], ['2', 9.75], ['1', 11.33], ['1/0', 12.34], ['2/0', 13.51], ['3/0', 14.83], ['4/0', 16.31]].forEach(function (x) { cat('thhn', '#' + x[0], '1C #' + x[0] + ' AWG', x[1], 1, false, x[0]); });
-  cat('otro', '—', 'Ø según catálogo del fabricante', 10, 1, false, '');
+  cat('otro', '—', 'Ø según catálogo del fabricante', 10, 1, false, '', 'otro:—:73');
+  // catálogos General Cable/Cocesa (id estable: familia:descripción)
+  function serie(f, awg, tabla, uni, mult, ap, cod) { // tabla {n: Ø}; uni: 'pares' | 'tríos' | 'C'
+    Object.keys(tabla).forEach(function (n) {
+      var t = n === '3+T' ? '3C+T' : (uni === 'C' ? n + 'C' : n + ' ' + uni), desc = t + ' #' + awg + ' AWG';
+      cat(f, cod || '', desc, tabla[n], n === '3+T' ? 4 : (+n) * mult, ap, awg, f + ':' + desc);
+    });
+  }
+  serie('pvicp', 20, { 2: 8.0, 4: 8.3, 8: 10.8, 12: 16.3, 16: 17.9, 20: 19.8, 24: 21.5, 36: 25.8, 50: 30.2 }, 'pares', 2, true, 'PVIC');
+  serie('pvicp', 18, { 2: 9.7, 4: 10.4, 8: 12.3, 12: 19.3, 16: 21.5, 20: 24.3, 24: 26.4, 36: 30.9, 50: 36.8 }, 'pares', 2, true, 'PVIC');
+  serie('pvicp', 16, { 2: 8.8, 4: 12.9, 8: 16.9, 12: 21.7, 16: 24.6, 20: 27.4, 24: 29.6, 36: 35.3, 50: 42.0 }, 'pares', 2, true, 'PVIC');
+  serie('pvict', 20, { 2: 8.6, 4: 9.3, 8: 14.4, 12: 17.9, 16: 19.8, 20: 21.8, 24: 24.3, 36: 28.3 }, 'tríos', 3, true, 'PVIC');
+  serie('pvict', 18, { 2: 8.2, 4: 11.3, 8: 17.6, 12: 21.3, 16: 24.4, 20: 26.9, 24: 29.1, 36: 34.7 }, 'tríos', 3, true, 'PVIC');
+  serie('pvict', 16, { 2: 9.3, 4: 12.8, 8: 20.0, 12: 24.6, 16: 27.3, 20: 30.4, 24: 33.3, 36: 40.4 }, 'tríos', 3, true, 'PVIC');
+  serie('gfip', 18, { 2: 13.0, 4: 16.0, 8: 21.7, 12: 26.2, 16: 29.0, 20: 32.1, 24: 36.8, 36: 41.9, 50: 53.0 }, 'pares', 2, true, 'GenFree');
+  serie('gfip', 16, { 2: 14.9, 4: 17.2, 6: 20.3, 8: 23.2, 12: 28.2, 16: 34.3, 20: 34.7, 24: 39.9, 36: 50.3, 50: 55.0 }, 'pares', 2, true, 'GenFree');
+  serie('gfit', 18, { 2: 15.1, 4: 17.5, 8: 23.9, 12: 28.8, 16: 32.1, 20: 35.7, 24: 39.8, 36: 47.2 }, 'tríos', 3, true, 'GenFree');
+  serie('gfit', 16, { 2: 16.3, 4: 18.9, 8: 25.8, 12: 31.2, 16: 34.8, 20: 38.7, 24: 44.7, 36: 51.2 }, 'tríos', 3, true, 'GenFree');
+  serie('cvtc', 14, { 2: 9.3, 3: 9.9, 4: 10.8, 5: 11.8, 7: 14.9, 9: 15.8, 12: 17.3, 19: 20.3, 25: 25.0, 30: 26.7, 37: 28.7 }, 'C', 1, false, 'CVTC');
+  serie('cvtc', 12, { 2: 10.4, '3+T': 11.1, 3: 11.1, 4: 12.1, 5: 13.1, 7: 15.1, 9: 17.7, 12: 19.8, 19: 23.6, 25: 27.8, 30: 29.2, 37: 31.5 }, 'C', 1, false, 'CVTC');
+  serie('cvtc', 10, { 2: 11.6, '3+T': 12.3, 3: 12.3, 4: 13.1, 5: 15.6, 7: 17.0, 9: 19.9, 12: 22.7 }, 'C', 1, false, 'CVTC');
+  serie('gfc', 14, { 2: 9.4, 3: 9.9, 4: 10.8, 5: 11.8, 7: 12.8, 9: 15.8, 12: 17.8, 19: 20.7, 25: 23.8, 30: 26.2, 37: 28.2 }, 'C', 1, false, 'GenFree');
+  serie('gfc', 12, { 2: 10.4, '3+T': 11.1, 3: 11.1, 4: 12.1, 5: 13.2, 7: 15.1, 9: 17.7, 12: 19.4, 19: 23.9, 25: 27.8, 30: 29.2, 37: 31.5 }, 'C', 1, false, 'GenFree');
+  serie('gfc', 10, { 2: 11.6, '3+T': 12.3, 3: 12.3, 4: 14.2, 5: 15.6, 7: 17.0, 9: 19.3, 12: 22.9 }, 'C', 1, false, 'GenFree');
+  serie('dlx', 14, { 2: 15.3, 3: 16.0, 4: 16.8, 5: 17.6, 7: 18.8, 9: 21.1, 12: 22.9, 19: 25.9, 25: 29.7, 37: 32.8 }, 'C', 1, false, 'Duralox');
+  serie('dlx', 12, { 2: 16.3, 3: 16.8, 4: 18.1, 5: 19.1, 7: 20.6, 9: 22.6, 12: 24.7, 19: 28.0, 25: 32.5, 37: 35.8 }, 'C', 1, false, 'Duralox');
+  serie('dlx', 10, { 3: 18.3, 4: 19.6 }, 'C', 1, false, 'Duralox');
+  function fuerza(f, cod, nc, filas) { filas.forEach(function (x) { var desc = (nc > 1 ? nc + 'C ' : '1C ') + '#' + x[0] + (/^\d{3,}$/.test(x[0]) ? ' kcmil' : ' AWG'); cat(f, cod, desc, x[1], nc, false, x[0], f + ':' + desc); }); }
+  fuerza('xtu', 'XTU', 1, [['14', 5.2], ['12', 5.7], ['10', 6.3], ['8', 7.7], ['6', 8.6], ['4', 9.8], ['2', 11.2], ['1', 13.4], ['1/0', 14.4], ['2/0', 15.5], ['3/0', 16.7], ['4/0', 18.0], ['250', 19.7], ['350', 23.2], ['500', 26.4]]);
+  fuerza('xtm3', 'XTMU', 3, [['14', 10.2], ['12', 11.2], ['10', 12.5], ['8', 16.4], ['6', 18.3], ['4', 21.0], ['2', 25.3], ['1', 28.3], ['1/0', 30.4], ['2/0', 32.8], ['3/0', 35.4], ['4/0', 38.5]]);
+  fuerza('xtm3n', 'XTMU', 4, [['14', 11.4], ['12', 12.4], ['10', 14.0], ['8', 18.3], ['6', 20.5], ['4', 24.7], ['2', 28.4], ['1', 31.8], ['1/0', 34.2]]);
+  fuerza('xtm3nt', 'XTMU', 5, [['14', 12.2], ['12', 13.4], ['10', 15.9], ['8', 19.7], ['6', 22.1], ['4', 26.6], ['2', 30.6], ['1', 34.3], ['1/0', 37.0], ['2/0', 39.9], ['3/0', 43.2], ['4/0', 48.7]]);
+  fuerza('xtk3', 'XTMU 1 kV', 3, [['14', 11.4], ['12', 12.3], ['10', 13.7], ['8', 15.0], ['6', 16.9], ['4', 20.5], ['2', 23.7], ['1', 26.0], ['1/0', 28.1]]);
+  fuerza('sfx3', 'SUPERFLEX', 3, [['14', 11.4], ['12', 12.5], ['10', 13.9], ['8', 15.6], ['6', 17.7], ['4', 21.4], ['2', 25.5], ['1', 28.0], ['1/0', 29.7]]);
+  fuerza('sfx3nt', 'SUPERFLEX', 5, [['14', 13.3], ['12', 14.7], ['10', 16.4], ['8', 18.7], ['6', 21.3], ['4', 26.1], ['2', 30.3], ['1', 34.4], ['1/0', 37.4]]);
+  fuerza('thgc', 'THHN-PLUS', 1, [['14', 3.0], ['12', 3.5], ['10', 4.3], ['8', 5.5], ['6', 6.4], ['4', 8.3], ['2', 9.7], ['1', 11.1], ['1/0', 12.1], ['2/0', 13.1], ['3/0', 14.3], ['4/0', 15.7], ['250', 17.4], ['300', 18.6], ['350', 19.8], ['400', 20.9], ['500', 23.1]]);
+  fuerza('gpt', 'GPT', 1, [['20', 2.6], ['18', 2.8], ['16', 3.1], ['14', 3.5], ['12', 4.0], ['10', 5.5]]);
+  function mm(f, cod, filas) { filas.forEach(function (x) { var p = String(x[0]).split('x'), nc = p.length > 1 ? +p[0] : 1, sec = p[p.length - 1], desc = (nc > 1 ? nc + ' x ' : '1 x ') + sec.replace('.', ',') + ' mm²'; cat(f, cod, desc, x[1], nc, false, '', f + ':' + desc); }); }
+  mm('rz1m', 'RZ1-K', [['3x1.5', 9.0], ['3x2.5', 9.9], ['3x4', 11.1], ['4x1.5', 9.9], ['4x2.5', 10.9], ['4x4', 12.2], ['4x6', 13.5], ['5x35', 28.4], ['5x50', 33.1], ['5x70', 39.0], ['5x95', 43.4]]);
+  mm('rz1', 'RZ1-K', [['2.5', 5.6], ['4', 6.1], ['6', 6.8], ['10', 7.5], ['16', 8.8], ['25', 10.6], ['35', 11.7], ['50', 14.6], ['70', 15.9], ['95', 17.7], ['120', 19.6], ['150', 21.5], ['185', 23.9], ['240', 26.6]]);
+  mm('evaf', 'H07Z1-K', [['1.5', 3.1], ['2.5', 3.8], ['4', 4.3], ['6', 4.9], ['10', 6.4], ['16', 7.4], ['25', 9.2], ['35', 10.4], ['50', 12.7], ['70', 14.3], ['95', 16.5], ['120', 18.2], ['150', 20.5], ['185', 22.6], ['240', 25.6]]);
+  mm('exz', 'H07Z1-K', [['1.5', 2.9], ['2.5', 3.5], ['4', 4.1], ['6', 4.6], ['10', 6.0], ['16', 7.0], ['25', 8.6], ['35', 9.7], ['50', 11.5], ['70', 13.4], ['95', 15.4], ['120', 17.2], ['150', 19.0], ['185', 20.9], ['240', 24.2]]);
+  mm('genl', 'H07V-U', [['1.5', 2.9], ['2.5', 3.5], ['4', 4.0], ['6', 4.5], ['10', 5.8]]);
   var CATI = {}; CAT.forEach(function (c) { CATI[c.id] = c; });
-  var COLF = { par: '#2f6db3', mpar: '#1d4f8a', mtri: '#5a3fa0', xtcc: '#3c4650', xtmu: '#202020', thhn: '#9a3b1d', otro: '#6b7480' };
+  var COLF = { par: '#2f6db3', mpar: '#1d4f8a', mtri: '#5a3fa0', xtcc: '#3c4650', xtmu: '#202020', thhn: '#9a3b1d', otro: '#6b7480',
+    pvicp: '#2f6db3', pvict: '#5a3fa0', gfip: '#1f7a6a', gfit: '#2b8c5a', cvtc: '#3c4650', gfc: '#4a6b3a', dlx: '#59606a',
+    xtu: '#202020', xtm3: '#202020', xtm3n: '#202020', xtm3nt: '#202020', xtk3: '#202020', sfx3: '#262c33', sfx3nt: '#262c33', rz1m: '#2e6b3a', rz1: '#2e6b3a',
+    thgc: '#9a3b1d', evaf: '#8a5a1a', exz: '#6a8a2a', genl: '#8a2a2a', gpt: '#7a4a6a' };
+  // Familias preferidas al traer cables del listado de circuitos
+  var PREF_INST = [['pvic', 'PVIC (GC/Cocesa)'], ['gfi', 'GenFree-Instrumentación (LSZH)'], ['orig', 'Formato original (UI)']];
+  var PREF_CTRL = [['cvtc', 'CVTC (GC/Cocesa)'], ['gfc', 'GenFree-control (LSZH)'], ['dlx', 'Duralox-control armado'], ['orig', 'Formato original XTCC (HU)']];
+  function pref() { var b = E().cond || {}; return b.pref || { inst: 'pvic', ctrl: 'cvtc' }; }
 
   // Sugiere el cable del catálogo a partir del diseño escrito en el listado ("1PR #16 AWG", "8 PARES #18", "1x3C #14 AWG")
   function sugerir(diseno, tipo, obs) {
-    var t = up(diseno) + ' ' + up(tipo), awg = (t.match(/#?\s*(\d{1,2})\s*AWG/) || [])[1], m;
+    var t = up(diseno) + ' ' + up(tipo), awg = (t.match(/#?\s*(\d{1,2})\s*AWG/) || [])[1], m, P = pref();
     var fam = /TR[IÍ]AD|TRIO|\bTR\b/.test(t) ? 'tri' : /PAR|\bPR\b|\bP\b/.test(t) ? 'par' : /\dC\b|COND|MULTICONDUCTOR/.test(t) ? 'cond' : '';
     var nx = 1;
     if ((m = t.match(/(\d+)\s*(PARES|PR|TR[IÍ]ADAS|TRIADAS|TR)\b/))) nx = +m[1];
     else if ((m = t.match(/(\d+)\s*X\s*(\d+)\s*C\b/))) nx = +m[2];
     else if ((m = t.match(/(\d+)\s*C\b/))) nx = +m[1];
     if (/MULTIPAR/.test(t) && nx <= 1) { var o = (String(obs || '').match(/(\d+)\s*PARES/) || [])[1]; nx = Math.max(2, +o || 8); }
+    var famInst = function (tri) { return P.inst === 'gfi' ? (tri ? 'gfit' : 'gfip') : P.inst === 'orig' ? (tri ? 'mtri' : 'mpar') : (tri ? 'pvict' : 'pvicp'); };
+    var famCtrl = P.ctrl === 'orig' ? 'xtcc' : P.ctrl;
     var cand;
-    if (fam === 'tri') cand = CAT.filter(function (c) { return (nx > 1 ? c.f === 'mtri' : c.f === 'par' && c.nc === 3); });
-    else if (fam === 'par') cand = CAT.filter(function (c) { return (nx > 1 ? c.f === 'mpar' : c.f === 'par' && c.nc === 2); });
-    else if (fam === 'cond') cand = CAT.filter(function (c) { return c.f === 'xtcc' || c.f === 'xtmu'; });
+    if (fam === 'tri') cand = CAT.filter(function (c) { return (nx > 1 ? c.f === famInst(true) : c.f === 'par' && c.nc === 3); });
+    else if (fam === 'par') cand = CAT.filter(function (c) { return (nx > 1 ? c.f === famInst(false) : c.f === 'par' && c.nc === 2); });
+    else if (fam === 'cond') cand = CAT.filter(function (c) { return c.f === famCtrl; });
     else cand = CAT.filter(function (c) { return c.f === 'par' && c.nc === 2; });
     var porAwg = cand.filter(function (c) { return !awg || String(c.awg) === awg; }); if (porAwg.length) cand = porAwg;
     var cuenta = function (c) { return fam === 'cond' ? c.nc : c.f === 'par' ? 1 : c.nc / (fam === 'tri' ? 3 : 2); };
@@ -89,7 +156,7 @@
     var T = TUBOS[dc.tubo] || TUBOS.CAG, C = CRIT[dc.crit] || CRIT.RIC, lista = [], suma = 0, n = 0, dist = {};
     dc.cables.forEach(function (c) {
       var d = dCable(c), q = Math.max(1, Math.round(+c.n || 1));
-      for (var i = 0; i < q; i++) lista.push({ d: d, c: c, k: CATI[c.cat] || CATI[CAT[CAT.length - 1].id] });
+      for (var i = 0; i < q; i++) lista.push({ d: d, c: c, k: CATI[c.cat] || CATI['otro:—:73'] });
       suma += q * area(d); n += q; dist[d] = 1;
     });
     var regla, lim;
@@ -207,7 +274,7 @@
     ['reserva', 'largo', 'curvas'].forEach(function (k) { f.querySelector('[data-k=' + k + ']').value = dc[k] == null ? '' : dc[k]; });
     // cables
     $('#kCables tbody').innerHTML = dc.cables.map(function (c, i) {
-      var k = CATI[c.cat] || CATI[CAT[CAT.length - 1].id], d = dCable(c), man = k.f === 'otro';
+      var k = CATI[c.cat] || CATI['otro:—:73'], d = dCable(c), man = k.f === 'otro';
       return '<tr data-i="' + i + '"><td class="num">' + (i + 1) + '</td><td><input data-c="tag" value="' + esc(c.tag || '') + '" placeholder="Tag del circuito"' + (c.ck ? ' class="enlazado" title="Vinculado al listado de circuitos"' : '') + '></td><td><select data-c="cat">' + opcionesCat(c.cat) + '</select></td><td><input data-c="n" type="number" min="1" step="1" value="' + (c.n || 1) + '" style="width:60px"></td><td><input data-c="d" type="number" min="1" step="0.1" value="' + n1(d, 1).replace(',', '.') + '" style="width:72px"' + (man || c.dMan ? '' : ' title="Del catálogo; escribe otro valor si tu cable es distinto"') + '></td><td class="num">' + n1(area(d) * (Math.max(1, +c.n || 1)), 1) + '</td><td><button type="button" class="mini peligro" data-quitar="' + i + '" aria-label="Quitar cable ' + (i + 1) + '">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="vacio">Sin cables. Agrega cables a mano o tráelos del listado de circuitos.</td></tr>';
     // paso a paso
@@ -257,6 +324,9 @@
         return '<label class="ksel"><input type="checkbox" value="' + esc(c.key) + '"' + (ya[c.key] ? ' checked disabled' : '') + '><b>' + esc(val(c, 'tagC') || '(sin tag)') + '</b> <span>' + esc(String(val(c, 'tipo')) + ' · ' + String(val(c, 'diseno'))) + '</span><span class="peq">' + esc(String(val(c, 'dGab')).replace(/\n/g, ' ') + ' → ' + String(val(c, 'hGab')).replace(/\n/g, ' ')) + (val(c, 'ruta') ? ' · ruta ' + esc(val(c, 'ruta')) : '') + '</span><span class="peq">Se tomará: ' + esc((k.cod !== '—' ? k.cod + ' ' : '') + k.desc + ' · Ø ' + n1(k.d, 1) + ' mm') + '</span></label>';
       }).join('') || '<p class="vacio">No hay circuitos en el listado. Genera el listado de E/S o agrega circuitos en «Listado de circuitos».</p>';
     }
+    var P = pref(), sI = $('#kPrefI'), sC = $('#kPrefC');
+    sI.innerHTML = opciones(PREF_INST, P.inst); sC.innerHTML = opciones(PREF_CTRL, P.ctrl);
+    sI.onchange = sC.onchange = function () { datos().pref = { inst: sI.value, ctrl: sC.value }; A.guardar(); lista(); };
     q.value = dc.ruta || ''; q.oninput = lista; lista();
     $('#kSelOk').onclick = function () {
       dlg.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').forEach(function (x) {
@@ -389,7 +459,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); }
-  window.LAZOS_COND = { calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
