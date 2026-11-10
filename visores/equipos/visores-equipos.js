@@ -1071,6 +1071,145 @@
     }
     V['valvula-diafragma'] = valvulaDiafragma;
 
+    // ── Soportes y paneles de montaje de instrumentos (26) ──
+    // Perfil canal plegado 100×50×6, placa de montaje de plancha 3 mm, placa base de plancha 5 mm 250×250
+    // con 4 perforaciones Ø14 y pernos de anclaje 1/2" sobre fundación con grout, o espárragos sobre plataforma.
+    function canal(largo, eje) { // C 10×5×0,6 cm; vertical ('y') con el alma al frente, horizontal ('x') con las alas hacia atrás
+      var e = 0.6, g;
+      if (eje === 'x') g = G(box(largo, 10, e, mats.galv, 0, 0, -e / 2), box(largo, e, 5, mats.galv, 0, 5 - e / 2, -2.5), box(largo, e, 5, mats.galv, 0, -5 + e / 2, -2.5));
+      else g = G(box(10, largo, e, mats.galv, 0, largo / 2, -e / 2), box(e, largo, 5, mats.galv, 5 - e / 2, largo / 2, -2.5), box(e, largo, 5, mats.galv, -5 + e / 2, largo / 2, -2.5));
+      return g;
+    }
+    function triangulo(a, b, esp, mat) { // triángulo rectángulo de catetos a (x) y b (y), extruido en z
+      var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(a, 0); s.lineTo(0, b); s.lineTo(0, 0);
+      var geo = new THREE.ExtrudeGeometry(s, { depth: esp, bevelEnabled: false }); geo.translate(0, 0, -esp / 2);
+      return M(geo, mat);
+    }
+    function baseSoporte(x, plataforma) { // placa base 25×25×0,5, cartelas y fijación
+      var placa = G(box(25, 0.5, 25, mats.galv, 0, 0.25, -2.5));
+      [-1, 1].forEach(function (s) { var t = triangulo(6, 9, 0.5, mats.galv); t.position.set(s * 5, 0.5, -2.5); if (s < 0) t.rotation.y = Math.PI; placa.add(t); });
+      var fij = G(), tuercas = G();
+      [[-10, -12.5], [10, -12.5], [-10, 7.5], [10, 7.5]].forEach(function (p) {
+        if (plataforma) {
+          fij.add(cyl(0.64, 9, mats.steel, p[0], -2.6, p[1], 'y', 12));
+          tuercas.add(cyl(1.15, 1.1, mats.dark, p[0], 1.05, p[1], 'y', 6), cyl(1.15, 1.1, mats.dark, p[0], -5.6, p[1], 'y', 6));
+        } else {
+          fij.add(cyl(0.64, 12, mats.steel, p[0], -4.6, p[1], 'y', 12), cyl(1.15, 1.1, mats.dark, p[0], 1.05, p[1], 'y', 6), cyl(1.6, 0.3, mats.steel, p[0], 0.65, p[1], 'y', 16));
+        }
+      });
+      placa.position.x = fij.position.x = tuercas.position.x = x;
+      var apoyo;
+      if (plataforma) {
+        apoyo = G(); for (var i = -11; i <= 11; i++) apoyo.add(box(70, 3, 0.5, mats.galv, 0, -1.5, i * 3 - 2.5));
+        for (var j = -3; j <= 3; j++) apoyo.add(box(0.6, 1, 70, mats.galv, j * 10, -0.5, -2.5));
+        apoyo.add(box(70, 1, 15, mats.dark, 0, -3.5 - 0.5, -2.5), box(70, 1, 15, mats.dark, 0, -21.5, -2.5), box(70, 17, 0.8, mats.dark, 0, -12.5, -2.5));
+        apoyo.position.x = x;
+      } else {
+        apoyo = G(box(40, 15, 40, mats.concrete, 0, -8.5, -2.5), box(30, 1, 30, std(0x9d9a93, 0, 0.9), 0, -0.5, -2.5)); apoyo.position.x = x;
+      }
+      return { placa: placa, fij: fij, tuercas: tuercas, apoyo: apoyo };
+    }
+    function transmisor(x, y, z) { // transmisor de presión con LCD y manifold, referencial
+      var g = G(cyl(5.2, 10, mats.inst, 0, 0, 0, 'x'), cyl(5.6, 1, mats.inst, -5.4, 0, 0, 'x'), cyl(5.6, 1, mats.inst, 5.4, 0, 0, 'x'), cyl(3.4, 0.4, mats.lcd, 5.9, 0, 0, 'x'),
+        box(8, 6, 7, mats.inst, 0, -8.5, 0), box(9, 3, 8, mats.ss, 0, -13, 0), box(3, 2, 3, mats.red, 5.5, -13, 0), box(3, 2, 3, mats.red, -5.5, -13, 0), box(8, 2, 0.5, mats.ss, 0, -14, -4.5));
+      g.children[0].rotation.y = 0; g.rotation.y = -Math.PI / 2; g.position.set(x, y, z);
+      return g;
+    }
+    function soporte(op) {
+      var root = G(), panel = op.tipo === 'panel', n = op.n || 1, plat = !!op.plataforma;
+      var W = panel ? 100 : [40, 70, 100][n - 1], H = panel ? 165 : 170, yPl = panel ? 45 : 125;
+      var patasX = panel ? [-W / 2 + 5, W / 2 - 5] : [0];
+      var est = G();
+      patasX.forEach(function (x) { var c = canal(H - 0.5, 'y'); c.position.set(x, 0.5, -0.3); est.add(c); });
+      if (panel) { var t1 = canal(W - 20, 'x'); t1.position.set(0, yPl + 5, -0.6); var t2 = canal(W - 20, 'x'); t2.position.set(0, H - 5, -0.6); est.add(t1, t2); }
+      else { var tb = canal(W - 4, 'x'); tb.position.set(0, H - 5, -0.6); var tb2 = canal(W - 4, 'x'); tb2.position.set(0, yPl + 5, -0.6); est.add(tb, tb2); }
+      var placa = G(box(W, H - yPl, 0.3, mats.galv, 0, (H + yPl) / 2, 0.15));
+      if (!panel) { // visera de protección: plancha superior con pestaña y laterales triangulares
+        placa.add(box(W + 2, 0.3, 20, mats.galv, 0, H + 0.15, 10), box(W + 2, 2, 0.3, mats.galv, 0, H - 0.85, 20));
+        [-1, 1].forEach(function (s) { var t = triangulo(20, 30, 0.3, mats.galv); t.rotation.set(Math.PI, -Math.PI / 2, 0); t.position.set(s * (W / 2 + 0.85), H, 0); placa.add(t); });
+      }
+      var bases = patasX.map(function (x) { return baseSoporte(x, plat); });
+      var bp = G(), fj = G(), tu = G(), ap = G();
+      bases.forEach(function (b) { bp.add(b.placa); fj.add(b.fij); tu.add(b.tuercas); ap.add(b.apoyo); });
+      var equipo, cond = G();
+      if (panel) {
+        equipo = caja(60, 70, 25, mats.cab, 0, 112, 13);
+        equipo.add(box(30, 6, 0.4, mats.white, 0, 25, 13.2));
+        [-15, 15].forEach(function (x) { cond.add(cyl(1.6, 4, mats.black, x, 75, 13, 'y'), conduit([[x, 75, 13], [x, 60, 14], [x, 25, 22], [x * 1.4, 4, 40]])); });
+      } else {
+        equipo = G();
+        var paso = W / n;
+        for (var i = 0; i < n; i++) {
+          var x = -W / 2 + paso * (i + 0.5);
+          equipo.add(transmisor(x, 152, 9), box(10, 2, 0.6, mats.ss, x, 138, 0.6));
+          cond.add(conduit([[x + 5.5, 152, 9], [x + 9, 144, 10], [x + 9, 120, 4], [x + 9, 60, 4], [x + 18, 6, 30]]));
+          cond.add(camino([[x - 2, 137, 9], [x - 2, 128, 10], [x - 2, 100, 14], [x - 20, 70, 40]], 0.48, mats.ss));
+        }
+      }
+      root.add(est, placa, bp, fj, ap, equipo, cond);
+      if (plat) root.add(tu);
+      var yB = 4, za = 14;
+      var partes = [
+        [1, 'Perfil canal plegado 100×50×6 mm, acero ASTM A36', 'L.R.', est, [0, 0, -30], [patasX[0] - 4, panel ? 22 : 80, -2]],
+        [2, panel ? 'Plancha lisa 3 mm, acero ASTM A36 (placa de montaje)' : 'Plancha lisa 3 mm, acero ASTM A36 (placa de montaje y visera)', 'L.R.', placa, [0, 0, 20], [W / 2 - 6, H - 20, 1]],
+        [3, 'Plancha lisa 5 mm, acero ASTM A36 (placa base 250×250 y cartelas)', 'L.R.', bp, [0, 10, 0], [patasX[patasX.length - 1] + 16, 2, za]]
+      ];
+      if (plat) partes.push([5, 'Perno espárrago 1/2" UNC × 3" de largo, acero al carbono', 4 * patasX.length, fj, [0, -12, 0], [patasX[0] - 16, -5, za]],
+        [6, 'Tuerca hexagonal 1/2" UNC, acero al carbono', 8 * patasX.length, tu, [0, 6, 0], [patasX[0] + 16, -7, za]],
+        [9, 'Plataforma de rejilla y viga existentes', 1, ap, [0, -20, 0], [patasX[0] - 28, -20, 20]]);
+      else partes.push([4, 'Perno de anclaje 1/2" UNC × 4" con golilla y tuerca hexagonal, acero al carbono', 4 * patasX.length, fj, [0, 12, 0], [patasX[0] - 16, yB, za]],
+        [9, 'Fundación de hormigón con grout e = 10 mm (obra civil)', patasX.length, ap, [0, -20, 0], [patasX[0] - 26, -14, 18]]);
+      partes.push(panel ? [7, 'Tablero de terreno (referencial, otra partida)', 1, equipo, [0, 0, 30], [0, 150, 26]]
+        : [7, (n > 1 ? n + ' transmisores' : 'Transmisor') + ' con manifold (referencial)', n, equipo, [0, 0, 25], [0, 162, 12]],
+        [8, panel ? 'Conduit flexible y prensaestopas a la canalización' : 'Conduit flexible y tubing de proceso (referencial)', panel ? 2 : 2 * n, cond, [0, -10, 25], [panel ? 28 : W / 2, panel ? 62 : 50, 18]]);
+      partes.sort(function (a, b) { return a[0] - b[0]; });
+
+      // ── Cálculo de materiales L.R. ──
+      var S = { ancho: W * 10, cant: 1, anc: plat ? 'plat' : 'conc' };
+      function kgCanal() { return (100 + 2 * 50 - 2 * 6) * 6 * 7.85e-3; } // kg/m (sección plegada)
+      function calc() {
+        var w = Math.max(200, +S.ancho || 0) / 1000, k = Math.max(1, Math.round(+S.cant || 1)), patas = patasX.length;
+        var mCanal = panel ? patas * 1.65 + 2 * (w - 0.2) : 1.70 + 2 * (w - 0.04);
+        var m3 = panel ? w * 1.20 : w * 0.45 + (w + 0.02) * 0.22 + 2 * 0.5 * 0.2 * 0.3;
+        var m5 = patas * (0.25 * 0.25 + 2 * 0.5 * 0.06 * 0.09);
+        var kg = mCanal * kgCanal() + m3 * 23.55 + m5 * 39.25;
+        var pint = mCanal * 0.39 + 2 * m3 + 2 * m5;
+        return { canal: mCanal * k, m3: m3 * k, m5: m5 * k, pernos: S.anc === 'conc' ? 4 * patas * k : 0, esp: S.anc === 'plat' ? 4 * patas * k : 0, tue: S.anc === 'plat' ? 8 * patas * k : 0, kg: kg * k, pint: pint * k };
+      }
+      function f(v, d) { return v.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+      var sim = {
+        html: '<div class="simg">' +
+          '<label>Ancho L.R. de la placa <output id="oAn"></output><input type="range" id="sAn" min="300" max="1600" step="50"></label>' +
+          '<label>Cantidad de soportes iguales <output id="oCa"></output><input type="range" id="sCa" min="1" max="20" step="1"></label>' +
+          '<label>Anclaje<select id="sAnc"><option value="conc">Fundación de hormigón (pernos de anclaje)</option><option value="plat">Plataforma (espárragos y tuercas)</option></select></label></div>' +
+          '<dl class="lect" id="lectS"></dl><p class="eq" id="eqS"></p>',
+        montar: function () {
+          $('sAn').value = S.ancho; $('sCa').value = S.cant; $('sAnc').value = S.anc;
+          $('sAn').addEventListener('input', function () { S.ancho = +this.value; sim.pintar(); });
+          $('sCa').addEventListener('input', function () { S.cant = +this.value; sim.pintar(); });
+          $('sAnc').addEventListener('change', function () { S.anc = this.value; sim.pintar(); });
+          sim.pintar();
+        },
+        pintar: function () {
+          var r = calc();
+          $('oAn').textContent = f(S.ancho, 0) + ' mm'; $('oCa').textContent = S.cant;
+          var filas = [['1 · Perfil canal 100×50×6', f(r.canal, 2) + ' m'], ['2 · Plancha 3 mm', f(r.m3, 2) + ' m²'], ['3 · Plancha 5 mm', f(r.m5, 3) + ' m²']];
+          if (r.pernos) filas.push(['4 · Pernos de anclaje 1/2"', r.pernos + ' c/u']);
+          if (r.esp) filas.push(['5 · Espárragos 1/2"', r.esp + ' c/u'], ['6 · Tuercas 1/2"', r.tue + ' c/u']);
+          filas.push(['Peso de acero', f(r.kg, 1) + ' kg'], ['Superficie a pintar', f(r.pint, 2) + ' m²']);
+          $('lectS').innerHTML = filas.map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('');
+          $('eqS').innerHTML = 'Cantidades «lo requerido» (L.R.) para ' + (panel ? 'el panel de ' + f(S.ancho, 0) + ' × 1.200 mm sobre dos patas de 1.650 mm' : 'la placa de ' + f(S.ancho, 0) + ' × 450 mm con visera sobre un poste de 1.700 mm') +
+            '. Pesos: canal ' + f(kgCanal(), 2) + ' kg/m, plancha 3 mm 23,55 kg/m², plancha 5 mm 39,25 kg/m². Sumar 5 % por cortes y despuntes al pedir el material.';
+        }
+      };
+      return { root: root, partes: partes, sim: sim };
+    }
+    V['soporte-panel'] = function () { return soporte({ tipo: 'panel' }); };
+    V['soporte-inst1'] = function () { return soporte({ tipo: 'inst', n: 1 }); };
+    V['soporte-inst2'] = function () { return soporte({ tipo: 'inst', n: 2 }); };
+    V['soporte-inst3'] = function () { return soporte({ tipo: 'inst', n: 3 }); };
+    V['soporte-plataforma'] = function () { return soporte({ tipo: 'inst', n: 1, plataforma: true }); };
+
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
     var $ = function (id) { return document.getElementById(id); };
     var estado = { v: DEF.variantes[0], etiquetas: true, explotar: false, giro: false };
@@ -1189,6 +1328,12 @@
       { c: '24-B', t: 'Sensor radar sobre pozo de calma', m: 'parshall-pozo', cam: [-0.7, 1.4, 1], zoom: 0.72, d: 'El nivel se mide en un pozo de calma conectado a la pared de la canaleta en el punto Ha, útil con oleaje, espuma o viento. Usa la misma simulación de caudal y totalizador.', n: ['Tubo de conexión al ras de la pared interior y a la altura del piso de la sección convergente.', 'Válvula para limpiar sedimentos del tubo y del pozo.', 'Pozo con protección contra heladas si corresponde.'] }] },
     { id: 'eq-valvula-control', num: '25', tab: 'ic', plano: '4600029931-03360-002AT-00008', titulo: 'Válvula modulada con actuador de diafragma', sub: 'Válvula globo con actuador de resorte y diafragma, convertidor I/P, tubing de aire y canalización.', variantes: [
       { c: '25-A', t: 'Actuador de diafragma con I/P', m: 'valvula-diafragma', cam: [0.32, 0.22, 1], d: 'Detalle típico 4600029931-03360-002AT-00008: válvula modulada bridada con actuador de diafragma y convertidor I/P en el yugo. El aire de instrumentos llega en tubo 3/8" OD de acero inoxidable y la señal 4–20 mA desde el gabinete RIO por conduit rígido y flexible de ¾". Mueve la señal para ver la presión del I/P, la carrera, la apertura y el caudal.', n: ['La cantidad de material es solo para un instrumento.', 'La forma y dimensiones pueden variar según la información certificada del proveedor.', 'El contratista de montaje verificará el lugar de instalación para dar buen acceso a la operación, lectura y mantención.', 'Usar unión recta tubo a tubo cuando el largo del tubo de 3/8" OD supere 3 m.', 'Dejar el actuador vertical sobre la cañería horizontal y espacio libre para retirar el actuador y el bonete.'] }] },
+    { id: 'eq-soportes-paneles', num: '26', tab: 'ic', titulo: 'Soportes y paneles de montaje', sub: 'Paneles para tableros e instrumentos en perfil canal con placa base, anclados a hormigón o a plataforma.', variantes: [
+      { c: '26-A', t: 'Soporte para panel', m: 'soporte-panel', cam: [0.55, 0.3, 1], d: 'Panel de plancha de 3 mm y 1.200 mm de alto sobre dos patas de perfil canal plegado 100×50×6 de 1.650 mm, con travesaños, placas base de 250×250×5 mm con cartelas y 4 pernos de anclaje de 1/2" cada una sobre fundación con grout de 10 mm. Sobre el panel se monta un tablero o caja de terreno.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
+      { c: '26-B', t: 'Soporte para un instrumento', m: 'soporte-inst1', cam: [0.6, 0.25, 1], d: 'Poste de perfil canal plegado 100×50×6 de 1.700 mm con placa de montaje de 450 mm de alto y visera de 200 mm con pestaña de 20 mm soldada, placa base de 250×250×5 mm y 4 pernos de anclaje sobre fundación. El instrumento queda con su indicador a 1.400–1.500 mm del piso.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
+      { c: '26-C', t: 'Soporte para dos instrumentos', m: 'soporte-inst2', cam: [0.6, 0.25, 1], d: 'El mismo poste con placa de montaje y visera de ancho suficiente para dos instrumentos, uno junto al otro.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
+      { c: '26-D', t: 'Soporte para tres instrumentos', m: 'soporte-inst3', cam: [0.6, 0.25, 1], d: 'El mismo poste con placa de montaje y visera para tres instrumentos; atiesar la placa con los travesaños de canal para que no se deforme.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] },
+      { c: '26-E', t: 'Soporte anclado a plataforma', m: 'soporte-plataforma', cam: [0.55, 0.12, 1], d: 'Soporte para instrumento fijado sobre plataforma de rejilla: la placa base se aprieta con 4 espárragos de 1/2" × 3" y 8 tuercas contra la rejilla y la viga, sin perforar el ala de la viga sin autorización.', n: ['Las dimensiones están en milímetros salvo indicación contraria.', 'Todos los soportes y materiales llevan limpieza, arenado, antióxido, terminación superficial exterior y pintura anticorrosiva, o galvanizado en caliente según la especificación del proyecto.', 'La forma y dimensiones de los instrumentos pueden variar según la información certificada del proveedor.', 'El montajista debe atiesar la estructura de modo que la placa de montaje no sufra deformación.', 'El contratista de montaje verificará el lugar de instalación de soportes y paneles para que los instrumentos tengan fácil acceso de operación, lectura y mantención, con aprobación previa de la inspección técnica.', 'L.R. = lo requerido; el visor calcula metros de perfil, m² de plancha, pernos y peso según el ancho real de la placa.'] }] },
     { id: 'eq-plc', num: 'CP', tab: 'tb', titulo: 'Gabinete PLC y E/S remotas', sub: 'Gabinete de control con PLC, fuentes redundantes y borneras, y E/S remotas en terreno.', variantes: [
       { c: 'CP-A', t: 'Gabinete de control en sala', m: 'gabinete-plc', d: 'Gabinete autosoportado con PLC, módulos de E/S, fuentes redundantes, switch, canaletas y borneras.', n: ['Reserva de 20 % en E/S y borneras.', 'Llenado de canaletas ≤ 40 %.'] },
       { c: 'CP-B', t: 'E/S remotas en terreno', m: 'rio-terreno', d: 'Gabinete NEMA 4X en estructura de terreno con techo de protección solar y prensaestopas.', n: ['Entradas de cables solo por la parte inferior.'] }] },
