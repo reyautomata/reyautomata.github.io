@@ -15,7 +15,7 @@
   var CFG0 = {
     proveedor: 'rockwell', modelos: { AI: '1756-IF8', AO: '1756-OF8', DI: '1756-IB16', DO: '1756-OB16E' },
     gabinete: 'GABINETE DE CONTROL PLC-01', zonaTerreno: 'TERRENO', zonaSala: 'SALA ELÉCTRICA', zonaControl: 'SALA DE CONTROL', hmi: 'ESTACIÓN DE OPERACIÓN (HMI)',
-    prefijoPlano: 'IN-DL-', primerPlano: 1, docIO: '', docInst: '', docCables: '', docPid: '', fuente24: '+24 VDC', fuente0: '0 VDC', tableroAlim: 'TDA-01', tension4h: '120 VAC',
+    prefijoPlano: 'IN-DL-', primerPlano: 1, prefijoUni: 'IN-UL-', docIO: '', docInst: '', docCables: '', docPid: '', fuente24: '+24 VDC', fuente0: '0 VDC', tableroAlim: 'TDA-01', tension4h: '120 VAC',
     chasis: 1, slotInicial: 1, cableAnalogico: '1x1p+sh 16 AWG', cable3h: '1x1t+sh 16 AWG', cableDiscreto: '1x2c 16 AWG', cableMultipar: '12 pares + sh 16 AWG',
     sufCableA: '-J001', sufCableD: '-C001', senalAI: '4-20 mA HART', senalAO: '4-20 mA HART', senalDI: '24 VDC', senalDO: '24 VDC'
   };
@@ -238,7 +238,7 @@
   var CAMPOS_CFG = [
     { g: 'Sistema de control', c: [{ k: 'proveedor', l: 'Proveedor / plataforma', prov: 1 }, { k: 'modelos.AI', l: 'Tarjeta AI por defecto', tipo: 'AI' }, { k: 'modelos.AO', l: 'Tarjeta AO por defecto', tipo: 'AO' }, { k: 'modelos.DI', l: 'Tarjeta DI por defecto', tipo: 'DI' }, { k: 'modelos.DO', l: 'Tarjeta DO por defecto', tipo: 'DO' }, { k: 'chasis', l: 'Chasis / rack por defecto' }, { k: 'slotInicial', l: 'Primer slot de E/S' }] },
     { g: 'Zonas del diagrama', c: [{ k: 'zonaTerreno', l: 'Zona de terreno' }, { k: 'zonaSala', l: 'Sala eléctrica' }, { k: 'gabinete', l: 'Gabinete' }, { k: 'zonaControl', l: 'Sala de control' }, { k: 'hmi', l: 'Estación de operación' }] },
-    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. 3450-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de circuitos (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
+    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. 3450-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'prefijoUni', l: 'Prefijo del N° de plano unilineal (TDI)' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de circuitos (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
     { g: 'Alimentación y cables', c: [{ k: 'fuente24', l: 'Barra positiva 24 VDC' }, { k: 'fuente0', l: 'Barra 0 VDC' }, { k: 'tableroAlim', l: 'Tablero de alimentación de 4 hilos' }, { k: 'tension4h', l: 'Tensión de equipos de 4 hilos' }, { k: 'cableAnalogico', l: 'Cable analógico 2 hilos' }, { k: 'cable3h', l: 'Cable analógico 3 hilos' }, { k: 'cableDiscreto', l: 'Cable discreto' }, { k: 'cableMultipar', l: 'Cable multipar JB–gabinete' }, { k: 'sufCableA', l: 'Sufijo de cable analógico' }, { k: 'sufCableD', l: 'Sufijo de cable discreto' }] },
     { g: 'Señales por defecto', c: [{ k: 'senalAI', l: 'Señal AI' }, { k: 'senalAO', l: 'Señal AO' }, { k: 'senalDI', l: 'Señal DI' }, { k: 'senalDO', l: 'Señal DO' }] }
   ];
@@ -614,7 +614,7 @@
   enlazar();
   enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
-  if (/^#(io|mod|cfg|lazos|doc|inst|circ)$/.test(location.hash)) v0 = location.hash.slice(1);
+  if (/^#(io|mod|cfg|lazos|doc|inst|circ|uni)$/.test(location.hash)) v0 = location.hash.slice(1);
   mostrar(v0);
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
   window.__LAZOS = { mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };

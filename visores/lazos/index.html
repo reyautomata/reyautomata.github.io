@@ -151,6 +151,10 @@ table.io2 td { padding: 0.6mm 0.9mm; text-align: center; }
 table.io2 td.izq { text-align: left; }
 table.io2 tr.grp td { background: #DCE3EB; color: #022A55; font-weight: 700; text-align: left; font-size: 7pt; }
 table.io2 tr.res td { color: #6B7785; }
+.uni { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
+.selTab { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.selTab select { min-width: 260px; }
+@media (max-width: 980px) { .uni { grid-template-columns: 1fr; } }
 .orig { display: inline-block; font: 600 11px var(--f-mono); padding: 2px 6px; border-radius: 4px; background: var(--line); color: var(--fg); }
 .orig.io { background: #DCE3EB; color: #022A55; }
 table.io td input[readonly] { color: var(--muted); }
@@ -221,6 +225,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="doc" aria-selected="false">Documento E/S</button>
     <button type="button" role="tab" data-v="inst" aria-selected="false">Listado de instrumentos</button>
     <button type="button" role="tab" data-v="circ" aria-selected="false">Listado de circuitos</button>
+    <button type="button" role="tab" data-v="uni" aria-selected="false">Unilineal TDI</button>
     <button type="button" role="tab" data-v="cfg" aria-selected="false">Configuración</button>
   </nav>
 </header>
@@ -353,6 +358,32 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     </div>
   </section>
 
+  <section id="v-uni" hidden>
+    <p class="intro">Diagrama unilineal del tablero de distribución de instrumentación (TDI) en el formato típico: alimentación, interruptor general, luz piloto, supresor de transientes, medidor opcional, barra, circuitos con protección termomagnética y diferencial, cargas, barra de tierra, simbología, notas y cuadro de cargas. Los instrumentos de 4 hilos del listado de E/S se traen como circuitos (en azul) y quedan vinculados al listado de circuitos.</p>
+    <div class="herr">
+      <label class="selTab">Tablero<select id="uSel" aria-label="Tablero"></select></label>
+      <button type="button" id="uNuevo">+ Nuevo tablero</button>
+      <button type="button" class="peligro" id="uBorrar">Quitar tablero</button>
+      <span class="esp"></span>
+      <button type="button" class="pri" id="uPdf">Imprimir / PDF</button>
+      <button type="button" id="uDxf">Descargar DXF</button>
+      <button type="button" id="uExcel">Excel · cuadro de cargas</button>
+    </div>
+    <div class="uni">
+      <form id="uForm" class="dform" onsubmit="return false"></form>
+      <div class="hojas" id="uHojas"></div>
+    </div>
+    <h2 class="grupo" style="margin-top:22px">Circuitos</h2>
+    <div class="herr">
+      <button type="button" class="pri" id="uAgregar">+ Agregar circuito</button>
+      <button type="button" id="uInst">Traer instrumentos de 4 hilos</button>
+      <button type="button" id="uReserva">+ 2 reservas</button>
+      <button type="button" class="peligro" id="uQuitar">Quitar seleccionados</button>
+    </div>
+    <p class="estado" id="uCuenta"></p>
+    <div class="tscroll"><table class="io" id="tablaUni"><thead></thead><tbody></tbody></table></div>
+  </section>
+
   <section id="v-cfg" hidden>
     <p class="intro">Configuración de los diagramas de este proyecto. Los datos del rótulo (cliente, proyecto, N° de proyecto, elaboró, revisó y aprobó) se toman de la ficha del proyecto en <a href="../proyectos/" style="color:var(--accent-ink)">Proyectos</a>.</p>
     <div class="herr"><button type="button" class="bVista" aria-pressed="false">Vista previa del lazo</button></div>
@@ -406,5 +437,6 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="../especificaciones/plantillas-et3.js"></script>
 <script src="app.js"></script>
 <script src="docio.js"></script>
+<script src="unilineal.js"></script>
 </body>
 </html>
