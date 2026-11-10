@@ -167,7 +167,7 @@
 (function () {
   'use strict';
   var ENLACES = {
-    'eq-temperatura': ['tit', 'tsh'], 'eq-flujo2': ['fit-vortex', 'fit-term'], 'eq-parshall': ['fit-parshall'], 'eq-nivel2': ['lit-us', 'lsw-vib'], 'eq-presion-sw': ['psh'],
+    'eq-temperatura': ['tit', 'tsh'], 'eq-flujo2': ['fit-vortex', 'fit-term'], 'eq-parshall': ['fit-parshall'], 'eq-valvula-control': ['fcv'], 'eq-nivel2': ['lit-us', 'lsw-vib'], 'eq-presion-sw': ['psh'],
     'eq-analizadores': ['ait-cond', 'ait-turb', 'ait-orp', 'ait-gas', 'dit-perc', 'froth'], 'eq-solenoide': ['xv-sol', 'tcv'],
     'eq-correa': ['zs-des', 'ss-cero', 'ls-tilt', 'zs-cp'], 'eq-plc': ['plc', 'gab'],
     'eq-comunicaciones': ['sw-eth', 'odf', 'gab-com', 'jb', 'tab-cctv', 'cab-inst', 'cab-fo'], 'eq-cctv': ['cam-ptz', 'cam-fija', 'nvr', 'tab-cctv'],
