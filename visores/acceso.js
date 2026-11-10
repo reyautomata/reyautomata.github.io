@@ -1,4 +1,4 @@
-/* Acceso a la Suite ReyEngi: se ingresa solo con clave de acceso.
+/* Acceso a ReyEngi (sitio principal y Suite): se ingresa solo con clave de acceso.
  * La clave no está en este archivo: solo su derivación PBKDF2-SHA256 con sal. Una vez desbloqueado,
  * el navegador queda habilitado por 180 días. Para cerrar la sesión en un equipo: agrega ?salir a la dirección.
  * Nota: es un control en el navegador de un sitio público; no reemplaza un acceso con servidor.
@@ -47,10 +47,10 @@
     Array.prototype.forEach.call(document.body.children, function (n) { n.setAttribute('inert', ''); n.setAttribute('aria-hidden', 'true'); });
     document.documentElement.style.overflow = 'hidden';
     var o = document.createElement('div'); o.id = 'rg-acceso'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'rg-tit');
-    o.innerHTML = '<form class="caja" autocomplete="off"><p class="marca">Rey<span>Engi</span> · Suite de Ingeniería I&amp;C</p><h2 id="rg-tit">Acceso restringido</h2>' +
-      '<p>El contenido de la Suite ReyEngi es privado. Ingresa tu clave de acceso para continuar.</p>' +
+    o.innerHTML = '<form class="caja" autocomplete="off"><p class="marca">Rey<span>Engi</span> · Ingeniería I&amp;C</p><h2 id="rg-tit">Acceso restringido</h2>' +
+      '<p>El contenido de ReyEngi es privado. Ingresa tu clave de acceso para continuar.</p>' +
       '<label for="rg-clave">Clave de acceso</label><input id="rg-clave" type="password" placeholder="REY-XXXX-XXXX-XXXX" spellcheck="false"><button type="submit">Ingresar</button><p class="err" id="rg-err" role="alert"></p>' +
-      '<p class="pie">¿No tienes clave? Solicítala al administrador de la Suite ReyEngi.</p></form>';
+      '<p class="pie">¿No tienes clave? Solicítala al administrador de ReyEngi.</p></form>';
     document.body.appendChild(o);
     var f = o.querySelector('form'), inp = o.querySelector('#rg-clave'), btn = o.querySelector('button'), err = o.querySelector('#rg-err'), fallos = 0;
     setTimeout(function () { inp.focus(); }, 50);
