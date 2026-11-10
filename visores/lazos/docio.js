@@ -23,7 +23,7 @@
   function tagSenal(s) {
     if (s.tagSenal) return s.tagSenal;
     var a = ISA.analizar(s.tag), l = letrasSenal(s), num = (a.numero || '') + (a.sufijo || '');
-    return (E().doc.formatoTag === 'guiones') ? (a.area ? a.area + '-' : '') + l + '-' + num : (a.area || '') + l + num;
+    return ((E().doc || {}).formatoTag === 'guiones') ? (a.area ? a.area + '-' : '') + l + '-' + num : (a.area || '') + l + num;
   }
   var NIVEL = { HH: 'MUY ALTO', H: 'ALTO', L: 'BAJO', LL: 'MUY BAJO' };
   function descSenal(s) {
@@ -57,7 +57,7 @@
 
   // ── Filas del Anexo A (agrupadas por módulo, con reservas) ──
   function planos() { var m = {}; A.lazos().forEach(function (l) { m[l.id] = l.plano; }); return m; }
-  function grupos() {
+  function gruposIO() {
     var e = E(), pl = planos(), base = A.base(), cfg = e.cfg, n = 0, out = [];
     function fila(s) {
       var r = A.resolver(s), m = A.modulo(s.mod), t = D.terminales(r, cfg), ru = rangoUnidad(s);
@@ -72,7 +72,7 @@
       for (var c = 0; c < nc; c++) {
         var s = e.senales.filter(function (x) { return x.mod === m.id && x.canal !== '' && x.canal != null && +x.canal === c; })[0];
         if (s) filas.push(fila(s));
-        else if (e.doc.reservas !== false) {
+        else if ((e.doc || {}).reservas !== false) {
           var t2 = tj ? D.terminales({ tipo: m.tipo, hilos: 2, canal: c, tarjeta: tj, bornes: T.bornes(tj.modelo, c, e.over) }, cfg) : { tb: [], tarjeta: [] };
           filas.push({ reserva: true, n: '', tagInst: 'RESERVA', tagSenal: '-', desc: '-', servicio: '-', pid: '-', plano: '-', senal: up(cfg['senal' + m.tipo]), io: m.tipo, gab: m.gabinete || cfg.gabinete, modelo: m.modelo,
             chasis: m.chasis, columna: m.columna || '', slot: m.slot, canal: c + base, regleta: m.tb || '', terminal: t2.tb.join('-'), termTarjeta: t2.tarjeta.join('-'), rango: '-', unidad: '-', LL: '-', L: '-', H: '-', HH: '-', obs: '', rev: P.activo().rev || '' });
@@ -85,7 +85,7 @@
     return out;
   }
   // Columnas del Anexo A: [clave, título, grupo, ancho Excel, ancho mm Word]
-  var COLS = [
+  var COLS_IO = [
     ['n', 'N°', '', 5, 7], ['tagInst', 'TAG INSTRUMENTO / EQUIPO', '', 16, 22], ['tagSenal', 'TAG SEÑAL', '', 16, 22], ['desc', 'DESCRIPCIÓN SEÑAL', '', 24, 32],
     ['servicio', 'SERVICIO', '', 34, 46], ['pid', 'P&ID', '', 18, 24], ['plano', 'DIAGRAMA DE LAZO / INTERCONEXIONADO', '', 18, 24], ['senal', 'TIPO SEÑAL', '', 11, 14],
     ['io', 'TIPO I/O', '', 6, 9], ['gab', 'GABINETE PLC', '', 15, 20], ['modelo', 'MODELO TARJETA I/O', '', 15, 20],
@@ -94,33 +94,146 @@
     ['rango', 'RANGO', '', 12, 15], ['unidad', 'UNIDAD', '', 8, 10], ['LL', 'LL', 'ALARMAS', 5, 7], ['L', 'L', 'ALARMAS', 5, 7], ['H', 'H', 'ALARMAS', 5, 7], ['HH', 'HH', 'ALARMAS', 5, 7],
     ['obs', 'OBSERVACIONES', '', 24, 30], ['rev', 'REV.', '', 5, 7]
   ];
+
+  // ── Listado de instrumentos ──
+  // Cada tag del listado de E/S aparece solo; se suman instrumentos sin E/S (manómetros, elementos primarios, balizas…).
+  // E.inst guarda solo lo que el usuario escribió: { id, tag, manual, oculto, desc, servicio, linea, pid, plano, unilineal, hd, et, obs, rev }
+  var NA = 'N.A.';
+  function plantillasHD() { return (window.HD && window.HD.plantillas) || []; }
+  var SUGERIDA = [[/^PD?I?T$/, 'pit'], [/^PI$|^PG$/, 'pi'], [/^PD?S/, 'psh'], [/^PCV$/, 'pcv'], [/^FI?T$|^FE$|^FQI?T?$/, 'fit-mag'], [/^FS/, 'fs'],
+    [/^LI?T$|^LE$/, 'lit-radar'], [/^LS/, 'lsw-vib'], [/^DI?T$|^DE$/, 'dit'], [/^AI?T$|^AE$/, 'ait-ph'], [/^TI?T$|^TE$|^TW$/, 'tit'], [/^TS/, 'tsh'],
+    [/^[FLPT]CV$|^[FLPT]V$/, 'fcv'], [/^[XHU]V$|^[A-Z]XV$/, 'xv-neu'], [/^WI?T$|^WQI?T?$/, 'wit'], [/^[XY]A$|^XL$/, 'xa'], [/^ZS$/, 'zs-des'], [/^SS/, 'ss-cero']];
+  function hdSugerida(tag) {
+    var l = ISA.analizar(tag || '').letras || '', id = null;
+    SUGERIDA.some(function (m) { if (m[0].test(l)) { id = m[1]; return true; } return false; });
+    return id && plantillasHD().some(function (p) { return p.id === id; }) ? id : '';
+  }
+  function numDas(id) { var i = plantillasHD().map(function (p) { return p.id; }).indexOf(id); return i < 0 ? '' : (P.activo().prefijo || '') + pad(i + 1, 4); }
+  function numEt(id) {
+    var F = (window.ET && window.ET.familias) || [], i = -1;
+    F.some(function (f, k) { if ((f.instrumentos || []).some(function (x) { return [].concat(x.das || []).indexOf(id) >= 0; })) { i = k; return true; } return false; });
+    return i < 0 ? '' : (P.activo().prefijoEt || '') + pad(i + 1, 4);
+  }
+  function instrumentos() {
+    var e = E(), L = e.inst = e.inst || [], sen = {}, porTag = {}, porLazo = {}, out = [];
+    e.senales.forEach(function (s) { if (!s.tag) return; if (!sen[s.tag]) sen[s.tag] = s; var k = A.lazoId(s); if (!porLazo[k]) porLazo[k] = s; });
+    L.forEach(function (x) { if (x.tag && !x.manual) porTag[x.tag] = x; });
+    Object.keys(sen).forEach(function (t) { out.push({ x: porTag[t] || null, tag: t, s: sen[t] }); });
+    L.forEach(function (x) { if (x.manual || !sen[x.tag]) out.push({ x: x, tag: x.tag || '', s: null, manual: true }); });
+    out = out.filter(function (r) { return !(r.x && r.x.oculto); });
+    out.forEach(function (r) { r.lazo = r.tag ? A.lazoId({ tag: r.tag, lazo: r.s ? r.s.lazo : '' }) : ''; r.ref = r.s || porLazo[r.lazo] || null; });
+    out.forEach(function (r) { r.hdAuto = hdSugerida(r.tag); });
+    // Finales de carrera de válvula (ZSO/ZSC/ZIO/ZIC): van en la hoja de datos de la válvula del mismo lazo
+    out.forEach(function (r) {
+      if (!/^Z[SI][OC]?$/.test(ISA.analizar(r.tag).letras || '') || r.hdAuto) return;
+      var v = out.filter(function (o) { return o !== r && o.lazo === r.lazo && /V$/.test(ISA.analizar(o.tag).letras || ''); })[0];
+      if (v) r.hdAuto = (v.x && v.x.hd) || v.hdAuto;
+    });
+    out.sort(function (a, b) { return (a.lazo ? 0 : 1) - (b.lazo ? 0 : 1) || (a.lazo || '').localeCompare(b.lazo || '', 'es', { numeric: true }) || a.tag.localeCompare(b.tag, 'es', { numeric: true }); });
+    return out;
+  }
+  // Valor automático de un campo (se muestra en gris en la tabla y se usa si el usuario no escribió nada)
+  function autoInst(r, k) {
+    var s = r.ref, cfg = E().cfg;
+    switch (k) {
+      case 'desc': return up(ISA.describir(r.tag) || '');
+      case 'servicio': return s ? up(s.servicio) : '';
+      case 'linea': return '';
+      case 'pid': return (s && s.pid) || cfg.docPid || '';
+      case 'plano': var pl = planos(); return (r.s && r.s.plano) || pl[r.lazo] || NA;
+      case 'unilineal': return NA;
+      case 'hd': return r.hdAuto != null ? r.hdAuto : hdSugerida(r.tag);
+      case 'obs': return r.s ? up(r.s.obs) : '';
+      case 'rev': return (r.s && r.s.rev) || P.activo().rev || '';
+    }
+    return '';
+  }
+  function valInst(r, k) { var v = r.x && r.x[k]; return v != null && v !== '' ? v : autoInst(r, k); }
+  function docsInst(r) { // números de hoja de datos y ET
+    var hd = valInst(r, 'hd'), das = hd === '-' ? NA : (numDas(hd) || NA), et = r.x && r.x.et ? r.x.et : (hd === '-' ? NA : (numEt(hd) || NA));
+    return { hd: hd, das: das, et: et };
+  }
+  function gruposInst() {
+    var filas = instrumentos().map(function (r, i) {
+      var d = docsInst(r), v = function (k) { return up(valInst(r, k)); };
+      return { n: i + 1, tagInst: r.tag, desc: v('desc'), servicio: v('servicio'), linea: v('linea') || NA, pid: v('pid') || NA, plano: v('plano') || NA, unilineal: v('unilineal') || NA,
+        et: d.et, das: d.das, obs: v('obs'), rev: valInst(r, 'rev') };
+    });
+    return [{ titulo: '', filas: filas }];
+  }
+  var COLS_INST = [
+    ['n', 'ÍTEM', '', 6, 8], ['tagInst', 'TAG', '', 18, 24], ['desc', 'DESCRIPCIÓN', '', 30, 40], ['servicio', 'SERVICIO', '', 38, 50], ['linea', 'LÍNEA / EQUIPO', '', 20, 26],
+    ['pid', 'P&ID', 'PLANOS', 20, 26], ['plano', 'DIAGRAMA DE LAZO O INTERCONEXIONADO', 'PLANOS', 20, 26], ['unilineal', 'DIAGRAMA UNILINEAL', 'PLANOS', 16, 20],
+    ['et', 'ESPECIFICACIÓN TÉCNICA', 'DOCUMENTOS', 18, 24], ['das', 'HOJA DE DATOS', 'DOCUMENTOS', 18, 24], ['obs', 'OBSERVACIONES', '', 28, 36], ['rev', 'REV.', '', 6, 8]
+  ];
+
+  // ── Tipos de documento ──
+  var K_IO = {
+    clave: 'doc', cols: COLS_IO, grupos: gruposIO, unir: ['tagInst', 'servicio'], izq: ['servicio', 'desc', 'obs'], notas: [],
+    titulo: 'LISTADO DE ENTRADAS Y SALIDAS', anexo: 'LISTADO DE ENTRADAS Y SALIDAS - SEÑALES ANALÓGICAS Y DIGITALES', objeto: 'listado de entradas y salidas del sistema de control',
+    codigo: function () { return E().cfg.docIO; },
+    alcance: 'Este documento corresponde al listado de entradas y salidas del sistema de control consideradas para el desarrollo del proyecto, con su punto de conexión (chasis, slot, canal), regleta, terminales, rango y alarmas.\n\nLa cantidad de los instrumentos o equipos y sus especificaciones particulares se encuentran en las hojas de datos respectivas.\n\nTodos los instrumentos y equipos deberán ser de diseño probado, de tipo estándar y fabricación reciente.',
+    ids: { form: '#dForm', prev: '#dPrev', estado: '#dEstado', excel: '#dExcel', word: '#dWord', pdf: '#dPdf', vista: '#v-doc' },
+    estado: function (G) {
+      var n = 0, r = 0; G.forEach(function (g) { g.filas.forEach(function (f) { if (f.reserva) r++; else n++; }); });
+      return n + ' señales · ' + r + ' reservas · ' + G.length + ' grupos';
+    },
+    extraForm: function (d) {
+      return '<fieldset><legend>Anexo A</legend><label class="ancho">Formato del tag de señal<select data-d="formatoTag"><option value="compacto"' + (d.formatoTag !== 'guiones' ? ' selected' : '') + '>Compacto (0110PDAH01004)</option><option value="guiones"' + (d.formatoTag === 'guiones' ? ' selected' : '') + '>Con guiones (0110-PDAH-01004)</option></select></label>' +
+        '<label class="chk ancho"><input type="checkbox" data-d="reservas"' + (d.reservas !== false ? ' checked' : '') + '> Incluir canales de reserva</label>' +
+        '<p class="ayuda ancho">Revisiones, cliente, proyecto y responsables se toman de Configuración (viñeta y cuadro de revisiones). Rango, P&amp;ID, alarmas, observaciones y tags de señal se editan en el listado de E/S.</p></fieldset>';
+    }
+  };
+  var K_INST = {
+    clave: 'docInst', cols: COLS_INST, grupos: gruposInst, unir: [], nw: ['tagInst', 'pid', 'plano', 'et', 'das'], izq: ['desc', 'servicio', 'linea', 'obs'], notas: ['N.A.: No Aplica.'],
+    titulo: 'LISTADO DE INSTRUMENTOS', anexo: 'LISTADO DE INSTRUMENTOS', objeto: 'listado de instrumentos',
+    codigo: function () { return E().cfg.docInst; },
+    alcance: 'Este documento corresponde al listado de instrumentos del proyecto.\n\nLa cantidad de los instrumentos y sus especificaciones particulares se encuentran en las hojas de datos respectivas.\n\nTodos los instrumentos deberán ser de diseño probado, de tipo estándar y fabricación reciente.',
+    refs: function (add) {
+      var vistos = {};
+      instrumentos().forEach(function (r) {
+        var d = docsInst(r);
+        if (d.et !== NA && !vistos['et' + d.et]) { vistos['et' + d.et] = 1; add(d.et, '', 'Especificación técnica de instrumentos'); }
+        if (d.das !== NA && !vistos[d.das]) { vistos[d.das] = 1; var p = plantillasHD().filter(function (x) { return x.id === d.hd; })[0]; add(d.das, '', 'Hoja de datos' + (p ? ' · ' + p.titulo : '')); }
+      });
+      if (E().cfg.docIO) add(E().cfg.docIO, '', 'Listado de entradas y salidas');
+    },
+    ids: { form: '#iForm', prev: '#iPrev', estado: '#iEstado', excel: '#iExcel', word: '#iWord', pdf: '#iPdf', vista: '#v-inst' },
+    estado: function (G) {
+      var f = G[0].filas, io = instrumentos().filter(function (r) { return r.s; }).length;
+      return f.length + ' instrumentos · ' + io + ' con E/S · ' + (f.length - io) + ' sin E/S';
+    },
+    extraForm: function () { return '<fieldset><legend>Anexo A</legend><p class="ayuda ancho">Los instrumentos se editan en la tabla de arriba. Cliente, proyecto, responsables, prefijos de hojas de datos (DAS) y de especificaciones (ET) se toman del proyecto activo; las revisiones, de Configuración.</p></fieldset>'; }
+  };
+  var K = K_IO;
   // Celdas de cabecera en dos filas: grupos combinados horizontalmente, el resto combinado verticalmente
   function cabecera() {
     var f1 = [], f2 = [], i = 0;
+    var COLS = K.cols;
     while (i < COLS.length) {
       var g = COLS[i][2];
       if (!g) { f1.push({ t: COLS[i][1], cs: 1, rs: 2, i: i }); f2.push({ t: '', cont: true, i: i }); i++; continue; }
       var j = i; while (j < COLS.length && COLS[j][2] === g) j++;
       f1.push({ t: g, cs: j - i, rs: 1, i: i });
-      for (var k = i; k < j; k++) f2.push({ t: COLS[k][1], cs: 1, i: k });
+      for (var k = i; k < j; k++) f2.push({ t: K.cols[k][1], cs: 1, i: k });
       i = j;
     }
     return [f1, f2];
   }
   // Rango de filas consecutivas del mismo instrumento (para combinar tag de instrumento y servicio)
   function tramos(filas) {
-    var r = []; filas.forEach(function (f, i) { if (i && !f.reserva && filas[i - 1].tagInst === f.tagInst && !filas[i - 1].reserva) r[r.length - 1][1] = i; else r.push([i, i]); }); return r;
+    var r = []; filas.forEach(function (f, i) { if (K.unir.length && i && !f.reserva && filas[i - 1].tagInst === f.tagInst && !filas[i - 1].reserva) r[r.length - 1][1] = i; else r.push([i, i]); }); return r;
   }
 
   // ── Datos del documento ──
   function datosDoc() {
-    var e = E(), d = e.doc, pr = P.activo();
+    var e = E(), d = e[K.clave] = e[K.clave] || {}, pr = P.activo();
     return {
-      codigo: d.codigo || e.cfg.docIO || '', titulo: d.titulo || 'LISTADO DE ENTRADAS Y SALIDAS', tipoDoc: d.tipoDoc || 'LISTA DE EQUIPOS', fecha: d.fecha || pr.porFecha || hoy(),
+      codigo: d.codigo || K.codigo() || '', titulo: d.titulo || K.titulo, tipoDoc: d.tipoDoc || 'LISTA DE EQUIPOS', fecha: d.fecha || pr.porFecha || hoy(),
       id: d.id || pr.idCliente || '', rev: pr.rev || '', proyecto: pr.proyecto || '', cliente: pr.cliente || '', empresa: pr.contratista || 'ReyEngi', numero: pr.numero || '',
-      anexoA: d.anexoA || 'LISTADO DE ENTRADAS Y SALIDAS - SEÑALES ANALÓGICAS Y DIGITALES', anexoB: d.anexoB || '',
-      intro: d.intro || (pr.cliente || 'El cliente') + ' ha encargado a ' + (pr.contratista || 'ReyEngi') + ' el desarrollo del proyecto "' + (pr.proyecto || '') + '".\n\nEl presente documento corresponde al listado de entradas y salidas del sistema de control del proyecto.',
-      alcance: d.alcance || 'Este documento corresponde al listado de entradas y salidas del sistema de control consideradas para el desarrollo del proyecto, con su punto de conexión (chasis, slot, canal), regleta, terminales, rango y alarmas.\n\nLa cantidad de los instrumentos o equipos y sus especificaciones particulares se encuentran en las hojas de datos respectivas.\n\nTodos los instrumentos y equipos deberán ser de diseño probado, de tipo estándar y fabricación reciente.',
+      anexoA: d.anexoA || K.anexo, anexoB: d.anexoB || '',
+      intro: d.intro || (pr.cliente || 'El cliente') + ' ha encargado a ' + (pr.contratista || 'ReyEngi') + ' el desarrollo del proyecto "' + (pr.proyecto || '') + '".\n\nEl presente documento corresponde al ' + K.objeto + ' del proyecto.',
+      alcance: d.alcance || K.alcance,
       control: [['Preparado por:', pr.por, d.rolPor || 'Ingeniero de Proyecto', pr.porFecha], ['Revisado por:', pr.reviso, d.rolReviso || 'Jefe de Disciplina', pr.revisoFecha], ['Aprobado por:', pr.aprobo, d.rolAprobo || 'Jefe de Proyecto', pr.aproboFecha],
         ['Revisado ' + (pr.cliente || 'cliente') + ':', pr.revisoCliente, d.rolCliente || '', ''], ['Aprobado ' + (pr.cliente || 'cliente') + ':', pr.aproboCliente, d.rolCliente || '', '']],
       revs: (e.revs || []).map(function (r) { return [r.rev || '', r.desc || '', r.fecha || '']; }),
@@ -135,7 +248,8 @@
     if (e.cfg.docPid) add(e.cfg.docPid, '', 'P&ID');
     A.lazos().forEach(function (l) { add(l.plano, l.rev || rev, 'Diagrama de lazo ' + l.id + (l.servicio ? ' · ' + l.servicio : '')); });
     if (e.cfg.docCables) add(e.cfg.docCables, '', 'Listado de cables');
-    String(e.doc.refs || '').split(/\r?\n/).filter(Boolean).forEach(function (l) { var c = l.split(/\s*;\s*/); add(c[0], c[1] || '', c[2] || ''); });
+    if (K.refs) K.refs(add);
+    String((e[K.clave] || {}).refs || '').split(/\r?\n/).filter(Boolean).forEach(function (l) { var c = l.split(/\s*;\s*/); add(c[0], c[1] || '', c[2] || ''); });
     return r;
   }
 
@@ -144,7 +258,7 @@
   function tablaHtml(f, cab) { return '<table>' + (cab ? '<tr>' + cab.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>' : '') + f.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + esc(c == null ? '' : c).replace(/\n/g, '<br>') + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>'; }
   function parrafos(t) { return String(t || '').split(/\n\s*\n/).map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join(''); }
   function htmlDoc() {
-    var d = datosDoc(), G = grupos(), pie = '<p style="margin-top:8mm;font-size:8pt;color:#5A6573;border-top:1px solid #9FB0C3;padding-top:2mm">' + esc(d.codigo + (d.rev !== '' ? ' R' + d.rev : '')) + '</p>';
+    var d = datosDoc(), G = K.grupos(), COLS = K.cols, pie = '<p style="margin-top:8mm;font-size:8pt;color:#5A6573;border-top:1px solid #9FB0C3;padding-top:2mm">' + esc(d.codigo + (d.rev !== '' ? ' R' + d.rev : '')) + '</p>';
     var h = [];
     h.push('<div class="pg v">' + cabPagina() + '<div class="tit">' + esc(up(d.empresa)) + '</div>' +
       '<table class="datos"><tr><td>TIPO DOCUMENTO</td><td>: ' + esc(d.tipoDoc) + ' &nbsp;&nbsp; ' + esc(d.titulo) + '</td></tr><tr><td>TÍTULO PROYECTO</td><td>: ' + esc(d.proyecto) + '</td></tr><tr><td>CLIENTE</td><td>: ' + esc(d.cliente) + '</td></tr><tr><td>ID</td><td>: ' + esc(d.id) + '</td></tr><tr><td>CÓDIGO</td><td>: <b>' + esc(d.codigo) + '</b> &nbsp;&nbsp; <b>FECHA DOCUMENTO:</b> ' + esc(d.fecha) + '</td></tr></table>' +
@@ -160,15 +274,16 @@
     var thead = '<thead><tr>' + cab[0].map(function (c) { return '<th' + (c.cs > 1 ? ' colspan="' + c.cs + '"' : '') + (c.rs > 1 ? ' rowspan="2"' : '') + '>' + esc(c.t) + '</th>'; }).join('') + '</tr><tr>' + cab[1].filter(function (c) { return !c.cont; }).map(function (c) { return '<th>' + esc(c.t) + '</th>'; }).join('') + '</tr></thead>';
     var cuerpo = G.map(function (g) {
       var tr = tramos(g.filas);
-      return '<tr class="grp"><td colspan="' + COLS.length + '">' + esc(g.titulo) + '</td></tr>' + g.filas.map(function (f, i) {
+      return (g.titulo ? '<tr class="grp"><td colspan="' + COLS.length + '">' + esc(g.titulo) + '</td></tr>' : '') + g.filas.map(function (f, i) {
         var t = tr.filter(function (x) { return x[0] <= i && i <= x[1]; })[0], ini = t[0] === i, rs = t[1] - t[0] + 1;
         return '<tr' + (f.reserva ? ' class="res"' : '') + '>' + COLS.map(function (c) {
-          if ((c[0] === 'tagInst' || c[0] === 'servicio') && !ini) return '';
-          var v = f[c[0]]; return '<td' + ((c[0] === 'tagInst' || c[0] === 'servicio') && rs > 1 ? ' rowspan="' + rs + '"' : '') + (c[0] === 'servicio' || c[0] === 'desc' || c[0] === 'obs' ? ' class="izq"' : '') + '>' + esc(v == null ? '' : v) + '</td>';
+          var un = K.unir.indexOf(c[0]) >= 0;
+          if (un && !ini) return '';
+          var v = f[c[0]]; return '<td' + (un && rs > 1 ? ' rowspan="' + rs + '"' : '') + (K.izq.indexOf(c[0]) >= 0 ? ' class="izq"' : '') + ((K.nw || []).indexOf(c[0]) >= 0 ? ' style="white-space:nowrap"' : '') + '>' + esc(v == null ? '' : v).replace(/\n/g, '<br>') + '</td>';
         }).join('') + '</tr>';
       }).join('');
     }).join('');
-    h.push('<div class="pg h">' + encabezadoAnexoHtml(d) + '<table class="io2">' + thead + '<tbody>' + (cuerpo || '<tr><td colspan="' + COLS.length + '">Sin señales</td></tr>') + '</tbody></table></div>');
+    h.push('<div class="pg h">' + encabezadoAnexoHtml(d) + '<table class="io2">' + thead + '<tbody>' + (cuerpo || '<tr><td colspan="' + COLS.length + '">Sin datos</td></tr>') + '</tbody></table>' + (K.notas.length ? '<p style="font-size:8pt;margin-top:3mm"><b>NOTAS:</b><br>' + K.notas.map(function (n, i) { return (i + 1) + '.- ' + esc(n); }).join('<br>') + '</p>' : '') + '</div>');
     return h.join('');
   }
   function encabezadoAnexoHtml(d) {
@@ -187,8 +302,9 @@
     return fetch(LOGO).then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { if (!b) return null; var dv = new DataView(b); return { bytes: new Uint8Array(b), w: dv.getUint32(16), h: dv.getUint32(20) }; }).catch(function () { return null; });
   }
   function excel() {
-    return cargarLogo().then(function (logo) {
-      var X = window.XLSX_RE, lb = X.libro(), d = datosDoc(), pr = P.activo(), G = grupos(), N = COLS.length;
+    var k0 = K;
+    return cargarLogo().then(function (logo) { K = k0;
+      var X = window.XLSX_RE, lb = X.libro(), d = datosDoc(), pr = P.activo(), G = K.grupos(), COLS = K.cols, N = COLS.length;
       lb.titulo = d.titulo; lb.autor = d.empresa;
       var h = lb.hoja('ANEXO A', { orientacion: 'landscape', pie: d.codigo + (d.rev !== '' ? ' R' + d.rev : '') });
       h.cols(COLS.map(function (c) { return c[3]; }));
@@ -214,27 +330,29 @@
       h.alto(r0, 24); h.alto(r0 + 1, 24); h.filasTitulo(r0, r0 + 1);
       var r = r0 + 2;
       G.forEach(function (g) {
-        h.combinar(r, 0, r, N - 1, g.titulo, { b: true, fill: CLARO, color: AZUL, sz: 8 }); r++;
+        if (g.titulo) { h.combinar(r, 0, r, N - 1, g.titulo, { b: true, fill: CLARO, color: AZUL, sz: 8 }); r++; }
         var tr = tramos(g.filas);
         g.filas.forEach(function (f, i) {
           var t = tr.filter(function (x) { return x[0] <= i && i <= x[1]; })[0];
           COLS.forEach(function (c, ci) {
-            var e = { sz: 8, h: c[0] === 'servicio' || c[0] === 'desc' || c[0] === 'obs' ? 'left' : 'center', color: f.reserva ? '6B7785' : undefined };
-            if ((c[0] === 'tagInst' || c[0] === 'servicio') && t[1] > t[0]) { if (t[0] === i) h.combinar(r, ci, r + (t[1] - t[0]), ci, f[c[0]], e); }
+            var e = { sz: 8, h: K.izq.indexOf(c[0]) >= 0 ? 'left' : 'center', color: f.reserva ? '6B7785' : undefined };
+            if (K.unir.indexOf(c[0]) >= 0 && t[1] > t[0]) { if (t[0] === i) h.combinar(r, ci, r + (t[1] - t[0]), ci, f[c[0]], e); }
             else h.celda(r, ci, f[c[0]] == null ? '' : f[c[0]], e);
           });
           h.alto(r, 24); r++;
         });
       });
-      var nom = (d.codigo ? d.codigo + (d.rev !== '' ? ' R' + d.rev : '') + ' ANEXO A' : 'Listado E-S Anexo A').replace(/[\\/:*?"<>|]+/g, '-') + '.xlsx';
+      if (K.notas.length) { r++; h.combinar(r, 0, r + K.notas.length, N - 1, 'NOTAS:\n' + K.notas.map(function (n, i) { return (i + 1) + '.- ' + n; }).join('\n'), { sz: 8, borde: 'none', v: 'top' }); }
+      var nom = (d.codigo ? d.codigo + (d.rev !== '' ? ' R' + d.rev : '') + ' ANEXO A' : K.titulo + ' ANEXO A').replace(/[\\/:*?"<>|]+/g, '-') + '.xlsx';
       A.descargar(nom, X.generar(lb), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     });
   }
 
   // ── Word (documento completo) ──
   function word() {
-    return cargarLogo().then(function (logo) {
-      var d = datosDoc(), G = grupos(), B = [];
+    var k0 = K;
+    return cargarLogo().then(function (logo) { K = k0;
+      var d = datosDoc(), G = K.grupos(), COLS = K.cols, B = [];
       B.push(logo ? { p: '', img: 70, c: true } : { p: 'ReyEngi', b: true, c: true, sz: 32, color: AZUL });
       B.push({ p: up(d.empresa), b: true, c: true, sz: 28, color: AZUL });
       B.push({ tabla: { anchos: [45, 125], filas: [['TIPO DOCUMENTO', d.tipoDoc + '   ' + d.titulo], ['TÍTULO PROYECTO', d.proyecto], ['CLIENTE', d.cliente], ['ID', d.id], ['CÓDIGO', d.codigo + '      FECHA DOCUMENTO: ' + d.fecha]].map(function (r) { return [{ t: r[0], b: true, fill: CLARO, color: AZUL }, r[1]]; }) } });
@@ -259,68 +377,157 @@
       // las celdas de grupo de la fila 2 no existen como tales: f2 lleva una celda por columna
       var filas = [f1, f2];
       G.forEach(function (g) {
-        filas.push([{ t: g.titulo, cs: COLS.length, b: true, fill: CLARO, color: AZUL, sz: 13 }]);
+        if (g.titulo) filas.push([{ t: g.titulo, cs: COLS.length, b: true, fill: CLARO, color: AZUL, sz: 13 }]);
         var tr = tramos(g.filas);
         g.filas.forEach(function (f, i) {
           var t = tr.filter(function (x) { return x[0] <= i && i <= x[1]; })[0];
           filas.push(COLS.map(function (c) {
-            var mg = (c[0] === 'tagInst' || c[0] === 'servicio') && t[1] > t[0];
-            return { t: mg && t[0] !== i ? '' : (f[c[0]] == null ? '' : String(f[c[0]])), sz: 12, c: !(c[0] === 'servicio' || c[0] === 'desc' || c[0] === 'obs'), vm: mg ? (t[0] === i ? 'start' : 'cont') : null, color: f.reserva ? '6B7785' : null };
+            var mg = K.unir.indexOf(c[0]) >= 0 && t[1] > t[0];
+            return { t: mg && t[0] !== i ? '' : (f[c[0]] == null ? '' : String(f[c[0]])), sz: 12, c: K.izq.indexOf(c[0]) < 0, vm: mg ? (t[0] === i ? 'start' : 'cont') : null, color: f.reserva ? '6B7785' : null };
           }));
         });
       });
       B.push({ p: (d.titulo + ' · ANEXO A · ' + d.anexoA).toUpperCase(), b: true, c: true, color: AZUL });
       B.push({ tabla: { cab: 2, anchos: anchos, filas: filas } });
+      K.notas.forEach(function (n, i) { B.push({ p: (i ? '' : 'NOTAS: ') + (i + 1) + '.- ' + n, sz: 16 }); });
       var bytes = window.DOCX.generar({
         titulo: d.titulo, autor: d.empresa, logo: logo, anchosEncabezado: [42, 86, 42], pie: d.codigo + (d.rev !== '' ? ' R' + d.rev : ''),
         encabezado: [[logo ? { t: '', img: 34, c: true } : { t: 'ReyEngi', b: true, c: true }, { t: d.proyecto, c: true }, { t: d.codigo, b: true, c: true }],
           [{ t: d.cliente, c: true }, { t: d.titulo, c: true, b: true }, { t: 'Rev. ' + d.rev + '  ·  {PAG}', c: true }]],
         bloques: B
       });
-      A.descargar(((d.codigo || 'Listado E-S') + (d.rev !== '' ? ' R' + d.rev : '')).replace(/[\\/:*?"<>|]+/g, '-') + '.docx', bytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      A.descargar(((d.codigo || K.titulo) + (d.rev !== '' ? ' R' + d.rev : '')).replace(/[\\/:*?"<>|]+/g, '-') + '.docx', bytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     });
   }
 
   function pdf() { var c = $('#imp'); c.innerHTML = htmlDoc(); setTimeout(function () { window.print(); }, 300); }
 
-  // ── Formulario ──
-  var CAMPOS = [
-    { g: 'Identificación', c: [['codigo', 'Código del documento', function () { return E().cfg.docIO; }], ['fecha', 'Fecha del documento', function () { return P.activo().porFecha || hoy(); }],
-      ['tipoDoc', 'Tipo de documento', function () { return 'LISTA DE EQUIPOS'; }], ['titulo', 'Título', function () { return 'LISTADO DE ENTRADAS Y SALIDAS'; }], ['id', 'ID / contrato del cliente', function () { return P.activo().idCliente; }]] },
-    { g: 'Firmas (roles)', c: [['rolPor', 'Rol de quien prepara', function () { return 'Ingeniero de Proyecto'; }], ['rolReviso', 'Rol de quien revisa', function () { return 'Jefe de Disciplina'; }], ['rolAprobo', 'Rol de quien aprueba', function () { return 'Jefe de Proyecto'; }], ['rolCliente', 'Rol en el cliente', function () { return 'Jefe de Proyecto'; }]] },
-    { g: 'Contenido', c: [['intro', 'Introducción', null, 'a'], ['alcance', 'Alcance', null, 'a'], ['refs', 'Referencias adicionales (código ; rev ; nombre, una por línea)', function () { return ''; }, 'a'], ['cambios', 'Control de cambios (rev ; fecha ; página ; descripción ; responsable)', function () { return ''; }, 'a'],
-      ['anexoA', 'Título del Anexo A', function () { return 'LISTADO DE ENTRADAS Y SALIDAS - SEÑALES ANALÓGICAS Y DIGITALES'; }], ['anexoB', 'Anexo B (opcional, ej. señales por comunicación)', function () { return ''; }]] }
+  // ── Formulario y vista de cada documento ──
+  function campos() {
+    return [
+      { g: 'Identificación', c: [['codigo', 'Código del documento', function () { return K.codigo(); }], ['fecha', 'Fecha del documento', function () { return P.activo().porFecha || hoy(); }],
+        ['tipoDoc', 'Tipo de documento', function () { return 'LISTA DE EQUIPOS'; }], ['titulo', 'Título', function () { return K.titulo; }], ['id', 'ID / contrato del cliente', function () { return P.activo().idCliente; }]] },
+      { g: 'Firmas (roles)', c: [['rolPor', 'Rol de quien prepara', function () { return 'Ingeniero de Proyecto'; }], ['rolReviso', 'Rol de quien revisa', function () { return 'Jefe de Disciplina'; }], ['rolAprobo', 'Rol de quien aprueba', function () { return 'Jefe de Proyecto'; }], ['rolCliente', 'Rol en el cliente', function () { return 'Jefe de Proyecto'; }]] },
+      { g: 'Contenido', c: [['intro', 'Introducción', null, 'a'], ['alcance', 'Alcance', null, 'a'], ['refs', 'Referencias adicionales (código ; rev ; nombre, una por línea)', function () { return ''; }, 'a'], ['cambios', 'Control de cambios (rev ; fecha ; página ; descripción ; responsable)', function () { return ''; }, 'a'],
+        ['anexoA', 'Título del Anexo A', function () { return K.anexo; }], ['anexoB', 'Anexo B (opcional)', function () { return ''; }]] }
+    ];
+  }
+  function vistaDoc(KK) {
+    var I = KK.ids, t = 0;
+    function pintarForm() {
+      K = KK; var e = E(), dd = datosDoc(), d = e[K.clave];
+      $(I.form).innerHTML = campos().map(function (g) {
+        return '<fieldset><legend>' + g.g + '</legend>' + g.c.map(function (c) {
+          var ph = c[2] ? c[2]() || '' : (c[0] === 'intro' ? dd.intro : dd.alcance);
+          return c[3] === 'a' ? '<label class="ancho">' + c[1] + '<textarea rows="4" data-d="' + c[0] + '" placeholder="' + esc(ph) + '">' + esc(d[c[0]] || '') + '</textarea></label>'
+            : '<label' + (c[0] === 'titulo' || c[0] === 'tipoDoc' ? ' class="ancho"' : '') + '>' + c[1] + '<input data-d="' + c[0] + '" value="' + esc(d[c[0]] || '') + '" placeholder="' + esc(ph) + '"></label>';
+        }).join('') + '</fieldset>';
+      }).join('') + K.extraForm(d);
+    }
+    function pintarPrev() {
+      K = KK; var G = K.grupos();
+      $(I.prev).innerHTML = htmlDoc();
+      $(I.estado).textContent = K.estado(G);
+    }
+    function poner(x) { K = KK; var d = E()[K.clave] = E()[K.clave] || {}; d[x.dataset.d] = x.type === 'checkbox' ? x.checked : x.value; A.guardar(); }
+    $(I.form).addEventListener('input', function (ev) { var x = ev.target; if (!x.dataset.d) return; poner(x); clearTimeout(t); t = setTimeout(pintarPrev, 250); });
+    $(I.form).addEventListener('change', function (ev) { var x = ev.target; if (x.dataset.d && (x.type === 'checkbox' || x.tagName === 'SELECT')) { poner(x); pintarPrev(); } });
+    $(I.excel).addEventListener('click', function () { K = KK; excel(); });
+    $(I.word).addEventListener('click', function () { K = KK; word(); });
+    $(I.pdf).addEventListener('click', function () { K = KK; pdf(); });
+    return { form: pintarForm, prev: pintarPrev, todo: function () { pintarForm(); pintarPrev(); } };
+  }
+  var VIO = vistaDoc(K_IO), VINST = vistaDoc(K_INST);
+
+  // ── Tabla editable de instrumentos ──
+  var CI = [
+    { k: 'tag', l: 'TAG', w: 130 }, { k: 'desc', l: 'Descripción', w: 210 }, { k: 'servicio', l: 'Servicio', w: 220 }, { k: 'linea', l: 'Línea / equipo', w: 130 },
+    { k: 'pid', l: 'P&ID', w: 140 }, { k: 'plano', l: 'Diagrama de lazo', w: 140 }, { k: 'unilineal', l: 'Diagrama unilineal', w: 120 },
+    { k: 'hd', l: 'Hoja de datos (tipo)', w: 220, sel: true }, { k: 'das', l: 'N° hoja de datos', w: 175, ro: true }, { k: 'et', l: 'N° especificación técnica', w: 175 },
+    { k: 'obs', l: 'Observaciones', w: 200 }, { k: 'rev', l: 'Rev.', w: 60 }
   ];
-  function pintarForm() {
-    var e = E(), d = e.doc, dd = datosDoc();
-    $('#dForm').innerHTML = CAMPOS.map(function (g) {
-      return '<fieldset><legend>' + g.g + '</legend>' + g.c.map(function (c) {
-        var ph = c[2] ? c[2]() || '' : (c[0] === 'intro' ? dd.intro : dd.alcance);
-        return c[3] === 'a' ? '<label class="ancho">' + c[1] + '<textarea rows="4" data-d="' + c[0] + '" placeholder="' + esc(ph) + '">' + esc(d[c[0]] || '') + '</textarea></label>'
-          : '<label' + (c[0] === 'titulo' || c[0] === 'tipoDoc' ? ' class="ancho"' : '') + '>' + c[1] + '<input data-d="' + c[0] + '" value="' + esc(d[c[0]] || '') + '" placeholder="' + esc(ph) + '"></label>';
-      }).join('') + '</fieldset>';
-    }).join('') + '<fieldset><legend>Anexo A</legend><label class="ancho">Formato del tag de señal<select data-d="formatoTag"><option value="compacto"' + (d.formatoTag !== 'guiones' ? ' selected' : '') + '>Compacto (0110PDAH01004)</option><option value="guiones"' + (d.formatoTag === 'guiones' ? ' selected' : '') + '>Con guiones (0110-PDAH-01004)</option></select></label>' +
-      '<label class="chk ancho"><input type="checkbox" data-d="reservas"' + (d.reservas !== false ? ' checked' : '') + '> Incluir canales de reserva</label>' +
-      '<p class="ayuda ancho">Revisiones, cliente, proyecto y responsables se toman de Configuración (viñeta y cuadro de revisiones). Rango, P&amp;ID, alarmas, observaciones y tags de señal se editan en el listado de E/S.</p></fieldset>';
+  function clave(r) { return r.manual ? 'm:' + r.x.id : 'io:' + r.tag; }
+  function fila(k) { return instrumentos().filter(function (r) { return clave(r) === k; })[0]; }
+  function entrada(r) { // registro editable (se crea al primer cambio en un instrumento que viene del listado E/S)
+    if (r.x) return r.x;
+    var x = { id: A.uid(), tag: r.tag }; E().inst.push(x); r.x = x; return x;
   }
-  function pintarPrev() {
-    var G = grupos(), n = G.reduce(function (s, g) { return s + g.filas.filter(function (f) { return !f.reserva; }).length; }, 0), r = G.reduce(function (s, g) { return s + g.filas.filter(function (f) { return f.reserva; }).length; }, 0);
-    $('#dPrev').innerHTML = htmlDoc();
-    $('#dEstado').textContent = n + ' señales · ' + r + ' reservas · ' + G.length + ' grupos';
+  function pintarTabla() {
+    K = K_INST;
+    var q = ($('#iBuscar').value || '').toLowerCase(), Rs = instrumentos(), H = plantillasHD();
+    var vis = Rs.filter(function (r) { return !q || (r.tag + ' ' + valInst(r, 'desc') + ' ' + valInst(r, 'servicio')).toLowerCase().indexOf(q) >= 0; });
+    $('#tablaInst thead').innerHTML = '<tr><th class="chk"><input type="checkbox" id="iTodo" aria-label="Seleccionar todo"></th><th style="min-width:64px">Origen</th>' + CI.map(function (c) { return '<th style="min-width:' + c.w + 'px">' + c.l + '</th>'; }).join('') + '</tr>';
+    $('#tablaInst tbody').innerHTML = vis.map(function (r) {
+      var d = docsInst(r), x = r.x || {};
+      return '<tr data-r="' + esc(clave(r)) + '"><td class="chk"><input type="checkbox" class="chkf" aria-label="Seleccionar ' + esc(r.tag) + '"></td><td><span class="orig' + (r.s ? ' io' : '') + '">' + (r.s ? r.s.tipo : 'Manual') + '</span></td>' + CI.map(function (c) {
+        if (c.k === 'tag' && !r.manual) return '<td><input value="' + esc(r.tag) + '" readonly title="Viene del listado de E/S: cámbialo allí"></td>';
+        if (c.sel) {
+          var a = autoInst(r, 'hd'), pa = H.filter(function (p) { return p.id === a; })[0];
+          return '<td><select data-k="hd"><option value="">' + (pa ? 'Auto · ' + esc(pa.titulo) : 'Auto · sin hoja') + '</option><option value="-"' + (x.hd === '-' ? ' selected' : '') + '>N.A. (no aplica)</option>' +
+            H.map(function (p) { return '<option value="' + p.id + '"' + (x.hd === p.id ? ' selected' : '') + '>' + esc(p.titulo) + '</option>'; }).join('') + '</select></td>';
+        }
+        if (c.ro) return '<td><input value="' + esc(d.das) + '" readonly tabindex="-1"></td>';
+        var ph = c.k === 'et' ? (d.hd === '-' ? NA : numEt(d.hd) || NA) : autoInst(r, c.k);
+        return '<td><input data-k="' + c.k + '" value="' + esc(x[c.k] || '') + '" placeholder="' + esc(ph || '') + '"></td>';
+      }).join('') + '</tr>';
+    }).join('') || '<tr><td colspan="' + (CI.length + 2) + '" class="vacio">Sin instrumentos. Agrega señales en el listado de E/S o instrumentos sin E/S con «+ Agregar instrumento».</td></tr>';
+    var ocultos = E().inst.filter(function (x) { return x.oculto; }).length;
+    $('#iCuenta').textContent = Rs.length + ' instrumentos · ' + Rs.filter(function (r) { return r.s; }).length + ' desde el listado de E/S · ' + Rs.filter(function (r) { return !r.s; }).length + ' sin E/S' + (ocultos ? ' · ' + ocultos + ' ocultos' : '');
   }
-  var t = 0;
-  function pintarDoc() { pintarForm(); pintarPrev(); }
-  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: pintarDoc });
-  window.LAZOS_DOC = { tagSenal: tagSenal, descSenal: descSenal, rangoUnidad: rangoUnidad, alarma: alarma, grupos: grupos, excel: excel, word: word, pdf: pdf, html: htmlDoc };
-  $('#dForm').addEventListener('input', function (ev) {
-    var x = ev.target, k = x.dataset.d; if (!k) return;
-    E().doc[k] = x.type === 'checkbox' ? x.checked : x.value; A.guardar();
-    clearTimeout(t); t = setTimeout(pintarPrev, 250);
+  var tPrev = 0;
+  function cambio() { A.guardar(); clearTimeout(tPrev); tPrev = setTimeout(VINST.prev, 300); }
+  $('#tablaInst').addEventListener('input', function (ev) {
+    var x = ev.target, k = x.dataset.k, tr = x.closest('tr[data-r]'); if (!k || !tr) return;
+    var r = fila(tr.dataset.r); if (!r) return;
+    entrada(r)[k] = x.value;
+    if (k === 'tag') tr.dataset.r = clave(r);
+    if (k === 'hd' || k === 'tag') { var y = window.scrollY; pintarTabla(); window.scrollTo(0, y); }
+    cambio();
   });
-  $('#dForm').addEventListener('change', function (ev) { var x = ev.target; if (x.dataset.d && (x.type === 'checkbox' || x.tagName === 'SELECT')) { E().doc[x.dataset.d] = x.type === 'checkbox' ? x.checked : x.value; A.guardar(); pintarPrev(); } });
-  $('#dExcel').addEventListener('click', excel);
-  $('#dWord').addEventListener('click', word);
-  $('#dPdf').addEventListener('click', pdf);
-  // Si la página se abrió directamente en esta pestaña, se pinta ahora
-  if (!$('#v-doc').hidden) pintarDoc();
+  $('#tablaInst').addEventListener('focusin', function (ev) { var tr = ev.target.closest('tr[data-r]'); if (!tr) return; var r = fila(tr.dataset.r); if (r && A.mirarLazo) A.mirarLazo(r.lazo); });
+  $('#tablaInst').addEventListener('change', function (ev) { if (ev.target.id === 'iTodo') document.querySelectorAll('#tablaInst .chkf').forEach(function (c) { c.checked = ev.target.checked; }); });
+  $('#iBuscar').addEventListener('input', pintarTabla);
+  $('#iAgregar').addEventListener('click', function () {
+    E().inst.push({ id: A.uid(), tag: '', manual: true }); pintarTabla(); cambio();
+    var ult = document.querySelectorAll('#tablaInst tr[data-r^="m:"] input[data-k="tag"]'); if (ult.length) ult[ult.length - 1].focus();
+  });
+  // Elementos primarios: FIT → FE, LIT → LE, TIT → TE, AIT → AE (mismo lazo y servicio)
+  $('#iPrimarios').addEventListener('click', function () {
+    var Rs = instrumentos(), hay = {}, n = 0;
+    Rs.forEach(function (r) { hay[r.tag] = 1; });
+    E().inst.forEach(function (x) { if (x.tag) hay[x.tag] = 1; });
+    Rs.forEach(function (r) {
+      var a = ISA.analizar(r.tag); if (!/^[FLTA]$/.test(a.variable) || a.modificador || !/^I?T$/.test(a.funciones)) return;
+      var nt = r.tag.replace(a.letras, a.variable + 'E'); if (hay[nt]) return;
+      hay[nt] = 1; n++;
+      E().inst.push({ id: A.uid(), tag: nt, manual: true, servicio: (r.x && r.x.servicio) || '', linea: (r.x && r.x.linea) || '', obs: 'ASOCIADO A ' + r.tag, hd: (r.x && r.x.hd) || '' });
+    });
+    pintarTabla(); cambio();
+    $('#iCuenta').textContent += ' · ' + (n ? n + ' elementos primarios agregados' : 'no faltan elementos primarios');
+  });
+  $('#iSincronizar').addEventListener('click', function () {
+    var e = E(), tags = {}; e.senales.forEach(function (s) { if (s.tag) tags[s.tag] = 1; });
+    // Vuelve a mostrar los ocultos y quita registros vacíos de tags que ya no existen en el listado de E/S
+    e.inst = e.inst.filter(function (x) { delete x.oculto; if (x.manual) return true; if (tags[x.tag]) return true; return Object.keys(x).some(function (k) { return ['id', 'tag'].indexOf(k) < 0 && x[k]; }) ? (x.manual = true) : false; });
+    pintarTabla(); cambio();
+  });
+  $('#iQuitar').addEventListener('click', function () {
+    var ks = []; document.querySelectorAll('#tablaInst .chkf:checked').forEach(function (c) { ks.push(c.closest('tr').dataset.r); });
+    if (!ks.length) return;
+    var e = E();
+    ks.forEach(function (k) {
+      var r = fila(k); if (!r) return;
+      if (r.manual) e.inst.splice(e.inst.indexOf(r.x), 1); else entrada(r).oculto = true;
+    });
+    pintarTabla(); cambio();
+  });
+  function pintarInst() { pintarTabla(); VINST.todo(); }
+
+  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: VIO.todo, inst: pintarInst });
+  window.LAZOS_DOC = { tagSenal: tagSenal, descSenal: descSenal, rangoUnidad: rangoUnidad, alarma: alarma, grupos: gruposIO, instrumentos: instrumentos, gruposInst: gruposInst, hdSugerida: hdSugerida,
+    excel: function (k) { K = k === 'inst' ? K_INST : K_IO; return excel(); }, word: function (k) { K = k === 'inst' ? K_INST : K_IO; return word(); }, pdf: pdf,
+    html: function (k) { K = k === 'inst' ? K_INST : K_IO; return htmlDoc(); } };
+  // Si la página se abrió directamente en una de estas pestañas, se pinta ahora
+  if (!$('#v-doc').hidden) VIO.todo();
+  if (!$('#v-inst').hidden) pintarInst();
 })();
