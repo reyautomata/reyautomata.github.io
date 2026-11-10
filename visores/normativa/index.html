@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Normativa · ReyEngi</title>
+<meta name="description" content="Normativa eléctrica chilena (SEC, CNE, Minería) aplicada a los entregables de instrumentación y control: estado de cada norma, matriz norma × entregable, reglas que usa la suite y revisión del proyecto.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --panel2: #13284A; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544; --bad: #FF8C8F; --sym-bg: #0F2036;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; line-height: 1.5; }
+[hidden] { display: none !important; }
+a { color: var(--accent-ink); }
+button { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 5px 11px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, select, textarea { font: 13px var(--f-body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 32px; width: 100%; }
+label { display: grid; gap: 3px; align-content: start; font: 600 11.5px var(--f-body); color: var(--muted); }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 3px solid var(--accent); padding: 8px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1400px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 17px; font-weight: 700; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 12px var(--f-mono); text-decoration: none; }
+.tabs { max-width: 1400px; margin: 8px auto 0; display: flex; gap: 2px; overflow-x: auto; }
+.tabs button { border: 0; border-radius: 6px 6px 0 0; min-height: 36px; color: var(--muted); background: transparent; white-space: nowrap; font-size: 13px; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--fg); box-shadow: inset 0 3px 0 var(--accent); }
+main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1400px; margin: 0 auto; }
+.intro { color: var(--muted); max-width: 100ch; margin: 0 0 14px; }
+.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px 14px; margin: 0 0 14px; }
+.blk > h2 { margin: 0 0 8px; font: 700 12px var(--f-mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--accent-ink); }
+.blk p { margin: 0 0 8px; max-width: 110ch; }
+h3.sub { margin: 14px 0 8px; font: 600 12px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+ol.pasos { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 110ch; }
+ol.pasos b { color: #fff; }
+table.t { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.t th { text-align: left; font: 600 11px var(--f-mono); color: var(--muted); padding: 6px 7px; border-bottom: 1px solid var(--line); background: var(--panel2); position: sticky; top: 0; }
+table.t td { padding: 5px 7px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t td b { color: #fff; }
+.tscroll { overflow: auto; max-height: 460px; border: 1px solid var(--line); border-radius: 8px; }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.sym { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; align-items: center; }
+.sym svg { width: 80px; height: 60px; color: #DCE6F1; }
+.sym figcaption b { display: block; font-size: 12.5px; color: #fff; }
+.sym figcaption span { font-size: 11.5px; color: var(--muted); line-height: 1.35; display: block; }
+.linea { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; margin: 8px 0; font: 700 18px var(--f-mono); }
+.seg { padding: 3px 8px; border-radius: 5px; background: var(--panel2); border: 1px solid var(--line); }
+.seg.area { border-color: #3F7FBF; } .seg.serv { border-color: #3FBF7F; } .seg.nps { border-color: #F2B544; } .seg.spec { border-color: #EF5A05; } .seg.corr { border-color: #A98BFF; } .seg.aisl { border-color: #FF8C8F; }
+.guion { color: var(--muted); }
+ul.lst { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; align-items: end; }
+.res { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--bg); }
+.res.bien { border-color: #2A8C5E; } .res.av { border-color: #8C6A1F; } .res.mal { border-color: #8C2A2E; }
+.res .big { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--muted); }
+.res .big b { display: block; font: 700 18px var(--f-mono); color: #fff; }
+b.mal { color: var(--bad); } b.av { color: var(--warn); }
+.peq { font-size: 11.5px; color: var(--muted); }
+textarea { font-family: var(--f-mono); font-size: 12px; min-height: 120px; margin-top: 8px; }
+.simgrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-items: start; }
+.simvista { padding: 0; overflow: hidden; position: relative; }
+#sCv { display: block; width: 100%; height: 420px; background: #0B1828; }
+.lect { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+.lect div { background: var(--panel); padding: 7px 10px; font-size: 11px; color: var(--muted); }
+.lect b { display: block; font: 700 16px var(--f-mono); color: #fff; }
+.lect .mal b { color: var(--bad); } .lect .av b { color: var(--warn); } .lect .ok b { color: var(--ok); }
+.herr { display: flex; gap: 6px; flex-wrap: wrap; }
+input[type=range] { accent-color: var(--accent); padding: 0; min-height: 24px; border: 0; background: none; }
+label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
+#sCurva { width: 100%; height: auto; background: #0B1828; border-radius: 8px; }
+@media (max-width: 1000px) { .simgrid { grid-template-columns: 1fr; } .lect { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .dos, .tres { grid-template-columns: 1fr; } }
+@media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
+
+
+.resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.resumen div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 120px; font-size: 11.5px; color: var(--muted); }
+.resumen b { display: block; font: 700 20px var(--f-mono); color: #fff; }
+.filtros { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(3, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; align-content: start; }
+.card.derogada, .card.reemplazada { opacity: .78; } .card.fuera { opacity: .6; }
+.card h3 { margin: 0; font-size: 14px; color: #fff; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card h3 small { font: 500 12px var(--f-body); color: var(--muted); }
+.card p { margin: 0; font-size: 12.5px; }
+.meta { font: 500 11px var(--f-mono); color: var(--muted); }
+.est { font: 700 10.5px var(--f-mono); padding: 1px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; border: 1px solid; }
+.est.vigente { color: #3FBF7F; border-color: #2A8C5E; } .est.modificada { color: #F2B544; border-color: #8C6A1F; } .est.reemplazada, .est.derogada { color: #FF8C8F; border-color: #8C2A2E; } .est.fuera { color: var(--muted); border-color: var(--line); } .est.consulta { color: #9DB8FF; border-color: #3F5A9F; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 600 10.5px var(--f-mono); padding: 1px 6px; border-radius: 5px; background: var(--panel2); border: 1px solid var(--line); color: var(--muted); }
+.chip.w3 { color: #fff; border-color: var(--accent); } .chip.w2 { color: #DCE6F1; border-color: #3F7FBF; }
+table.mx td.c { text-align: center; cursor: pointer; font: 700 13px var(--f-mono); color: var(--accent-ink); white-space: nowrap; }
+table.mx td.c:hover, table.mx td.c.sel { background: var(--panel2); }
+table.mx td.c.w2 { color: #7FB2E5; } table.mx td.c.w1 { color: var(--muted); }
+table.mx th.v { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; height: 200px; vertical-align: bottom; }
+.st { font: 700 10.5px var(--f-mono); padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+.st.aplicada { background: rgba(63,191,127,.15); color: #3FBF7F; } .st.nueva { background: rgba(239,90,5,.18); color: #FF8A45; } .st.pendiente { background: rgba(242,181,68,.14); color: #F2B544; }
+.hall { display: grid; gap: 6px; }
+.hall li { list-style: none; border: 1px solid var(--line); border-left-width: 4px; border-radius: 6px; padding: 7px 10px; background: var(--bg); font-size: 12.5px; }
+.hall li.error { border-left-color: #E5484D; } .hall li.aviso { border-left-color: #F2B544; } .hall li.info { border-left-color: #3F7FBF; }
+.hall li .meta { display: block; margin-top: 2px; }
+.hall ul { margin: 0; padding: 0; display: grid; gap: 6px; }
+.chk { display: flex; gap: 8px; align-items: center; font: 500 12.5px var(--f-body); color: var(--fg); }
+.chk input { width: auto; min-height: 0; }
+table.t input { min-height: 28px; padding: 3px 6px; }
+.exres { margin-top: 8px; font-weight: 600; } .exres.ok { color: #3FBF7F; } .exres.no { color: #FF8C8F; }
+@media (max-width: 760px) { .filtros { grid-template-columns: 1fr 1fr; } .filtros input { grid-column: 1 / -1; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Suite ReyEngi</a>
+    <h1>Normativa<small>SEC · CNE · Minería → entregables de I&amp;C</small></h1>
+  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <button type="button" data-t="normas" aria-selected="true">Normas</button>
+    <button type="button" data-t="matriz" aria-selected="false">Matriz por entregable</button>
+    <button type="button" data-t="reglas" aria-selected="false">Reglas en la app</button>
+    <button type="button" data-t="revision" aria-selected="false">Revisión del proyecto</button>
+    <button type="button" data-t="mejoras" aria-selected="false">Mejoras sugeridas</button>
+  </nav>
+</header>
+<main>
+  <section data-t="normas">
+    <p class="intro">Normas eléctricas chilenas que rigen el diseño de instalaciones de instrumentación y control, con su estado, el acto que las aprobó o derogó y a qué entregables aportan. Revisado sobre los textos oficiales de los pliegos RIC (Res. Ex. SEC N°33.877/2020, vigentes desde julio de 2021), los pliegos RPTD (Res. Ex. SEC N°33.277/2020), la NTSyCS, el D.S. N°132 y el D.S. N°594. Antes de emitir un proyecto, confirma la versión vigente en sec.cl y cne.cl.</p>
+    <div class="resumen" id="nResumen"></div>
+    <div class="filtros">
+      <input type="search" id="nBuscar" placeholder="Buscar norma, tema o cláusula" aria-label="Buscar norma">
+      <select id="nEstado" aria-label="Estado"><option value="">Todos los estados</option><option value="vigente">Vigentes</option><option value="modificada">Vigentes con modificaciones</option><option value="reemplazada">Reemplazadas</option><option value="derogada">Derogadas</option><option value="fuera">Fuera de alcance I&amp;C</option></select>
+      <select id="nOrg" aria-label="Organismo"><option value="">Todos los organismos</option></select>
+      <select id="nEnt" aria-label="Entregable"><option value="">Todos los entregables</option></select>
+    </div>
+    <div class="cards" id="nCards"></div>
+  </section>
+
+  <section data-t="matriz" hidden>
+    <p class="intro">Cuánto aporta cada norma vigente a cada entregable (●●● alto, ●● medio, ● bajo). Toca una celda para ver las cláusulas que se aplican en ese entregable.</p>
+    <div class="tscroll" style="max-height:none"><table class="t mx" id="mTabla"></table></div>
+    <div class="blk" id="mDetalle" style="margin-top:14px" hidden></div>
+  </section>
+
+  <section data-t="reglas" hidden>
+    <p class="intro">Cláusulas concretas convertidas en reglas de la suite. <b>Aplicada</b>: el algoritmo ya la usa. <b>Nueva</b>: se incorporó con esta base normativa. <b>Pendiente</b>: mejora sugerida para próximas versiones.</p>
+    <div class="filtros" style="grid-template-columns:repeat(3,minmax(140px,1fr)) auto">
+      <select id="rEnt" aria-label="Entregable"><option value="">Todos los entregables</option></select>
+      <select id="rNorma" aria-label="Norma"><option value="">Todas las normas</option></select>
+      <select id="rEst" aria-label="Estado de la regla"><option value="">Todas</option><option value="aplicada">Aplicadas</option><option value="nueva">Nuevas</option><option value="pendiente">Pendientes</option></select>
+      <button type="button" id="rExcel">Excel · normativa y reglas</button>
+    </div>
+    <p class="estado peq" id="rCuenta"></p>
+    <div class="tscroll" style="max-height:none"><table class="t" id="rTabla"><thead><tr><th>Norma · cláusula</th><th>Requisito</th><th>Entregables</th><th>Dónde la usa la app</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+    <div class="blk" style="margin-top:14px"><h2>Parámetros que leen los cálculos</h2><p class="peq">Valores de <code>RE_NORMAS.P</code>. Canalizaciones lee de aquí los porcentajes de ocupación; si la norma cambia, se corrige en un solo lugar.</p><div class="tscroll"><table class="t" id="rParam"></table></div></div>
+  </section>
+
+  <section data-t="revision" hidden>
+    <p class="intro">Revisa el proyecto activo contra las reglas: condiciones de sitio (altitud, temperatura, clasificación de área), tensión de control, circuitos sin ducto, canalizaciones, diagrama de bloques y paradas de emergencia de correas.</p>
+    <div class="dos">
+      <div class="blk"><h2>Alcance del proyecto</h2>
+        <p class="meta" id="vProyecto"></p>
+        <label class="chk"><input type="checkbox" id="vMinero"> Faena minera (aplica D.S. N°132)</label>
+        <label class="chk"><input type="checkbox" id="vCoord"> Instalación coordinada por el CEN (aplica NTSyCS Cap. 4)</label>
+        <h3 class="sub">Correas transportadoras · paradas de emergencia (RIC N°07 5.4.9)</h3>
+        <div class="tscroll"><table class="t" id="vCorreas"><thead><tr><th>Tag</th><th>Largo [m]</th><th>Lados</th><th>Tirantes previstos</th><th>Mínimo</th><th></th></tr></thead><tbody></tbody></table></div>
+        <div class="herr" style="margin-top:8px"><button type="button" id="vAgregarCorrea">+ Correa</button></div>
+      </div>
+      <div class="blk"><h2>Verificador Ex (RIC N°12 5.1–5.3)</h2>
+        <div class="form"><label>Zona<select id="exZona"><option value="0">Zona 0 (gas)</option><option value="1" selected>Zona 1 (gas)</option><option value="2">Zona 2 (gas)</option><option value="20">Zona 20 (polvo)</option><option value="21">Zona 21 (polvo)</option><option value="22">Zona 22 (polvo)</option></select></label>
+        <label style="grid-column:span 2">Marcado del equipo<input id="exMarca" value="Ex db IIC T4 Gb" placeholder="Ex ia IIC T4 Ga"></label></div>
+        <p class="exres" id="exRes" aria-live="polite"></p>
+        <p class="peq">Zona 0/20: ia, ma, ta · Zona 1/21: además d, e, ib, p, q, o, mb, tb · Zona 2/22: además nA, nC, nL, ic, pc, mc, tc. Si la temperatura ambiente sale de −20…+40 °C, el marcado debe declarar el rango (9.2.1.3).</p>
+      </div>
+    </div>
+    <div class="herr" style="margin:4px 0 12px"><button type="button" class="pri" id="vRevisar">Revisar proyecto</button><span class="peq" id="vEstado" aria-live="polite"></span></div>
+    <div id="vHall" class="hall"></div>
+  </section>
+
+  <section data-t="mejoras" hidden>
+    <p class="intro">Requisitos normativos que aún no calcula la suite, ordenados por impacto en los entregables. Cada uno indica el módulo donde encaja.</p>
+    <div id="mjLista"></div>
+  </section>
+</main>
+<script src="../proyectos.js"></script>
+<script src="../hojas-datos/xlsx.js"></script>
+<script src="../normas.js"></script>
+<script>
+// Los cálculos de canalizaciones se reutilizan aquí leyendo el proyecto activo (sin la interfaz de Diagramas de lazo)
+window.__LAZOS = { E: function () { return (window.REProyectos && window.REProyectos.leer('lazos', null)) || {}; }, esc: function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }, uid: function () { return Math.random().toString(36).slice(2, 10); }, guardar: function () {} };
+</script>
+<script src="../lazos/conduit.js"></script>
+<script src="normativa.js"></script>
+</body>
+</html>
