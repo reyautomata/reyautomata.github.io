@@ -32,14 +32,20 @@
       .catch(function () { return false; });
   }
 
-  var CSS = '#rg-acceso{position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;padding:16px;background:linear-gradient(180deg,#034488 0%,#021D3D 100%);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}' +
+  var CSS = '#rg-acceso{position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;overflow-y:auto;padding:16px;background:linear-gradient(180deg,#034488 0%,#021D3D 100%);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}' +
     '#rg-acceso .caja{width:min(400px,100%);background:#0F2036;color:#E6EDF5;border:1px solid #1E3350;border-top:3px solid #EF5A05;border-radius:10px;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}' +
     '#rg-acceso .marca{font:700 15px "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.6px;color:#A9B6C6;margin:0 0 10px}#rg-acceso .marca span{color:#EF5A05}' +
     '#rg-acceso h2{color:#fff;text-transform:none;letter-spacing:.2px;line-height:1.1;margin:0 0 6px;font:700 22px "Barlow Condensed","Arial Narrow",sans-serif}#rg-acceso p{margin:0 0 14px;color:#A9B6C6;font-size:13px;line-height:1.5}' +
     '#rg-acceso label{display:block;font-size:12px;font-weight:600;color:#E6EDF5;margin:0 0 6px}' +
     '#rg-acceso input{width:100%;box-sizing:border-box;min-height:40px;font:600 15px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase;color:#E6EDF5;background:#07111F;border:1px solid #1E3350;border-radius:6px;padding:8px 12px}' +
     '#rg-acceso input:focus{outline:2px solid #EF5A05;outline-offset:1px}#rg-acceso button{margin-top:10px;width:100%;min-height:40px;border:0;border-radius:6px;background:#EF5A05;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer}' +
-    '#rg-acceso button:disabled{opacity:.6;cursor:wait}#rg-acceso .err{color:#FF8A80;font-size:12.5px;min-height:18px;margin:8px 0 0}#rg-acceso .pie{margin:6px 0 0;font-size:11.5px}';
+    '#rg-acceso button:disabled{opacity:.6;cursor:wait}#rg-acceso .err{color:#FF8A80;font-size:12.5px;min-height:18px;margin:8px 0 0}#rg-acceso .pie{margin:6px 0 0;font-size:11.5px}' +
+    '#rg-acceso .sol{margin-top:12px;border-top:1px solid #1E3350;padding-top:12px}#rg-acceso .sol>button.abrir{margin:0;background:transparent;border:1px solid #25D366;color:#E6EDF5;display:flex;align-items:center;justify-content:center;gap:8px}' +
+    '#rg-acceso .sol>button.abrir:hover{background:rgba(37,211,102,.12)}#rg-acceso .sol svg{width:18px;height:18px;flex-shrink:0}#rg-acceso .solf{margin-top:10px;display:grid;gap:8px}' +
+    '#rg-acceso .solf input,#rg-acceso .solf textarea{text-transform:none;letter-spacing:0;font:13px "IBM Plex Sans",system-ui,sans-serif;min-height:36px}#rg-acceso .solf textarea{width:100%;box-sizing:border-box;color:#E6EDF5;background:#07111F;border:1px solid #1E3350;border-radius:6px;padding:8px 12px;min-height:60px;resize:vertical}' +
+    '#rg-acceso .solf textarea:focus{outline:2px solid #EF5A05;outline-offset:1px}#rg-acceso .solf label{margin:0 0 -4px}#rg-acceso .wsp{margin:0;background:#25D366;color:#06210F;display:flex;align-items:center;justify-content:center;gap:8px}#rg-acceso .solf .pie{margin:0}';
+  var WSP = '56931959479'; // número que recibe las solicitudes de acceso
+  var ICO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2z"/></svg>';
 
   function mostrar() {
     if (document.getElementById('rg-acceso')) return;
@@ -47,11 +53,24 @@
     Array.prototype.forEach.call(document.body.children, function (n) { n.setAttribute('inert', ''); n.setAttribute('aria-hidden', 'true'); });
     document.documentElement.style.overflow = 'hidden';
     var o = document.createElement('div'); o.id = 'rg-acceso'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'rg-tit');
-    o.innerHTML = '<form class="caja" autocomplete="off"><p class="marca">Rey<span>Engi</span> · Ingeniería I&amp;C</p><h2 id="rg-tit">Acceso restringido</h2>' +
+    o.innerHTML = '<div class="caja"><form autocomplete="off"><p class="marca">Rey<span>Engi</span> · Ingeniería I&amp;C</p><h2 id="rg-tit">Acceso restringido</h2>' +
       '<p>El contenido de ReyEngi es privado. Ingresa tu clave de acceso para continuar.</p>' +
       '<label for="rg-clave">Clave de acceso</label><input id="rg-clave" type="password" placeholder="REY-XXXX-XXXX-XXXX" spellcheck="false"><button type="submit">Ingresar</button><p class="err" id="rg-err" role="alert"></p>' +
-      '<p class="pie">¿No tienes clave? Solicítala al administrador de ReyEngi.</p></form>';
+      '</form><div class="sol"><button type="button" class="abrir" aria-expanded="false" aria-controls="rg-solf">' + ICO + '¿No tienes clave? Solicitar acceso</button>' +
+      '<form class="solf" id="rg-solf" hidden autocomplete="on"><label for="rg-nom">Nombre</label><input id="rg-nom" required autocomplete="name">' +
+      '<label for="rg-emp">Empresa o cargo</label><input id="rg-emp" autocomplete="organization">' +
+      '<label for="rg-mot">Motivo (opcional)</label><textarea id="rg-mot" placeholder="Ej.: revisar los detalles de montaje para un proyecto"></textarea>' +
+      '<button type="submit" class="wsp">' + ICO + 'Enviar solicitud por WhatsApp</button><p class="pie">Se abrirá WhatsApp con tu solicitud lista; solo toca «Enviar». Te responderán con la clave.</p></form></div></div>';
     document.body.appendChild(o);
+    var sol = o.querySelector('.sol'), sf = o.querySelector('#rg-solf'), ab = sol.querySelector('.abrir');
+    ab.addEventListener('click', function () { var v = sf.hidden; sf.hidden = !v; ab.setAttribute('aria-expanded', String(v)); if (v) o.querySelector('#rg-nom').focus(); });
+    sf.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var nom = o.querySelector('#rg-nom').value.trim(), emp = o.querySelector('#rg-emp').value.trim(), mot = o.querySelector('#rg-mot').value.trim();
+      if (!nom) { o.querySelector('#rg-nom').focus(); return; }
+      var txt = 'Hola, solicito clave de acceso a ReyEngi.\nNombre: ' + nom + (emp ? '\nEmpresa / cargo: ' + emp : '') + (mot ? '\nMotivo: ' + mot : '') + '\nPágina: ' + location.href.split('?')[0];
+      window.open('https://wa.me/' + WSP + '?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+    });
     var f = o.querySelector('form'), inp = o.querySelector('#rg-clave'), btn = o.querySelector('button'), err = o.querySelector('#rg-err'), fallos = 0;
     setTimeout(function () { inp.focus(); }, 50);
     f.addEventListener('submit', function (ev) {
