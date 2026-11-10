@@ -98,7 +98,8 @@
     Array.prototype.forEach.call(document.body.children, function (n) { n.setAttribute('inert', ''); n.setAttribute('aria-hidden', 'true'); });
     document.documentElement.style.overflow = 'hidden';
     var o = document.createElement('div'); o.id = 'rg-acceso'; o.lang = 'es';
-    var ENT = [['01', 'Listado de instrumentos', 'Tag, servicio, P&amp;ID, rango y señal de cada instrumento, enlazado al resto de los documentos.', ['Excel', 'Word']],
+    var ENT = [['00', 'Análisis de P&amp;ID', 'Lee el P&amp;ID (DXF de AutoCAD, atributos o PDF), propone los instrumentos y, tras la validación del revisor, alimenta todos los entregables.', ['DXF', 'PDF', 'Excel']],
+      ['01', 'Listado de instrumentos', 'Tag, servicio, P&amp;ID, rango y señal de cada instrumento, enlazado al resto de los documentos.', ['Excel', 'Word']],
       ['02', 'Hojas de datos', 'Formularios ISA-TR20 por tipo de instrumento, con tabla de aplicación por tag.', ['PDF', 'Excel']],
       ['03', 'Especificaciones técnicas', 'Instrumentación, control, comunicaciones y cables, listas para el proyecto.', ['Word']],
       ['04', 'Listado de entradas y salidas', 'Señales por tarjeta y canal del PLC, rangos y alarmas.', ['Excel', 'Word']],
@@ -138,11 +139,11 @@
       '<button type="button" class="car-b car-prev" aria-label="Ejemplo anterior">‹</button><button type="button" class="car-b car-next" aria-label="Ejemplo siguiente">›</button></div>' +
       '<figcaption><span class="car-t" aria-live="polite">' + CAR[0][1] + '</span><span class="car-n">1 / ' + CAR.length + '</span></figcaption><div class="car-d" role="group" aria-label="Elegir ejemplo">' +
       CAR.map(function (c, i) { return '<button type="button" aria-label="' + (i + 1) + ': ' + c[1] + '"' + (i ? '' : ' aria-current="true"') + '></button>'; }).join('') + '</div></figure></section>' +
-      '<div class="cifras"><div><b>9</b><span>entregables enlazados</span></div><div><b>40+</b><span>visores 3D de montaje y procesos</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div><div><b>ISA · RIC</b><span>ISA-5.1, 5.4, TR20 y RIC (SEC)</span></div></div>' +
+      '<div class="cifras"><div><b>10</b><span>entregables enlazados</span></div><div><b>40+</b><span>visores 3D de montaje y procesos</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div><div><b>ISA · RIC</b><span>ISA-5.1, 5.4, TR20 y RIC (SEC)</span></div></div>' +
       '<section class="sec"><h2>Qué puedes hacer</h2><p class="sub">Los entregables de un proyecto de I&amp;C, en el orden en que se desarrollan, conectados entre sí.</p><ul class="ents">' +
       ENT.map(function (e) { return '<li><b>' + e[0] + '</b><h3>' + e[1] + '</h3><p>' + e[2] + '</p><div class="fm">' + e[3].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></li>'; }).join('') + '</ul></section>' +
       '<section class="sec"><h2>Cómo funciona</h2><p class="sub">Menos horas en tareas repetitivas y documentos que no se contradicen.</p><ol class="pasos">' +
-      '<li><h3>Cargas el proyecto</h3><p>Datos del cliente, rótulos y el listado de señales o instrumentos. Se puede importar desde Excel.</p></li>' +
+      '<li><h3>Cargas el P&amp;ID</h3><p>Se leen los instrumentos desde el DXF de AutoCAD o el PDF, se cruzan con el listado existente y el revisor los valida.</p></li>' +
       '<li><h3>Todo queda enlazado</h3><p>Instrumentos, E/S, lazos, circuitos y tableros comparten los mismos datos: un cambio se refleja en todos.</p></li>' +
       '<li><h3>Descargas los entregables</h3><p>Planos A3 en PDF y DXF para AutoCAD, y listados en Excel y Word con formato de entrega.</p></li></ol></section>' +
       '<section class="sec"><h2>Así se ve</h2><p class="sub">Capturas de la Suite en uso.</p><div class="gal">' +

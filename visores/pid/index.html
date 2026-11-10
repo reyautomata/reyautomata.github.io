@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Análisis de P&amp;ID · ReyEngi</title>
+<meta name="description" content="Extracción de instrumentos desde P&amp;ID (DXF, PDF, atributos de AutoCAD), revisión y validación, y exportación a los entregables de la Suite ReyEngi.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root {
+  --bg: #07111F; --panel: #0F2036; --panel2: #13284A; --fg: #E6EDF5; --muted: #A9B6C6; --line: #1E3350;
+  --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544; --bad: #E5484D;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; }
+[hidden] { display: none !important; }
+button, .btn { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 5px 11px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.ok { background: #1F6F4A; border-color: #2A8C5E; color: #fff; }
+button:hover, .btn:hover { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.mini { min-height: 26px; padding: 2px 8px; font-size: 12px; }
+input, select { font: 13px var(--f-body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 32px; width: 100%; }
+label { display: grid; gap: 4px; align-content: start; font: 600 12px var(--f-body); color: var(--muted); }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 3px solid var(--accent); padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); }
+.barra .fila { max-width: 1600px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 17px; font-weight: 700; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 12px var(--f-mono); text-decoration: none; }
+.barra a.volver:hover { color: var(--accent-ink); }
+.selp { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px var(--f-mono); color: var(--muted); }
+.selp select { width: auto; max-width: 220px; }
+main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1600px; margin: 0 auto; }
+.pasos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; counter-reset: p; }
+.pasos li { counter-increment: p; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px 9px 44px; position: relative; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.pasos li::before { content: counter(p); position: absolute; left: 12px; top: 9px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); border: 1px solid var(--accent); color: #fff; font: 700 12px var(--f-mono); display: grid; place-items: center; }
+.pasos li b { display: block; color: var(--fg); font-size: 13px; }
+.pasos li.on { border-color: var(--accent); }
+.pasos li.hecho::before { content: "✓"; background: #1F6F4A; border-color: #2A8C5E; }
+.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; }
+.blk > h2 { margin: 0 0 8px; font: 700 12px var(--f-mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--accent-ink); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.blk > h2 small { font: 500 11.5px var(--f-mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.ayuda { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 0 0 10px; max-width: 110ch; }
+.herr { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.herr .esp { flex: 1; }
+.drop { border: 1.5px dashed #2D4A70; border-radius: 8px; padding: 14px; text-align: center; color: var(--muted); font-size: 12.5px; cursor: pointer; }
+.drop.sobre { border-color: var(--accent); background: rgba(239, 90, 5, .06); color: var(--fg); }
+.drop b { color: var(--fg); }
+.fmt { display: inline-block; font: 600 10.5px var(--f-mono); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; margin: 0 2px; color: var(--fg); }
+table.hojas { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+table.hojas th { text-align: left; font: 600 11px var(--f-mono); color: var(--muted); padding: 5px 6px; border-bottom: 1px solid var(--line); }
+table.hojas td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
+table.hojas td input { min-height: 28px; padding: 3px 6px; }
+.trabajo { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.trabajo > div { min-width: 0; }
+.filtros { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.filtros select, .filtros input { width: auto; min-height: 30px; }
+.filtros input[type=search] { flex: 1 1 160px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; min-height: 30px; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+.tscroll { overflow: auto; max-height: calc(100vh - 250px); border: 1px solid var(--line); border-radius: 8px; }
+table.cand { border-collapse: separate; border-spacing: 0; font-size: 12.5px; width: 100%; }
+table.cand th { position: sticky; top: 0; z-index: 1; background: var(--brand); color: #fff; font: 600 11.5px var(--f-body); text-align: left; padding: 6px 5px; white-space: nowrap; }
+table.cand td { padding: 1px 3px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.cand td input, table.cand td select { min-height: 28px; border-color: transparent; background: transparent; padding: 3px 5px; font-size: 12.5px; }
+table.cand td input:hover, table.cand td select:hover { border-color: var(--line); }
+table.cand td.l input { font: 700 12.5px var(--f-mono); text-transform: uppercase; }
+table.cand td.n input { font: 600 12.5px var(--f-mono); }
+table.cand tr.sel td { background: rgba(239, 90, 5, .13); }
+table.cand tr.validado td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+table.cand tr.rechazado td { opacity: .5; }
+table.cand tr.rechazado td:first-child { box-shadow: inset 3px 0 0 var(--bad); opacity: 1; }
+table.cand tr.pendiente td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+table.cand .chk { width: 30px; text-align: center; }
+table.cand .chk input { width: 16px; min-height: 16px; }
+table.cand td.acc { white-space: nowrap; }
+.est { font: 600 10.5px var(--f-mono); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.est.pendiente { color: var(--warn); border: 1px solid #6B5320; }
+.est.validado { color: var(--ok); border: 1px solid #23573E; }
+.est.rechazado { color: #FF8C8F; border: 1px solid #6B2427; }
+.conf { font: 500 10.5px var(--f-mono); color: var(--muted); }
+.lst { font: 600 10.5px var(--f-mono); }
+.lst.si { color: var(--ok); }
+.lst.no { color: var(--warn); }
+.visor { position: sticky; top: 64px; background: #fff; border-radius: 8px; overflow: hidden; height: calc(100vh - 150px); min-height: 420px; border: 1px solid var(--line); }
+.visor canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.visor.marcar canvas { cursor: crosshair; }
+.vtools { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; pointer-events: none; }
+.vtools > * { pointer-events: auto; }
+.vtools button, .vtools select { background: rgba(2, 18, 38, .88); color: #fff; border-color: #2D4A70; min-height: 30px; width: auto; }
+.vtools button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.vinfo { position: absolute; left: 8px; bottom: 8px; background: rgba(2, 18, 38, .85); color: #DCE6F1; font: 500 11.5px var(--f-mono); border-radius: 5px; padding: 3px 8px; }
+.vvacio { position: absolute; inset: 0; display: grid; place-items: center; color: #4A5868; font-size: 13px; text-align: center; padding: 20px; background: #F4F6F8; }
+.resumen { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+.resumen span { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; font: 500 12px var(--f-mono); color: var(--muted); }
+.resumen b { color: var(--fg); }
+.rev { display: grid; grid-template-columns: minmax(180px, 260px) minmax(140px, 180px) auto; gap: 8px; align-items: end; }
+.aviso { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 8px 0 0; font-size: 12.5px; }
+.okmsg { border: 1px solid #2A8C5E; color: #9BE3BD; border-radius: 8px; padding: 8px 12px; margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
+.okmsg a { color: #fff; }
+ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); color: var(--muted); columns: 3; }
+.toast { position: fixed; right: 16px; bottom: 16px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; padding: 9px 12px; font-size: 12.5px; max-width: min(420px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+@media (max-width: 1100px) { .trabajo { grid-template-columns: 1fr; } .visor { position: relative; top: 0; height: 60vh; } .tscroll { max-height: 60vh; } }
+@media (max-width: 700px) { .pasos { grid-template-columns: 1fr; } .rev { grid-template-columns: 1fr; } ul.falt { columns: 1; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <a class="volver" href="../">← Suite ReyEngi</a>
+    <h1>Análisis de P&amp;ID<small>Extracción de instrumentos · revisión · exportación a entregables</small></h1>
+    <label class="selp">Proyecto <select id="proy" aria-label="Proyecto activo"></select></label>
+    <a class="btn" href="../proyectos/">Proyectos</a>
+  </div>
+</header>
+<main>
+  <ol class="pasos" id="pasos">
+    <li data-p="1"><b>Cargar P&amp;ID</b>DXF de AutoCAD, atributos exportados (ATTOUT / extracción de datos), PDF o archivo de extracción.</li>
+    <li data-p="2"><b>Revisar y validar</b>El revisor confirma, corrige o rechaza cada instrumento contra el plano.</li>
+    <li data-p="3"><b>Exportar a entregables</b>Lo validado pasa al listado de instrumentos, E/S, lazos y circuitos.</li>
+  </ol>
+
+  <section class="blk" aria-labelledby="t1">
+    <h2 id="t1">1 · Cargar P&amp;ID <small id="cuentaHojas"></small></h2>
+    <p class="ayuda">La extracción más exacta viene del dibujo original: guarda el P&amp;ID como <b>DXF</b> desde AutoCAD (Guardar como → DXF) o exporta los atributos con <b>ATTOUT</b> o Extracción de datos (TXT/CSV). Los PDF con texto se leen directamente; en los PDF con texto en líneas o escaneados, el plano queda como fondo para marcar cada burbuja con un clic, o se carga el archivo de extracción (.json) preparado con IA.</p>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Seleccionar archivos de P&amp;ID">
+      Arrastra aquí los archivos o <b>haz clic para elegirlos</b><br>
+      <span class="fmt">DXF</span><span class="fmt">PDF</span><span class="fmt">TXT / CSV de atributos</span><span class="fmt">JSON de extracción</span>
+    </div>
+    <input type="file" id="archivos" multiple accept=".dxf,.pdf,.txt,.csv,.json" hidden>
+    <div class="herr" style="margin-top:10px">
+      <button type="button" id="bListado">Cruzar con listado existente (Excel)</button>
+      <input type="file" id="archListado" accept=".xlsx" hidden>
+      <span class="esp"></span>
+      <button type="button" class="mini peligro" id="bLimpiar">Vaciar análisis</button>
+    </div>
+    <table class="hojas" id="tHojas" hidden><thead><tr><th>Hoja</th><th>N° de plano (P&amp;ID)</th><th>Área por defecto</th><th>Origen</th><th>Instrumentos</th><th></th></tr></thead><tbody></tbody></table>
+    <div id="msgListado"></div>
+  </section>
+
+  <section class="blk" aria-labelledby="t2">
+    <h2 id="t2">2 · Revisión de instrumentos <small id="cuentaCand"></small></h2>
+    <div class="resumen" id="resumen"></div>
+    <div class="trabajo">
+      <div>
+        <div class="filtros">
+          <select id="fEstado" aria-label="Filtrar por estado"><option value="">Todos</option><option value="pendiente" selected>Pendientes</option><option value="validado">Validados</option><option value="rechazado">Rechazados</option></select>
+          <select id="fHoja" aria-label="Filtrar por hoja"></select>
+          <input type="search" id="fBuscar" placeholder="Buscar tag, servicio, equipo" aria-label="Buscar">
+        </div>
+        <div class="herr" style="margin-bottom:8px">
+          <button type="button" class="ok mini" id="bValSel">✓ Validar seleccionados</button>
+          <button type="button" class="mini" id="bRecSel">✗ Rechazar seleccionados</button>
+          <button type="button" class="mini" id="bValAlta" title="Valida los de confianza alta que además están en el listado existente o tienen tipo de señal">✓ Validar confianza alta</button>
+          <button type="button" class="mini" id="bNuevo">+ Agregar</button>
+          <span class="esp"></span>
+          <button type="button" class="mini" id="bExcelRev">Excel de revisión</button>
+        </div>
+        <div class="tscroll"><table class="cand" id="tCand"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div>
+        <div class="visor" id="visor">
+          <canvas id="lienzo" tabindex="0" aria-label="Vista del P&amp;ID: arrastra para mover, rueda para acercar"></canvas>
+          <div class="vtools">
+            <select id="vHoja" aria-label="Hoja visible"></select>
+            <button type="button" id="vAjustar">Ajustar</button>
+            <button type="button" id="vMarcar" aria-pressed="false" title="Haz clic sobre una burbuja del plano para agregar el instrumento en ese punto">+ Marcar en el plano</button>
+          </div>
+          <div class="vinfo" id="vInfo">Rueda: zoom · arrastrar: mover · clic en un marcador: seleccionar</div>
+          <div class="vvacio" id="vVacio">Carga un P&amp;ID en DXF o PDF para verlo aquí y ubicar cada instrumento.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk" aria-labelledby="t3">
+    <h2 id="t3">3 · Validación del revisor y exportación</h2>
+    <p class="ayuda">Solo los instrumentos validados se exportan. Los que tienen señal (AI, AO, DI, DO) entran al listado de E/S y generan su diagrama de lazo y su circuito; los demás (elementos primarios, indicadores locales) entran al listado de instrumentos. Los tags que ya existen en el proyecto no se duplican.</p>
+    <div class="rev">
+      <label>Revisor<input id="revisor" autocomplete="name" placeholder="Nombre de quien valida"></label>
+      <label>Fecha de revisión<input id="fechaRev" type="date"></label>
+      <div class="herr"><button type="button" class="pri" id="bExportar">Exportar validados a entregables</button></div>
+    </div>
+    <div id="msgExport"></div>
+  </section>
+</main>
+<script src="../proyectos.js"></script>
+<script src="../hojas-datos/xlsx.js"></script>
+<script src="../lazos/isa.js"></script>
+<script src="pid.js"></script>
+</body>
+</html>
