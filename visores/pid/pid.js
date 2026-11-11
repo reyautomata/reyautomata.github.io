@@ -165,28 +165,51 @@
     cerrar();
     // Instrumentos: INSERT con atributos de letras + número
     var cands = [], textos = [];
-    var NOMS_L = /^(NOM|LETRAS?|FUNC(ION)?|INST(RUMENTO)?|ISA|ID|TAG1|TAGL|LETTERS?|FUNCTION|PREFIJO)$/;
-    var NOMS_N = /^(TAG|NUM(ERO)?|N°|NO|LOOP|LAZO|CORRELATIVO|TAG2|TAGN|NUMBER|LOOPNO|TAGNO)$/;
-    function desdeAtt(att) {
-      var l = '', n = '', a = '', serv = '', eq = '', extra = [];
+    var NOMS_L = /^(NOM|LETRAS?|FUNC(ION)?|INST(RUMENTO)?|ISA|ID|TAG1|TAGL|LETTERS?|FUNCTION|PREFIJO|INSTRUMENT_TYPE|INST_TYPE|INSTRUMENTTYPE|TAG_FN)$/;
+    var NOMS_N = /^(TAG|NUM(ERO)?|N°|NO|LOOP|LAZO|CORRELATIVO|TAG2|TAGN|NUMBER|LOOPNO|TAGNO|INSTRUMENT_ID|INSTRUMENTID|LOOP_NUMBER|LOOPNUMBER|SEQ_?NO)$/;
+    // Atributos que nunca son letras ni número del instrumento (estado, claves internas, área, tamaños, especificación…)
+    var NO_RESPALDO = /COMMENTS|PLACE|SEQ_NUMBER|^(AREA|ÁREA|WBS|KEYTAG|DESIGNSTATUS|CONSTTYPE|TRAIN|USER\d*|SUFFIX|EQUIP_SUFFIX|COMMISSIONING_SYS|STDDETAIL|BREAKTYPE|UNIT_MARKER|SIZE\d*|REDUCED_SIZE|FITTING_ID|ESCALA|REV\.?|FECHA.*|NOMBRE.*|TAG_NUMBER|MODIFIER\d)$|SPEC/;
+    var ESTADOS = /^(NEW|NUEVO|NUEVA|EXIST(ING|ENTE)?|FUTURO|FUTURE|PRELIMINARY|PRELIMINAR|DEMOLISH|DEMOLER|RELOCATED?|EXISTING)$/;
+    // att: atributos por nombre; ae: registros con su bandera de visibilidad (grupo 70, bit 1 = invisible) y posición
+    function desdeAtt(att, ae) {
+      // Conectores entre planos, rótulos y cuadros: no son instrumentos
+      if (Object.keys(att).some(function (k) { return /P&ID_REFERENCE|TO\/FROM|^PLN|REFERENCIA|^TITULO|^N%D/.test(k); })) return null;
+      var inv = {}, pos = {};
+      (ae || []).forEach(function (d) { if (!d.tag) return; var k = d.tag.toUpperCase(); inv[k] = ((+d[70] || 0) & 1) === 1; var al = (+d[72] || 0) || (+d[74] || 0); pos[k] = al && d[11] != null ? [+d[11], +d[21]] : [+d[10], +d[20]]; });
+      var l = '', n = '', a = '', serv = '', eq = '', suf = '', extra = [], kl = '', kn = '', visNum = '', kVis = '', tagAtt = '', idOculto = '', alarmas = [];
       Object.keys(att).forEach(function (k) {
         var v = limpiarAtt(att[k]).toUpperCase(); if (!v) return;
-        if (!l && NOMS_L.test(k) && esLetras(v)) l = v;
-        else if (!n && NOMS_N.test(k) && RX_NUM.test(v)) n = v;
+        if (!l && NOMS_L.test(k) && esLetras(v)) { l = v; kl = k; }
+        else if (!n && NOMS_N.test(k) && RX_NUM.test(v)) { n = v; kn = k; if (inv[k]) idOculto = v; }
         else if (/^(AREA|ÁREA|WBS)$/.test(k)) a = v;
+        else if (k === 'TAG_NUMBER') tagAtt = v;
+        else if (k === 'SUFFIX' && /^[A-Z]$/.test(v)) suf = v;
+        else if (/^MODIFIER\d$/.test(k) && /^[A-Z]{2,5}$/.test(v)) alarmas.push(v);
         else if (/SERVICIO|DESCRIP/.test(k)) serv = serv || v;
         else if (/EQUIPO|LINEA|LÍNEA|LINE/.test(k)) eq = eq || v;
         else if (/^TXT_/.test(k) && v.length < 14) extra.push(v);
+        // Número visible del bloque (p. ej. «$format» en planos exportados de SmartPlant): es el que se ve en la burbuja
+        if (!inv[k] && !NO_RESPALDO.test(k) && !NOMS_L.test(k) && RX_NUM.test(v) && (k === '$FORMAT' || !visNum)) { visNum = v; kVis = k; }
       });
+      // Lo dibujado manda: si hay un número visible distinto del atributo de número oculto, se usa el visible y se anota la diferencia
+      if (visNum && (!n || (inv[kn] && n !== visNum))) { if (n && n !== visNum) idOculto = n; n = visNum; kn = kVis; }
       if (!l || !n) Object.keys(att).forEach(function (k) {
-        var v = limpiarAtt(att[k]).toUpperCase(); if (!v) return;
+        if (inv[k] || NO_RESPALDO.test(k)) return;
+        var v = limpiarAtt(att[k]).toUpperCase(); if (!v || ESTADOS.test(v)) return;
         var m = /^(?:(\d{3,5})-)?([A-Z]{1,5})-?(\d{2,6}[A-Z]?)$/.exec(v.replace(/\s+/g, '-'));
-        if (m && esLetras(m[2]) && !l) { a = a || m[1] || ''; l = m[2]; n = m[3]; return; }
-        if (!l && esLetras(v)) l = v; else if (!n && RX_NUM.test(v)) n = v;
+        if (m && esLetras(m[2]) && !l) { a = a || m[1] || ''; l = m[2]; n = m[3]; kl = kn = k; return; }
+        if (!l && esLetras(v)) { l = v; kl = k; } else if (!n && RX_NUM.test(v)) { n = v; kn = k; }
       });
       if (!l || !n) return null;
-      var pn = partirNum(n);
-      return { letras: l, num: pn.num, suf: pn.suf, area: /^\d{3,5}$/.test(a) ? a : '', servicio: serv, equipo: eq, nota: extra.join(' ') };
+      var pn = partirNum(n), notas = extra.slice(), avisos = [];
+      if (alarmas.length) notas.push('ALARMAS: ' + alarmas.join(', '));
+      if (!visNum && inv[kn]) avisos.push('el número ' + n + ' solo está en un atributo oculto (la burbuja no lo muestra)');
+      // Tag de base de datos (oculto) que no coincide con lo dibujado
+      var dib = (/^\d{3,5}$/.test(a) ? a + '-' : '') + l + '-' + pn.num;
+      if (tagAtt && tagAtt.replace(/^0+/, '') !== dib && tagAtt !== l + '-' + pn.num) avisos.push('atributo oculto tag_number = ' + tagAtt);
+      else if (idOculto && idOculto !== pn.num + pn.suf) avisos.push('atributo oculto de número = ' + idOculto);
+      var pl = pos[kl], pnum = pos[kn], centro = pl && pnum && isFinite(pl[0]) && isFinite(pnum[0]) ? [(pl[0] + pnum[0]) / 2, (pl[1] + pnum[1]) / 2] : null;
+      return { letras: l, num: pn.num, suf: pn.suf || suf, area: /^\d{3,5}$/.test(a) ? a : '', servicio: serv, equipo: eq, nota: notas.join(' · '), aviso: avisos.join('; '), centro: centro };
     }
     var bx = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     function ext(x, y) { if (!isFinite(x) || !isFinite(y)) return; if (x < bx.x0) bx.x0 = x; if (x > bx.x1) bx.x1 = x; if (y < bx.y0) bx.y0 = y; if (y > bx.y1) bx.y1 = y; }
@@ -227,8 +250,8 @@
     // Candidatos desde atributos (también INSERT anidados de primer nivel no aplican: las burbujas van en espacio modelo)
     ents.forEach(function (e) {
       if (e.t !== 'INSERT' || !e.att) return; if (e.d[67] != null && +e.d[67] === 1) return;
-      var c = desdeAtt(e.att); if (!c) return;
-      c.px = +e.d[10]; c.py = +e.d[20]; c.bloque = (e.d[2] || '').trim(); cands.push(c);
+      var c = desdeAtt(e.att, e.attEnts); if (!c) return;
+      c.px = c.centro ? c.centro[0] : +e.d[10]; c.py = c.centro ? c.centro[1] : +e.d[20]; delete c.centro; c.bloque = (e.d[2] || '').trim(); cands.push(c);
     });
     // Respaldo: textos sueltos (TEXT/MTEXT) de letras ISA con número debajo
     if (!cands.length) {
