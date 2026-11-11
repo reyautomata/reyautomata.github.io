@@ -1,7 +1,9 @@
 /* Arranque de la app: datos del proyecto, abrir/guardar archivo y aviso de licencia. */
 (function () {
   'use strict';
-  var A = window.__LAZOS, $ = function (s) { return document.querySelector(s); };
+  var A = window.__LAZOS, $ = function (s) { return document.querySelector(s); }, ED = window.REY_EDICION || {};
+  // Edición (por ejemplo Versión Beta): nombre en el título y en la barra
+  if (ED.etiqueta) { document.title = 'ReyEngi Conduit · ' + ED.etiqueta; var h = document.querySelector('.barra h1'); if (h) { var sp = document.createElement('span'); sp.className = 'ed-tag'; sp.textContent = ED.etiqueta; h.insertBefore(sp, h.querySelector('small')); } }
   function refrescar() { var c = A.E().cfg; $('#pProy').value = c.proyecto || ''; $('#pCli').value = c.cliente || ''; window.LAZOS_VISTAS.cond(); }
   ['pProy', 'pCli'].forEach(function (id) {
     $('#' + id).addEventListener('input', function (e) { A.E().cfg[id === 'pProy' ? 'proyecto' : 'cliente'] = e.target.value; A.guardar(); });
@@ -33,8 +35,8 @@
       }
     });
   } else $('#pLic').hidden = true;
-  // Publicidad de la Suite ReyEngi (botón en el rincón inferior izquierdo)
-  (function () {
+  // Publicidad de la Suite ReyEngi (botón en el rincón inferior izquierdo); se omite en ediciones sin publicidad
+  if (!ED.sinPublicidad) (function () {
     var WSP = '56931959479';
     var txt = encodeURIComponent('Hola, uso ReyEngi Conduit y me interesa conocer la Suite ReyEngi de ingeniería de instrumentación y control.');
     var b = document.createElement('button'); b.type = 'button'; b.id = 'rsBtn'; b.setAttribute('aria-haspopup', 'dialog');
@@ -66,7 +68,7 @@
   // PDF A3 directo desde la app de escritorio (la lámina se arma en #imp y se imprime a archivo)
   if (window.reyPdf) window.print = function () { var c = A.E().cfg; window.reyPdf.guardar('Ductos ' + (c.proyecto || '').replace(/[\\/:*?"<>|]+/g, '-')); };
   // App instalable (web): service worker para usarla sin conexión
-  if ('serviceWorker' in navigator && !window.reyPdf && (location.protocol === 'https:' || location.hostname === 'localhost') && window.parent === window) {
+  if ('serviceWorker' in navigator && !window.reyPdf && !window.ReyAndroid && (location.protocol === 'https:' || location.hostname === 'localhost') && window.parent === window) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
   refrescar();

@@ -40,3 +40,6 @@ main { padding: 14px 18px 30px; }
 #rsDlg .rs-zoom img { max-width: 100%; max-height: calc(100% - 60px); border-radius: 8px; background: #fff; }
 #rsDlg .rs-zx { background: #E8A317; color: #1a1205; border: 0; border-radius: 8px; padding: 9px 18px; font: 700 13px system-ui, sans-serif; cursor: pointer; }
 @media (max-width: 600px) { #rsDlg .rs-vp { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Etiqueta de edición (Versión Beta) */
+.barra h1 .ed-tag { display: inline-block; margin-left: 10px; padding: 2px 9px; border-radius: 10px; background: #E8A317; color: #1a1205; font: 700 12px/1.5 system-ui, "Segoe UI", sans-serif; letter-spacing: .4px; text-transform: uppercase; vertical-align: 4px; }
