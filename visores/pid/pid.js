@@ -185,8 +185,8 @@
         else if (k === 'TAG_NUMBER') tagAtt = v;
         else if (k === 'SUFFIX' && /^[A-Z]$/.test(v)) suf = v;
         else if (/^MODIFIER\d$/.test(k) && /^[A-Z]{2,5}$/.test(v)) alarmas.push(v);
-        else if (/SERVICIO|DESCRIP/.test(k)) serv = serv || v;
-        else if (/EQUIPO|LINEA|LÍNEA|LINE/.test(k)) eq = eq || v;
+        else if (/SERVICIO|SERVICE|DESCRIP/.test(k)) serv = serv || v;
+        else if (/EQUIPO|EQUIPMENT|LINEA|LÍNEA|LINE/.test(k) && k !== 'BREAKTYPE') eq = eq || v;
         else if (/^TXT_/.test(k) && v.length < 14) extra.push(v);
         // Número visible del bloque (p. ej. «$format» en planos exportados de SmartPlant): es el que se ve en la burbuja
         if (!inv[k] && !NO_RESPALDO.test(k) && !NOMS_L.test(k) && RX_NUM.test(v) && (k === '$FORMAT' || !visNum)) { visNum = v; kVis = k; }

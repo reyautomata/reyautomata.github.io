@@ -123,7 +123,7 @@
     '#npPanel.abierto{transform:none}',
     '#npPanel .np-cab{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#022A55;border-bottom:1px solid #24405f}#npPanel .np-cab b{flex:1;font-size:15px}',
     '#npPanel .np-cab button{background:transparent;color:#e8eef5;border:1.5px solid #3a5a80;border-radius:8px;min-width:34px;min-height:34px;cursor:pointer;font-size:16px;justify-content:center}',
-    '#npPanel .np-tabs{display:flex;border-bottom:1px solid #24405f}#npPanel .np-tabs button{flex:1;border:0;border-radius:0;background:transparent;color:#9fb0c3;min-height:40px;font:700 12.5px system-ui,sans-serif;justify-content:center;border-bottom:3px solid transparent}',
+    '#npPanel .np-tabs{display:flex;border-bottom:1px solid #24405f}#npPanel .np-tabs button{flex:1;padding:0 4px;border:0;border-radius:0;background:transparent;color:#9fb0c3;min-height:40px;font:700 12.5px system-ui,sans-serif;justify-content:center;border-bottom:3px solid transparent}',
     '#npPanel .np-tabs button[aria-selected=true]{color:#fff;border-bottom-color:#1f7a6a}',
     '#npPanel .np-cuerpo{flex:1;overflow:auto;padding:12px 14px}',
     '#npPanel .np-res{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#npPanel .np-res span{border-radius:6px;padding:4px 9px;font:600 12px system-ui,sans-serif;background:#11243a;border:1px solid #24405f}',
@@ -140,6 +140,7 @@
     '#npPanel .np-prueba{display:flex;gap:6px;margin-bottom:8px}#npPanel .np-prueba input{flex:1;background:#071423;color:#e8eef5;border:1.5px solid #24405f;border-radius:8px;padding:8px 10px;font:600 13px Consolas,monospace;text-transform:uppercase}',
     '#npPanel .np-sal{background:#071423;border-radius:8px;padding:9px 11px;margin-bottom:14px;font-size:12.5px;min-height:20px}#npPanel .np-sal b{color:#fff}',
     '#npPanel .np-pie{margin:0;padding:10px 14px 12px;border-top:1px solid #24405f;font-size:11.5px;color:#9fb0c3}',
+    '#npPanel table.np-cad td:first-child{width:auto;font-size:12px;white-space:nowrap}#npPanel table.np-cad td:nth-child(2){color:#9fb0c3;width:44px}',
     '#npPanel h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#E8A317;margin:4px 0 8px}',
     '@media (max-width:700px){#npTab{top:auto;bottom:0;right:auto;left:0;width:25%;height:54px;writing-mode:horizontal-tb;border-radius:0;padding:4px 6px;font-size:11.5px;z-index:61}#npTab .npN{margin:0 0 0 4px}}'
   ].join('\n');
@@ -149,7 +150,7 @@
   tab.innerHTML = 'Normativa P&amp;ID<span class="npN" hidden></span>';
   var pn = document.createElement('aside'); pn.id = 'npPanel'; pn.setAttribute('aria-label', 'Normativa del P&ID y verificación ISA'); pn.inert = true;
   pn.innerHTML = '<div class="np-cab"><b>Normativa del P&amp;ID</b><button type="button" id="npCerrar" aria-label="Cerrar">✕</button></div>' +
-    '<div class="np-tabs" role="tablist"><button type="button" role="tab" data-t="ver" aria-selected="true">Verificación ISA</button><button type="button" role="tab" data-t="normas" aria-selected="false">Normas</button><button type="button" role="tab" data-t="letras" aria-selected="false">Letras ISA-5.1</button></div>' +
+    '<div class="np-tabs" role="tablist"><button type="button" role="tab" data-t="ver" aria-selected="true">Verificación ISA</button><button type="button" role="tab" data-t="normas" aria-selected="false">Normas</button><button type="button" role="tab" data-t="letras" aria-selected="false">Letras ISA-5.1</button><button type="button" role="tab" data-t="cad" aria-selected="false">Bloques CAD</button></div>' +
     '<div class="np-cuerpo" id="npCuerpo"></div>' +
     '<p class="np-pie">Resumen propio de cada norma para la revisión del P&amp;ID. Verificar contra la edición vigente y el estándar de identificación del mandante, que prevalece.</p>';
   document.body.appendChild(tab); document.body.appendChild(pn);
@@ -199,7 +200,35 @@
       ' · Funciones: ' + esc(a.funciones ? a.funciones.split('').map(function (f) { return f + ' = ' + (ISA.FUN[f] || '?'); }).join(', ') : '—') + ' · Lazo: ' + esc(a.numero || '—') +
       '<br>' + (p.length ? p.map(function (r) { return '<span class="g-' + REGLAS[r][0] + '">' + GTXT[REGLAS[r][0]] + ': ' + esc(REGLAS[r][1]) + '</span>'; }).join('<br>') : '<span style="color:#9BE3BD">Cumple las reglas de identificación que revisa la app.</span>');
   }
-  function pintar() { if (vista === 'ver') pintarVer(); else if (vista === 'normas') pintarNormas(); else pintarLetras(); }
+  // Recomendación de atributos para los bloques de instrumentos del CAD (lo que la app lee del DXF)
+  var ATT_CAD = [
+    ['instrument_type', 'Sí', 'Letras ISA completas: PIT, PI, LIC. (También se lee LETRAS o TAG1.)'],
+    ['$format', 'Sí', 'Número de lazo tal como se dibuja: 1677. Nunca «XXX». (También NUMERO o TAG2.)'],
+    ['instrument_id', 'No', 'Igual a $format.'],
+    ['area', 'No', 'Área del instrumento: 341. Se usa como prefijo del tag.'],
+    ['tag_number', 'No', 'Siempre área-letras-número: 341-PI-1677. Si nadie lo mantiene, mejor vacío que equivocado.'],
+    ['suffix', 'No', 'Letra cuando el tag se repite (A, B); vacío si no.'],
+    ['modifier1 a modifier4', 'Sí', 'Alarmas de la burbuja (PAHH, PALL): pasan a Observaciones.'],
+    ['consttype', 'No', 'NEW o EXISTING. La app lo ignora.'],
+    ['SERVICIO', 'No', 'Qué mide o controla: «Presión descarga bomba 341-PP-001». (También SERVICE.)'],
+    ['EQUIPO', 'No', 'Línea o equipo asociado: 6"-TA-343-SR3. (También LINEA o EQUIPMENT.)']
+  ];
+  var REGLAS_CAD = [
+    'En la definición del bloque, todos los valores vacíos: el error típico es copiar una burbuja ya llenada y cambiar solo lo visible.',
+    'Un dato, un lugar: el número visible manda; instrument_id y tag_number se derivan de él, no se escriben a mano.',
+    'El tag en atributos visibles, nunca en un texto suelto encima del bloque.',
+    'Equipos (bombas, motores, estanques) en otra familia de bloques, con atributos propios (equipment_type, equipment_id), nunca instrument_type.',
+    'Un bloque dinámico con estados de visibilidad (campo, panel, sistema de control, local) reemplaza a varios bloques; sus atributos salen igual en el DXF.',
+    'Antes de exportar: DXF desde AutoCAD (Guardar como › DXF). Para revisar los atributos de un bloque, doble clic (EATTEDIT); para todo el plano, ATTOUT o DATAEXTRACTION.'
+  ];
+  function pintarCad() {
+    $('#npCuerpo').innerHTML = '<p style="margin:0 0 10px;color:#cdd8e4">La app lee el tag de los <b>atributos</b> de cada bloque. Manda lo visible en la burbuja; los atributos ocultos que no coinciden aparecen como aviso en la Verificación.</p>' +
+      '<h3>Atributos recomendados</h3><table class="np-l np-cad"><thead><tr><th>Atributo</th><th>Visible</th><th>Regla</th></tr></thead><tbody>' +
+      ATT_CAD.map(function (a) { return '<tr><td>' + esc(a[0]) + '</td><td>' + a[1] + '</td><td>' + esc(a[2]) + '</td></tr>'; }).join('') + '</tbody></table>' +
+      '<h3>Reglas de la biblioteca de bloques</h3><ol style="margin:0 0 12px;padding-left:18px;color:#cdd8e4;font-size:12.5px">' + REGLAS_CAD.map(function (r) { return '<li style="margin-bottom:5px">' + esc(r) + '</li>'; }).join('') + '</ol>' +
+      '<p style="color:#9fb0c3;font-size:12px">Los nombres siguen la convención de los planos exportados de SmartPlant, muy comunes en minería; si tu biblioteca usa LETRAS / NUMERO / AREA, también se leen.</p>';
+  }
+  function pintar() { if (vista === 'ver') pintarVer(); else if (vista === 'normas') pintarNormas(); else if (vista === 'cad') pintarCad(); else pintarLetras(); }
   pn.addEventListener('change', function (e) { if (e.target.id === 'npSoloVal') { soloVal = e.target.checked; pintarVer(); } });
   pn.addEventListener('input', function (e) { if (e.target.id === 'npTag') probar(e.target.value); });
   pn.addEventListener('click', function (e) {
