@@ -109,7 +109,7 @@
       { s: 'TRANSMISOR', r: [f('Señal de salida', '', '4-20 mA + HART'), f('Relés', '', '2 SPDT'), f('Alimentación', '', '120 VAC 50 Hz'), f('Indicador local', '', 'LCD'), f('Grado de protección', '', 'IP66')] },
       REQUISITOS([f('Soluciones de calibración', '', 'Requeridas')])],
     aplicacion: { columnas: [C_TAG, C_SERV, { t: 'FLUIDO', w: 12 }, { t: 'RANGO (µS/cm)', w: 11 }, { t: 'MONTAJE', w: 12 }, C_PID],
-      filas: [['4100-AIT-0310', 'Conductividad agua recuperada', 'Agua', '0 – 5.000', 'En línea', '—']] }
+      filas: [['200-AIT-0201', 'Conductividad agua recuperada', 'Agua', '0 – 5.000', 'En línea', '—']] }
   });
 
   add('Densidad y análisis', {
