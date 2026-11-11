@@ -78,7 +78,7 @@
 
   var DEFECTO = {
     nombre: 'Proyecto tipo',
-    proyecto: 'INSTRUMENTACIÓN TIPO · PLANTA CONCENTRADORA',
+    proyecto: 'INSTRUMENTACIÓN TIPO · PLANTA DE PROCESO',
     cliente: 'REYENGI · AUTOMATIZACIÓN Y CONTROL INDUSTRIAL',
     contratista: 'REYENGI',
     ubicacion: 'CHILE',
@@ -88,7 +88,7 @@
     prefijo: 'RE-001-IN-DAS-',
     prefijoEt: 'RE-001-IN-ETE-',
     rev: 'A',
-    intro: 'El proyecto corresponde a una planta concentradora de cobre ubicada en la zona centro-norte de Chile, con etapas de chancado, molienda, flotación, espesamiento de concentrado y relaves, y sistemas de agua fresca y recuperada.',
+    intro: 'El proyecto corresponde a una planta de proceso con etapas de alimentación, tratamiento, espesamiento y disposición, y sistemas de agua fresca y recuperada.',
     por: 'AA', porFecha: '', reviso: '', revisoFecha: '', aprobo: '', aproboFecha: '',
     revisoCliente: '', aproboCliente: '',
     lugar: 'Exterior',
@@ -153,7 +153,13 @@
     if (!l.some(function (p) { return p.id === a; })) { a = l[0].id; set('activo', a); }
     return a;
   }
-  function datos(id) { return Object.assign({}, DEFECTO, get('datos:' + (id || activoId()), {})); }
+  // Proyecto de referencia guardado con el nombre anterior: se actualiza a «Planta de proceso»
+  var VIEJOS = { 'INSTRUMENTACIÓN TIPO · PLANTA CONCENTRADORA': 'proyecto', 'El proyecto corresponde a una planta concentradora de cobre ubicada en la zona centro-norte de Chile, con etapas de chancado, molienda, flotación, espesamiento de concentrado y relaves, y sistemas de agua fresca y recuperada.': 'intro' };
+  function datos(id) {
+    var d = Object.assign({}, DEFECTO, get('datos:' + (id || activoId()), {}));
+    ['proyecto', 'intro'].forEach(function (k) { if (VIEJOS[d[k]] === k) d[k] = DEFECTO[k]; });
+    return d;
+  }
   function activo() { var d = datos(activoId()); d.id = activoId(); return d; }
   function guardar(id, v) { set('datos:' + id, Object.assign({}, DEFECTO, v)); }
   function seleccionar(id) { set('activo', id); }

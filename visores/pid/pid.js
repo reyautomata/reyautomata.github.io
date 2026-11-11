@@ -567,7 +567,7 @@
       (!nPl ? 'Ningún instrumento del listado indica como P&amp;ID uno de los planos cargados: revisa el N° de plano de cada hoja para comparar qué falta. ' : f.length ? f.length + ' instrumentos del listado no aparecen en los P&amp;ID cargados: <button type="button" class="mini" id="bAgrFalt">Agregarlos como pendientes</button><details><summary style="cursor:pointer;margin-top:6px">Ver la lista</summary><ul class="falt">' + f.map(function (x) { return '<li>' + esc(x.tag) + '</li>'; }).join('') + '</ul></details>' : 'Los ' + nPl + ' instrumentos del listado de estos planos fueron encontrados.') + ' <button type="button" class="mini" id="bQuitarListado">Quitar listado</button></div>';
   }
   function pintarTodo() { pintarHojas(); pintarTabla(); pintarResumen(); pintarListadoMsg(); pintarVista(); avisarListado(); }
-  function avisarListado() { if (window.PID_LISTADO) window.PID_LISTADO.cambio(); }
+  function avisarListado() { if (window.PID_LISTADO) window.PID_LISTADO.cambio(); if (window.PID_NORMAS) window.PID_NORMAS.cambio(); }
   function cand(id) { return S.cand.filter(function (c) { return c.id === id; })[0]; }
   function seleccionar(id, desdeVista) {
     selId = id; var c = cand(id); if (!c) return;
@@ -717,5 +717,8 @@
   }
   iniciar();
   window.__PID = { estado: function () { return S; }, guardar: guardar, tagDe: tagDe, tipoSugerido: tipoSugerido, esLetras: esLetras,
-    idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy };
+    idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy,
+    seleccionar: function (id) { // desde otras vistas (verificación ISA): muestra la fila y el plano
+      if (!document.querySelector('#tCand tr[data-id="' + id + '"]')) { $('#fEstado').value = ''; $('#fHoja').value = ''; $('#fBuscar').value = ''; pintarTabla(); }
+      seleccionar(id, false); var tr = document.querySelector('#tCand tr[data-id="' + id + '"]'); if (tr) { tr.closest('.blk').scrollIntoView({ block: 'start' }); tr.scrollIntoView({ block: 'center' }); var i = tr.querySelector('input[data-k="letras"]'); if (i) i.focus({ preventScroll: true }); } } };
 })();

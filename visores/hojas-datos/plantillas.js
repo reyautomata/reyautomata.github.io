@@ -892,7 +892,7 @@
 
   // ── Datos de proyecto por defecto (se editan en "Datos del proyecto") ──────────────
   var PROYECTO = {
-    proyecto: 'INSTRUMENTACIÓN TIPO · PLANTA CONCENTRADORA',
+    proyecto: 'INSTRUMENTACIÓN TIPO · PLANTA DE PROCESO',
     cliente: 'REYENGI · AUTOMATIZACIÓN Y CONTROL INDUSTRIAL',
     ubicacion: 'CHILE',
     numero: 'RE-001',
