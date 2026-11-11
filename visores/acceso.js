@@ -84,6 +84,7 @@
     '@media (max-width:900px){#rg-acceso .hero{grid-template-columns:1fr;padding-top:28px;gap:24px}#rg-acceso .ents,#rg-acceso .gal,#rg-acceso .pasos{grid-template-columns:1fr 1fr}#rg-acceso .cifras{grid-template-columns:1fr 1fr}#rg-acceso .cifras div:nth-child(3){border-left:0}#rg-acceso .cifras div:nth-child(n+3){border-top:1px solid #1E3350}}' +
     '@media (max-width:600px){#rg-acceso .lp{padding:0 16px 90px}#rg-acceso .lp-top>div{padding:8px 16px}#rg-acceso .lp-top .b-sec{display:none}#rg-acceso .ents,#rg-acceso .gal,#rg-acceso .pasos{grid-template-columns:1fr}#rg-acceso .final{padding:22px}#rg-acceso .flota span{display:none}#rg-acceso .flota{padding:0;width:52px;height:52px}}' +
     '@media (prefers-reduced-motion:no-preference){#rg-acceso .rg-modal .caja{animation:rgEntra .18s ease-out}@keyframes rgEntra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}';
+  CSS += '#rg-acceso .lp-nav{display:flex;gap:2px;margin-left:8px}#rg-acceso .lp-nav a{color:#C9D6E4;text-decoration:none;font:600 12.5px "IBM Plex Sans",system-ui,sans-serif;padding:7px 10px;border-radius:6px}#rg-acceso .lp-nav a:hover{color:#fff;background:rgba(255,255,255,.08)}#rg-acceso .lp-nav a:focus-visible{outline:2px solid #fff}#rg-acceso{scroll-padding-top:70px}#rg-acceso .kick{color:#C8901E}#rg-acceso .hero{position:relative}#rg-acceso .sellos{list-style:none;margin:18px 0 0;padding:0;display:flex;gap:6px;flex-wrap:wrap}#rg-acceso .sellos li{font:600 11px "IBM Plex Mono",monospace;color:#E6EDF5;border:1px solid #3A5578;border-radius:999px;padding:4px 10px}#rg-acceso .etp{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}#rg-acceso .etp li{position:relative;background:#0F2036;border:1px solid #1E3350;border-top:3px solid #C8901E;border-radius:8px;padding:14px}#rg-acceso .etp .el{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#C8901E;color:#1A1206;font:700 14px "IBM Plex Mono",monospace;margin-bottom:8px}#rg-acceso .etp h3{margin:0;font:600 15px "IBM Plex Sans",system-ui,sans-serif;color:#fff}#rg-acceso .etp small{display:block;font:500 11px "IBM Plex Mono",monospace;color:#7F92A8;margin:2px 0 6px}#rg-acceso .etp p{margin:0;font-size:12.5px;line-height:1.5;color:#9FB0C3}#rg-acceso .discs{display:flex;flex-direction:column;gap:8px}#rg-acceso .disc{background:#0F2036;border:1px solid #1E3350;border-radius:10px;overflow:hidden}#rg-acceso .disc summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr) auto 14px;gap:12px;align-items:center;padding:12px 14px}#rg-acceso .disc summary::-webkit-details-marker{display:none}#rg-acceso .disc summary::after{content:\'\';width:8px;height:8px;border-right:2px solid #7F92A8;border-bottom:2px solid #7F92A8;transform:rotate(45deg);transition:transform .15s}#rg-acceso .disc[open] summary::after{transform:rotate(-135deg)}#rg-acceso .disc summary:hover{background:#13263F}#rg-acceso .disc summary:focus-visible{outline:2px solid #EF5A05;outline-offset:-2px}#rg-acceso .disc summary b{display:grid;place-items:center;height:34px;border-radius:7px;background:#022A55;color:#fff;font:700 15px "Barlow Condensed",sans-serif;border-bottom:3px solid #C8901E}#rg-acceso .disc summary span{font:600 15px "IBM Plex Sans",system-ui,sans-serif;color:#fff}#rg-acceso .disc summary i{font:600 11px "IBM Plex Mono",monospace;font-style:normal;color:#9FB0C3;background:#142A45;border-radius:999px;padding:2px 9px}#rg-acceso .disc ul{margin:0;padding:4px 18px 14px 74px;color:#C3CFDC;line-height:1.7;font-size:13.5px;border-top:1px solid #1E3350}#rg-acceso .disc li::marker{color:#C8901E}#rg-acceso .vp{background:#0F2036;border:1px solid #1E3350;border-radius:12px;overflow:hidden}#rg-acceso .vp-tabs{display:flex;overflow-x:auto;border-bottom:1px solid #1E3350;scrollbar-width:none}#rg-acceso .vp-tabs button{flex:1 0 auto;display:inline-flex;align-items:center;gap:8px;background:transparent;border:0;border-bottom:3px solid transparent;color:#9FB0C3;font:600 13px "IBM Plex Sans",system-ui,sans-serif;padding:12px 14px;cursor:pointer;white-space:nowrap}#rg-acceso .vp-tabs button b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid #3A5578;font:700 11px "IBM Plex Mono",monospace}#rg-acceso .vp-tabs button[aria-selected=true]{color:#fff;border-bottom-color:#C8901E;background:#13263F}#rg-acceso .vp-tabs button[aria-selected=true] b{background:#C8901E;border-color:#C8901E;color:#1A1206}#rg-acceso .vp-tabs button:focus-visible{outline:2px solid #EF5A05;outline-offset:-2px}#rg-acceso .vp-p{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px;padding:18px;align-items:start}#rg-acceso .vp-p .shot{box-shadow:none}#rg-acceso .vp-p img{aspect-ratio:16/10;object-fit:cover;object-position:top;background:#0C1724}#rg-acceso .vp-t h3{margin:4px 0 6px;font:700 24px/1.1 "Barlow Condensed",sans-serif;color:#fff}#rg-acceso .vp-t p{margin:0 0 10px;color:#C3CFDC;font-size:14px;line-height:1.55}#rg-acceso .vp-t ul{margin:0;padding-left:18px;color:#9FB0C3;font-size:13px;line-height:1.7}#rg-acceso .vp-t li::marker{color:#C8901E}#rg-acceso .bf,#rg-acceso .pronto{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}#rg-acceso .pronto{grid-template-columns:repeat(3,minmax(0,1fr))}#rg-acceso .bf li,#rg-acceso .pronto li{background:#0F2036;border:1px solid #1E3350;border-radius:8px;padding:14px}#rg-acceso .pronto li{border-style:dashed;border-color:#3A5578}#rg-acceso .bf h3,#rg-acceso .pronto h3{margin:0 0 4px;font:600 15px "IBM Plex Sans",system-ui,sans-serif;color:#fff}#rg-acceso .bf p,#rg-acceso .pronto p{margin:0;font-size:13px;line-height:1.5;color:#9FB0C3}#rg-acceso .pr{display:inline-block;margin-bottom:8px;font:600 9.5px "IBM Plex Mono",monospace;letter-spacing:.6px;text-transform:uppercase;color:#1A1206;background:#C8901E;border-radius:999px;padding:2px 8px}@media (max-width:1000px){#rg-acceso .lp-nav{display:none}#rg-acceso .etp{grid-template-columns:repeat(2,minmax(0,1fr))}#rg-acceso .vp-p{grid-template-columns:1fr}#rg-acceso .bf{grid-template-columns:1fr 1fr}#rg-acceso .pronto{grid-template-columns:1fr 1fr}}@media (max-width:600px){#rg-acceso .wm small{display:none}#rg-acceso .etp,#rg-acceso .bf,#rg-acceso .pronto{grid-template-columns:1fr}#rg-acceso .disc ul{padding-left:30px}#rg-acceso .vp-tabs button{flex:0 0 auto}#rg-acceso .vp-p{padding:12px}}';
   var SUITE_IMG = ['visor-3d','plano-a3','diagrama-lazo','unilineal','chancado','v-nivel','v-densimetro','v-onoff','v-tablero','v-fuerza','v-fibra','v-estanque','v-maleta','plano-cctv','plano-parshall','plano-plc','listado','hojas-datos','especificaciones']; // imágenes publicadas en /img/suite
   var WSP = '56931959479'; // número que recibe las solicitudes de acceso
   var ICO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2z"/></svg>';
@@ -98,60 +99,53 @@
     Array.prototype.forEach.call(document.body.children, function (n) { n.setAttribute('inert', ''); n.setAttribute('aria-hidden', 'true'); });
     document.documentElement.style.overflow = 'hidden';
     var o = document.createElement('div'); o.id = 'rg-acceso'; o.lang = 'es';
-    var ENT = [['00', 'Análisis de P&amp;ID', 'Lee el P&amp;ID (DXF de AutoCAD, atributos o PDF), propone los instrumentos y, tras la validación del revisor, alimenta todos los entregables.', ['DXF', 'PDF', 'Excel']],
-      ['01', 'Listado de instrumentos', 'Tag, servicio, P&amp;ID, rango y señal de cada instrumento, enlazado al resto de los documentos.', ['Excel', 'Word']],
-      ['02', 'Hojas de datos', 'Formularios ISA-TR20 por tipo de instrumento, con tabla de aplicación por tag.', ['PDF', 'Excel']],
-      ['03', 'Especificaciones técnicas', 'Instrumentación, control, comunicaciones y cables, listas para el proyecto.', ['Word']],
-      ['04', 'Listado de entradas y salidas', 'Señales por tarjeta y canal del PLC, rangos y alarmas.', ['Excel', 'Word']],
-      ['05', 'Diagramas de lazo', 'ISA-5.4 desde terreno hasta la sala de control, en lámina A3 con rótulo.', ['PDF', 'DXF']],
-      ['06', 'Listado de circuitos', 'Cables de señal, troncales y alimentación con origen, destino y largo.', ['Excel', 'Word']],
-      ['07', 'Unilineales TDI', 'Tableros de instrumentos con protecciones, conductores y caída de tensión calculados según el RIC.', ['PDF', 'DXF', 'Excel']],
-      ['08', 'Diagrama de bloques de control y comunicaciones', 'Arquitectura del sistema de control por niveles con sus redes y buses, y análisis de qué se pierde si falla un equipo.', ['PDF', 'DXF', 'Excel']],
-      ['09', 'Detalles típicos de montaje', 'Visores 3D por instrumento con lista de materiales, notas y plano A3.', ['PDF', 'DXF', 'PNG', 'STL']],
-      ['10', 'Emulaciones y procesos', 'Plantas y procesos en 3D con PLC, variadores e instrumentos para practicar y capacitar.', ['3D', 'Simulación']]];
-    var CAR = [['visor-3d', 'Visor 3D de montaje: válvula de control con actuador de diafragma y simulación de la señal'],
-      ['plano-a3', 'Plano de montaje A3 generado desde el modelo, con lista de materiales y rótulo'],
-      ['diagrama-lazo', 'Diagrama de lazo ISA-5.4 generado automáticamente desde el listado de E/S'],
-      ['unilineal', 'Unilineal TDI con protecciones y conductores calculados según el RIC'],
-      ['chancado', 'Chancado primario en 3D: proceso minero con toda su instrumentación'],
-      ['v-nivel', 'Transmisores de nivel: tipos de montaje con despiece y etiquetas'],
-      ['v-densimetro', 'Densímetro nuclear: montaje en cañería con soporte y blindaje'],
-      ['v-onoff', 'Válvulas ON/OFF con actuador, solenoide e interruptores de posición'],
-      ['v-tablero', 'Gabinete de control en 3D: componentes, cableado y energía'],
-      ['v-fuerza', 'Tablero de fuerza 380 Vac con interruptores y diferenciales'],
-      ['v-fibra', 'Paneles murales de fibra óptica: empalmes, adaptadores y pruebas'],
-      ['v-estanque', 'Simulador de estanque e impulsión con PLC y variador'],
-      ['v-maleta', 'Maleta de demostración PLC S7-1200 con HMI'],
-      ['plano-cctv', 'Plano A3: cámara PTZ de CCTV en poste con lista de materiales'],
-      ['plano-parshall', 'Plano A3: canaleta Parshall con sensor ultrasónico'],
-      ['plano-plc', 'Plano A3: gabinete PLC con vistas y lista de materiales'],
-      ['listado', 'Listado de instrumentos enlazado con E/S, lazos y circuitos'],
-      ['hojas-datos', 'Hojas de datos ISA-TR20 por tipo de instrumento'],
-      ['especificaciones', 'Especificaciones técnicas listas para el proyecto']].filter(function (c) { return SUITE_IMG.indexOf(c[0]) >= 0; });
-    var GAL = [['diagrama-lazo', 'Diagrama de lazo ISA-5.4 generado desde el listado de E/S'], ['unilineal', 'Unilineal TDI con cálculo según RIC'], ['plano-a3', 'Plano de montaje A3 con lista de materiales'],
-      ['chancado', 'Chancado primario: proceso minero con su instrumentación'], ['listado', 'Listado de instrumentos enlazado'], ['hojas-datos', 'Hojas de datos ISA-TR20']];
-    o.innerHTML = '<div class="lp-top"><div><span class="wm">Rey<span>Engi</span><small>Ingeniería I&amp;C</small></span><span class="sp"></span>' +
+    // ── Presentación pública: qué es, etapas, disciplinas, 6 vistas previas, brownfield y próximas mejoras ──
+    var ETAPAS = [['C', 'Conceptual', 'Perfil · FEL 1', 'Alternativas, alcance, criterios de diseño y arquitectura de control preliminar.'],
+      ['B', 'Básica', 'Prefactibilidad y factibilidad · FEL 2–3', 'P&amp;ID para diseño, listados, hojas de datos, especificaciones y equipos de largo plazo.'],
+      ['D', 'Detalle', 'Ejecución · EPCM', 'Lazos, circuitos, tableros, canalizaciones, detalles típicos y requisiciones de compra.'],
+      ['P', 'Construcción y puesta en marcha', 'Precomisionamiento', 'Montaje según típicos, pruebas lazo a lazo, as-built y capacitación con simulación.'],
+      ['O', 'Operación y mejora continua', 'Brownfield · PDCA', 'Levantamiento de lo existente, gestión del cambio, paradas de planta y optimización.']];
+    var DISC = [['G1', 'Gestión y dirección del proyecto', ['Proyecto: datos maestros, rótulos y revisiones A, B y 0 compartidos por todos los documentos', 'Requisiciones de compra con suministro por tag, calidad y hoja de respuesta a comentarios', 'Normativa SEC (RIC, RPTD) y D.S. 132 con reglas que revisan el proyecto']],
+      ['G2', 'Procesos y P&amp;ID', ['Análisis de P&amp;ID desde DXF de AutoCAD o PDF, validado por el revisor', 'Guía de piping para leer líneas, clases y simbología']],
+      ['G3', 'Instrumentación', ['Listado de instrumentos enlazado con todos los entregables', 'Hojas de datos ISA-TR20 y especificaciones técnicas por familia', 'Dimensionamiento de válvulas y actuadores (Kv/Cv, cavitación, torque)', 'Más de 40 detalles típicos de montaje en 3D con plano A3']],
+      ['G4', 'Control y comunicaciones', ['Listado de entradas y salidas por tarjeta y canal', 'Diagramas de lazo ISA-5.4 generados desde los datos', 'Arquitectura de control y comunicaciones con análisis de fallas', 'Simuladores de procesos mineros con lazos de control']],
+      ['G5', 'Energía de instrumentación y canalizaciones', ['Listado de circuitos con origen, destino y largo', 'Unilineales de tableros de instrumentos calculados según RIC', 'Ductos por ocupación de sección (RIC N°04)', 'Escalerillas por niveles de tensión con distancias del RIC N°04']]];
+    var VISTAS = [['portada', 'Gestión por etapas', 'Portada de la suite con las etapas del proyecto y la ingeniería ordenada por disciplina.', ['Etapas conceptual, básica, detalle, construcción y operación', 'Entregables marcados por etapa', 'Rangos de estimación AACE por compuerta']],
+      ['listado', 'Instrumentación', 'Listado de instrumentos enlazado con hojas de datos, E/S, lazos y circuitos.', ['Un cambio de tag se refleja en todos los documentos', 'Exportación a Excel y Word con rótulo', 'Hojas de datos ISA-TR20 por tipo']],
+      ['diagrama-lazo', 'Control', 'Diagrama de lazo ISA-5.4 generado desde el listado de entradas y salidas.', ['Terreno, sala eléctrica y sala de control', 'Lámina A3 en PDF y DXF para AutoCAD', 'Bornes, cables y tarjetas desde la base del proyecto']],
+      ['escalerillas', 'Canalizaciones', 'Escalerillas multinivel por niveles de tensión, con cotas y verificación del RIC N°04.', ['MT, BT fuerza, control, instrumentación y comunicaciones', '0,30 m entre niveles, 0,15 m en cruces, 2 m al piso', 'Cubicación de tiras, eclisas, soportes, riel e hilo corrido']],
+      ['plano-a3', 'Detalles típicos', 'Plano de montaje A3 generado desde el modelo 3D, con lista de materiales y notas.', ['Visores 3D con despiece y etiquetas', 'Plano en PDF, DXF y PNG', 'Modelos en OBJ y STL']],
+      ['requisiciones', 'Procura', 'Requisiciones de compra armadas desde el listado de instrumentos del proyecto.', ['Documentos de referencia, suministro con tags y servicios', 'Requisitos de documentación y planilla de inspección', 'Word, PDF, Excel e índice de requisiciones']]];
+    var PRONTO = [['Formación', 'Cursos para ingenieros y proyectistas de I&amp;C minero: rutas de proyectista y de ingeniero sobre proyectos reales de la suite.'],
+      ['Aplicación de escritorio', 'Suite instalable en Windows para trabajar sin conexión con los archivos del proyecto.'],
+      ['Versión Android', 'Visores, cálculos y simuladores en tablet y teléfono para revisar en terreno.'],
+      ['P&amp;ID a lazos', 'Más automatización desde el P&amp;ID: instrumentos, lazos y E/S a partir de los planos del proyecto.'],
+      ['Más detalles típicos', 'Nuevos montajes de canalización, tableros y equipos de proceso, siempre con plano y materiales.'],
+      ['Mejora continua', 'Nuevas reglas normativas y verificaciones que se suman con cada proyecto.']];
+    o.innerHTML = '<div class="lp-top"><div><span class="wm">Rey<span>Engi</span><small>Ingeniería I&amp;C · Minería</small></span>' +
+      '<nav class="lp-nav" aria-label="Secciones"><a href="#rg-que">Qué es</a><a href="#rg-etapas">Etapas</a><a href="#rg-disc">Qué puedes hacer</a><a href="#rg-vistas">Vistas previas</a><a href="#rg-pronto">Próximamente</a></nav><span class="sp"></span>' +
       '<button type="button" class="b b-sec" data-abrir="clave">Ingresar con clave</button><button type="button" class="b b-pri" data-abrir="solicitar">Solicitar acceso</button></div></div>' +
-      '<main class="lp"><section class="hero"><div><p class="kick">Suite ReyEngi · Ingeniería I&amp;C</p><h1>Toda la ingeniería de instrumentación y control, <span>en un solo lugar.</span></h1>' +
-      '<p class="lead">Listados, hojas de datos, diagramas de lazo, unilineales y detalles de montaje que salen de una sola base de datos del proyecto. Cambias un tag y se actualiza en todos los documentos. Descargas en PDF, DXF, Excel y Word con formato de entregable.</p>' +
-      '<div class="ctas"><button type="button" class="b b-wsp" data-abrir="solicitar">' + ICO + 'Solicitar acceso por WhatsApp</button><button type="button" class="b b-sec" data-abrir="clave">Ya tengo clave</button></div></div>' +
-      '<figure class="shot car" role="region" aria-roledescription="carrusel" aria-label="Ejemplos de la Suite"><div class="car-v">' +
-      CAR.map(function (c, i) { return '<img ' + (i ? 'data-src' : 'src') + '="/img/suite/' + c[0] + '.webp" alt="' + c[1] + '" width="1280" height="800"' + (i ? ' aria-hidden="true"' : '') + ' class="' + (i ? '' : 'on ') + (/^plano/.test(c[0]) ? 'fit' : '') + '">'; }).join('') +
-      '<button type="button" class="car-b car-prev" aria-label="Ejemplo anterior">‹</button><button type="button" class="car-b car-next" aria-label="Ejemplo siguiente">›</button></div>' +
-      '<figcaption><span class="car-t" aria-live="polite">' + CAR[0][1] + '</span><span class="car-n">1 / ' + CAR.length + '</span></figcaption><div class="car-d" role="group" aria-label="Elegir ejemplo">' +
-      CAR.map(function (c, i) { return '<button type="button" aria-label="' + (i + 1) + ': ' + c[1] + '"' + (i ? '' : ' aria-current="true"') + '></button>'; }).join('') + '</div></figure></section>' +
-      '<div class="cifras"><div><b>11</b><span>entregables enlazados</span></div><div><b>40+</b><span>visores 3D de montaje y procesos</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div><div><b>ISA · RIC</b><span>ISA-5.1, 5.4, TR20 y RIC (SEC)</span></div></div>' +
-      '<section class="sec"><h2>Qué puedes hacer</h2><p class="sub">Los entregables de un proyecto de I&amp;C, en el orden en que se desarrollan, conectados entre sí.</p><ul class="ents">' +
-      ENT.map(function (e) { return '<li><b>' + e[0] + '</b><h3>' + e[1] + '</h3><p>' + e[2] + '</p><div class="fm">' + e[3].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></li>'; }).join('') + '</ul></section>' +
-      '<section class="sec"><h2>Cómo funciona</h2><p class="sub">Menos horas en tareas repetitivas y documentos que no se contradicen.</p><ol class="pasos">' +
-      '<li><h3>Cargas el P&amp;ID</h3><p>Se leen los instrumentos desde el DXF de AutoCAD o el PDF, se cruzan con el listado existente y el revisor los valida.</p></li>' +
-      '<li><h3>Todo queda enlazado</h3><p>Instrumentos, E/S, lazos, circuitos y tableros comparten los mismos datos: un cambio se refleja en todos.</p></li>' +
-      '<li><h3>Descargas los entregables</h3><p>Planos A3 en PDF y DXF para AutoCAD, y listados en Excel y Word con formato de entrega.</p></li></ol></section>' +
-      '<section class="sec"><h2>Así se ve</h2><p class="sub">Capturas de la Suite en uso.</p><div class="gal">' +
-      GAL.map(function (g) { return '<figure class="shot"><img src="/img/suite/' + g[0] + '.webp" alt="' + g[1] + '" loading="lazy" width="960" height="600"><figcaption>' + g[1] + '</figcaption></figure>'; }).join('') + '</div></section>' +
-      '<section class="final"><div><h2>¿Quieres verla funcionando?</h2><p>Escríbeme y te envío una clave de acceso para revisar la Suite con tu equipo, o coordinamos una demostración con un proyecto real.</p></div>' +
+      '<main class="lp"><section class="hero" id="rg-que"><div><p class="kick">Plataforma de ingeniería I&amp;C · Minería</p><h1>Ingeniería conceptual, básica y de detalle <span>para proyectos mineros.</span></h1>' +
+      '<p class="lead">ReyEngi reúne en una sola base de proyecto los entregables de instrumentación y control, de la idea a la operación: P&amp;ID, listados, hojas de datos, lazos, circuitos, tableros, canalizaciones, detalles típicos y requisiciones. Pensada para faenas en operación (brownfield) y plantas nuevas, con la normativa chilena y la gestión por etapas de la dirección de proyectos.</p>' +
+      '<div class="ctas"><button type="button" class="b b-wsp" data-abrir="solicitar">' + ICO + 'Solicitar acceso por WhatsApp</button><button type="button" class="b b-sec" data-abrir="clave">Ya tengo clave</button></div>' +
+      '<ul class="sellos"><li>Pliegos SEC RIC y RPTD</li><li>D.S. 132 Seguridad Minera</li><li>ISA-5.1 · ISA-5.4 · ISA-TR20</li></ul></div>' +
+      '<figure class="shot"><img src="/img/suite/portada.webp" alt="Portada de la suite con las etapas del proyecto y la ingeniería por disciplina" width="1280" height="800"></figure></section>' +
+      '<div class="cifras"><div><b>12</b><span>entregables enlazados</span></div><div><b>45</b><span>detalles típicos en 3D con plano A3</span></div><div><b>5</b><span>etapas, de la idea a la operación</span></div><div><b>PDF · DXF</b><span>Excel y Word con rótulo</span></div></div>' +
+      '<section class="sec" id="rg-etapas"><h2>Ingeniería por etapas</h2><p class="sub">Gestión por compuertas: cada etapa cierra con una decisión y los entregables que la respaldan.</p><ol class="etp">' +
+      ETAPAS.map(function (e) { return '<li><span class="el">' + e[0] + '</span><h3>' + e[1] + '</h3><small>' + e[2] + '</small><p>' + e[3] + '</p></li>'; }).join('') + '</ol></section>' +
+      '<section class="sec" id="rg-disc"><h2>Qué puedes hacer en la suite</h2><p class="sub">Todo comparte los mismos datos del proyecto: cambias un tag y se actualiza en todos los documentos. Toca cada disciplina para ver su detalle.</p><div class="discs">' +
+      DISC.map(function (d, i) { return '<details class="disc"' + (i ? '' : ' open') + '><summary><b>' + d[0] + '</b><span>' + d[1] + '</span><i>' + d[2].length + '</i></summary><ul>' + d[2].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></details>'; }).join('') + '</div></section>' +
+      '<section class="sec" id="rg-vistas"><h2>Vistas previas</h2><p class="sub">Seis tipos de trabajo que haces en la suite.</p><div class="vp"><div class="vp-tabs" role="tablist" aria-label="Vistas previas">' +
+      VISTAS.map(function (v, i) { return '<button type="button" role="tab" id="vt' + i + '" aria-controls="vp' + i + '" aria-selected="' + (i ? 'false' : 'true') + '"' + (i ? ' tabindex="-1"' : '') + '><b>' + (i + 1) + '</b>' + v[1] + '</button>'; }).join('') + '</div>' +
+      VISTAS.map(function (v, i) { return '<div class="vp-p" role="tabpanel" id="vp' + i + '" aria-labelledby="vt' + i + '"' + (i ? ' hidden' : '') + '><figure class="shot"><img ' + (i ? 'data-src' : 'src') + '="/img/suite/' + v[0] + '.webp" alt="' + v[2] + '" width="1280" height="800" loading="lazy"></figure><div class="vp-t"><h3>' + v[1] + '</h3><p>' + v[2] + '</p><ul>' + v[3].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div></div>'; }).join('') + '</div></section>' +
+      '<section class="sec"><h2>Brownfield y mejora continua</h2><p class="sub">Diseñar sobre una faena en operación exige conocer lo existente y controlar cada cambio.</p><ul class="bf">' +
+      [['Levantamiento y as-built', 'Catastro de instrumentos y P&amp;ID como construido antes de diseñar.'], ['Tie-ins e interferencias', 'Empalmes con lo existente apoyados en modelos 3D.'], ['Paradas programadas', 'Paquetes de conexionado y pruebas listos para la ventana de detención.'], ['Gestión del cambio', 'Revisiones, hojas de respuesta a comentarios y trazabilidad.']]
+        .map(function (x) { return '<li><h3>' + x[0] + '</h3><p>' + x[1] + '</p></li>'; }).join('') + '</ul></section>' +
+      '<section class="sec" id="rg-pronto"><h2>Próximas mejoras</h2><p class="sub">La suite crece con cada proyecto.</p><ul class="pronto">' +
+      PRONTO.map(function (p) { return '<li><span class="pr">Próximamente</span><h3>' + p[0] + '</h3><p>' + p[1] + '</p></li>'; }).join('') + '</ul></section>' +
+      '<section class="final"><div><h2>¿Quieres verla funcionando?</h2><p>Escríbeme y te envío una clave de acceso para revisar la suite con tu equipo, o coordinamos una demostración con un proyecto real.</p></div>' +
       '<button type="button" class="b b-wsp" data-abrir="solicitar">' + ICO + 'Solicitar acceso por WhatsApp</button></section>' +
-      '<p class="lp-pie">ReyEngi · Automatización y control industrial · Chile</p></main>' +
+      '<p class="lp-pie">ReyEngi · Ingeniería de instrumentación y control para la minería · Chile</p></main>' +
       '<button type="button" class="b b-wsp flota" data-abrir="solicitar" aria-label="Solicitar acceso por WhatsApp">' + ICO + '<span>Solicitar acceso</span></button>' +
       '<div class="rg-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rg-tit"><div class="caja"><button type="button" class="cerrar" aria-label="Cerrar">×</button><form autocomplete="off"><p class="marca">Rey<span>Engi</span> · Ingeniería I&amp;C</p><h2 id="rg-tit">Acceso a la Suite</h2>' +
       '<p>Ingresa tu clave de acceso para continuar.</p>' +
@@ -172,26 +166,26 @@
       window.open('https://wa.me/' + WSP + '?text=' + encodeURIComponent(txt), '_blank', 'noopener');
     });
     var f = o.querySelector('.caja form'), inp = o.querySelector('#rg-clave'), btn = f.querySelector('button'), err = o.querySelector('#rg-err'), fallos = 0;
-    (function carrusel() {
-      var car = o.querySelector('.car'); if (!car) return;
-      var ims = [].slice.call(car.querySelectorAll('.car-v img')), ds = [].slice.call(car.querySelectorAll('.car-d button')), t = car.querySelector('.car-t'), n = car.querySelector('.car-n'), i = 0, timer = null, pausa = false;
-      var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-      function cargar(k) { var im = ims[k]; if (im && im.dataset.src) { im.src = im.dataset.src; im.removeAttribute('data-src'); } }
-      function ir(k) {
-        k = (k + ims.length) % ims.length; cargar(k); cargar((k + 1) % ims.length);
-        ims[i].classList.remove('on'); ims[i].setAttribute('aria-hidden', 'true'); ds[i].removeAttribute('aria-current');
-        i = k; ims[i].classList.add('on'); ims[i].removeAttribute('aria-hidden'); ds[i].setAttribute('aria-current', 'true');
-        t.textContent = ims[i].alt; n.textContent = (i + 1) + ' / ' + ims.length;
+    (function vistas() { // pestañas de vistas previas (flechas, Inicio, Fin) y navegación interna
+      var tabs = [].slice.call(o.querySelectorAll('.vp-tabs [role="tab"]'));
+      function sel(t, foco) {
+        tabs.forEach(function (x) {
+          var on = x === t, p = o.querySelector('#' + x.getAttribute('aria-controls'));
+          x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; p.hidden = !on;
+          if (on) { var im = p.querySelector('img[data-src]'); if (im) { im.src = im.dataset.src; im.removeAttribute('data-src'); } }
+        });
+        if (foco) t.focus();
       }
-      function auto() { clearInterval(timer); if (!quieto) timer = setInterval(function () { if (!pausa && !document.hidden) ir(i + 1); }, 4500); }
-      car.querySelector('.car-prev').addEventListener('click', function () { ir(i - 1); auto(); });
-      car.querySelector('.car-next').addEventListener('click', function () { ir(i + 1); auto(); });
-      ds.forEach(function (d, k) { d.addEventListener('click', function () { ir(k); auto(); }); });
-      car.addEventListener('mouseenter', function () { pausa = true; }); car.addEventListener('mouseleave', function () { pausa = false; });
-      car.addEventListener('focusin', function () { pausa = true; }); car.addEventListener('focusout', function () { pausa = false; });
-      var x0 = null; car.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
-      car.addEventListener('touchend', function (e) { if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) { ir(i + (dx < 0 ? 1 : -1)); auto(); } x0 = null; });
-      cargar(1); auto();
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () { sel(t); });
+        t.addEventListener('keydown', function (e) {
+          var n = tabs.length, k = e.key, j = k === 'ArrowRight' || k === 'ArrowDown' ? (i + 1) % n : k === 'ArrowLeft' || k === 'ArrowUp' ? (i - 1 + n) % n : k === 'Home' ? 0 : k === 'End' ? n - 1 : -1;
+          if (j >= 0) { e.preventDefault(); sel(tabs[j], true); }
+        });
+      });
+      [].forEach.call(o.querySelectorAll('.lp-nav a'), function (a) {
+        a.addEventListener('click', function (e) { e.preventDefault(); var d = o.querySelector(a.getAttribute('href')); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      });
     })();
     var modal = o.querySelector('.rg-modal'), lp = [o.querySelector('.lp-top'), o.querySelector('.lp'), o.querySelector('.flota')], antes = null;
     function abrir(modo) {
