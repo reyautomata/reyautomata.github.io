@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<title>ReyEngi Conduit · Dimensionamiento de ductos RIC N°04</title>
+<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="barra">
+  <div class="fila">
+    <img class="logo" src="../../../img/logo-reyengi.png" alt="ReyEngi">
+    <h1>Conduit<small>Dimensionamiento de ductos · RIC N°04 Tabla 4.21</small></h1>
+    <label class="selp">Proyecto<input id="pProy" placeholder="Nombre del proyecto"></label>
+    <label class="selp">Cliente<input id="pCli" placeholder="Cliente"></label>
+    <button type="button" class="btn" id="pAbrir">Abrir…</button>
+    <button type="button" class="btn" id="pGuardar">Guardar…</button>
+    <button type="button" class="btn" id="pLic" title="Licencia">Licencia</button>
+  </div>
+</header>
+<div id="aviso" class="aviso" hidden></div>
+<main>
+<section id="v-cond">
+    <p class="intro">Dimensionamiento de ductos (conduit) según el <b>RIC N°04</b> de la SEC (Tabla N°4.21): los cables, con su aislación y cubierta, pueden ocupar hasta el <b>50 %</b> de la sección interior con 1 conductor y el <b>33 %</b> con 2 o más. Arma cada ducto con sus cables del catálogo, revisa el paso a paso y el dibujo del corte con el espacio libre, y exporta la lámina A3, el DXF del corte y la memoria en Excel.</p>
+    <div class="herr">
+      <button type="button" class="pri" id="kNuevo">+ Nuevo ducto</button>
+      <button type="button" id="kDuplicar">Duplicar</button>
+      <button type="button" class="peligro" id="kBorrar">Eliminar ducto</button>
+      <span class="esp"></span>
+      <button type="button" class="pri" id="kAsignar" hidden title="Escribe el tamaño en la columna Ducto y el tag del ducto en Ruta de canalización">Escribir en el listado de circuitos</button>
+      <button type="button" id="kPdf">Imprimir / PDF (A3)</button>
+      <button type="button" id="kDxf">DXF del corte</button>
+      <button type="button" id="kExcel">Excel · memoria</button>
+    </div>
+    <p class="estado" id="kEstado" aria-live="polite"></p>
+    <div class="tscroll"><table class="io kduct" id="kDuctos"><thead><tr><th>Ducto</th><th>Ruta / tramo</th><th>Tubería</th><th>Cables</th><th>ΣA mm²</th><th>Límite</th><th>Tamaño · ocupación</th></tr></thead><tbody></tbody></table></div>
+    <div class="uni" style="margin-top:14px">
+      <div>
+        <form id="kForm" class="dform" onsubmit="return false" style="position:static;max-height:none">
+          <fieldset><legend>Ducto</legend>
+            <label>Tag<input data-k="tag"></label>
+            <label>Ruta / tramo<input data-k="ruta" placeholder="Ej.: JB-101 → SALA ELÉCTRICA"></label>
+            <label class="ancho">Tipo de tubería<select data-k="tubo"></select></label>
+            <label class="ancho">Criterio de ocupación<select data-k="crit"></select></label>
+            <label class="ancho">Condición del tramo<select data-k="cond"></select></label>
+            <label>Tamaño mínimo<select data-k="min"></select></label>
+            <label>Reserva futura [%]<input data-k="reserva" type="number" min="0" max="100" step="5"></label>
+            <label>Largo del tramo [m]<input data-k="largo" type="number" min="0" step="1"></label>
+            <label>N° de curvas<input data-k="curvas" type="number" min="0" step="1"></label>
+          </fieldset>
+          <fieldset><legend>Cómo se calcula</legend>
+            <ol class="kpasos" id="kPasos"></ol>
+            <ul class="kavisos" id="kAvisos" hidden></ul>
+          </fieldset>
+        </form>
+      </div>
+      <div>
+        <div class="kres">
+          <div class="kdib"><div id="kDibujo"></div><div id="kMedidor"></div></div>
+          <ol class="kley" id="kLeyenda"></ol>
+        </div>
+        <p class="peq" style="margin:6px 0">Toca un tamaño de la tabla para ver cómo quedan los cables en él. Verde rayado: espacio libre dentro del tubo.</p>
+        <div class="tscroll"><table class="io ktam" id="kTam"><thead><tr><th></th><th>Tamaño</th><th>Ø ext. mm</th><th>Ø int. mm</th><th>Área int. mm²</th><th>Área útil mm²</th><th>Ocupación</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+        <p class="peq" id="kFuente"></p>
+      </div>
+    </div>
+    <h2 class="grupo" style="margin-top:18px">Cables del ducto</h2>
+    <div class="herr"><button type="button" class="pri" id="kAgregar">+ Agregar cable</button><button type="button" id="kDesde" hidden>+ Desde el listado de circuitos…</button></div>
+    <div class="tscroll"><table class="io" id="kCables"><thead><tr><th>N°</th><th style="min-width:150px">Tag circuito</th><th style="min-width:320px">Cable (catálogo)</th><th>Cant.</th><th>Ø mm</th><th>Área mm²</th><th></th></tr></thead><tbody></tbody></table></div>
+    <dialog id="kSel" class="kdlg" aria-labelledby="kSelTit">
+      <h3 id="kSelTit">Cables desde el listado de circuitos</h3>
+      <input id="kSelFiltro" type="search" placeholder="Filtrar por tag, cable, gabinete o ruta" aria-label="Filtrar circuitos">
+      <div class="kpref"><label>Instrumentación (multipares y multitríos)<select id="kPrefI"></select></label><label>Control (multiconductores)<select id="kPrefC"></select></label></div>
+      <div id="kSelLista" class="kselista"></div>
+      <div class="herr" style="justify-content:flex-end"><button type="button" id="kSelCerrar">Cancelar</button><button type="button" class="pri" id="kSelOk">Agregar seleccionados</button></div>
+    </dialog>
+  </section>
+</main>
+<footer class="pie">ReyEngi Conduit · Verificar dimensiones con el catálogo del fabricante y la normativa vigente (SEC, RIC N°04). <span id="licTxt"></span></footer>
+<input type="file" id="pArchivo" accept=".json,.reyconduit" hidden>
+<div id="imp"></div>
+<script src="../../hojas-datos/xlsx.js"></script>
+<script src="../../normas.js"></script>
+<script src="../demo.js"></script>
+<script src="shim.js"></script>
+<script src="../../lazos/conduit.js"></script>
+<script src="inicio.js"></script>
+</body>
+</html>

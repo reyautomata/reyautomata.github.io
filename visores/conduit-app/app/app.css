@@ -1,0 +1,13 @@
+/* Ajustes de la app de escritorio */
+body { margin: 0; }
+.barra .fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.barra .logo { height: 30px; width: auto; }
+.barra h1 { margin: 0 auto 0 0; }
+.barra .selp { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.barra .selp input { min-height: 32px; width: 200px; }
+main { padding: 14px 18px 30px; }
+#v-cond .intro { margin-top: 0; }
+.pie { padding: 10px 18px 16px; font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line); }
+.aviso { margin: 10px 18px 0; padding: 9px 14px; border-radius: 8px; background: #fdf1d8; color: #6b4700; border: 1px solid #e8c36a; font-size: 13px; display: flex; gap: 12px; align-items: center; }
+.aviso[hidden] { display: none; }
+.aviso button { min-height: 30px; padding: 4px 12px; font-size: 12.5px; background: #E8A317; border-color: #c88a0c; color: #1a1205; }
