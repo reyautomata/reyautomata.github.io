@@ -528,6 +528,23 @@
       '.kt-foco{outline:3px solid #E8A317!important;outline-offset:4px;border-radius:6px;animation:ktPulso 1.2s ease 2}',
       '@keyframes ktPulso{0%,100%{outline-color:#E8A317}50%{outline-color:rgba(232,163,23,.25)}}',
       '@media (prefers-reduced-motion:reduce){#kTut,#kCat{transition:none}.kt-foco{animation:none}}',
+      '#kNorTab{position:fixed;left:0;top:calc(30% + 120px);z-index:60;writing-mode:vertical-rl;transform:rotate(180deg);background:#1f7a6a;color:#fff;border:0;border-radius:8px 0 0 8px;padding:14px 8px;font:700 13px/1 system-ui,sans-serif;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}',
+      '#kNorTab:focus-visible{outline:2px solid #fff;outline-offset:2px}',
+      '#kNor{position:fixed;top:0;left:0;bottom:0;width:min(560px,100vw);z-index:73;background:#0e1f33;color:#e8eef5;border-right:2px solid #1f7a6a;box-shadow:10px 0 30px rgba(0,0,0,.4);display:flex;flex-direction:column;transform:translateX(-105%);transition:transform .22s ease;font:13px/1.45 system-ui,"Segoe UI",sans-serif}',
+      '#kNor.abierto{transform:none}',
+      '#kNor .kt-cab{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#022A55;border-bottom:1px solid #24405f}#kNor .kt-cab b{flex:1;font-size:15px}',
+      '#kNor .kt-cab button{background:transparent;color:#e8eef5;border:1.5px solid #3a5a80;border-radius:8px;min-width:34px;min-height:34px;cursor:pointer;font-size:16px}',
+      '#kNor .kn-ficha{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #24405f;font-size:12.5px;color:#cdd8e4}#kNor .kn-ficha b{color:#fff;font-size:13.5px}',
+      '#kNor .kn-sigla{flex:none;background:#1f7a6a;color:#fff;font:800 15px system-ui,sans-serif;border-radius:8px;padding:10px 10px;text-align:center;line-height:1.1}',
+      '#kNor .kn-pdf{padding:10px 14px 0}#kNor .kn-pdf button{width:100%;min-height:38px;background:#1f7a6a;color:#fff;border:0;border-radius:8px;font:700 13px system-ui,sans-serif;cursor:pointer}#kNor .kn-pdf button:hover{background:#249078}',
+      '#kNor .kn-busca{padding:10px 14px}#kNor .kn-busca input{width:100%;box-sizing:border-box;background:#071423;color:#e8eef5;border:1.5px solid #24405f;border-radius:8px;padding:8px 10px;font:13px system-ui,sans-serif}',
+      '#kNor .kt-lista{list-style:none;margin:0;padding:0 12px 10px;overflow:auto;flex:1}',
+      '#kNor .kn-item{border:1px solid #24405f;border-left:4px solid #1f7a6a;border-radius:8px;background:#11243a;margin-bottom:8px}',
+      '#kNor .kn-item summary{cursor:pointer;padding:9px 10px;display:flex;gap:10px;align-items:baseline;list-style:none}#kNor .kn-item summary::-webkit-details-marker{display:none}',
+      '#kNor .kn-cl{flex:none;font:700 11.5px Consolas,monospace;color:#7fd8c4;min-width:118px}#kNor .kn-t{font-weight:700;color:#fff}',
+      '#kNor .kn-app{margin:0 10px 8px;color:#cdd8e4;font-size:12.5px}#kNor .kn-app b{color:#E8A317}',
+      '#kNor blockquote{margin:0 10px 10px;padding:8px 10px;background:#071423;border-radius:6px;border-left:3px solid #3a5a80;color:#dfe7ef;font-size:12.5px;line-height:1.5}',
+      '#kNor .kn-pie{margin:0;padding:10px 14px 14px;border-top:1px solid #24405f;font-size:11.5px;color:#9fb0c3}',
       '#k3dBtn{margin-top:8px}',
       '#k3d{width:min(1280px,96vw);height:min(860px,92vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}',
       '#k3d[open]{display:flex;flex-direction:column}#k3d::backdrop{background:rgba(0,0,0,.6)}',
@@ -613,6 +630,7 @@
     ['Míralo en 3D', '#k3dBtn', 'Pulsa <b>Ver ducto en 3D</b>: arrastra para girar y usa la rueda para acercar. Los cables salen escalonados para ver cubierta, pantalla y conductores. Puedes quitar el corte, ocultar etiquetas o exportar un PNG.'],
     ['Exporta los entregables', '#kPdf', '<b>Imprimir / PDF (A3)</b> genera una lámina por ducto con corte, tabla y memoria. <b>DXF del corte</b> abre en AutoCAD y <b>Excel · memoria</b> entrega todos los ductos con sus cables.'],
     ['Guarda tu proyecto', '#pGuardar', 'Escribe <b>Proyecto</b> y <b>Cliente</b> (salen en la lámina). <b>Guardar…</b> crea un archivo .reyconduit y <b>Abrir…</b> lo recupera en este u otro equipo. El trabajo también queda guardado en la app entre sesiones.'],
+    ['Consulta la normativa', '#kNorTab', 'La pestaña <b>Normativa RIC N°04</b> muestra cada cláusula que aplica el cálculo, qué hace la app con ella y el texto literal del pliego. Puedes buscar por palabra.'],
     ['Licencia', '#pLic', 'El botón <b>Licencia</b> muestra la vigencia, el código de este equipo y cómo renovar. La app avisa antes del vencimiento.']
   ];
   function montarTutorial() {
@@ -633,6 +651,7 @@
     p.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-ir]'); if (!b) return;
       var sel = b.dataset.ir, el = document.querySelector(sel); if (!el) return;
+      if (sel === '#kNorTab') { el.click(); return; }
       if (sel === '#kCatTab') { el.hidden ? $('#kCat').classList.add('abierto') : el.click(); el = $('#kCat'); }
       if (window.innerWidth < 900) abrir(false);
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -642,6 +661,64 @@
     });
     // se abre solo la primera vez
     var pt = leerPref('reyengi-ktut'); abrir(pt === null ? !!document.getElementById('pGuardar') : pt === '1'); // en la app de escritorio se abre solo la primera vez
+    var sec = $('#v-cond'); if (sec && window.MutationObserver) new MutationObserver(function () { var v = !sec.hidden; tab.style.display = v ? '' : 'none'; if (!v) p.classList.remove('abierto'); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
+    if (sec && sec.hidden) tab.style.display = 'none';
+  }
+
+
+  // ── Normativa aplicada: RIC N°04 (panel retráctil) ──
+  // Extractos literales del pliego (Res. Ex. N°33.877 de 30/12/2020, SEC) de las cláusulas que usa el cálculo.
+  var NORMA = [
+    ['Tabla N°4.21 · 7.16.1.14', 'Ocupación máxima de la tubería', 'Límite de ocupación del criterio RIC: 50 % con un conductor, 33 % con dos y con tres o más.',
+      '7.16.1.14 Para fijar la cantidad máxima de conductores en una tubería se aceptará que el conductor o haz de conductores, incluyendo la aislación de cada uno de ellos, ocupe un porcentaje de la sección transversal de la tubería que esté de acuerdo con lo prescrito por la tabla Nº4.21.\nTabla Nº4.21 · Porcentaje de sección transversal de la tubería ocupada por los conductores: 1 conductor 50 %; 2 conductores 33 %; 3 o más 33 %.'],
+    ['Tabla N°4.21 · condiciones', 'Niples entre gabinetes y conductor de tierra', 'Condición «Tubería de unión entre gabinetes de hasta 1 m» → 60 %. El conductor de tierra se suma como un cable más.',
+      'Condiciones de aplicación de la tabla Nº4.21:\n• Cuando se trata de tuberías de unión de gabinetes de tableros o similares, de una longitud no superior a 1 m se podrá considerar un porcentaje de área de hasta el 60 %.\n• Cuando en el cálculo de la cantidad de conductores de un determinado tipo de tubería se obtengan valores decimales, sólo se aproximará al entero superior si el decimal es de 0,8 o mayor.\n• Para combinación de conductores de diferentes secciones nominales se respetarán los valores indicados en la tabla Nº4.21, usando las dimensiones de conductores y tuberías indicadas en las tablas Nº4.17 a Nº4.20, respectivamente.\n• Cuando el conductor de tierra forme parte del haz de conductores deberá incluirse en el cálculo.'],
+    ['7.16.1.13', 'Largo y curvas del tramo', 'Aviso cuando el tramo supera 20 m o tiene más de dos curvas.',
+      '7.16.1.13 Los valores de las tablas Nº4.17 a N°4.20, serán válidos para tramos de tubería de hasta 20 m de largo, rectos o con no más de dos curvas con una desviación total no superior a 180º. Para tramos de distancias superiores o para desviaciones mayores a las indicadas se deberá colocar cajas de paso intermedias.'],
+    ['7.16.1.6', 'Desviación entre cajas', 'Define la condición «Tramo normal» (desviación ≤ 180°); la desviación no se verifica automáticamente.',
+      '7.16.1.6 No deberá existir una desviación mayor de 180 grados en un tramo de tubería entre dos cajas o accesorios. En caso de existir la necesidad de tener una mayor desviación se deberán colocar cajas intermedias. Para distancias entre cajas de derivación no superiores a 5,0 m se aceptará una desviación de 270º sin cajas intermedias.'],
+    ['7.16.1.7', 'Registros en tramos rectos', 'Aviso cuando un tramo recto supera 15 m.',
+      '7.16.1.7 Deberá ser posible la fácil introducción y retirada de los conductores en la tubería después de colocados y fijados éstos y sus accesorios, disponiendo para ello los registros que se consideren convenientes, que en tramos rectos no estarán separados entre sí más de 15 m.'],
+    ['5.27', 'Un circuito por tubería', 'Aviso cuando el ducto lleva más de un cable de fuerza.',
+      '5.27 En una misma tubería sólo podrán llevarse los conductores pertenecientes a un mismo circuito. Se exceptúan de esta disposición los conductores canalizados en pilares de servicio, bandejas, escalerillas, canastillos o canaletas, los que estarán afectos a las disposiciones de las secciones 7.7, 7.8, 7.10, 7.11, 7.12 y 7.13 de este pliego, respectivamente.'],
+    ['7.1.7', 'Separación de fuerza y control o señales', 'Aviso cuando el ducto mezcla instrumentación con control o fuerza.',
+      '7.1.7 Las canalizaciones eléctricas y de comunicación o control, instaladas al interior de un mismo conducto, shaft o canal de una construcción, se deberán separar y distanciar adecuadamente para evitar influencias electromagnéticas.'],
+    ['7.16.2.1', 'Tubería metálica en corriente alterna', 'No se verifica automáticamente: al canalizar fuerza en tubería metálica, lleva todas las fases y el neutro en el mismo ducto.',
+      '7.16.2.1 En alimentaciones de corriente alterna canalizadas en tuberías metálicas deberá evitarse el calentamiento de éstas debido a la inducción electromagnética, colocando todos los conductores, incluido el neutro cuando corresponda, en una misma tubería.'],
+    ['7.16.1.15', 'Más de tres conductores', 'No se calcula aquí: la app dimensiona la ocupación; la capacidad de corriente se corrige aparte con la Tabla N°4.6.',
+      '7.16.1.15 En tuberías que lleven más de tres conductores se deberán aplicar los factores de corrección de capacidad de transporte de corriente indicados en la tabla Nº4.6.'],
+    ['7.9.7.1 · Tabla N°4.29', 'Ducto subterráneo', 'Condición «Ducto subterráneo»: tamaño mínimo de 25 mm y, con más de 10 conductores o secciones distintas, ocupación de 25 %.',
+      '7.9.7.1 El diámetro mínimo del ducto de una canalización subterránea no debe ser inferior a 25 mm.\nTabla Nº4.29, nota: Para más de 10 conductores por tubo o para conductores o cables de secciones diferentes a instalar en el mismo tubo, su sección interior será como mínimo, igual a 4 veces la sección ocupada por los conductores.'],
+    ['7.9.7.8 a 7.9.7.10', 'Distancia entre cámaras', 'Aviso cuando el tramo subterráneo supera 90 m.',
+      '7.9.7.8 Se aceptará una distancia máxima de recorrido entre cámaras de 90 m, con un máximo de dos curvas y una desviación por cada curva no superior a 60º con respecto a la línea recta y radios de curvatura de 10 veces el diámetro del ducto respectivo como mínimo. Si existen más de dos curvas o una desviación superior a la señalada se deberá colocar cámaras intermedias.\n7.9.7.9 En tramos rectos se aceptará, colocar cámaras hasta, una distancia máxima de 120 m entre ellas. El ducto que se utilice en estos casos será de un diámetro mínimo de 50 mm.\n7.9.7.10 En tramos cuyo recorrido no sea superior a 20 m se aceptará que los ductos formen una U, sin colocar cámaras.'],
+    ['7.10.19', 'Cuando no cabe: bandeja', 'Sugerencia cuando ningún tamaño de tubería alcanza.',
+      '7.10.19 Podrán llevarse la cantidad de conductores o cables multiconductores activos tales que, incluyendo su aislación, no ocupen más del 40 % de la sección transversal de la bandeja. Se deberá aplicar los factores de corrección contenidos en la tabla Nº4.6.']
+  ];
+  function montarNorma() {
+    if ($('#kNor')) return;
+    var tab = document.createElement('button'); tab.type = 'button'; tab.id = 'kNorTab'; tab.textContent = 'Normativa RIC N°04'; tab.setAttribute('aria-controls', 'kNor'); tab.setAttribute('aria-expanded', 'false');
+    var p = document.createElement('aside'); p.id = 'kNor'; p.setAttribute('aria-label', 'Normativa aplicada');
+    var pdf = !!window.reyNorma;
+    p.innerHTML = '<div class="kt-cab"><b>Normativa aplicada</b><button type="button" id="kNorCerrar" aria-label="Cerrar normativa">✕</button></div>' +
+      '<div class="kn-ficha"><div class="kn-sigla">RIC N°04</div><div><b>Conductores, materiales y sistemas de canalización</b><br>Pliego técnico normativo de la SEC · Resolución Exenta N°33.877 de 30/12/2020 · Fuente reglamentaria: D.S. N°8 de 2019 del Ministerio de Energía.</div></div>' +
+      (pdf ? '<div class="kn-pdf"><button type="button" id="kNorPdf">Abrir el pliego completo (PDF oficial SEC)</button></div>' : '') +
+      '<div class="kn-busca"><input type="search" id="kNorBus" placeholder="Buscar en las cláusulas: tierra, 20 m, subterráneo…" aria-label="Buscar en la normativa"></div>' +
+      '<div class="kt-lista" id="kNorLista">' + NORMA.map(function (n, i) {
+        return '<details class="kn-item"' + (i < 2 ? ' open' : '') + ' data-q="' + esc((n[0] + ' ' + n[1] + ' ' + n[2] + ' ' + n[3]).toLowerCase()) + '"><summary><span class="kn-cl">' + esc(n[0]) + '</span><span class="kn-t">' + esc(n[1]) + '</span></summary>' +
+          '<p class="kn-app"><b>En la app:</b> ' + esc(n[2]) + '</p><blockquote>' + esc(n[3]).replace(/\n/g, '<br>') + '</blockquote></details>';
+      }).join('') + '</div>' +
+      '<p class="kn-pie">Extractos literales del pliego vigente a la fecha de esta versión. Verifica en el sitio de la SEC si existen modificaciones posteriores. La app no reemplaza el criterio del proyectista ni la revisión del inspector.</p>';
+    document.body.appendChild(tab); document.body.appendChild(p);
+    function abrir(v) { p.classList.toggle('abierto', v); tab.setAttribute('aria-expanded', String(v)); tab.hidden = v; if (v) { var t = $('#kTut'); if (t && t.classList.contains('abierto')) $('#kTutCerrar').click(); } }
+    tab.addEventListener('click', function () { abrir(true); $('#kNorBus').focus(); });
+    $('#kNorCerrar').addEventListener('click', function () { abrir(false); tab.focus(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && p.classList.contains('abierto') && !document.querySelector('dialog[open]')) abrir(false); });
+    if (pdf) $('#kNorPdf').addEventListener('click', function () { window.reyNorma.abrir(); });
+    $('#kNorBus').addEventListener('input', function (e) {
+      var q = e.target.value.trim().toLowerCase();
+      p.querySelectorAll('.kn-item').forEach(function (d) { var ok = !q || d.dataset.q.indexOf(q) >= 0; d.hidden = !ok; if (q && ok) d.open = true; });
+    });
+    document.addEventListener('click', function (e) { if (e.target && e.target.id === 'kTutTab') abrir(false); });
     var sec = $('#v-cond'); if (sec && window.MutationObserver) new MutationObserver(function () { var v = !sec.hidden; tab.style.display = v ? '' : 'none'; if (!v) p.classList.remove('abierto'); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
     if (sec && sec.hidden) tab.style.display = 'none';
   }
@@ -765,7 +842,7 @@
     cssExtra(); montarCatalogo();
     var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
     var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
-    setTimeout(montarTutorial, 0); // después de que la app agregue sus botones
+    setTimeout(function () { montarNorma(); montarTutorial(); }, 0); // después de que la app agregue sus botones
     $('#kForm').addEventListener('input', leerForm); $('#kForm').addEventListener('change', leerForm);
     $('#kDuctos').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-d]'); if (!tr) return; datos().sel = tr.dataset.d; verTam = null; cambio(); });
     $('#kNuevo').addEventListener('click', function () { var b = datos(), d = nuevo(b.ductos.length + 1), a = actual(); d.tubo = a.tubo; d.crit = a.crit; d.min = a.min; b.ductos.push(d); b.sel = d.id; verTam = null; cambio(); $('#kForm [data-k=tag]').focus(); });
