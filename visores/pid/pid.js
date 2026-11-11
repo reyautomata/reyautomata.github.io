@@ -566,7 +566,8 @@
     el.innerHTML = '<div class="' + (f.length || !nPl ? 'aviso' : 'okmsg') + '">Listado existente: <b>' + esc(S.listado.archivo || '') + '</b> (hoja «' + esc(S.listado.hoja) + '», ' + S.listado.items.length + ' instrumentos). ' +
       (!nPl ? 'Ningún instrumento del listado indica como P&amp;ID uno de los planos cargados: revisa el N° de plano de cada hoja para comparar qué falta. ' : f.length ? f.length + ' instrumentos del listado no aparecen en los P&amp;ID cargados: <button type="button" class="mini" id="bAgrFalt">Agregarlos como pendientes</button><details><summary style="cursor:pointer;margin-top:6px">Ver la lista</summary><ul class="falt">' + f.map(function (x) { return '<li>' + esc(x.tag) + '</li>'; }).join('') + '</ul></details>' : 'Los ' + nPl + ' instrumentos del listado de estos planos fueron encontrados.') + ' <button type="button" class="mini" id="bQuitarListado">Quitar listado</button></div>';
   }
-  function pintarTodo() { pintarHojas(); pintarTabla(); pintarResumen(); pintarListadoMsg(); pintarVista(); }
+  function pintarTodo() { pintarHojas(); pintarTabla(); pintarResumen(); pintarListadoMsg(); pintarVista(); avisarListado(); }
+  function avisarListado() { if (window.PID_LISTADO) window.PID_LISTADO.cambio(); }
   function cand(id) { return S.cand.filter(function (c) { return c.id === id; })[0]; }
   function seleccionar(id, desdeVista) {
     selId = id; var c = cand(id); if (!c) return;
@@ -588,7 +589,7 @@
     if (k === 'tipo') c.tipoManual = 1;
     if (S.listado && (k === 'letras' || k === 'num' || k === 'suf')) cruzar();
     tr.querySelector('td b').textContent = tagDe(c) || '—';
-    guardar(); pintarResumen(); pintarVista();
+    guardar(); pintarResumen(); pintarVista(); avisarListado();
   });
   $('#tCand').addEventListener('change', function (e) { if (e.target.id === 'cTodo') document.querySelectorAll('#tCand .chkf').forEach(function (x) { x.checked = e.target.checked; }); });
   $('#tCand').addEventListener('click', function (e) {
@@ -597,7 +598,7 @@
     if (b.dataset.a === 'ver') { seleccionar(c.id, false); return; }
     if (b.dataset.a === 'val' && (!c.letras || !c.num)) { toast('Completa letras y número antes de validar.'); return; }
     marcar(c, b.dataset.a === 'val' ? 'validado' : 'rechazado'); guardar();
-    var sig = tr.nextElementSibling; pintarTabla(); pintarResumen(); pintarVista();
+    var sig = tr.nextElementSibling; pintarTabla(); pintarResumen(); pintarVista(); avisarListado();
     if ($('#fEstado').value === 'pendiente' && sig && sig.dataset.id) seleccionar(sig.dataset.id, false);
   });
   function seleccionados() { var ids = []; document.querySelectorAll('#tCand .chkf:checked').forEach(function (x) { ids.push(x.closest('tr').dataset.id); }); return ids.map(cand).filter(Boolean); }
@@ -712,7 +713,9 @@
     $('#revisor').value = S.revisor || ''; if (!$('#fechaRev').value) $('#fechaRev').value = hoy();
     listaProy(); pintarTodo(); tamCanvas(); pintarVista();
     if (S.hojas.length) mostrarHoja(S.hojas[0].id);
+    if (window.PID_LISTADO) window.PID_LISTADO.refrescar();
   }
   iniciar();
-  window.__PID = { estado: function () { return S; }, tipoSugerido: tipoSugerido, esLetras: esLetras };
+  window.__PID = { estado: function () { return S; }, guardar: guardar, tagDe: tagDe, tipoSugerido: tipoSugerido, esLetras: esLetras,
+    idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy };
 })();

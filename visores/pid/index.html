@@ -37,7 +37,7 @@ label { display: grid; gap: 4px; align-content: start; font: 600 12px var(--f-bo
 .selp { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px var(--f-mono); color: var(--muted); }
 .selp select { width: auto; max-width: 220px; }
 main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1600px; margin: 0 auto; }
-.pasos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; counter-reset: p; }
+.pasos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; counter-reset: p; }
 .pasos li { counter-increment: p; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px 9px 44px; position: relative; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
 .pasos li::before { content: counter(p); position: absolute; left: 12px; top: 9px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); border: 1px solid var(--accent); color: #fff; font: 700 12px var(--f-mono); display: grid; place-items: center; }
 .pasos li b { display: block; color: var(--fg); font-size: 13px; }
@@ -108,7 +108,7 @@ table.cand td.acc { white-space: nowrap; }
 .okmsg a { color: #fff; }
 ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); color: var(--muted); columns: 3; }
 .toast { position: fixed; right: 16px; bottom: 16px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; padding: 9px 12px; font-size: 12.5px; max-width: min(420px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-@media (max-width: 1100px) { .trabajo { grid-template-columns: 1fr; } .visor { position: relative; top: 0; height: 60vh; } .tscroll { max-height: 60vh; } }
+@media (max-width: 1100px) { .pasos { grid-template-columns: 1fr 1fr; } .trabajo { grid-template-columns: 1fr; } .visor { position: relative; top: 0; height: 60vh; } .tscroll { max-height: 60vh; } }
 @media (max-width: 700px) { .pasos { grid-template-columns: 1fr; } .rev { grid-template-columns: 1fr; } ul.falt { columns: 1; } }
 </style>
 <script src="../acceso.js"></script>
@@ -129,6 +129,7 @@ ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); col
     <li data-p="1"><b>Cargar P&amp;ID</b>DXF de AutoCAD, atributos exportados (ATTOUT / extracción de datos), PDF o archivo de extracción.</li>
     <li data-p="2"><b>Revisar y validar</b>El revisor confirma, corrige o rechaza cada instrumento contra el plano.</li>
     <li data-p="3"><b>Exportar a entregables</b>Lo validado pasa al listado de instrumentos, E/S, lazos y circuitos.</li>
+    <li data-p="4"><b>Listado de instrumentos</b>Documento con portada y Anexo A, editable en la vista previa: Excel, Word y PDF.</li>
   </ol>
 
   <section class="blk" aria-labelledby="t1">
@@ -194,10 +195,17 @@ ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); col
     </div>
     <div id="msgExport"></div>
   </section>
+
+  <section class="blk" aria-labelledby="t4" id="secListado">
+    <h2 id="t4">4 · Documento · Listado de instrumentos <small>formato de la Suite: portada, control de cambios, referencias y Anexo A</small></h2>
+    <p class="ayuda">Los instrumentos revisados forman el Anexo A con tag, descripción ISA, servicio, línea o equipo y el P&amp;ID de donde salen. Corrige cualquier dato escribiendo sobre la vista previa; lo que cambies se guarda en el proyecto y no se pierde si vuelves a revisar el P&amp;ID.</p>
+  </section>
 </main>
 <script src="../proyectos.js"></script>
 <script src="../hojas-datos/xlsx.js"></script>
 <script src="../lazos/isa.js"></script>
+<script src="../especificaciones/docx.js"></script>
 <script src="pid.js"></script>
+<script src="listado.js"></script>
 </body>
 </html>

@@ -1,3 +1,14 @@
+/* ReyEngi · compatibilidad de pdf.js con navegadores y Electron anteriores a 2025 (Uint8Array.toHex/base64, Map.getOrInsert, Promise.try, Math.sumPrecise) */
+(function(){var U=Uint8Array,d=function(o,k,v){if(!(k in o))Object.defineProperty(o,k,{value:v,writable:true,configurable:true});};
+d(U.prototype,'toHex',function(){var s='';for(var i=0;i<this.length;i++)s+=(this[i]<16?'0':'')+this[i].toString(16);return s;});
+d(U.prototype,'toBase64',function(o){var s='',T=0x8000;for(var i=0;i<this.length;i+=T)s+=String.fromCharCode.apply(null,this.subarray(i,i+T));var r=btoa(s);if(o&&o.alphabet==='base64url'){r=r.replace(/\+/g,'-').replace(/\//g,'_');if(o.omitPadding)r=r.replace(/=+$/,'');}else if(o&&o.omitPadding)r=r.replace(/=+$/,'');return r;});
+d(U,'fromBase64',function(t,o){t=String(t).replace(/\s+/g,'');if(o&&o.alphabet==='base64url')t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';var s=atob(t),u=new U(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;});
+d(U,'fromHex',function(t){var u=new U(t.length>>1);for(var i=0;i<u.length;i++)u[i]=parseInt(t.substr(i*2,2),16);return u;});
+[typeof Map!=='undefined'&&Map,typeof WeakMap!=='undefined'&&WeakMap].forEach(function(M){if(!M)return;d(M.prototype,'getOrInsert',function(k,v){if(!this.has(k))this.set(k,v);return this.get(k);});d(M.prototype,'getOrInsertComputed',function(k,f){if(!this.has(k))this.set(k,f(k));return this.get(k);});});
+d(Promise,'try',function(f){var a=[].slice.call(arguments,1);return new Promise(function(r){r(f.apply(void 0,a));});});
+d(Promise,'withResolvers',function(){var o={};o.promise=new Promise(function(a,b){o.resolve=a;o.reject=b;});return o;});
+d(Math,'sumPrecise',function(it){var s=0,c=0;for(var x of it){var y=x-c,t=s+y;c=(t-s)-y;s=t;}return s;});
+})();
 /**
  * @licstart The following is the entire license notice for the
  * JavaScript code in this page
