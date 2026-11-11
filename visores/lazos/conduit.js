@@ -261,7 +261,7 @@
   var verTam = null; // tamaño que se muestra en el dibujo (null = el elegido)
   function opciones(lista, v) { return lista.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(v) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join(''); }
   function opcionesCat(v) {
-    return Object.keys(FAM).map(function (f) { return '<optgroup label="' + esc(FAM[f]) + '">' + CAT.filter(function (c) { return c.f === f; }).map(function (c) { return '<option value="' + c.id + '"' + (c.id === v ? ' selected' : '') + '>' + esc((c.cod !== '—' ? c.cod + ' · ' : '') + c.desc + (c.f !== 'otro' ? ' · Ø ' + n1(c.d, 1) + ' mm' : '')) + '</option>'; }).join('') + '</optgroup>'; }).join('');
+    return ORDEN_FAM.map(function (f) { return '<optgroup label="' + esc(SERV[servDe(f)].n.toUpperCase() + ' · ' + FAM[f]) + '">' + CAT.filter(function (c) { return c.f === f; }).map(function (c) { return '<option value="' + c.id + '"' + (c.id === v ? ' selected' : '') + '>' + esc((c.cod !== '—' ? c.cod + ' · ' : '') + c.desc + (c.f !== 'otro' ? ' · Ø ' + n1(c.d, 1) + ' mm' : '')) + '</option>'; }).join('') + '</optgroup>'; }).join('');
   }
   function pintar() {
     var b = datos(), dc = actual(), r = calcular(dc);
@@ -299,7 +299,8 @@
     var occ = s ? r.suma / area(s[2]) * 100 : 0;
     $('#kMedidor').innerHTML = '<div class="kbar"><span style="width:' + Math.min(100, occ) + '%;background:' + (occ <= r.lim ? '#2e7d32' : '#c62828') + '"></span><i style="left:' + r.lim + '%" title="Límite ' + r.lim + ' %"></i></div><div class="peq">Ocupación en Ø ' + esc(s ? s[0] : '') + ': <b>' + n1(occ, 1) + ' %</b> · límite ' + r.lim + ' % · libre ' + n1(Math.max(0, 100 - occ), 1) + ' %</div>';
     $('#kDibujo').innerHTML = s ? svgCorte(r, s, 420, 'kHatch') : '';
-    $('#kLeyenda').innerHTML = r.lista.map(function (x, i) { return '<li><span class="kdot" style="background:' + COLF[x.k.f] + '"></span><b>' + (i + 1) + '</b> ' + esc(x.c.tag || '(sin tag)') + ' · ' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + ' · Ø ' + n1(x.d, 1) + ' mm</li>'; }).join('');
+    ultimo = { r: r, s: s }; var b3 = $('#k3dBtn'); if (b3) b3.disabled = !s || !r.lista.length;
+    $('#kLeyenda').innerHTML = r.lista.map(function (x, i) { var sv = SERV[servDe(x.k.f)]; return '<li><span class="kdot" style="background:' + COLF[x.k.f] + '"></span><b>' + (i + 1) + '</b> <span class="kserv" style="background:' + sv.c + '" title="' + sv.n + '">' + sv.n.slice(0, 4).toUpperCase() + '</span>' + esc(x.c.tag || '(sin tag)') + ' · ' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + ' · Ø ' + n1(x.d, 1) + ' mm</li>'; }).join('');
     // tabla de tamaños (como el formato original: "Utilizar >>")
     $('#kTam tbody').innerHTML = r.filas.map(function (q) {
       var es = el && q.i === el.i;
@@ -308,7 +309,7 @@
     $('#kFuente').textContent = 'Dimensiones: ' + r.T.f + '. Verifique con el catálogo del fabricante.';
   }
 
-  function cambio() { A.guardar(); pintar(); }
+  function cambio() { A.guardar(); pintar(); var cd = $('#kCatDest'); if (cd) cd.innerHTML = destino(); }
   function leerForm(ev) {
     var t = ev.target, k = t.dataset.k, dc = actual(); if (!k) return;
     dc[k] = k === 'tag' ? t.value.toUpperCase() : t.value;
@@ -436,10 +437,267 @@
     A.descargar('Canalizaciones_RIC04.xlsx', X.generar(lb), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   }
 
+
+  // ── Catálogo lateral de cables por servicio y visor 3D del ducto ──
+  // Servicio de cada familia (agrupación del formato original: instrumentación, control y fuerza)
+  var SERV = { inst: { n: 'Instrumentación', c: '#2F6FB5', d: 'Señales analógicas y de campo: pares y tríadas apantallados, multipares y multitríadas.' },
+    ctrl: { n: 'Control', c: '#B7791F', d: 'Señales discretas 24 VDC / 120 VAC, solenoides, interruptores y botoneras: multiconductores.' },
+    fuerza: { n: 'Fuerza', c: '#C0392B', d: 'Alimentación 220/380 V de instrumentos, tableros y motores: mono y multiconductores.' },
+    otro: { n: 'Otro', c: '#6b7480', d: 'Cable fuera del catálogo con diámetro manual.' } };
+  var FSERV = { par: 'inst', mpar: 'inst', mtri: 'inst', pvicp: 'inst', pvict: 'inst', gfip: 'inst', gfit: 'inst',
+    xtcc: 'ctrl', cvtc: 'ctrl', gfc: 'ctrl', dlx: 'ctrl', gpt: 'ctrl', otro: 'otro' };
+  function servDe(f) { return FSERV[f] || 'fuerza'; }
+  var USO = {
+    par: 'Un instrumento: 4–20 mA / HART del transmisor a la caja de conexiones (par) o RTD de 3 hilos (tríada).',
+    mpar: 'Troncal de caja de conexiones a sala eléctrica o de control con varias señales analógicas.',
+    mtri: 'Troncal para RTD de 3 hilos y señales de tres conductores.',
+    pvicp: 'Pares apantallados individual y total (PVC): troncales de señales analógicas.',
+    pvict: 'Tríos apantallados (PVC): troncales para RTD y señales de 3 hilos.',
+    gfip: 'Pares libres de halógenos (LSZH): salas eléctricas, túneles y recintos cerrados.',
+    gfit: 'Tríos libres de halógenos (LSZH): salas eléctricas, túneles y recintos cerrados.',
+    xtcc: 'Control 600 V del formato original: discretas, solenoides y comandos.',
+    cvtc: 'Control 600 V tipo TC-ER: discretas, solenoides y comandos en bandeja o ducto.',
+    gfc: 'Control libre de halógenos (LSZH) para recintos cerrados.',
+    dlx: 'Control armado: tramos expuestos a daño mecánico o directamente enterrados.',
+    gpt: 'Cable de uso general para cableado interno de tableros y conexiones cortas.',
+    xtmu: 'Fuerza 1000 V del formato original: alimentación trifásica.',
+    thhn: 'Conductores individuales en ducto: alimentación 220/380 V (NEC Cap. 9 Tabla 5).',
+    xtu: 'Monoconductor 600 V para alimentadores en ducto o bandeja.',
+    xtm3: 'Alimentación trifásica de motores y equipos (3 fases).', xtm3n: 'Alimentación trifásica con neutro.',
+    xtm3nt: 'Alimentación trifásica con neutro y tierra.', xtk3: 'Alimentación trifásica 1 kV.',
+    sfx3: 'Multiconductor flexible para equipos móviles o con vibración.', sfx3nt: 'Flexible 3F + N + T para equipos móviles.',
+    rz1m: 'Multiconductor 0,6/1 kV libre de halógenos (LSZH).', rz1: 'Monoconductor 0,6/1 kV libre de halógenos (LSZH).',
+    thgc: 'Conductores individuales THHN/THWN-2 en ducto.', evaf: 'Cableado interior 450/750 V libre de halógenos.',
+    exz: 'Cableado interior 450/750 V libre de halógenos.', genl: 'Cableado interior 450/750 V (PVC).', otro: 'Ingresa el diámetro del catálogo del fabricante.'
+  };
+  var ORDEN_FAM = Object.keys(FAM).sort(function (a, b) { var o = { inst: 0, ctrl: 1, fuerza: 2, otro: 3 }; return o[servDe(a)] - o[servDe(b)]; });
+  var catFiltro = 'todos', catTexto = '', ultimo = null;
+  function miniCable(k, px) {
+    var d = 10;
+    return '<svg viewBox="-6 -6 12 12" width="' + px + '" height="' + px + '" aria-hidden="true"><circle r="5" fill="' + COLF[k.f] + '" stroke="#0b1828" stroke-width=".3"/><g>' + nucleos(0, 0, d, k) + '</g></svg>';
+  }
+  function cssExtra() {
+    if (document.getElementById('kExtraCss')) return;
+    var s = document.createElement('style'); s.id = 'kExtraCss';
+    s.textContent = [
+      '#kCatTab{position:fixed;right:0;top:42%;z-index:60;writing-mode:vertical-rl;transform:rotate(180deg);background:#E8A317;color:#1a1205;border:0;border-radius:0 8px 8px 0;padding:14px 8px;font:700 13px/1 system-ui,sans-serif;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}',
+      '#kCatTab:focus-visible{outline:2px solid #fff;outline-offset:2px}',
+      '#kCat{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);z-index:70;background:#0e1f33;color:#e8eef5;border-left:2px solid #E8A317;box-shadow:-10px 0 30px rgba(0,0,0,.4);display:flex;flex-direction:column;transform:translateX(105%);transition:transform .22s ease;font:13px/1.4 system-ui,"Segoe UI",sans-serif}',
+      '#kCat.abierto{transform:none}',
+      '@media (min-width:1280px){body.kcat-on{padding-right:420px;transition:padding .22s ease}}',
+      '#kCat .kc-cab{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#022A55;border-bottom:1px solid #24405f}#kCat .kc-cab b{flex:1;font-size:15px}',
+      '#kCat .kc-cab button{background:transparent;color:#e8eef5;border:1.5px solid #3a5a80;border-radius:8px;min-width:34px;min-height:34px;cursor:pointer;font-size:16px}',
+      '#kCat .kc-dest{padding:8px 14px;font-size:12px;color:#9fb0c3;border-bottom:1px solid #24405f}#kCat .kc-dest b{color:#E8A317}',
+      '#kCat .kc-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px 4px}',
+      '#kCat .kc-chips button{border:1.5px solid #3a5a80;background:transparent;color:#e8eef5;border-radius:16px;padding:5px 11px;font:600 12px system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px}',
+      '#kCat .kc-chips button i{width:9px;height:9px;border-radius:50%;display:inline-block}',
+      '#kCat .kc-chips button[aria-pressed=true]{background:#E8A317;border-color:#E8A317;color:#1a1205}',
+      '#kCat .kc-bus{padding:6px 14px 10px}#kCat .kc-bus input{width:100%;box-sizing:border-box;background:#071423;color:#e8eef5;border:1.5px solid #24405f;border-radius:8px;padding:8px 10px;font:13px system-ui,sans-serif}',
+      '#kCat .kc-lista{flex:1;overflow:auto;padding:0 10px 16px}',
+      '#kCat .kc-serv{margin:12px 4px 6px;font:700 11.5px system-ui,sans-serif;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;gap:8px}',
+      '#kCat .kc-serv:after{content:"";flex:1;height:2px;background:currentColor;opacity:.4}',
+      '#kCat details{border:1px solid #24405f;border-left:4px solid var(--sc);border-radius:8px;margin:0 0 8px;background:#11243a}',
+      '#kCat summary{cursor:pointer;padding:8px 10px;display:flex;gap:8px;align-items:center;list-style:none}#kCat summary::-webkit-details-marker{display:none}',
+      '#kCat summary .nm{flex:1;font-weight:600;font-size:12.5px}#kCat summary small{color:#9fb0c3;font-weight:400}',
+      '#kCat summary .ct{font-size:11px;color:#9fb0c3;border:1px solid #24405f;border-radius:10px;padding:1px 7px}',
+      '#kCat .kc-uso{margin:0 10px 6px;font-size:11.5px;color:#cdd8e4}',
+      '#kCat table{width:100%;border-collapse:collapse;font-size:12px}#kCat td{padding:4px 6px;border-top:1px solid #1d3550;vertical-align:middle}',
+      '#kCat td.n{text-align:right;white-space:nowrap;color:#cdd8e4}#kCat td.cd{font-weight:700;white-space:nowrap}',
+      '#kCat td button{background:#E8A317;color:#1a1205;border:0;border-radius:6px;min-width:30px;min-height:28px;font:700 15px system-ui;cursor:pointer}',
+      '#kCat tr.ok td{background:#173d29}',
+      '#kCat .kc-pie{padding:8px 14px;font-size:11px;color:#9fb0c3;border-top:1px solid #24405f}',
+      '.kserv{display:inline-block;font:700 10px system-ui,sans-serif;padding:1px 6px;border-radius:8px;color:#fff;margin-right:4px;vertical-align:1px}',
+      '#k3dBtn{margin-top:8px}',
+      '#k3d{width:min(1280px,96vw);height:min(860px,92vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}',
+      '#k3d[open]{display:flex;flex-direction:column}#k3d::backdrop{background:rgba(0,0,0,.6)}',
+      '#k3d .k3-cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#022A55;border-bottom:2px solid #E8A317}',
+      '#k3d .k3-cab b{flex:1;font:700 15px system-ui,sans-serif}#k3d .k3-cab b small{display:block;font-weight:400;font-size:12px;color:#9fb0c3}',
+      '#k3d .k3-cab button{background:transparent;color:#e8eef5;border:1.5px solid #3a5a80;border-radius:8px;padding:7px 12px;font:600 12.5px system-ui,sans-serif;cursor:pointer}',
+      '#k3d .k3-cab button[aria-pressed=true]{background:#E8A317;color:#1a1205;border-color:#E8A317}',
+      '#k3d .k3-cuerpo{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 270px;min-height:0}',
+      '#k3d .k3-esc{position:relative;min-height:0}#k3d .k3-esc canvas{display:block;width:100%;height:100%;outline:none}',
+      '#k3d .k3-esc .labels{position:absolute;inset:0;pointer-events:none}',
+      '#k3d .k3-lbl{font:700 11px system-ui,sans-serif;background:rgba(11,26,43,.85);color:#fff;border:1px solid #E8A317;border-radius:10px;padding:1px 7px;white-space:nowrap}',
+      '#k3d .k3-ley{overflow:auto;padding:10px 12px;border-left:1px solid #24405f;font-size:12px}#k3d .k3-ley li{margin:0 0 6px}',
+      '#k3d .k3-ley ol{margin:0;padding-left:20px}#k3d .k3-ayuda{color:#9fb0c3;font-size:11.5px;margin-top:10px}',
+      '#k3d .k3-carga{position:absolute;inset:0;display:grid;place-items:center;color:#9fb0c3}',
+      '@media (max-width:760px){#k3d .k3-cuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 150px}#k3d .k3-ley{border-left:0;border-top:1px solid #24405f}}'
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  function guardarPref(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function leerPref(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function montarCatalogo() {
+    if ($('#kCat')) return;
+    cssExtra();
+    var tab = document.createElement('button'); tab.type = 'button'; tab.id = 'kCatTab'; tab.textContent = 'Catálogo de cables'; tab.setAttribute('aria-controls', 'kCat'); tab.setAttribute('aria-expanded', 'false');
+    var p = document.createElement('aside'); p.id = 'kCat'; p.setAttribute('aria-label', 'Catálogo de cables');
+    p.innerHTML = '<div class="kc-cab"><b>Catálogo de cables</b><button type="button" id="kCatCerrar" aria-label="Cerrar catálogo">✕</button></div>' +
+      '<div class="kc-dest" id="kCatDest"></div>' +
+      '<div class="kc-chips" role="group" aria-label="Servicio">' + [['todos', 'Todos', '']].concat(['inst', 'ctrl', 'fuerza'].map(function (k) { return [k, SERV[k].n, SERV[k].c]; }))
+        .map(function (x) { return '<button type="button" data-s="' + x[0] + '" aria-pressed="' + (x[0] === catFiltro) + '">' + (x[2] ? '<i style="background:' + x[2] + '"></i>' : '') + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="kc-bus"><input type="search" id="kCatBus" placeholder="Buscar: código, AWG, mm², pares…" aria-label="Buscar cable"></div>' +
+      '<div class="kc-lista" id="kCatLista"></div>' +
+      '<div class="kc-pie">Diámetros exteriores aproximados de los catálogos citados en cada familia. Verificar con el catálogo vigente del fabricante.</div>';
+    document.body.appendChild(tab); document.body.appendChild(p);
+    function abrir(v) { p.classList.toggle('abierto', v); document.body.classList.toggle('kcat-on', v); tab.setAttribute('aria-expanded', String(v)); tab.hidden = v; guardarPref('reyengi-kcat', v ? '1' : '0'); if (v) pintarCatalogo(); }
+    tab.addEventListener('click', function () { abrir(true); $('#kCatBus').focus(); });
+    $('#kCatCerrar').addEventListener('click', function () { abrir(false); tab.focus(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && p.classList.contains('abierto') && !document.querySelector('dialog[open]')) abrir(false); });
+    p.querySelector('.kc-chips').addEventListener('click', function (e) { var b = e.target.closest('button[data-s]'); if (!b) return; catFiltro = b.dataset.s; p.querySelectorAll('.kc-chips button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); pintarCatalogo(); });
+    $('#kCatBus').addEventListener('input', function (e) { catTexto = e.target.value.trim().toLowerCase(); pintarCatalogo(); });
+    $('#kCatLista').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-add]'); if (!b) return;
+      var dc = actual(), id = b.dataset.add, ya = dc.cables.filter(function (c) { return c.cat === id && !c.tag; })[0];
+      if (ya && e.shiftKey) ya.n = (+ya.n || 1) + 1; else dc.cables.push({ tag: '', cat: id, n: 1 });
+      cambio(); var tr = b.closest('tr'); tr.classList.add('ok'); setTimeout(function () { tr.classList.remove('ok'); }, 700);
+      $('#kCatDest').innerHTML = destino();
+    });
+    // abierto por defecto en pantallas anchas, salvo que el usuario lo haya cerrado
+    var pref = leerPref('reyengi-kcat'); abrir(pref === null ? window.innerWidth >= 1500 : pref === '1');
+    // al salir de la vista de canalizaciones se oculta la pestaña
+    var sec = $('#v-cond'); if (sec && window.MutationObserver) new MutationObserver(function () { var v = !sec.hidden; tab.style.display = v ? '' : 'none'; if (!v) { p.classList.remove('abierto'); document.body.classList.remove('kcat-on'); } else if (leerPref('reyengi-kcat') === '1') abrir(true); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
+  }
+  function destino() { var dc = actual(); return 'Toca <b>+</b> para agregar al ducto <b>' + esc(dc.tag) + '</b> (' + dc.cables.length + ' cable' + (dc.cables.length === 1 ? '' : 's') + ').'; }
+  function pintarCatalogo() {
+    var L = $('#kCatLista'); if (!L || !$('#kCat').classList.contains('abierto')) return;
+    $('#kCatDest').innerHTML = destino();
+    var q = catTexto, servAnt = '', html = '';
+    ORDEN_FAM.forEach(function (f) {
+      var sv = servDe(f); if (catFiltro !== 'todos' && sv !== catFiltro) return;
+      var items = CAT.filter(function (c) { return c.f === f && (!q || (FAM[f] + ' ' + c.cod + ' ' + c.desc + ' ' + c.awg + ' ø' + c.d).toLowerCase().indexOf(q) >= 0); });
+      if (!items.length) return;
+      if (sv !== servAnt) { servAnt = sv; html += '<div class="kc-serv" style="color:' + SERV[sv].c + '">' + SERV[sv].n + '</div>'; }
+      var p = FAM[f].split(' · '), abierto = !!q || catFiltro !== 'todos';
+      html += '<details style="--sc:' + COLF[f] + '"' + (abierto ? ' open' : '') + '><summary>' + miniCable(items[0], 26) + '<span class="nm">' + esc(p[0]) + (p[1] ? '<br><small>' + esc(p.slice(1).join(' · ')) + '</small>' : '') + '</span><span class="ct">' + items.length + '</span></summary>' +
+        '<p class="kc-uso">' + esc(USO[f] || '') + (items[0].ap ? ' Apantallado.' : '') + '</p><table><tbody>' +
+        items.map(function (c) {
+          return '<tr><td>' + miniCable(c, 22) + '</td><td class="cd">' + esc(c.cod !== '—' ? c.cod : '') + '</td><td>' + esc(c.desc) + '</td><td class="n">' + (f !== 'otro' ? 'Ø ' + n1(c.d, 1) + '<br><small>' + n1(area(c.d), 0) + ' mm²</small>' : '') + '</td>' +
+            '<td><button type="button" data-add="' + esc(c.id) + '" aria-label="Agregar ' + esc(c.desc) + '" title="Agregar al ducto">+</button></td></tr>';
+        }).join('') + '</tbody></table></details>';
+    });
+    L.innerHTML = html || '<p class="kc-uso" style="margin:14px 4px">Sin cables para esa búsqueda.</p>';
+  }
+
+  // ── Visor 3D del ducto con sus conductores ──
+  var L3 = null, v3 = null;
+  var RUTA_3D = (function () { var s = document.currentScript && document.currentScript.src; return window.RE_LIB3D || (s ? new URL('../lib3d.js', s).href : '../lib3d.js'); })();
+  function cargar3d(cb) {
+    if (window.__LIB) return cb(window.__LIB);
+    var s = document.createElement('script'); s.src = RUTA_3D; s.onload = function () { cb(window.__LIB); }; s.onerror = function () { cb(null); };
+    document.head.appendChild(s);
+  }
+  function corePos(d, k) { // misma disposición que el corte 2D
+    var di = d * 0.74, m = 0, out = [], n = 0; while (1 + 3 * m * (m + 1) < k.nc) m++;
+    if (k.nc === 1) return [{ x: 0, y: 0, r: d * 0.3, c: '#d18b47', cu: true }];
+    if (k.nc === 2 || k.nc === 3) { for (var j = 0; j < k.nc; j++) { var a = j / k.nc * 2 * PI + PI / 2, rr = di * (k.nc === 2 ? 0.25 : 0.28); out.push({ x: rr * Math.cos(a), y: rr * Math.sin(a), r: di * (k.nc === 2 ? 0.24 : 0.21), c: COLCORE[j % 3] }); } return out; }
+    var dc = Math.min(di / (2 * m + 1) * 0.92, di * 0.48);
+    for (var ring = 0; ring <= m && n < k.nc; ring++) { var cnt = ring === 0 ? 1 : 6 * ring; for (var q = 0; q < cnt && n < k.nc; q++, n++) { var ang = q / cnt * 2 * PI + PI / 2; out.push({ x: ring * dc * Math.cos(ang), y: ring * dc * Math.sin(ang), r: dc / 2 * 0.92, c: COLCORE[n % (k.f === 'mpar' || k.f === 'mtri' ? 2 : COLCORE.length)] }); } }
+    return out;
+  }
+  function abrir3d() {
+    if (!ultimo || !ultimo.s) return;
+    cssExtra();
+    var dlg = $('#k3d');
+    if (!dlg) {
+      dlg = document.createElement('dialog'); dlg.id = 'k3d'; dlg.setAttribute('aria-labelledby', 'k3dTit');
+      dlg.innerHTML = '<div class="k3-cab"><b id="k3dTit"></b><button type="button" data-t="corte" aria-pressed="true">Corte</button><button type="button" data-t="etq" aria-pressed="true">Etiquetas</button><button type="button" data-t="giro" aria-pressed="false">Girar</button><button type="button" data-t="frente">Vista de frente</button><button type="button" data-t="png">PNG</button><button type="button" id="k3dCerrar">Cerrar</button></div>' +
+        '<div class="k3-cuerpo"><div class="k3-esc" id="k3dEsc"><div class="k3-carga">Cargando visor 3D…</div></div><div class="k3-ley" id="k3dLey"></div></div>';
+      document.body.appendChild(dlg);
+      $('#k3dCerrar').addEventListener('click', function () { dlg.close(); });
+      dlg.addEventListener('close', cerrar3d);
+      dlg.querySelector('.k3-cab').addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-t]'); if (!b || !v3) return; var t = b.dataset.t;
+        if (t === 'frente') { v3.frente(); return; }
+        if (t === 'png') { v3.png(); return; }
+        var on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on));
+        if (t === 'corte') v3.corte(on); else if (t === 'etq') v3.etiquetas(on); else v3.controls.autoRotate = on;
+      });
+    }
+    var r = ultimo.r, s = ultimo.s, dc = actual();
+    $('#k3dTit').innerHTML = esc(dc.tag) + ' · ' + esc(r.T.c) + ' Ø ' + esc(s[0]) + '<small>' + r.n + ' cable' + (r.n === 1 ? '' : 's') + ' · ocupación ' + n1(r.suma / area(s[2]) * 100, 1) + ' % (límite ' + r.lim + ' %) · Ø int. ' + n1(s[2], 1) + ' mm</small>';
+    $('#k3dLey').innerHTML = '<ol>' + r.lista.map(function (x) { var sv = servDe(x.k.f); return '<li><span class="kserv" style="background:' + SERV[sv].c + '">' + SERV[sv].n.slice(0, 4).toUpperCase() + '</span><b>' + esc(x.c.tag || '(sin tag)') + '</b><br>' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + ' · Ø ' + n1(x.d, 1) + ' mm</li>'; }).join('') + '</ol>' +
+      '<p class="k3-ayuda">Arrastra para girar, rueda o pellizco para acercar, clic derecho o dos dedos para desplazar. Los cables salen escalonados por el extremo para ver cubierta, pantalla y conductores.</p>';
+    dlg.showModal();
+    cargar3d(function (L) {
+      if (!L) { $('#k3dEsc').innerHTML = '<div class="k3-carga">No se pudo cargar el visor 3D.</div>'; return; }
+      if (!dlg.open) return;
+      montar3d(L, r, s, dc);
+    });
+  }
+  function cerrar3d() { if (!v3) return; cancelAnimationFrame(v3.raf); v3.ro.disconnect(); v3.renderer.dispose(); v3.scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(function (m) { if (m.map) m.map.dispose(); m.dispose(); }); }); v3 = null; $('#k3dEsc').innerHTML = ''; }
+  function montar3d(L, r, s, dc) {
+    cerrar3d();
+    var THREE = L.THREE, esc3 = $('#k3dEsc'); esc3.innerHTML = '';
+    var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.domElement.setAttribute('tabindex', '0'); renderer.domElement.setAttribute('aria-label', 'Modelo 3D del ducto ' + dc.tag + ' con sus cables. Arrastra para girar.');
+    esc3.appendChild(renderer.domElement);
+    var lr = new L.CSS2DRenderer(); lr.domElement.className = 'labels'; esc3.appendChild(lr.domElement);
+    var scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b1a2b);
+    var pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new L.RoomEnvironment(), 0.04).texture;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 0.6));
+    var sol = new THREE.DirectionalLight(0xffffff, 1.5); sol.position.set(200, 300, 260); scene.add(sol);
+    var Re = s[1] / 2, Ri = s[2] / 2, Lc = Math.max(160, Re * 9), x0 = -Lc / 2, x1 = Lc / 2;
+    var metal = /PVC|HDPE|PEAD/i.test(r.T.c) ? new THREE.MeshStandardMaterial({ color: 0x8d969e, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
+      : new THREE.MeshStandardMaterial({ color: 0xb9c1c8, roughness: 0.32, metalness: 0.85, side: THREE.DoubleSide });
+    var tubo = new THREE.Group(), cortado = true;
+    function armarTubo(corte) {
+      while (tubo.children.length) { var o = tubo.children.pop(); o.geometry.dispose(); }
+      var t0 = corte ? PI * 1.1 : 0, tl = corte ? PI * 1.5 : 2 * PI; // corte de 90° hacia el observador
+      var sh = new THREE.Shape(); sh.absarc(0, 0, Re, t0, t0 + tl, false); sh.absarc(0, 0, Ri, t0 + tl, t0, true);
+      var g = new THREE.ExtrudeGeometry(sh, { depth: Lc, bevelEnabled: false, curveSegments: 72 });
+      g.rotateY(PI / 2); g.translate(x0, 0, 0);
+      tubo.add(new THREE.Mesh(g, metal));
+      // copla con hilo en el extremo trasero (referencial)
+      var cp = new THREE.Shape(); cp.absarc(0, 0, Re * 1.12, t0, t0 + tl, false); cp.absarc(0, 0, Re, t0 + tl, t0, true);
+      var gc = new THREE.ExtrudeGeometry(cp, { depth: Re * 1.4, bevelEnabled: false, curveSegments: 72 }); gc.rotateY(PI / 2); gc.translate(x0 - Re * 0.2, 0, 0);
+      tubo.add(new THREE.Mesh(gc, metal));
+    }
+    armarTubo(true); scene.add(tubo);
+    var pk = r.elegido && r.elegido.s === s ? r.elegido.pack : empacar(Ri, r.lista.map(function (x) { return x.d / 2; }));
+    var cables = new THREE.Group(), etqs = [], matC = {};
+    function mat(col, rough, met) { var k = col + '|' + rough + '|' + met; return matC[k] || (matC[k] = new THREE.MeshStandardMaterial({ color: new THREE.Color(col), roughness: rough, metalness: met })); }
+    function cil(rad, a, b, m, y, z) { var g = new THREE.CylinderGeometry(rad, rad, b - a, 28); g.rotateZ(PI / 2); var o = new THREE.Mesh(g, m); o.position.set((a + b) / 2, y, z); return o; }
+    var extra = Math.max(18, Re * 0.9);
+    r.lista.forEach(function (x, i) {
+      var p = pk.pos[i]; if (!p || p.fuera) return;
+      var y = p.y, z = p.x, d = x.d, rc = d / 2 * 0.985, k = x.k;
+      var paso = (i % 4) * Re * 0.18; // salida escalonada
+      var xf = x1 + extra * 0.4 + paso, xs = xf + 4 + d * 0.15, xc = xs + d * 0.9 + extra * 0.5;
+      cables.add(cil(rc, x0 - Re * 0.15, xf, mat(COLF[k.f], 0.7, 0.02), y, z));
+      // pantalla (apantallados) y relleno
+      if (k.ap) cables.add(cil(d * 0.39, xf, xs, mat('#c9ced4', 0.25, 0.9), y, z));
+      corePos(d, k).forEach(function (c, j) {
+        var cy = y + c.y, cz = z + c.x, xe = xc + (j % 3) * d * 0.12;
+        cables.add(cil(c.r, xf, xe, c.cu ? mat('#2b2b2b', 0.6, 0) : mat(c.c, 0.45, 0.02), cy, cz));
+        cables.add(cil(c.r * 0.55, xe, xe + Math.max(3, d * 0.25), mat('#d18b47', 0.25, 1), cy, cz));
+      });
+      var div = document.createElement('div'); div.className = 'k3-lbl'; div.textContent = (i + 1) + (x.c.tag ? ' · ' + x.c.tag : '');
+      var lb = new L.CSS2DObject(div); lb.position.set(xc + d * 0.6, y + d * 0.55, z); cables.add(lb); etqs.push(lb);
+    });
+    scene.add(cables);
+    var camera = new THREE.PerspectiveCamera(32, 1, 0.5, 20000);
+    var controls = new L.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.autoRotateSpeed = 1.2;
+    function frente() { camera.position.set(x1 + Re * 7.5, Re * 2.6, Re * 4.2); controls.target.set(x1 * 0.55, 0, 0); controls.update(); }
+    frente();
+    var ro = new ResizeObserver(function () { var w = esc3.clientWidth, h = esc3.clientHeight; if (!w || !h) return; renderer.setSize(w, h); lr.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); });
+    ro.observe(esc3);
+    v3 = { renderer: renderer, scene: scene, controls: controls, ro: ro, raf: 0,
+      frente: frente,
+      corte: function (on) { cortado = on; armarTubo(on); },
+      etiquetas: function (on) { etqs.forEach(function (e) { e.visible = on; e.element.style.display = on ? '' : 'none'; }); },
+      png: function () { renderer.render(scene, camera); var a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = 'Ducto_' + dc.tag.replace(/[\\/:*?"<>|]+/g, '-') + '_3D.png'; document.body.appendChild(a); a.click(); a.remove(); } };
+    (function loop() { if (!v3 || v3.renderer !== renderer) return; v3.raf = requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); lr.render(scene, camera); })();
+  }
+
   // ── Eventos ──
   var listo = false;
   function enganchar() {
     if (listo) return; listo = true;
+    cssExtra(); montarCatalogo();
+    var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
+    var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
     $('#kForm').addEventListener('input', leerForm); $('#kForm').addEventListener('change', leerForm);
     $('#kDuctos').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-d]'); if (!tr) return; datos().sel = tr.dataset.d; verTam = null; cambio(); });
     $('#kNuevo').addEventListener('click', function () { var b = datos(), d = nuevo(b.ductos.length + 1), a = actual(); d.tubo = a.tubo; d.crit = a.crit; d.min = a.min; b.ductos.push(d); b.sel = d.id; verTam = null; cambio(); $('#kForm [data-k=tag]').focus(); });
@@ -464,7 +722,7 @@
     $('#kDxf').addEventListener('click', function () { var d = actual(); A.descargar('Ducto_' + d.tag.replace(/[\\/:*?"<>|]+/g, '-') + '.dxf', dxf(d), 'application/dxf'); });
     $('#kExcel').addEventListener('click', excel);
   }
-  function vista() { enganchar(); pintar(); }
+  function vista() { enganchar(); pintar(); pintarCatalogo(); }
   window.LAZOS_COND = { FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
