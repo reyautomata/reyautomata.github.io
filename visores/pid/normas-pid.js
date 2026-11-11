@@ -35,6 +35,7 @@
     sinMedicion: ['info', 'Válvula de control sin medición', 'La válvula de control no tiene un transmisor (…T) del mismo lazo en los P&ID cargados; puede estar en otra hoja aún no cargada.'],
     senal: ['aviso', 'Tipo de señal no calza con las letras', 'Los indicadores locales (PI, TI, LG) y elementos primarios (FE, TE) no llevan E/S propia; un transmisor (…T) va como AI y una válvula on/off como DO.'],
     duplicado: ['info', 'Tag repetido en varias hojas', 'El mismo tag aparece en más de un plano: puede ser una continuación (normal) o un número duplicado (error).'],
+    atributo: ['aviso', 'Atributos del bloque distintos de lo dibujado', 'El bloque guarda en atributos ocultos un tag o número distinto del que se ve en el plano (típico de bloques copiados o de planos exportados de SmartPlant). La app usa lo dibujado; corrige los atributos en el CAD para que la base de datos y el plano digan lo mismo.'],
     servicio: ['info', 'Sin servicio', 'El servicio (qué mide o controla) es obligatorio en el listado de instrumentos y en la hoja de datos.']
   };
   var GRAV = { error: 0, aviso: 1, info: 2 }, GTXT = { error: 'Error', aviso: 'Aviso', info: 'Revisar' };
@@ -76,6 +77,7 @@
       else if (digMod && String(c.num).length !== +digMod && C.length > 3) add('digitos', c, c.num.length + ' dígitos; el proyecto usa ' + digMod);
       if (!c.area && conArea > C.length / 2) add('area', c);
       if (!String(c.servicio || '').trim()) add('servicio', c);
+      if (c.aviso) add('atributo', c, c.aviso);
       var sug = PID.tipoSugerido(c.letras);
       if (c.tipo && sug && c.tipo !== sug && (c.tipo === 'NA' || sug === 'NA' || (c.tipo[0] !== sug[0]))) add('senal', c, 'indicado ' + (c.tipo === 'NA' ? 'sin E/S' : c.tipo) + ', esperado ' + (sug === 'NA' ? 'sin E/S' : sug));
       (porTag[tag] = porTag[tag] || []).push(c);
