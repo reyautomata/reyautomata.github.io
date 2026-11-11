@@ -507,6 +507,27 @@
       '#kCat tr.ok td{background:#173d29}',
       '#kCat .kc-pie{padding:8px 14px;font-size:11px;color:#9fb0c3;border-top:1px solid #24405f}',
       '.kserv{display:inline-block;font:700 10px system-ui,sans-serif;padding:1px 6px;border-radius:8px;color:#fff;margin-right:4px;vertical-align:1px}',
+      '#kTutTab{position:fixed;left:0;top:30%;z-index:60;writing-mode:vertical-rl;transform:rotate(180deg);background:#2F6FB5;color:#fff;border:0;border-radius:8px 0 0 8px;padding:14px 8px;font:700 13px/1 system-ui,sans-serif;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}',
+      '#kTutTab:focus-visible{outline:2px solid #fff;outline-offset:2px}',
+      '#kTut{position:fixed;top:0;left:0;bottom:0;width:min(400px,100vw);z-index:72;background:#0e1f33;color:#e8eef5;border-right:2px solid #2F6FB5;box-shadow:10px 0 30px rgba(0,0,0,.4);display:flex;flex-direction:column;transform:translateX(-105%);transition:transform .22s ease;font:13px/1.45 system-ui,"Segoe UI",sans-serif}',
+      '#kTut.abierto{transform:none}',
+      '#kTut .kt-cab{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#022A55;border-bottom:1px solid #24405f}#kTut .kt-cab b{flex:1;font-size:15px}',
+      '#kTut .kt-cab button{background:transparent;color:#e8eef5;border:1.5px solid #3a5a80;border-radius:8px;min-width:34px;min-height:34px;cursor:pointer;font-size:16px}',
+      '#kTut .kt-int{margin:0;padding:10px 14px;color:#9fb0c3;font-size:12.5px;border-bottom:1px solid #24405f}',
+      '#kTut .kt-lista{list-style:none;margin:0;padding:10px 12px;overflow:auto;flex:1}',
+      '#kTut .kt-lista li{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px;border:1px solid #24405f;border-radius:10px;background:#11243a;margin-bottom:8px}',
+      '#kTut .kt-lista li.visto{border-color:#2c6b45}#kTut .kt-lista li.visto .kt-n{background:#1f9d55}',
+      '#kTut .kt-n{width:28px;height:28px;border-radius:50%;background:#2F6FB5;color:#fff;display:grid;place-items:center;font-weight:700}',
+      '#kTut h3{margin:2px 0 4px;font:700 13.5px system-ui,sans-serif;color:#fff;border:0;padding:0;text-transform:none;letter-spacing:0}',
+      '#kTut h3::before,#kTut h3::after{display:none}',
+      '#kTut .kt-lista p{margin:0 0 8px;color:#cdd8e4;font-size:12.5px}#kTut .kt-lista b{color:#fff}',
+      '#kTut .kt-lista button{min-height:0;background:transparent;color:#E8A317;border:1.5px solid #E8A317;border-radius:7px;padding:4px 10px;font:600 12px system-ui,sans-serif;cursor:pointer}',
+      '#kTut .kt-lista button:hover{background:#E8A317;color:#1a1205}',
+      '#kTut .kt-ref{padding:10px 14px 14px;border-top:1px solid #24405f;font-size:12px;color:#9fb0c3}#kTut .kt-ref table{width:100%;border-collapse:collapse;margin:6px 0}',
+      '#kTut .kt-ref td{padding:4px 6px;border-top:1px solid #1d3550;color:#e8eef5}#kTut .kt-ref p{margin:0}',
+      '.kt-foco{outline:3px solid #E8A317!important;outline-offset:4px;border-radius:6px;animation:ktPulso 1.2s ease 2}',
+      '@keyframes ktPulso{0%,100%{outline-color:#E8A317}50%{outline-color:rgba(232,163,23,.25)}}',
+      '@media (prefers-reduced-motion:reduce){#kTut,#kCat{transition:none}.kt-foco{animation:none}}',
       '#k3dBtn{margin-top:8px}',
       '#k3d{width:min(1280px,96vw);height:min(860px,92vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}',
       '#k3d[open]{display:flex;flex-direction:column}#k3d::backdrop{background:rgba(0,0,0,.6)}',
@@ -577,6 +598,52 @@
         }).join('') + '</tbody></table></details>';
     });
     L.innerHTML = html || '<p class="kc-uso" style="margin:14px 4px">Sin cables para esa búsqueda.</p>';
+  }
+
+
+  // ── Tutorial retráctil (panel izquierdo) ──
+  var TUT = [
+    ['Crea o elige un ducto', '#kNuevo', 'Pulsa <b>+ Nuevo ducto</b> o toca uno en la tabla de ductos. Cada ducto es un tramo de canalización con sus propios cables. <b>Duplicar</b> copia el ducto activo con sus cables.'],
+    ['Define el ducto', '#kForm', 'Escribe el <b>tag</b> y la <b>ruta</b> (por ejemplo JB-101 → sala eléctrica), elige el <b>tipo de tubería</b>, el <b>criterio de ocupación</b> (RIC N°04 Tabla 4.21: 50 % con un conductor y 33 % con dos o más) y la <b>condición del tramo</b>. Con <b>tamaño mínimo</b> fijas el menor diámetro aceptado y con <b>reserva futura</b> dejas holgura para cables que vendrán.'],
+    ['Agrega cables desde el catálogo', '#kCatTab', 'Abre el <b>Catálogo de cables</b> en el borde derecho. Filtra por <b>Instrumentación</b>, <b>Control</b> o <b>Fuerza</b>, busca por código, AWG o número de pares y pulsa <b>+</b> para sumar el cable al ducto activo. Cada familia indica su uso típico.'],
+    ['Ajusta la lista de cables', '#kCables', 'En <b>Cables del ducto</b> escribe el <b>tag del circuito</b>, cambia el cable en la lista desplegable o la <b>cantidad</b>. Para un cable fuera del catálogo elige «Otro cable» y escribe su diámetro. La ✕ quita el cable.'],
+    ['Lee el resultado', '#kDibujo', 'El <b>corte</b> muestra cómo quedan los cables dentro del tubo y el espacio libre (verde rayado). La barra indica la <b>ocupación</b> frente al límite de la norma.'],
+    ['Elige el tamaño', '#kTam', 'La fila <b>Utilizar ▶</b> es el menor tamaño que cumple la ocupación y en que los cables caben. Toca otra fila para ver cómo quedarían en ese diámetro.'],
+    ['Revisa cómo se calcula', '#kPasos', 'En <b>Cómo se calcula</b> está el paso a paso: área de cada cable, porcentaje permitido, área mínima, tamaño comercial y espacio disponible. Los avisos señalan tramos largos, curvas o mezclas de servicios.'],
+    ['Míralo en 3D', '#k3dBtn', 'Pulsa <b>Ver ducto en 3D</b>: arrastra para girar y usa la rueda para acercar. Los cables salen escalonados para ver cubierta, pantalla y conductores. Puedes quitar el corte, ocultar etiquetas o exportar un PNG.'],
+    ['Exporta los entregables', '#kPdf', '<b>Imprimir / PDF (A3)</b> genera una lámina por ducto con corte, tabla y memoria. <b>DXF del corte</b> abre en AutoCAD y <b>Excel · memoria</b> entrega todos los ductos con sus cables.'],
+    ['Guarda tu proyecto', '#pGuardar', 'Escribe <b>Proyecto</b> y <b>Cliente</b> (salen en la lámina). <b>Guardar…</b> crea un archivo .reyconduit y <b>Abrir…</b> lo recupera en este u otro equipo. El trabajo también queda guardado en la app entre sesiones.'],
+    ['Licencia', '#pLic', 'El botón <b>Licencia</b> muestra la vigencia, el código de este equipo y cómo renovar. La app avisa antes del vencimiento.']
+  ];
+  function montarTutorial() {
+    if ($('#kTut')) return;
+    var pasos = TUT.filter(function (t) { return document.querySelector(t[1]); });
+    var tab = document.createElement('button'); tab.type = 'button'; tab.id = 'kTutTab'; tab.textContent = 'Tutorial'; tab.setAttribute('aria-controls', 'kTut'); tab.setAttribute('aria-expanded', 'false');
+    var p = document.createElement('aside'); p.id = 'kTut'; p.setAttribute('aria-label', 'Tutorial');
+    p.innerHTML = '<div class="kt-cab"><b>Cómo se usa</b><button type="button" id="kTutCerrar" aria-label="Cerrar tutorial">✕</button></div>' +
+      '<p class="kt-int">Dimensiona un ducto en ' + pasos.length + ' pasos. Pulsa <b>Mostrar</b> para ir al lugar de la pantalla.</p>' +
+      '<ol class="kt-lista">' + pasos.map(function (t, i) { return '<li><div class="kt-n">' + (i + 1) + '</div><div><h3>' + t[0] + '</h3><p>' + t[2] + '</p><button type="button" data-ir="' + t[1] + '">Mostrar</button></div></li>'; }).join('') + '</ol>' +
+      '<div class="kt-ref"><h3>Referencia rápida · RIC N°04 Tabla 4.21</h3><table><tbody><tr><td>1 conductor o cable</td><td><b>50 %</b></td></tr><tr><td>2 o más conductores</td><td><b>33 %</b></td></tr></tbody></table>' +
+      '<p>Cada cable multiconductor cuenta como un conductor. Verifica los diámetros con el catálogo vigente del fabricante.</p></div>';
+    document.body.appendChild(tab); document.body.appendChild(p);
+    function abrir(v) { p.classList.toggle('abierto', v); tab.setAttribute('aria-expanded', String(v)); tab.hidden = v; guardarPref('reyengi-ktut', v ? '1' : '0'); }
+    tab.addEventListener('click', function () { abrir(true); $('#kTutCerrar').focus(); });
+    $('#kTutCerrar').addEventListener('click', function () { abrir(false); tab.focus(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && p.classList.contains('abierto') && !document.querySelector('dialog[open]')) abrir(false); });
+    p.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-ir]'); if (!b) return;
+      var sel = b.dataset.ir, el = document.querySelector(sel); if (!el) return;
+      if (sel === '#kCatTab') { el.hidden ? $('#kCat').classList.add('abierto') : el.click(); el = $('#kCat'); }
+      if (window.innerWidth < 900) abrir(false);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('kt-foco'); void el.offsetWidth; el.classList.add('kt-foco');
+      setTimeout(function () { el.classList.remove('kt-foco'); }, 2600);
+      p.querySelectorAll('li').forEach(function (li) { li.classList.toggle('visto', li.contains(b) || li.classList.contains('visto')); });
+    });
+    // se abre solo la primera vez
+    var pt = leerPref('reyengi-ktut'); abrir(pt === null ? !!document.getElementById('pGuardar') : pt === '1'); // en la app de escritorio se abre solo la primera vez
+    var sec = $('#v-cond'); if (sec && window.MutationObserver) new MutationObserver(function () { var v = !sec.hidden; tab.style.display = v ? '' : 'none'; if (!v) p.classList.remove('abierto'); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
+    if (sec && sec.hidden) tab.style.display = 'none';
   }
 
   // ── Visor 3D del ducto con sus conductores ──
@@ -698,6 +765,7 @@
     cssExtra(); montarCatalogo();
     var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
     var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
+    setTimeout(montarTutorial, 0); // después de que la app agregue sus botones
     $('#kForm').addEventListener('input', leerForm); $('#kForm').addEventListener('change', leerForm);
     $('#kDuctos').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-d]'); if (!tr) return; datos().sel = tr.dataset.d; verTam = null; cambio(); });
     $('#kNuevo').addEventListener('click', function () { var b = datos(), d = nuevo(b.ductos.length + 1), a = actual(); d.tubo = a.tubo; d.crit = a.crit; d.min = a.min; b.ductos.push(d); b.sel = d.id; verTam = null; cambio(); $('#kForm [data-k=tag]').focus(); });
