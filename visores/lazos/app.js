@@ -30,6 +30,20 @@
   var tGuardar = 0;
   function guardar() { if (typeof refrescarFlota === 'function') refrescarFlota(); clearTimeout(tGuardar); tGuardar = setTimeout(function () { P.escribir('lazos', E); estado('Guardado en este navegador · ' + new Date().toLocaleTimeString('es-CL')); }, 250); }
   function estado(t) { var e = $('#estado'); if (e) e.textContent = t; }
+  // Si otra pestaña (por ejemplo, el Análisis de P&ID al aprobar el listado) cambia los datos del proyecto, se recargan aquí
+  var externo = false;
+  window.addEventListener('storage', function (ev) {
+    if (!ev.key || !/:lazos$/.test(ev.key) || ev.key.indexOf('p:' + P.activoId() + ':') < 0) return;
+    clearTimeout(tGuardar);
+    if (document.hidden) { externo = true; return; }
+    if (document.getElementById('avisoExterno')) return;
+    var b = document.createElement('div'); b.id = 'avisoExterno'; b.setAttribute('role', 'status');
+    b.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:90;background:#0e1f33;color:#e8eef5;border:1.5px solid #2A8C5E;border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.4);font:13px system-ui,sans-serif';
+    b.innerHTML = '<span>El listado se actualizó desde otra pestaña (Análisis de P&amp;ID).</span><button type="button" style="background:#2A8C5E;color:#fff;border:0;border-radius:6px;padding:6px 12px;font-weight:700;cursor:pointer">Ver cambios</button>';
+    b.querySelector('button').addEventListener('click', function () { location.reload(); });
+    document.body.appendChild(b);
+  });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && externo) location.reload(); });
 
   // Ejemplo inicial (dos lazos típicos) para que la sección no parta vacía
   function ejemplo() {

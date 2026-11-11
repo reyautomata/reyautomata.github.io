@@ -717,7 +717,7 @@
   }
   iniciar();
   window.__PID = { estado: function () { return S; }, guardar: guardar, tagDe: tagDe, tipoSugerido: tipoSugerido, esLetras: esLetras,
-    idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy,
+    idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy, repintar: function () { pintarTodo(); },
     seleccionar: function (id) { // desde otras vistas (verificación ISA): muestra la fila y el plano
       if (!document.querySelector('#tCand tr[data-id="' + id + '"]')) { $('#fEstado').value = ''; $('#fHoja').value = ''; $('#fBuscar').value = ''; pintarTabla(); }
       seleccionar(id, false); var tr = document.querySelector('#tCand tr[data-id="' + id + '"]'); if (tr) { tr.closest('.blk').scrollIntoView({ block: 'start' }); tr.scrollIntoView({ block: 'center' }); var i = tr.querySelector('input[data-k="letras"]'); if (i) i.focus({ preventScroll: true }); } } };

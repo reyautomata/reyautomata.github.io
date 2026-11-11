@@ -139,9 +139,10 @@
     if (ED) return '<div class="ce bloque" contenteditable="plaintext-only" spellcheck="true" data-e="t:' + k + '">' + esc(t) + '</div>';
     return String(t || '').split(/\n\s*\n/).map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
   }
-  function htmlDoc(editable) {
+  function htmlDoc(editable, soloAnexo) {
     ED = !!editable;
     var d = datosDoc(), G = grupos(), pie = '<p class="piepg">' + esc(d.codigo ? d.codigo + (d.rev !== '' ? ' R' + d.rev : '') : '') + '</p>', h = [];
+    if (!soloAnexo) {
     h.push('<div class="pg v">' + cabPagina() + '<div class="tit">' + ce('p:contratista', up(d.empresa)) + '</div>' +
       '<table class="datos"><tr><td>TIPO DOCUMENTO</td><td>: ' + ce('c:tipoDoc', d.tipoDoc) + ' &nbsp;&nbsp; ' + ce('c:titulo', d.titulo) + '</td></tr><tr><td>TÍTULO PROYECTO</td><td>: ' + ce('p:proyecto', d.proyecto) + '</td></tr><tr><td>CLIENTE</td><td>: ' + ce('p:cliente', d.cliente) + '</td></tr><tr><td>ID</td><td>: ' + ce('c:id', d.id) + '</td></tr><tr><td>CÓDIGO</td><td>: <b>' + ce('c:codigo', d.codigo, d.codigo ? '' : 'vacio') + '</b> &nbsp;&nbsp; <b>FECHA DOCUMENTO:</b> ' + ce('c:fecha', d.fecha) + '</td></tr></table>' +
       '<div style="height:24mm"></div>' + tabla(d.control.map(function (r) { return [r[0], { h: ce('p:' + r[4], r[1]) }, r[2], '', { h: r[5] ? ce('p:' + r[5], r[3]) : '' }]; }), ['Control', 'Nombre', 'Rol', 'Firma', 'Fecha']) + '<br>' +
@@ -152,6 +153,7 @@
       '<h2>1 &nbsp; INTRODUCCIÓN</h2>' + parrafos('intro', d.intro) + '<h2>2 &nbsp; ALCANCE</h2>' + parrafos('alcance', d.alcance) +
       '<h2>3 &nbsp; ANTECEDENTES Y REFERENCIAS</h2><p>Son complementarios a este listado los documentos y planos indicados a continuación.</p>' + tabla(d.refs.length ? d.refs : [['—', '', '']], ['CÓDIGO DOCUMENTO', 'REV', 'NOMBRE DOCUMENTO']) + pie + '</div>');
     h.push('<div class="pg v"><div class="anexo"><b>Anexo A</b>' + ce('c:anexoA', d.anexoA) + '</div></div>');
+    }
     var cab = cabecera(), ov = doc().f;
     var thead = '<thead><tr>' + (ED ? '<th rowspan="2" class="gut"></th>' : '') + cab[0].map(function (c) { return '<th' + (c.cs > 1 ? ' colspan="' + c.cs + '"' : '') + (c.rs > 1 ? ' rowspan="2"' : '') + '>' + esc(c.t) + '</th>'; }).join('') + '</tr><tr>' + cab[1].filter(function (c) { return !c.cont; }).map(function (c) { return '<th>' + esc(c.t) + '</th>'; }).join('') + '</tr></thead>';
     var cuerpo = G.map(function (g) {
@@ -288,7 +290,13 @@
     '.lform legend{font:700 11px var(--f-mono);color:var(--accent-ink);text-transform:uppercase;letter-spacing:1px;padding:0 4px}',
     '.lform .ancho{grid-column:1/-1}.lform textarea{font:12.5px var(--f-body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px;width:100%;resize:vertical}',
     '.lform label.chk{display:flex;align-items:center;gap:8px;color:var(--fg);font-weight:500}.lform label.chk input{width:16px;min-height:16px}',
-    '.lprev{display:flex;flex-direction:column;gap:14px;min-width:0;max-height:calc(100vh - 80px);overflow:auto;padding:4px;background:#2A3B50;border-radius:8px}',
+    '.lprev{display:flex;flex-direction:column;gap:14px;min-width:0;max-height:calc(100vh - 80px);overflow:auto;padding:8px;background:#2A3B50;border-radius:8px}',
+    '.lprev>.pg{flex:none}', // sin esto la página del Anexo A se encoge hasta quedar en una franja
+    '.ldoc.amplio{grid-template-columns:minmax(0,1fr)}.ldoc.amplio .lform{display:none}.ldoc.amplio .lprev{max-height:calc(100vh - 150px)}',
+    '.lprev.soloA .pg.h{padding:6mm !important}.lprev.soloA table.io2{font-size:9pt}.lprev.soloA table.io2 th{font-size:8pt}.lprev.soloA table.encio td{font-size:8.5pt}',
+    '.lvista{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.lvista button{border:0;border-radius:0;min-height:30px;background:transparent}.lvista button[aria-pressed=true]{background:#1f3550;color:#fff;font-weight:700;box-shadow:inset 0 -3px 0 #E8A317}',
+    '.laprob{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-left:4px solid #2A8C5E;border-radius:8px}.laprob p{margin:0;flex:1;min-width:240px;font-size:13px}',
+    '.laprob .ok{color:#9BE3BD}.laprob a{color:var(--accent)}',
     '.lprev .pg,#impDoc .pg{background:#fff;color:#17212C;box-shadow:0 6px 30px rgba(0,0,0,.45);padding:12mm 14mm;font:10pt/1.4 Arial,Helvetica,sans-serif;color-scheme:light;margin:0 auto}',
     '.pg.v{width:210mm;min-height:297mm;max-width:100%}.pg.h{width:100%;overflow-x:auto;padding:8mm !important}',
     '.pg table{border-collapse:collapse;width:100%}.pg td,.pg th{border:.6pt solid #1F2A36;padding:1mm 1.4mm;vertical-align:middle}',
@@ -318,8 +326,10 @@
 
   sec.insertAdjacentHTML('beforeend',
     '<div class="herr" style="margin-bottom:10px"><button type="button" class="pri" id="lExcel">Excel · Anexo A</button><button type="button" id="lWord">Word · documento</button><button type="button" id="lPdf">PDF</button>' +
+    '<span class="lvista" role="group" aria-label="Qué mostrar en la vista previa"><button type="button" class="mini" data-vista="anexo" aria-pressed="true">Anexo A</button><button type="button" class="mini" data-vista="doc" aria-pressed="false">Documento completo</button></span><button type="button" class="mini" id="lAmpliar" aria-pressed="false">Ampliar vista previa</button>' +
     '<span class="esp"></span><button type="button" class="mini" id="lAgregar">+ Agregar fila</button><button type="button" class="mini" id="lRestaurar" hidden></button><button type="button" class="mini" id="lLimpiar" title="Vuelve a los valores tomados del P&amp;ID en todas las celdas del Anexo A">Descartar ediciones del Anexo A</button></div>' +
     '<p class="lest" id="lEstado" aria-live="polite"></p>' +
+    (window.PID_APP ? '' : '<div class="laprob"><p id="lAprobTxt">Al aprobar, cada instrumento del Anexo A pasa al <b>Listado de instrumentos del proyecto</b> (Entregables), con lo que corregiste aquí. Si ya existe, se actualiza; no se borra nada.</p><button type="button" class="pri" id="lAprobar">Aprobar y actualizar el listado del proyecto</button></div>') +
     '<div class="ldoc"><form class="lform" id="lForm"></form><div class="lprev" id="lPrev"></div></div>');
 
   $('#lForm').addEventListener('submit', function (e) { e.preventDefault(); });
@@ -340,7 +350,9 @@
   function pintarPrev() {
     if (editando) return; // no se repinta mientras se escribe en la vista previa
     var R = filas(), sc = $('#lPrev').scrollTop, sl = ($('#lPrev .pg.h') || {}).scrollLeft || 0;
-    $('#lPrev').innerHTML = htmlDoc(true);
+    var soloA = (doc().vista || 'anexo') === 'anexo';
+    $('#lPrev').classList.toggle('soloA', soloA);
+    $('#lPrev').innerHTML = htmlDoc(true, soloA);
     $('#lPrev').scrollTop = sc; var ph = $('#lPrev .pg.h'); if (ph) ph.scrollLeft = sl;
     var d = doc(), nf = Object.keys(d.fuera).length, ned = Object.keys(d.f).length;
     $('#lEstado').textContent = R.length + ' instrumentos en el Anexo A' + (d.extra.length ? ' (' + d.extra.length + ' agregados a mano)' : '') + (ned ? ' · ' + ned + ' filas con ediciones' : '') + (nf ? ' · ' + nf + ' quitados' : '') + '.';
@@ -348,7 +360,7 @@
   }
   var tP = 0;
   function luego() { clearTimeout(tP); tP = setTimeout(pintarPrev, 250); }
-  function refrescar() { pintarForm(); pintarPrev(); }
+  function refrescar() { pintarForm(); marcarVista(); pintarPrev(); pintarAprob(false); }
 
   $('#lForm').addEventListener('input', function (e) {
     var x = e.target, d = doc();
@@ -417,6 +429,89 @@
   $('#lExcel').addEventListener('click', excel);
   $('#lWord').addEventListener('click', word);
   $('#lPdf').addEventListener('click', pdf);
+
+  // Vista previa: solo Anexo A o documento completo, y ampliada (sin el formulario)
+  document.querySelectorAll('#secListado [data-vista]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      doc().vista = b.dataset.vista; guardar(); marcarVista(); editando = false; pintarPrev();
+    });
+  });
+  function marcarVista() { var v = doc().vista || 'anexo'; document.querySelectorAll('#secListado [data-vista]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.vista === v)); }); }
+  $('#lAmpliar').addEventListener('click', function () {
+    var on = !$('.ldoc').classList.contains('amplio'); $('.ldoc').classList.toggle('amplio', on);
+    this.setAttribute('aria-pressed', String(on)); this.textContent = on ? 'Mostrar formulario' : 'Ampliar vista previa';
+    $('#lPrev').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+
+  // ── Aprobar: traspasa el Anexo A al Listado de instrumentos del proyecto (Entregables) ──
+  // Los instrumentos con E/S van como señales del listado de E/S (ahí viven descripción, servicio y P&ID);
+  // el resto, como instrumentos sin E/S. Los demás campos (línea, diagramas, ET, observaciones, rev.) quedan en el
+  // registro del instrumento. Solo se escriben los valores con contenido o editados a mano: un «N.A.» automático no
+  // pisa lo que el listado del proyecto calcula (por ejemplo, el N° de diagrama de lazo).
+  var CAMPOS_INST = ['desc', 'servicio', 'linea', 'pid', 'plano', 'unilineal', 'et', 'obs', 'rev'], EN_SENAL = ['desc', 'servicio', 'pid'];
+  function nuevoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function aprobar() {
+    var rev = (($('#revisor') || {}).value || '').trim();
+    if (!rev) { alert('Indica el nombre del revisor (más arriba, en «Validación del revisor») antes de aprobar.'); var r0 = $('#revisor'); if (r0) { r0.scrollIntoView({ block: 'center' }); r0.focus(); } return; }
+    var R = filas().filter(function (r) { return val(r, 'tagInst'); });
+    if (!R.length) { alert('El Anexo A no tiene instrumentos para aprobar.'); return; }
+    var E = P.leer('lazos', null) || { cfg: {}, modulos: [], senales: [], lazos: {}, revs: [], over: {}, doc: {} };
+    E.senales = E.senales || []; E.inst = E.inst || []; E.lazos = E.lazos || {}; E.cfg = E.cfg || {}; E.docInst = E.docInst || {};
+    var ov = doc().f, nuevos = 0, act = 0;
+    var plan = R.map(function (r) {
+      var tag = up(val(r, 'tagInst')).trim(), v = {};
+      CAMPOS_INST.forEach(function (k) {
+        var x = val(r, k), editado = ov[r.key] && ov[r.key][k] != null;
+        if (x == null) return; x = String(x).trim();
+        if (editado || (x && x !== NA)) v[k] = x;
+      });
+      return { r: r, tag: tag, v: v, io: !r.extra && r.c && /^(AI|AO|DI|DO)$/.test(r.c.tipo) };
+    });
+    var existentes = {}; E.senales.forEach(function (s) { if (s.tag) existentes[up(s.tag)] = 1; }); E.inst.forEach(function (x) { if (x.tag) existentes[up(x.tag)] = 1; });
+    var nNuevos = plan.filter(function (p) { return !existentes[p.tag]; }).length;
+    if (!confirm('Aprobar el listado como ' + rev + ':\n\n· ' + nNuevos + ' instrumentos nuevos en el listado del proyecto\n· ' + (plan.length - nNuevos) + ' instrumentos que ya estaban se actualizan con lo corregido aquí\n\nNo se borra ningún instrumento del proyecto. ¿Continuar?')) return;
+    plan.forEach(function (p) {
+      var sen = E.senales.filter(function (s) { return up(s.tag) === p.tag; });
+      if (!sen.length && p.io && !existentes[p.tag]) { // señal nueva al listado de E/S
+        var s = { id: nuevoId(), tag: p.tag, tipo: p.r.c.tipo, hilos: '2', servicio: '', lazo: '', canal: '', pid: '', obs: '', origenPid: true };
+        E.senales.push(s); sen = [s];
+      }
+      var esNuevo = !existentes[p.tag]; existentes[p.tag] = 1;
+      if (sen.length) {
+        sen.forEach(function (s) { EN_SENAL.forEach(function (k) { if (p.v[k] != null) s[k] = p.v[k]; }); });
+        var x = E.inst.filter(function (i) { return !i.manual && up(i.tag) === p.tag; })[0];
+        var resto = CAMPOS_INST.filter(function (k) { return EN_SENAL.indexOf(k) < 0 && p.v[k] != null; });
+        if (resto.length && !x) { x = { id: nuevoId(), tag: p.tag }; E.inst.push(x); }
+        resto.forEach(function (k) { x[k] = p.v[k]; });
+        if (x) delete x.oculto;
+      } else {
+        var m = E.inst.filter(function (i) { return up(i.tag) === p.tag; })[0];
+        if (!m) { m = { id: nuevoId(), tag: p.tag, manual: true }; E.inst.push(m); }
+        CAMPOS_INST.forEach(function (k) { if (p.v[k] != null) m[k] = p.v[k]; });
+        delete m.oculto;
+      }
+      var lz = ISA ? ISA.lazoDe(p.tag) : ''; if (lz && p.v.servicio && !(E.lazos[lz] && E.lazos[lz].servicio)) E.lazos[lz] = Object.assign({}, E.lazos[lz] || {}, { servicio: p.v.servicio });
+      if (esNuevo) nuevos++; else act++;
+      if (p.r.c) { p.r.c.exportado = true; p.r.c.revisor = p.r.c.revisor || rev; }
+    });
+    // Datos del documento: código y textos escritos aquí pasan al documento del proyecto
+    var c = doc().c;
+    if (c.codigo) E.cfg.docInst = c.codigo;
+    ['titulo', 'tipoDoc', 'fecha', 'id', 'anexoA', 'intro', 'alcance', 'cambios', 'rolPor', 'rolReviso', 'rolAprobo', 'rolCliente'].forEach(function (k) { if (c[k]) E.docInst[k] = c[k]; });
+    if (c.refs) E.docInst.refs = c.refs;
+    if (!E.revs || !E.revs.length) E.revs = lineas(campo('revs'), 3).map(function (l) { return { rev: l[0], desc: l[1], fecha: l[2], por: '' }; });
+    if (!P.escribir('lazos', E)) { alert('No se pudo guardar en el proyecto (almacenamiento del navegador lleno).'); return; }
+    var s = S(); s.aprobaciones = (s.aprobaciones || []).concat([{ fecha: hoyCL(), revisor: rev, nuevos: nuevos, actualizados: act, total: plan.length }]);
+    guardar(); pintarAprob(true);
+    if (window.__PID.repintar) window.__PID.repintar();
+  }
+  function pintarAprob(recien) {
+    var t = $('#lAprobTxt'); if (!t) return;
+    var a = (S().aprobaciones || []).slice(-1)[0];
+    if (!a) return;
+    t.innerHTML = (recien ? '<span class="ok">✓ Listado aprobado y traspasado.</span> ' : '') + 'Última aprobación: <b>' + esc(a.revisor) + '</b>, ' + esc(a.fecha) + ' · ' + a.nuevos + ' nuevos, ' + a.actualizados + ' actualizados en el <a href="../lazos/#inst">Listado de instrumentos del proyecto</a>. Si vuelves a corregir, aprueba otra vez para actualizarlo.';
+  }
+  if ($('#lAprobar')) $('#lAprobar').addEventListener('click', aprobar);
 
   window.PID_LISTADO = { refrescar: refrescar, cambio: luego, filas: filas, grupos: grupos, datos: datosDoc, excel: excel, word: word, html: htmlDoc };
   refrescar();
