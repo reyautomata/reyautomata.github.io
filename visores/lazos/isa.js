@@ -1,5 +1,5 @@
 /* Identificación de instrumentos según ANSI/ISA-5.1-2009 · ReyEngi
- * Tag típico de proyecto: ÁREA-LETRAS-NÚMERO[SUFIJO], por ejemplo 830-LIT-0276 o 3450-PDSH-2053A.
+ * Tag típico de proyecto: ÁREA-LETRAS-NÚMERO[SUFIJO], por ejemplo 100-LIT-0101 o 200-PDSH-0201A.
  */
 (function () {
   'use strict';

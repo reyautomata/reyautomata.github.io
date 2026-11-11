@@ -35,9 +35,9 @@
   function ejemplo() {
     var d = { cfg: Object.assign({}, CFG0), modulos: [], senales: [], lazos: {}, revs: [{ rev: 'A', fecha: P.hoy ? P.hoy() : '', desc: 'EMITIDO PARA COORDINACIÓN INTERNA', por: '' }], over: {} };
     E = d;
-    crearTipico('ctrl', { area: '830', num: '0276', v: 'L', servicio: 'Nivel estanque de agua de proceso TK-01' }, true);
-    crearTipico('onoff', { area: '830', num: '0310', v: 'X', servicio: 'Válvula de descarga estanque TK-01' }, true);
-    crearTipico('sw', { area: '830', num: '0311', v: 'P', servicio: 'Presión alta descarga bomba PP-01' }, true);
+    crearTipico('ctrl', { area: '100', num: '0101', v: 'L', servicio: 'Nivel estanque de agua de proceso TK-01' }, true);
+    crearTipico('onoff', { area: '100', num: '0102', v: 'X', servicio: 'Válvula de descarga estanque TK-01' }, true);
+    crearTipico('sw', { area: '100', num: '0103', v: 'P', servicio: 'Presión alta descarga bomba PP-01' }, true);
     asignarAuto();
     return d;
   }
@@ -254,7 +254,7 @@
   var CAMPOS_CFG = [
     { g: 'Sistema de control', c: [{ k: 'proveedor', l: 'Proveedor / plataforma', prov: 1 }, { k: 'modelos.AI', l: 'Tarjeta AI por defecto', tipo: 'AI' }, { k: 'modelos.AO', l: 'Tarjeta AO por defecto', tipo: 'AO' }, { k: 'modelos.DI', l: 'Tarjeta DI por defecto', tipo: 'DI' }, { k: 'modelos.DO', l: 'Tarjeta DO por defecto', tipo: 'DO' }, { k: 'chasis', l: 'Chasis / rack por defecto' }, { k: 'slotInicial', l: 'Primer slot de E/S' }] },
     { g: 'Zonas del diagrama', c: [{ k: 'zonaTerreno', l: 'Zona de terreno' }, { k: 'zonaSala', l: 'Sala eléctrica' }, { k: 'gabinete', l: 'Gabinete' }, { k: 'zonaControl', l: 'Sala de control' }, { k: 'hmi', l: 'Estación de operación' }] },
-    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. 3450-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'prefijoUni', l: 'Prefijo del N° de plano unilineal (TDI)' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de circuitos (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
+    { g: 'Planos y referencias', c: [{ k: 'prefijoPlano', l: 'Prefijo del N° de plano (ej. RE-001-IN-DL-)' }, { k: 'primerPlano', l: 'Primer número correlativo' }, { k: 'prefijoUni', l: 'Prefijo del N° de plano unilineal (TDI)' }, { k: 'docIO', l: 'Listado de E/S (N° documento)' }, { k: 'docInst', l: 'Listado de instrumentos (N° documento)' }, { k: 'docCables', l: 'Listado de circuitos (N° documento)' }, { k: 'docPid', l: 'P&ID de referencia' }] },
     { g: 'Alimentación y cables', c: [{ k: 'fuente24', l: 'Barra positiva 24 VDC' }, { k: 'fuente0', l: 'Barra 0 VDC' }, { k: 'tableroAlim', l: 'Tablero de alimentación de 4 hilos' }, { k: 'tension4h', l: 'Tensión de equipos de 4 hilos' }, { k: 'cableAnalogico', l: 'Cable analógico 2 hilos' }, { k: 'cable3h', l: 'Cable analógico 3 hilos' }, { k: 'cableDiscreto', l: 'Cable discreto' }, { k: 'cableMultipar', l: 'Cable multipar JB–gabinete' }, { k: 'sufCableA', l: 'Sufijo de cable analógico' }, { k: 'sufCableD', l: 'Sufijo de cable discreto' }] },
     { g: 'Señales por defecto', c: [{ k: 'senalAI', l: 'Señal AI' }, { k: 'senalAO', l: 'Señal AO' }, { k: 'senalDI', l: 'Señal DI' }, { k: 'senalDO', l: 'Señal DO' }] }
   ];
@@ -513,7 +513,7 @@
   }
   function dlgTipico() {
     dialogo('<label>Lazo típico<select id="tTip">' + Object.keys(TIPICOS).map(function (k) { return '<option value="' + k + '">' + esc(TIPICOS[k].n) + '</option>'; }).join('') + '</select></label>' +
-      '<div class="fila3"><label>Área<input id="tArea" value="' + esc((lazoSel() && ISA.analizar(lazoSel().crudas[0].tag).area) || '') + '" placeholder="830"></label><label>N° de lazo<input id="tNum" placeholder="0276" required></label>' +
+      '<div class="fila3"><label>Área<input id="tArea" value="' + esc((lazoSel() && ISA.analizar(lazoSel().crudas[0].tag).area) || '') + '" placeholder="100"></label><label>N° de lazo<input id="tNum" placeholder="0276" required></label>' +
       '<label>Variable (ISA)<select id="tVar">' + Object.keys(ISA.VAR).map(function (k) { return '<option value="' + k + '"' + (k === 'F' ? ' selected' : '') + '>' + k + ' · ' + esc(ISA.VAR[k]) + '</option>'; }).join('') + '</select></label></div>' +
       '<label>Servicio<input id="tServ" placeholder="Flujo de agua a estanque TK-01"></label><p class="ayuda" id="tPrev"></p>', function () {
       var o = { area: $('#tArea').value.trim(), num: $('#tNum').value.trim(), v: $('#tVar').value, servicio: $('#tServ').value.trim() };

@@ -776,7 +776,7 @@
       columnas: [C_TAG, C_SERV, { t: 'TIPO', w: 14 }, { t: 'DN (pulg)', w: 7 }, { t: 'FLUJO NOR. (m³/h)', w: 9 },
         { t: 'P1 (kPa g)', w: 8 }, { t: 'P2 (kPa g)', w: 8 }, { t: 'TRANSMISOR POSICIÓN', w: 10 }, C_PID, C_DET],
       filas: [
-        ['4100-PCV-0310', 'Reducción agua a planta', 'Autopilotada', '8', '200', '1.200', '450', 'Sí', '—', '16-A'],
+        ['200-PCV-0202', 'Reducción agua a planta', 'Autopilotada', '8', '200', '1.200', '450', 'Sí', '—', '16-A'],
         ['4200-PCV-0320', 'Reducción agua de servicios', 'Proporcional 3:1', '4', '40', '900', '300', 'No', '—', '16-B']
       ]
     },
