@@ -50,8 +50,8 @@
     var c = E.cfg, m = modulo(s.mod), tj = m ? T.buscar(m.modelo) : null, h = +s.hilos || 2, ca = s.canal === '' || s.canal == null ? null : +s.canal;
     var analog = s.tipo === 'AI' || s.tipo === 'AO';
     return {
-      tag: s.tag, tipo: s.tipo, hilos: h, desc: s.desc || ISA.describir(s.tag), servicio: s.servicio || '', rango: s.rango || '',
-      senalTxt: s.senal || c['senal' + s.tipo] || '', marca: s.marca || '', modeloInst: s.modeloInst || '',
+      tag: s.tag, tipo: s.tipo, hilos: h, sensor: s.tipo === 'AI' && (s.sensor === 'RTD' || s.sensor === 'TC') ? s.sensor : '', desc: s.desc || ISA.describir(s.tag), servicio: s.servicio || '', rango: s.rango || '',
+      senalTxt: s.senal || (s.tipo === 'AI' && s.sensor === 'RTD' ? 'RTD Pt100 ' + (h >= 3 ? h : 2) + ' hilos' : s.tipo === 'AI' && s.sensor === 'TC' ? 'Termopar tipo K' : c['senal' + s.tipo]) || '', marca: s.marca || '', modeloInst: s.modeloInst || '',
       cable: s.cable || ISA.compacto(s.tag) + (analog ? c.sufCableA : c.sufCableD),
       cableSpec: s.cableSpec || (analog ? (h === 3 ? c.cable3h : c.cableAnalogico) : c.cableDiscreto),
       jb: s.jb || '', par: s.par || '', cable2: s.cable2 || '', cable2Spec: s.cable2Spec || '', alimTab: s.alimTab || '',
@@ -94,13 +94,23 @@
     E.senales.forEach(function (s) {
       var m = modulo(s.mod);
       if (m && m.tipo === s.tipo && s.canal !== '' && s.canal != null) return;
+      var sen = s.tipo === 'AI' && (s.sensor === 'RTD' || s.sensor === 'TC') ? s.sensor : 'mA';
       var libres = E.modulos.filter(function (x) { return x.tipo === s.tipo; }), hecho = false;
+      // Preferir tarjetas que admiten el sensor de la señal (RTD y TC directos; mA en las demás)
+      libres = libres.filter(function (x) { return T.soporta(T.buscar(x.modelo), sen); });
       libres.some(function (x) {
         var tj = T.buscar(x.modelo), u = usados(x.id);
         for (var c = 0; c < (tj ? tj.canales : 8); c++) if (!u[c]) { s.mod = x.id; s.canal = c; hecho = true; return true; }
         return false;
       });
-      if (!hecho) { var nm = nuevoModulo(s.tipo); s.mod = nm.id; s.canal = 0; }
+      if (!hecho) {
+        var nm = nuevoModulo(s.tipo);
+        if (!T.soporta(T.buscar(nm.modelo), sen)) { // tarjeta RTD/TC del mismo fabricante o genérica
+          var alt = T.lista.filter(function (t) { return t.tipo === s.tipo && t.prov === E.cfg.proveedor && T.soporta(t, sen); })[0] || T.lista.filter(function (t) { return t.tipo === s.tipo && T.soporta(t, sen); })[0];
+          if (alt) { nm.modelo = alt.modelo; nm.nombre = s.tipo + '-' + sen + '-' + nm.nombre.split('-').pop(); }
+        }
+        s.mod = nm.id; s.canal = 0;
+      }
       n++;
     });
     return n;
@@ -115,6 +125,12 @@
     ao: { n: 'Salida analógica a posicionador / variador (AO)', s: [['Y', 'AO', 2]] },
     sw: { n: 'Interruptor de proceso, contacto seco (DI 2 hilos)', s: [['SH', 'DI', 2]] },
     prox: { n: 'Sensor inductivo PNP 3 hilos (DI)', s: [['S', 'DI', 3]] },
+    rtd: { n: 'Temperatura con RTD Pt100 de 3 hilos directo a tarjeta (AI RTD)', s: [['TE', 'AI', 3, true, 'RTD']] },
+    tc: { n: 'Temperatura con termopar directo a tarjeta (AI TC)', s: [['TE', 'AI', 2, true, 'TC']] },
+    tt: { n: 'Temperatura con transmisor 4–20 mA HART (RTD en cabezal)', s: [['TT', 'AI', 2, true]] },
+    pos: { n: 'Válvula de control con posicionador HART y transmisor de posición (AO + AI)', s: [['V', 'AO', 2], ['ZT', 'AI', 2, true]] },
+    vdf: { n: 'Variador de frecuencia: referencia y velocidad 4–20 mA, partida, en servicio y falla (AO + AI + DO + 2 DI)', s: [['SC', 'AO', 2, true], ['SI', 'AI', 4, true], ['HS', 'DO', 4, true], ['YS', 'DI', 2, true], ['XA', 'DI', 2, true]] },
+    nivel: { n: 'Nivel con alarmas independientes: transmisor + interruptores alto-alto y bajo-bajo (AI + 2 DI)', s: [['LIT', 'AI', 2, true], ['LSHH', 'DI', 2, true], ['LSLL', 'DI', 2, true]] },
     onoff: { n: 'Válvula on/off con solenoide y finales de carrera (DO + 2 DI)', s: [['XV', 'DO', 2, true], ['ZSO', 'DI', 2, true], ['ZSC', 'DI', 2, true]] },
     motor: { n: 'Equipo / motor: en servicio, falla y comando por relé (2 DI + DO 4 hilos)', s: [['YS', 'DI', 2, true], ['XA', 'DI', 2, true], ['HS', 'DO', 4, true]] }
   };
@@ -123,7 +139,7 @@
     t.s.forEach(function (x) {
       var letras = x[3] ? x[0] : o.v + x[0], tag = (o.area ? o.area + '-' : '') + letras + '-' + o.num;
       if (E.senales.some(function (s) { return s.tag === tag; })) return;
-      var s = { id: uid(), tag: tag, tipo: x[1], hilos: x[2], servicio: o.servicio || '', lazo: '', canal: '' };
+      var s = { id: uid(), tag: tag, tipo: x[1], hilos: x[2], servicio: o.servicio || '', lazo: '', canal: '' }; if (x[4]) s.sensor = x[4];
       E.senales.push(s); creadas.push(s);
     });
     var id = (o.area ? o.area + '-' : '') + o.num;
@@ -171,7 +187,7 @@
   // Listado de E/S (tabla editable)
   var COLS = [
     { k: 'tag', l: 'Tag', w: 130 }, { k: 'lazo', l: 'Lazo', w: 90, ph: function (s) { return ISA.lazoDe(s.tag); } },
-    { k: 'tipo', l: 'Tipo', w: 62, sel: TIPOS }, { k: 'hilos', l: 'Hilos', w: 56, sel: ['2', '3', '4'] },
+    { k: 'tipo', l: 'Tipo', w: 62, sel: TIPOS }, { k: 'hilos', l: 'Hilos', w: 56, sel: ['2', '3', '4'] }, { k: 'sensor', l: 'Sensor', w: 70, sel: ['mA', 'RTD', 'TC'] },
     { k: 'desc', l: 'Descripción del instrumento', w: 200, ph: function (s) { return ISA.describir(s.tag); } }, { k: 'servicio', l: 'Servicio', w: 220 },
     { k: 'rango', l: 'Rango', w: 80 }, { k: 'senal', l: 'Señal', w: 92, ph: function (s) { return E.cfg['senal' + s.tipo]; } },
     { k: 'jb', l: 'Caja (JB)', w: 90 }, { k: 'cable', l: 'Cable', w: 130, ph: function (s) { return resolver(s).cable; } },
@@ -245,6 +261,24 @@
   function getK(k) { var p = k.split('.'); return p.length > 1 ? E.cfg[p[0]][p[1]] : E.cfg[k]; }
   function setK(k, v) { var p = k.split('.'); if (p.length > 1) E.cfg[p[0]][p[1]] = v; else E.cfg[k] = v; }
   var ROTULO = [['cliente', 'Cliente'], ['proyecto', 'Título del proyecto'], ['numero', 'N° de proyecto'], ['rev', 'Revisión vigente'], ['por', 'Elaboró'], ['porFecha', 'Fecha'], ['reviso', 'Revisó'], ['revisoFecha', 'Fecha'], ['aprobo', 'Aprobó'], ['aproboFecha', 'Fecha']];
+  // Biblioteca de tarjetas: fabricante, estado de verificación, fuente y bornes del primer canal
+  var bibProv = '';
+  function pintarBiblio() {
+    var el = $('#biblio'); if (!el) return;
+    var L = T.lista.filter(function (t) { return !bibProv || t.prov === bibProv; }), nv = T.lista.filter(function (t) { return t.verificado; }).length;
+    el.innerHTML = '<p class="ayuda">' + T.lista.length + ' tarjetas, ' + nv + ' con bornes verificados contra documentación pública del fabricante (se cita documento, revisión y página). Las referenciales usan la numeración típica y se corrigen con «Editar bornes». ' +
+      'Solo se toman números de borne y funciones; los esquemas se dibujan con el estilo de la suite. Verificar siempre contra la documentación vigente del fabricante y los planos certificados del suministro.</p>' +
+      '<label>Fabricante<select id="bibProv"><option value="">Todos</option>' + T.proveedores.map(function (p) { return '<option value="' + p.id + '"' + (p.id === bibProv ? ' selected' : '') + '>' + esc(p.nombre) + '</option>'; }).join('') + '</select></label>' +
+      '<div class="tscroll"><table class="io"><thead><tr><th>Fabricante</th><th>Modelo</th><th>Tipo</th><th>Canales</th><th>Señal</th><th>Bornera</th><th>Estado</th><th>Fuente</th><th>Bornes del canal ' + (base()) + '</th></tr></thead><tbody>' +
+      L.map(function (t) {
+        var p = T.proveedores.filter(function (x) { return x.id === t.prov; })[0] || {}, bo = T.bornes(t.modelo, 0, E.over) || {};
+        var sen = (t.sensores || ['mA']).join(', ') + (t.tipo === 'DI' || t.tipo === 'DO' ? ' ' + (t.tension || '') : '') + (t.rele ? ' · relé' : '');
+        return '<tr><td>' + esc((p.nombre || t.prov).split(' · ')[0]) + '</td><td><b>' + esc(t.modelo) + '</b><br><small>' + esc(t.desc) + '</small></td><td>' + t.tipo + '</td><td>' + t.canales + '</td><td>' + esc(sen) + (t.tipo === 'AI' || t.tipo === 'AO' ? '<br><small>Lazo ' + t.alim + '</small>' : '') + '</td><td>' + esc(t.rtb || '—') + '</td>' +
+          '<td><span class="bib-est ' + (t.verificado ? 'bib-ok">✓ Verificado' : 'bib-ref">Referencial') + '</span></td><td><small>' + esc(t.fuente) + '</small></td><td><small>' +
+          Object.keys(bo).filter(function (k) { return k !== 'puentes'; }).map(function (k) { return esc(T.nombreRol[k]) + ' <b>' + esc(bo[k].n) + '</b>'; }).join('<br>') + '</small></td></tr>';
+      }).join('') + '</tbody></table></div>';
+    $('#bibProv').addEventListener('change', function (e) { bibProv = e.target.value; pintarBiblio(); });
+  }
   function pintarCfg() {
     var pr = P.activo();
     $('#rotulo').innerHTML = '<legend>Viñeta (rótulo de los planos)</legend>' + ROTULO.map(function (r) { return '<label' + (r[0] === 'proyecto' || r[0] === 'cliente' ? ' class="ancho"' : '') + '>' + r[1] + '<input data-p="' + r[0] + '" value="' + esc(pr[r[0]] || '') + '"></label>'; }).join('') +
@@ -257,6 +291,7 @@
         return '<label>' + c.l + '<input data-c="' + c.k + '" value="' + esc(v) + '"></label>';
       }).join('') + '</fieldset>';
     }).join('');
+    pintarBiblio();
     $('#revs').innerHTML = '<tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th><th>Cliente</th><th></th></tr>' + E.revs.map(function (r, i) {
       return '<tr>' + ['rev', 'fecha', 'desc', 'por', 'reviso', 'aprobo', 'cliente'].map(function (k) { return '<td><input data-r="' + i + '" data-k="' + k + '" value="' + esc(r[k] || '') + '"></td>'; }).join('') + '<td><button type="button" class="mini peligro" data-rq="' + i + '" aria-label="Quitar revisión">×</button></td></tr>';
     }).join('');
@@ -355,11 +390,11 @@
     var arch = Ls.map(function (L) { return { nombre: nombreArch(L.plano) + '.dxf', datos: dxfLazo(L) }; });
     descargar('Diagramas de lazo.zip', window.XLSX_RE._zip(arch), 'application/zip');
   }
-  var COLS_X = ['tag', 'lazo', 'tipo', 'hilos', 'desc', 'servicio', 'rango', 'senal', 'jb', 'cable', 'modulo', 'modeloTarjeta', 'chasis', 'slot', 'canal', 'bornes', 'hmi', 'marca', 'modeloInst'];
-  var TIT_X = ['TAG', 'LAZO', 'TIPO', 'HILOS', 'DESCRIPCIÓN', 'SERVICIO', 'RANGO', 'SEÑAL', 'CAJA (JB)', 'CABLE', 'MÓDULO', 'TARJETA', 'CHASIS', 'SLOT', 'CANAL', 'BORNES DE TARJETA', 'HMI', 'MARCA', 'MODELO'];
+  var COLS_X = ['tag', 'lazo', 'tipo', 'hilos', 'sensor', 'desc', 'servicio', 'rango', 'senal', 'jb', 'cable', 'modulo', 'modeloTarjeta', 'chasis', 'slot', 'canal', 'bornes', 'hmi', 'marca', 'modeloInst'];
+  var TIT_X = ['TAG', 'LAZO', 'TIPO', 'HILOS', 'SENSOR', 'DESCRIPCIÓN', 'SERVICIO', 'RANGO', 'SEÑAL', 'CAJA (JB)', 'CABLE', 'MÓDULO', 'TARJETA', 'CHASIS', 'SLOT', 'CANAL', 'BORNES DE TARJETA', 'HMI', 'MARCA', 'MODELO'];
   function filaExport(s) {
     var r = resolver(s), m = modulo(s.mod), b = r.bornes || {};
-    return { tag: s.tag, lazo: lazoId(s), tipo: s.tipo, hilos: s.hilos, desc: r.desc, servicio: s.servicio || '', rango: s.rango || '', senal: r.senalTxt, jb: s.jb || '', cable: r.cable,
+    return { tag: s.tag, lazo: lazoId(s), tipo: s.tipo, hilos: s.hilos, sensor: r.sensor || (s.tipo === 'AI' || s.tipo === 'AO' ? 'mA' : ''), desc: r.desc, servicio: s.servicio || '', rango: s.rango || '', senal: r.senalTxt, jb: s.jb || '', cable: r.cable,
       modulo: m ? m.nombre : '', modeloTarjeta: m ? m.modelo : '', chasis: m ? m.chasis : '', slot: m ? m.slot : '', canal: s.canal === '' || s.canal == null ? '' : +s.canal + base(),
       bornes: Object.keys(b).filter(function (k) { return k !== 'puentes'; }).map(function (k) { return k + ':' + b[k].n; }).join(' '), hmi: r.hmi.join(','), marca: s.marca || '', modeloInst: s.modeloInst || '' };
   }
@@ -385,7 +420,7 @@
   function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9/]+/g, ' ').trim(); }
   var MAPA = {
     tag: ['tag', 'tag instrumento', 'instrumento tag', 'tag n'], lazo: ['lazo', 'loop', 'n lazo'], tipo: ['tipo', 'tipo e/s', 'e/s', 'io', 'tipo senal', 'i/o', 'tipo io'],
-    hilos: ['hilos', 'n hilos', 'wires', 'conexion'], desc: ['descripcion', 'description', 'instrumento', 'tipo de instrumento'], servicio: ['servicio', 'service', 'servicio / descripcion'],
+    hilos: ['hilos', 'n hilos', 'wires', 'conexion'], sensor: ['sensor', 'elemento', 'tipo sensor', 'sensor type'], desc: ['descripcion', 'description', 'instrumento', 'tipo de instrumento'], servicio: ['servicio', 'service', 'servicio / descripcion'],
     rango: ['rango', 'range'], senal: ['senal', 'signal'], jb: ['jb', 'caja', 'caja de conexion', 'caja de conexiones'], cable: ['cable', 'n cable', 'cable n'],
     modulo: ['modulo', 'tarjeta', 'card', 'module'], chasis: ['chasis', 'rack', 'chassis'], slot: ['slot', 'ranura'], canal: ['canal', 'channel', 'ch', 'punto'],
     hmi: ['hmi'], marca: ['marca', 'fabricante'], modeloInst: ['modelo', 'model']
@@ -407,7 +442,7 @@
       if (TIPOS.indexOf(tipo) < 0) tipo = /AI|ENTRADA ANAL/.test(tipo) ? 'AI' : /T$|E$/.test(ISA.analizar(tag).letras) ? 'AI' : /V$/.test(ISA.analizar(tag).letras) ? 'AO' : 'DI';
       var s = E.senales.filter(function (x) { return x.tag === tag; })[0];
       if (!s) { s = { id: uid(), tag: tag, canal: '' }; E.senales.push(s); nuevos++; }
-      s.tipo = tipo; var h = parseInt(g('hilos'), 10); s.hilos = h >= 2 && h <= 4 ? h : (s.hilos || 2);
+      s.tipo = tipo; var h = parseInt(g('hilos'), 10); s.hilos = h >= 2 && h <= 4 ? h : (s.hilos || 2); var sn = String(g('sensor') || '').toUpperCase(); if (/RTD|PT ?100/.test(sn)) s.sensor = 'RTD'; else if (/TC|TERMOPAR|THERMOCOUPLE/.test(sn)) s.sensor = 'TC';
       ['lazo', 'desc', 'servicio', 'rango', 'senal', 'jb', 'cable', 'hmi', 'marca', 'modeloInst'].forEach(function (k) { var v = g(k); if (v) s[k] = v; });
       var ch = g('chasis'), sl = g('slot'), mn = g('modulo'), ca = g('canal');
       if (ch !== '' || sl !== '' || mn) {

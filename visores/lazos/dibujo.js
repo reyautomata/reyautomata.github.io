@@ -41,6 +41,22 @@
       });
     }
     var pot = function () { potencia = { terms: ['L', 'N', 'PE'], texto: (s.alimTab || cfg.tableroAlim || 'TABLERO DE DISTRIBUCIÓN') + ' · ' + (cfg.tension4h || '120 VAC') }; };
+    var TJ = window.LAZOS_TARJETAS, sen = s.sensor || '';
+    if (s.tipo === 'AI' && (sen === 'RTD' || sen === 'TC')) {
+      if (TJ && TJ.soporta(tj, sen) && (sen === 'TC' ? bc.inp : bc.rA)) {
+        if (sen === 'RTD') {
+          f({ it: 'A', card: bc.rA }); f({ it: 'B', card: bc.rB });
+          if (h >= 3 && bc.rb) f({ it: 'b', card: bc.rb }); else if (bc.rb) { f({ card: bc.rb, busCard: 'PUENTE ' + bc.rB.n }); notas.push('RTD 2 HILOS: PUENTE B–b EN LA TARJETA; LA RESISTENCIA DE LÍNEA QUEDA SIN COMPENSAR.'); }
+          if (h >= 3) notas.push('RTD 3 HILOS: TRES CONDUCTORES DE IGUAL SECCIÓN Y LARGO PARA COMPENSAR LA RESISTENCIA DE LÍNEA.');
+        } else {
+          f({ it: '+', card: bc.inp }); f({ it: '−', card: bc.inn });
+          notas.push('TERMOPAR: CABLE DE EXTENSIÓN O COMPENSACIÓN DEL MISMO TIPO, SIN EMPALMES DE COBRE; RESPETAR POLARIDAD; JUNTA FRÍA COMPENSADA EN LA TARJETA.');
+        }
+        return { filas: filas, puentes: puentes, potencia: potencia, notas: notas };
+      }
+      notas.push('SENSOR ' + sen + ' CON TRANSMISOR DE CABEZAL 4–20 mA DE 2 HILOS: LA TARJETA ' + (tj.modelo || 'ASIGNADA') + ' NO TIENE ENTRADA ' + sen + ' DIRECTA.');
+      h = 2;
+    }
     if (s.tipo === 'AI') {
       if (h === 4) { f({ it: '+', card: bc.inp }); f({ it: '−', card: bc.inn }); conPuentes(); pot(); }
       else if (tj.alim === 'interna' && bc.pwr) {
@@ -63,8 +79,11 @@
       else { f({ it: 'C', fu: true, busTB: vb }); f({ it: 'NA', card: bc.inp }); if (bc.com) f({ card: bc.com, busCard: vc }); }
       if (h === 4) pot();
     } else if (s.tipo === 'DO') {
-      var porCanal = bc.com && /^[−-]$/.test(bc.com.s);
-      if (h === 4) {
+      var porCanal = !!(bc.com && (tj.comPorCanal || /^[−-]$/.test(bc.com.s)));
+      if (tj.rele) {
+        f({ card: bc.com, busCard: v24 }); f({ it: '+', card: bc.out }); f({ it: '−', busTB: v0 });
+        notas.push('SALIDA DE RELÉ (CONTACTO SECO): EL COMÚN DEL CONTACTO SE ALIMENTA DESDE LA BARRA DEL GABINETE; VERIFICAR TENSIÓN Y CORRIENTE DEL CONTACTO.');
+      } else if (h === 4) {
         var ka = 'KA-' + pad(s.canal + 1, 2);
         f({ card: bc.out, busCard: 'BOBINA ' + ka + ' A1' }); if (bc.com) f({ card: bc.com, busCard: porCanal ? 'BOBINA ' + ka + ' A2' : v0 });
         f({ it: 'C', busTB: ka + ' (11)' }); f({ it: 'NA', busTB: ka + ' (14)' });

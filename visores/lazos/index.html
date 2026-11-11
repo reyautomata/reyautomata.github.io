@@ -87,6 +87,9 @@ table.io td:nth-child(2) input { font: 600 13px var(--f-mono); }
 h2.grupo { font: 700 13px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; display: flex; gap: 12px; align-items: center; margin: 22px 0 10px; }
 .modulo { background: var(--panel); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
 .modcab { display: grid; grid-template-columns: 110px minmax(240px, 2fr) 70px 70px 110px minmax(160px, 1fr) auto auto; gap: 8px; align-items: end; }
+.bib-est { font: 600 11px var(--f-body); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.bib-ok { background: #e3f3e8; color: #1f6b3a; } .bib-ref { background: #fdf1d8; color: #8a5a00; }
+#biblio table.io td { padding: 5px 6px; vertical-align: top; } #biblio .tscroll { max-height: 460px; overflow: auto; }
 .fuente { margin: 8px 0; font: 500 12px var(--f-mono); color: var(--muted); }
 table.canales { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.canales th { text-align: left; font: 600 12px var(--f-mono); color: var(--muted); padding: 6px; border-bottom: 1px solid var(--line); }
@@ -512,6 +515,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <fieldset id="rotulo" class="rotulo"></fieldset>
     <div id="cfgForm" style="margin-top:14px"></div>
     <div class="herr" style="margin-top:14px"><button type="button" id="bAplicarProv">Aplicar tarjetas por defecto a todas las tarjetas existentes</button></div>
+    <fieldset style="display:block;margin-top:14px"><legend>Biblioteca de tarjetas de E/S</legend><div id="biblio"></div></fieldset>
     <fieldset style="display:block;margin-top:14px"><legend>Revisiones (cuadro de revisiones de los planos)</legend>
       <table class="revs" id="revs"></table>
       <button type="button" class="mini" id="bRev" style="margin-top:8px">+ Agregar revisión</button>
