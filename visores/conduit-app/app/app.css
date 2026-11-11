@@ -11,3 +11,21 @@ main { padding: 14px 18px 30px; }
 .aviso { margin: 10px 18px 0; padding: 9px 14px; border-radius: 8px; background: #fdf1d8; color: #6b4700; border: 1px solid #e8c36a; font-size: 13px; display: flex; gap: 12px; align-items: center; }
 .aviso[hidden] { display: none; }
 .aviso button { min-height: 30px; padding: 4px 12px; font-size: 12.5px; background: #E8A317; border-color: #c88a0c; color: #1a1205; }
+
+/* Publicidad de la Suite ReyEngi */
+#rsBtn { position: fixed; left: 14px; bottom: 14px; z-index: 55; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 8px; border-radius: 22px;
+  background: #022A55; color: #fff; border: 1.5px solid #E8A317; font: 600 12.5px system-ui, "Segoe UI", sans-serif; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+#rsBtn img { height: 22px; width: auto; } #rsBtn:hover { background: #0a3a70; } #rsBtn:focus-visible { outline: 2px solid #E8A317; outline-offset: 2px; }
+#rsDlg { width: min(520px, calc(100vw - 32px)); border: 0; border-radius: 14px; padding: 22px 24px 20px; background: #0e1f33; color: #e8eef5; border-top: 4px solid #E8A317;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55); font: 14px/1.5 system-ui, "Segoe UI", sans-serif; }
+#rsDlg::backdrop { background: rgba(0,0,0,.55); }
+#rsDlg .rs-x { position: absolute; top: 10px; right: 10px; background: transparent; color: #cfe0f2; border: 1.5px solid #3a5a80; border-radius: 8px; min-width: 32px; min-height: 32px; cursor: pointer; }
+#rsDlg .rs-k { margin: 0; color: #E8A317; font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+#rsDlg h2 { margin: 6px 36px 10px 0; padding: 0; border: 0; font: 700 19px/1.3 system-ui, "Segoe UI", sans-serif; color: #fff; text-transform: none; letter-spacing: 0; }
+#rsDlg h2::before, #rsDlg h2::after { display: none; }
+#rsDlg .rs-l { margin: 0 0 10px; color: #cdd8e4; }
+#rsDlg ul { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 4px; } #rsDlg li::marker { color: #E8A317; }
+#rsDlg .rs-wsp { display: block; text-align: center; background: #1f9d55; color: #fff; text-decoration: none; font-weight: 700; padding: 11px 14px; border-radius: 10px; margin-top: 4px; }
+#rsDlg .rs-wsp:hover { background: #23b061; }
+#rsDlg .rs-p { margin: 8px 0 0; font-size: 12px; color: #9fb0c3; text-align: center; }
+@media (max-width: 600px) { #rsBtn span { display: none; } #rsBtn { padding: 7px; } }
