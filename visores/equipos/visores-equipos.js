@@ -1115,9 +1115,13 @@
       g.children[0].rotation.y = 0; g.rotation.y = -Math.PI / 2; g.position.set(x, y, z);
       return g;
     }
+    var SIMS = {};
+    function estadoSim(def) { var k = estado.v.c; return SIMS[k] || (SIMS[k] = Object.assign({}, def)); }
     function soporte(op) {
-      var root = G(), panel = op.tipo === 'panel', n = op.n || 1, plat = !!op.plataforma;
-      var W = panel ? 100 : [40, 70, 100][n - 1], H = panel ? 165 : 170, yPl = panel ? 45 : 125;
+      var root = G(), panel = op.tipo === 'panel', n = op.n || 1;
+      var S = estadoSim({ ancho: (panel ? 100 : [40, 70, 100][n - 1]) * 10, cant: 1, anc: op.plataforma ? 'plat' : 'conc' });
+      var plat = S.anc === 'plat';
+      var W = Math.max(30, S.ancho / 10), H = panel ? 165 : 170, yPl = panel ? 45 : 125;
       var patasX = panel ? [-W / 2 + 5, W / 2 - 5] : [0];
       var est = G();
       patasX.forEach(function (x) { var c = canal(H - 0.5, 'y'); c.position.set(x, 0.5, -0.3); est.add(c); });
@@ -1165,7 +1169,6 @@
       partes.sort(function (a, b) { return a[0] - b[0]; });
 
       // ── Cálculo de materiales L.R. ──
-      var S = { ancho: W * 10, cant: 1, anc: plat ? 'plat' : 'conc' };
       function kgCanal() { return (100 + 2 * 50 - 2 * 6) * 6 * 7.85e-3; } // kg/m (sección plegada)
       function calc() {
         var w = Math.max(200, +S.ancho || 0) / 1000, k = Math.max(1, Math.round(+S.cant || 1)), patas = patasX.length;
@@ -1179,20 +1182,22 @@
       function f(v, d) { return v.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d }); }
       var sim = {
         html: '<div class="simg">' +
-          '<label>Ancho L.R. de la placa <output id="oAn"></output><input type="range" id="sAn" min="300" max="1600" step="50"></label>' +
+          '<label>Ancho L.R. de la placa (el modelo se redibuja al soltar) <output id="oAn"></output><input type="range" id="sAn" min="300" max="1600" step="50"></label>' +
           '<label>Cantidad de soportes iguales <output id="oCa"></output><input type="range" id="sCa" min="1" max="20" step="1"></label>' +
           '<label>Anclaje<select id="sAnc"><option value="conc">Fundación de hormigón (pernos de anclaje)</option><option value="plat">Plataforma (espárragos y tuercas)</option></select></label></div>' +
           '<dl class="lect" id="lectS"></dl><p class="eq" id="eqS"></p>',
         montar: function () {
           $('sAn').value = S.ancho; $('sCa').value = S.cant; $('sAnc').value = S.anc;
           $('sAn').addEventListener('input', function () { S.ancho = +this.value; sim.pintar(); });
+          $('sAn').addEventListener('change', function () { S.ancho = +this.value; reconstruir(); });
           $('sCa').addEventListener('input', function () { S.cant = +this.value; sim.pintar(); });
-          $('sAnc').addEventListener('change', function () { S.anc = this.value; sim.pintar(); });
+          $('sAnc').addEventListener('change', function () { S.anc = this.value; reconstruir(); });
           sim.pintar();
         },
         pintar: function () {
           var r = calc();
           $('oAn').textContent = f(S.ancho, 0) + ' mm'; $('oCa').textContent = S.cant;
+          $('vName').textContent = estado.v.t + ' · placa ' + f(S.ancho, 0) + ' mm' + (S.anc === 'plat' ? ' · en plataforma' : '');
           var filas = [['1 · Perfil canal 100×50×6', f(r.canal, 2) + ' m'], ['2 · Plancha 3 mm', f(r.m3, 2) + ' m²'], ['3 · Plancha 5 mm', f(r.m5, 3) + ' m²']];
           if (r.pernos) filas.push(['4 · Pernos de anclaje 1/2"', r.pernos + ' c/u']);
           if (r.esp) filas.push(['5 · Espárragos 1/2"', r.esp + ' c/u'], ['6 · Tuercas 1/2"', r.tue + ' c/u']);
@@ -1279,7 +1284,7 @@
     function hilo(x, y0, y1, z) { return cyl(0.48, Math.abs(y1 - y0), mats.steel, x, (y0 + y1) / 2, z, 'y', 12); }
     function tuerca(x, y, z) { return G(cyl(0.9, 0.7, mats.dark, x, y, z, 'y', 6), cyl(1.2, 0.15, mats.steel, x, y - 0.45, z, 'y', 16)); }
     function cables(M_, A, n, mat) { // cables sobre los palillos, para ver el llenado
-      var g = G(), r = 0.9;
+      var g = G(), r = 0.9; if (ES.nCab) n = ES.nCab;
       for (var k = 0; k < n; k++) {
         var off = -A / 2 + 2 + r + k * (2 * r + 0.3); if (off > A / 2 - 2) break;
         var pts = M_.map(function (m) { return m.p.clone().addScaledVector(m.n, off).addScaledVector(m.u, 2.1 + r); });
@@ -1294,8 +1299,15 @@
     }
 
     // ── Dimensionamiento (simulación compartida por todas las variantes) ──
-    function simEscalerilla(base) {
-      var S = Object.assign({ A: 600, H: 100, ver: 'n', L: 60, d: 1.5, ch: 4, cv: 2, ct: 1, sop: 'trap', susp: 1.0, niv: 1, ac: 0, llen: 40 }, base || {});
+    function sE(base) { // estado del tipo de montaje activo (persiste al redibujar) y medidas de la geometría
+      var S = estadoSim(Object.assign({ A: 600, H: 100, ver: 'n', R: 300, L: 60, d: 1.5, ch: 4, cv: 2, ct: 1, sop: 'trap', susp: 1.0, niv: 1, ac: 0, llen: 40 }, base || {}));
+      ES.A = S.A / 10; ES.H = S.H / 10; ES.R = S.R / 10; ES.paso = S.ver === 'r' ? 15 : 23; ES.esp = S.ver === 'r' ? 0.25 : 0.2;
+      ES.nCab = S.ac > 0 ? Math.max(1, Math.round(S.ac / 254)) : 0; ES.ver = S.ver;
+      return S;
+    }
+    function dimES() { return Math.round(ES.A * 10) + '×' + Math.round(ES.H * 10) + ' mm'; }
+    function verES() { return ES.ver === 'r' ? 'reforzada' : 'normal'; }
+    function simEscalerilla(S) {
       function calc() {
         var A = S.A / 1000, H = S.H / 1000, tiras = Math.ceil(S.L / 3), acc = S.ch + S.cv + S.ct;
         var nSop = (Math.ceil(S.L / S.d) + 1 + 2 * acc) * (S.sop === 'muro' ? 1 : 1);
@@ -1319,6 +1331,7 @@
         html: '<div class="simg">' +
           '<label>Ancho A' + sel('eA', [100, 150, 200, 300, 400, 450, 500, 600, 750, 800, 900, 1000].map(function (x) { return [x, x + ' mm']; }), S.A) + '</label>' +
           '<label>Alto lateral H' + sel('eH', [50, 75, 100, 125, 150, 200].map(function (x) { return [x, x + ' mm']; }), S.H) + '</label>' +
+          '<label>Radio interior R de las curvas' + sel('eR', [200, 300, 450, 600, 750, 900].map(function (x) { return [x, x + ' mm']; }), S.R) + '</label>' +
           '<label>Versión' + sel('eV', [['n', 'Normal: lateral 2,0 mm, palillos cada 230 mm'], ['r', 'Reforzada: lateral 2,5 mm, palillos cada 150 mm']], S.ver) + '</label>' +
           '<label>Largo recto del recorrido <output id="oL"></output><input type="range" id="eL" min="3" max="600" step="3"></label>' +
           '<label>Distancia entre soportes <output id="oD"></output><input type="range" id="eD" min="0.9" max="3" step="0.1"></label>' +
@@ -1327,19 +1340,27 @@
           '<label>Tees, cruces y reducciones <output id="oCt"></output><input type="range" id="eCt" min="0" max="20" step="1"></label>' +
           '<label>Soportación' + sel('eS', [['trap', 'Trapecio suspendido (riel 42×42 + hilo corrido)'], ['muro', 'Ménsula en muro o columna (soporte muro riel 42×42)']], S.sop) + '</label>' +
           '<label>Niveles de escalerilla en el mismo soporte' + sel('eN', [[1, '1 nivel'], [2, '2 niveles (fuerza / instrumentación)'], [3, '3 niveles']], S.niv) + '</label>' +
-          '<label>Largo de suspensión <output id="oSu"></output><input type="range" id="eSu" min="0.3" max="3" step="0.1"></label>' +
+          '<label>Largo de suspensión (redibuja al soltar) <output id="oSu"></output><input type="range" id="eSu" min="0.3" max="3" step="0.1"></label>' +
           '<label>Sección de cables a tender [mm²]<input type="number" id="eAc" min="0" step="100" inputmode="numeric"></label>' +
           '<label>Llenado máximo del proyecto [%]<input type="number" id="eLl" min="10" max="100" step="5" inputmode="numeric"></label></div>' +
           '<dl class="lect" id="lectE"></dl><p class="eq" id="eqE"></p>',
         montar: function () {
           var $$ = function (id) { return document.getElementById(id); };
           $$('eL').value = S.L; $$('eD').value = S.d; $$('eCh').value = S.ch; $$('eCv').value = S.cv; $$('eCt').value = S.ct; $$('eSu').value = S.susp; $$('eAc').value = S.ac || ''; $$('eLl').value = S.llen;
-          [['eA', 'A'], ['eH', 'H'], ['eV', 'ver'], ['eS', 'sop'], ['eN', 'niv']].forEach(function (k) { $$(k[0]).addEventListener('change', function () { S[k[1]] = /^[0-9.]+$/.test(this.value) ? +this.value : this.value; sim.pintar(); }); });
-          [['eL', 'L'], ['eD', 'd'], ['eCh', 'ch'], ['eCv', 'cv'], ['eCt', 'ct'], ['eSu', 'susp'], ['eAc', 'ac'], ['eLl', 'llen']].forEach(function (k) { $$(k[0]).addEventListener('input', function () { S[k[1]] = +this.value || 0; sim.pintar(); }); });
+          // A, H, R, versión, niveles, suspensión y sección de cables cambian el modelo 3D: se redibuja con la misma vista
+          var GEO = { A: 1, H: 1, R: 1, ver: 1, niv: 1, susp: 1, ac: 1 };
+          [['eA', 'A'], ['eH', 'H'], ['eR', 'R'], ['eV', 'ver'], ['eS', 'sop'], ['eN', 'niv']].forEach(function (k) { $$(k[0]).addEventListener('change', function () { S[k[1]] = /^[0-9.]+$/.test(this.value) ? +this.value : this.value; if (GEO[k[1]]) reconstruir(); else sim.pintar(); }); });
+          [['eL', 'L'], ['eD', 'd'], ['eCh', 'ch'], ['eCv', 'cv'], ['eCt', 'ct'], ['eSu', 'susp'], ['eAc', 'ac'], ['eLl', 'llen']].forEach(function (k) {
+            $$(k[0]).addEventListener('input', function () { S[k[1]] = +this.value || 0; sim.pintar(); });
+            if (GEO[k[1]]) $$(k[0]).addEventListener('change', function () { S[k[1]] = +this.value || 0; reconstruir(); });
+          });
           sim.pintar();
         },
         pintar: function () {
           var $$ = function (id) { return document.getElementById(id); }, r = calc();
+          var curvo = /ch|cv|tee|cruz|recorrido/.test(estado.v.m);
+          $$('eR').closest('label').hidden = !curvo;
+          if ($$('vName')) $$('vName').textContent = estado.v.t + ' · ' + S.A + '×' + S.H + ' mm' + (curvo ? ' · R ' + S.R + ' mm' : '') + (S.ver === 'r' ? ' · reforzada' : '');
           $$('oL').textContent = f(S.L) + ' m'; $$('oD').textContent = f(S.d, 1) + ' m'; $$('oCh').textContent = S.ch; $$('oCv').textContent = S.cv; $$('oCt').textContent = S.ct; $$('oSu').textContent = f(S.susp, 1) + ' m';
           $$('eSu').closest('label').hidden = S.sop !== 'trap';
           var tag = 'ESC ' + S.A + '×' + S.H + (S.ver === 'r' ? ' reforzada' : ' normal');
@@ -1359,7 +1380,7 @@
 
     // Variantes de escalerilla y accesorios
     function esRecta(reforzada) {
-      var A = ES.A, H = ES.H, paso = reforzada ? 15 : ES.paso, root = G();
+      var A = ES.A, H = ES.H, paso = ES.paso, root = G();
       var m1 = trRecta(300, 2), m2 = aplicar(trRecta(120, 2), 300, 0, 0);
       var t1 = pieza(m1, A, H, paso), t2 = pieza(m2, A, H, paso), ecl = eclisasEn(m2, 0, A, H);
       root.add(t1, t2, ecl);
@@ -1367,22 +1388,22 @@
       var cab = cables(m1.concat(m2.slice(1)), A, 12);
       root.add(sop, cab);
       return { root: root, foco: [200, 6, 0, 125], partes: [
-        [1, 'Escalerilla recta ' + (reforzada ? 'reforzada' : 'normal') + ' 600×100 mm, tira de 3.000 mm', 1, t1, [0, 25, 0], [80, H + 4, A / 2]],
-        [2, 'Lateral C de ' + (reforzada ? '2,5' : '2,0') + ' mm con pestañas de 19 mm', 2, G(), [0, 0, 0], [150, H, -A / 2]],
-        [3, 'Palillo de 1,5 mm cada ' + paso * 10 + ' mm (' + (reforzada ? 20 : 13) + ' por tira)', reforzada ? 20 : 13, G(), [0, 0, 0], [120, 2, 0]],
+        [1, 'Escalerilla recta ' + verES() + ' ' + dimES() + ', tira de 3.000 mm', 1, t1, [0, 25, 0], [80, H + 4, A / 2]],
+        [2, 'Lateral C de ' + (ES.ver === 'r' ? '2,5' : '2,0') + ' mm con pestañas de 19 mm', 2, G(), [0, 0, 0], [150, H, -A / 2]],
+        [3, 'Palillo de 1,5 mm cada ' + paso * 10 + ' mm (' + (ES.ver === 'r' ? 20 : 13) + ' por tira)', ES.ver === 'r' ? 20 : 13, G(), [0, 0, 0], [120, 2, 0]],
         [4, 'Tira siguiente (continuación del tramo)', 1, t2, [40, 0, 0], [360, H + 4, A / 2]],
         [5, 'Par de eclisas recta normal con 8 pernos y tuercas', 1, ecl, [0, 0, 30], [300, H + 6, A / 2 + 2]],
         [6, 'Riel 42×42 de soporte', 3, sop, [0, -25, 0], [260, -6, A / 2 + 10]],
         [7, 'Mordaza 42 con perno 3/8" y tuerca riel', 6, G(), [0, 0, 0], [40, 2, -A / 2 - 6]],
         [8, 'Cables de instrumentación y control (referencial)', 1, cab, [0, 35, 0], [200, 6, 0]]] };
     }
-    V['esc-recta'] = function () { var r = esRecta(false); r.sim = simEscalerilla(); return r; };
-    V['esc-reforzada'] = function () { var r = esRecta(true); r.sim = simEscalerilla({ ver: 'r', d: 2.5 }); return r; };
+    V['esc-recta'] = function () { var S = sE({}); var r = esRecta(S.ver === 'r'); r.sim = simEscalerilla(S); return r; };
+    V['esc-reforzada'] = function () { var S = sE({ ver: 'r', d: 2.5 }); var r = esRecta(S.ver === 'r'); r.sim = simEscalerilla(S); return r; };
     function esCurva(tipo, ang) {
       var A = ES.A, H = ES.H, R = ES.R, root = G(), m, ent, sal, et;
-      if (tipo === 'ch') { m = trCH(R + A / 2, ang); et = 'Curva horizontal (C.H.) ' + Math.round(ang * 180 / Math.PI) + '°, R = 300 mm'; }
-      else if (tipo === 'cvi') { m = trCV(R + 10, ang, true); et = 'Curva vertical interior (C.V.I.) 90°, R = 300 mm'; }
-      else { m = trCV(R + 10, ang, false); et = 'Curva vertical exterior (C.V.E.) 90°, R = 300 mm'; }
+      if (tipo === 'ch') { m = trCH(R + A / 2, ang); et = 'Curva horizontal (C.H.) ' + Math.round(ang * 180 / Math.PI) + '°, R = ' + Math.round(R * 10) + ' mm'; }
+      else if (tipo === 'cvi') { m = trCV(R + 10, ang, true); et = 'Curva vertical interior (C.V.I.) 90°, R = ' + Math.round(R * 10) + ' mm'; }
+      else { m = trCV(R + 10, ang, false); et = 'Curva vertical exterior (C.V.E.) 90°, R = ' + Math.round(R * 10) + ' mm'; }
       var curva = pieza(m, A, H, ES.paso);
       var u = m[m.length - 1], mEnt = aplicar(trRecta(80, 2), -80, 0, 0);
       var mSal = trRecta(80, 2).map(function (x) { var q = new THREE.Quaternion().setFromUnitVectors(V3(1, 0, 0), u.t); return { p: x.p.clone().applyQuaternion(q).add(u.p), t: u.t.clone(), u: u.u.clone(), n: u.n.clone() }; });
@@ -1396,15 +1417,15 @@
       else { sop.add(transf(riel(A + 20), -50, -4.1, 0, Math.PI / 2)); }
       root.add(sop);
       var mid = m[12];
-      return { root: root, partes: [[1, 'Escalerilla ' + et + ', A = 600 mm, H = 100 mm', 1, curva, [0, 25, 0], [mid.p.x, mid.p.y + H + 4, mid.p.z]],
+      return { root: root, partes: [[1, 'Escalerilla ' + et + ', ' + dimES(), 1, curva, [0, 25, 0], [mid.p.x, mid.p.y + H + 4, mid.p.z]],
         [2, 'Tramo recto de entrada', 1, ent, [-30, 0, 0], [-60, H + 4, A / 2]], [3, 'Tramo recto de salida', 1, sal, [u.t.x * 30, u.t.y * 30, u.t.z * 30], [u.p.x + u.t.x * 60, u.p.y + u.t.y * 60 + H, u.p.z + u.t.z * 60]],
         [4, 'Par de eclisas recta normal con 8 pernos y tuercas (incluido con la curva)', 2, ecl, [0, 0, 20], [m[0].p.x, H + 8, A / 2 + 4]],
         [5, 'Soporte riel 42×42 a menos de 600 mm de la curva', sop.children.length, sop, [0, -20, 0], [-50, -8, A / 2 + 10]], [6, 'Cables (radio de curvatura ≥ el mínimo del cable)', 1, cab, [0, 30, 0], [mid.p.x, mid.p.y + 6, mid.p.z]]] };
     }
-    V['esc-ch90'] = function () { var r = esCurva('ch', Math.PI / 2); r.sim = simEscalerilla(); return r; };
-    V['esc-ch45'] = function () { var r = esCurva('ch', Math.PI / 4); r.sim = simEscalerilla(); return r; };
-    V['esc-cvi'] = function () { var r = esCurva('cvi', Math.PI / 2); r.sim = simEscalerilla(); return r; };
-    V['esc-cve'] = function () { var r = esCurva('cve', Math.PI / 2); r.sim = simEscalerilla(); return r; };
+    V['esc-ch90'] = function () { var S = sE({}); var r = esCurva('ch', Math.PI / 2); r.sim = simEscalerilla(S); return r; };
+    V['esc-ch45'] = function () { var S = sE({}); var r = esCurva('ch', Math.PI / 4); r.sim = simEscalerilla(S); return r; };
+    V['esc-cvi'] = function () { var S = sE({}); var r = esCurva('cvi', Math.PI / 2); r.sim = simEscalerilla(S); return r; };
+    V['esc-cve'] = function () { var S = sE({}); var r = esCurva('cve', Math.PI / 2); r.sim = simEscalerilla(S); return r; };
     // Tee y cruz: lateral pasante continuo y curvas de radio R hacia la derivación
     function esDerivacion(cruz) {
       var A = ES.A, H = ES.H, R = ES.R, L = A + 2 * R, root = G(), lat = G(), y = V3(0, 1, 0);
@@ -1430,24 +1451,24 @@
       root.add(lat, pal, ent, sal, ecl);
       var cab = cables(aplicar(trRecta(L + 120, 6), -L / 2 - 60, 0, 0), A, 8);
       root.add(cab);
-      return { root: root, partes: [[1, 'Escalerilla ' + (cruz ? 'curva cruz (C.C.)' : 'curva tee (C.T.)') + ' A = S = P = 600 mm, R = 300 mm', 1, G(lat, pal), [0, 20, 0], [0, H + 4, -A / 2]],
+      return { root: root, partes: [[1, 'Escalerilla ' + (cruz ? 'curva cruz (C.C.)' : 'curva tee (C.T.)') + ' A = S = P = ' + Math.round(A * 10) + ' mm, H = ' + Math.round(H * 10) + ' mm, R = ' + Math.round(R * 10) + ' mm', 1, G(lat, pal), [0, 20, 0], [0, H + 4, -A / 2]],
         [2, 'Tramo recto entrante (A)', 1, ent, [-30, 0, 0], [-L / 2 - 30, H + 4, A / 2]], [3, 'Tramo recto pasante (P)', 1, sal, [30, 0, 0], [L / 2 + 30, H + 4, A / 2]],
         [4, 'Par de eclisas recta normal con 8 pernos y tuercas', cruz ? 4 : 3, ecl, [0, 0, 25], [-L / 2, H + 8, -A / 2 - 4]], [5, 'Cables pasantes (referencial)', 1, cab, [0, 30, 0], [0, 6, -10]]] };
     }
-    V['esc-tee'] = function () { var r = esDerivacion(false); r.sim = simEscalerilla(); return r; };
-    V['esc-cruz'] = function () { var r = esDerivacion(true); r.sim = simEscalerilla(); return r; };
+    V['esc-tee'] = function () { var S = sE({}); var r = esDerivacion(false); r.sim = simEscalerilla(S); return r; };
+    V['esc-cruz'] = function () { var S = sE({}); var r = esDerivacion(true); r.sim = simEscalerilla(S); return r; };
     V['esc-reduccion'] = function () {
-      var A = ES.A, B = 30, H = ES.H, root = G(), lat = G(), y = V3(0, 1, 0), Lr = 48;
+      var A = ES.A, B = Math.max(10, Math.round(ES.A / 10) * 5), H = ES.H, root = G(), lat = G(), y = V3(0, 1, 0), Lr = 48;
       [1, -1].forEach(function (s) { segLat(V3(0, 0, s * A / 2), V3(16, 0, s * A / 2), y, V3(0, 0, -s), H, lat); segLat(V3(16, 0, s * A / 2), V3(Lr - 16, 0, s * B / 2), y, V3(0, 0, -s), H, lat); segLat(V3(Lr - 16, 0, s * B / 2), V3(Lr, 0, s * B / 2), y, V3(0, 0, -s), H, lat); });
       var pal = G(palillo(V3(8, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), A), palillo(V3(Lr - 8, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), B), palillo(V3(Lr / 2, 0, 0), V3(1, 0, 0), y, V3(0, 0, 1), (A + B) / 2));
       var ent = pieza(aplicar(trRecta(100, 2), -100, 0, 0), A, H, ES.paso), sal = pieza(aplicar(trRecta(100, 2), Lr, 0, 0), B, H, ES.paso);
       var ecl = G(eclisasEn(aplicar(trRecta(1, 1), 0, 0, 0), 0, A, H), eclisasEn(aplicar(trRecta(1, 1), Lr, 0, 0), 0, B, H));
       root.add(lat, pal, ent, sal, ecl);
-      return { root: root, partes: [[1, 'Escalerilla curva reducción central A = 600 → B = 300 mm (480 mm, tramos de 160 mm)', 1, G(lat, pal), [0, 25, 0], [Lr / 2, H + 4, A / 2]],
-        [2, 'Tramo recto ancho A = 600 mm', 1, ent, [-30, 0, 0], [-60, H + 4, A / 2]], [3, 'Tramo recto ancho B = 300 mm', 1, sal, [30, 0, 0], [Lr + 60, H + 4, B / 2]],
+      return { root: root, partes: [[1, 'Escalerilla curva reducción central A = ' + Math.round(A * 10) + ' → B = ' + Math.round(B * 10) + ' mm (480 mm, tramos de 160 mm)', 1, G(lat, pal), [0, 25, 0], [Lr / 2, H + 4, A / 2]],
+        [2, 'Tramo recto ancho A = ' + Math.round(A * 10) + ' mm', 1, ent, [-30, 0, 0], [-60, H + 4, A / 2]], [3, 'Tramo recto ancho B = ' + Math.round(B * 10) + ' mm', 1, sal, [30, 0, 0], [Lr + 60, H + 4, B / 2]],
         [4, 'Par de eclisas recta normal con 8 pernos y tuercas', 2, ecl, [0, 0, 25], [0, H + 8, -A / 2 - 4]]] };
     };
-    V['esc-reduccion'] = (function (f) { return function () { var r = f(); r.sim = simEscalerilla(); return r; }; })(V['esc-reduccion']);
+    V['esc-reduccion'] = (function (f) { return function () { var S = sE({}); var r = f(); r.sim = simEscalerilla(S); return r; }; })(V['esc-reduccion']);
 
     // ── Soportación ──
     function trapecio(x, z, yTecho, niveles, A, H, sep) { // base, omegas, hilo corrido, riel 42×42 por nivel, tuercas
@@ -1465,8 +1486,8 @@
       return { g: g, base: base, omegas: omegas, rieles: rieles, hilos: hilos, tuer: tuer };
     }
     V['esc-trapecio'] = function (niveles) {
-      niveles = niveles || 1;
-      var A = ES.A, H = ES.H, sep = 30, root = G(), yT = 70, techo = G(box(320, 12, 70, mats.concrete, 150, yT + 6, 0), box(320, 30, 20, mats.concrete, 150, yT - 3, 0));
+      var S = sE({ niv: niveles || 1, susp: 0.7 }); niveles = Math.max(1, +S.niv || 1);
+      var A = ES.A, H = ES.H, sep = 30, root = G(), yT = Math.max(25, S.susp * 100), techo = G(box(320, 12, 70, mats.concrete, 150, yT + 6, 0), box(320, 30, 20, mats.concrete, 150, yT - 3, 0));
       techo.children[1].visible = false;
       var tr = [trapecio(40, 0, yT, niveles, A, H, sep), trapecio(260, 0, yT, niveles, A, H, sep)];
       var escs = G(), mords = G(), cab = G();
@@ -1484,13 +1505,14 @@
         [4, 'Hilo corrido 3/8" UNC (largo según suspensión)', 4, G(tr[0].hilos, tr[1].hilos), [0, 0, 0], [40, 35, A / 2 + 6]],
         [5, 'Conjunto soporte recto riel 42×42, L = ' + (A * 10 + 280) + ' mm', 2 * niveles, G(tr[0].rieles, tr[1].rieles), [0, -10, 0], [260, -6, -A / 2 - 10]],
         [6, 'Tuerca riel 42 con resorte, tuercas hexagonales y golillas 3/8"', 2 * (4 * niveles + 2), G(tr[0].tuer, tr[1].tuer), [0, 0, 0], [40, -6, A / 2 + 10]],
-        [7, 'Escalerilla recta normal 600×100 mm' + sepTxt, niveles, escs, [0, 0, 0], [150, H + 4, A / 2]],
+        [7, 'Escalerilla recta ' + verES() + ' ' + dimES() + sepTxt, niveles, escs, [0, 0, 0], [150, H + 4, A / 2]],
         [8, 'Mordaza 42 con perno y tuerca riel (una por lateral)', 4 * niveles, mords, [0, 8, 0], [40, 3, -A / 2 - 6]],
-        [9, 'Cables (referencial)', 1, cab, [0, 25, 0], [150, 6, 0]]], sim: simEscalerilla({ sop: 'trap', niv: niveles, susp: 0.7 }) };
+        [9, 'Cables (referencial)', 1, cab, [0, 25, 0], [150, 6, 0]]], sim: simEscalerilla(S) };
     };
     V['esc-trapecio2'] = function () { return V['esc-trapecio'](2); };
+    V['esc-trapecio1'] = function () { return V['esc-trapecio'](1); };
     V['esc-mensula'] = function () {
-      var A = ES.A, H = ES.H, root = G(), L = A + 10, pared = box(300, 110, 15, mats.wall, 115, 25, -A / 2 - 13);
+      var S = sE({ sop: 'muro' }), A = ES.A, H = ES.H, root = G(), L = A + 10, pared = box(300, 110, 15, mats.wall, 115, 25, -A / 2 - 13);
       var mens = G(), anc = G(), mords = G();
       [40, 190].forEach(function (x) {
         var g = G(box(0.6, 30, 4.4, mats.galv, 0, -10, 0), transf(riel(L), L / 2, -4.1, 0));
@@ -1504,11 +1526,11 @@
       return { root: root, partes: [[1, 'Muro o columna (estructura existente)', 1, pared, [0, 0, -20], [10, 100, -A / 2 - 5]],
         [2, 'Soporte muro simple riel 42×42, L = ' + (L * 10) + ' mm, placa con 2 perforaciones', 2, mens, [0, 0, 15], [190, -18, -A / 2 + 6]],
         [3, 'Perno de anclaje de expansión 3/8" × 3"', 4, anc, [0, 0, -10], [40, -22, -A / 2 - 2]],
-        [4, 'Escalerilla recta normal 600×100 mm', 1, esc, [0, 20, 0], [120, H + 4, A / 2]],
-        [5, 'Mordaza 42 con perno y tuerca riel', 4, mords, [0, 6, 0], [40, 3, A / 2 + 6]], [6, 'Cables (referencial)', 1, cab, [0, 25, 0], [120, 6, 0]]], sim: simEscalerilla({ sop: 'muro' }) };
+        [4, 'Escalerilla recta ' + verES() + ' ' + dimES(), 1, esc, [0, 20, 0], [120, H + 4, A / 2]],
+        [5, 'Mordaza 42 con perno y tuerca riel', 4, mords, [0, 6, 0], [40, 3, A / 2 + 6]], [6, 'Cables (referencial)', 1, cab, [0, 25, 0], [120, 6, 0]]], sim: simEscalerilla(S) };
     };
     V['esc-vertical'] = function () {
-      var A = ES.A, H = ES.H, root = G(), pared = box(160, 360, 15, mats.wall, 0, 160, -H - 13.1), losa_ = box(220, 10, 160, mats.concrete, 0, -5, 50);
+      var S = sE({ sop: 'muro', d: 1.2 }), A = ES.A, H = ES.H, root = G(), pared = box(160, 360, 15, mats.wall, 0, 160, -H - 13.1), losa_ = box(220, 10, 160, mats.concrete, 0, -5, 50);
       var m = trRecta(300, 2).map(function (x) { return { p: V3(0, 20 + x.p.x, -H - 1.5), t: V3(0, 1, 0), u: V3(0, 0, 1), n: V3(1, 0, 0) }; });
       m.forEach(function (x) { x.p.z = -1.5 - 0; });
       var mm = m.map(function (x) { return { p: V3(0, x.p.y, -H - 1.5 + 0), t: x.t, u: x.u, n: x.n }; });
@@ -1518,14 +1540,14 @@
       var cabs = G(); for (var k2 = 0; k2 < 10; k2++) cabs.add(cyl(0.9, 300, k2 % 2 ? mats.cableBlue : mats.black, -A / 2 + 4 + k2 * 2.2, 170, -H + 3, 'y', 10));
       root.add(pared, losa_, esc, sop, ab, cabs);
       return { root: root, partes: [[1, 'Muro (estructura existente)', 1, pared, [0, 0, -20], [60, 330, -H - 1]],
-        [2, 'Escalerilla recta normal 600×100 mm en vertical', 1, esc, [0, 0, 15], [A / 2, 250, -H + 4]],
+        [2, 'Escalerilla recta ' + verES() + ' ' + dimES() + ' en vertical', 1, esc, [0, 0, 15], [A / 2, 250, -H + 4]],
         [3, 'Riel 42×42 adosado al muro cada 1.200 mm máx. con 2 pernos de expansión 3/8"', 3, sop, [0, 0, -8], [-A / 2 - 8, 180, -H]],
-        [4, 'Amarras de cables a los palillos cada 300 mm (cables en vertical)', 1, ab, [0, 0, 20], [0, 220, -H + 8]], [5, 'Cables (referencial)', 1, cabs, [0, 0, 30], [10, 120, -H + 6]]], sim: simEscalerilla({ sop: 'muro', d: 1.2 }) };
+        [4, 'Amarras de cables a los palillos cada 300 mm (cables en vertical)', 1, ab, [0, 0, 20], [0, 220, -H + 8]], [5, 'Cables (referencial)', 1, cabs, [0, 0, 30], [10, 120, -H + 6]]], sim: simEscalerilla(S) };
     };
 
     // ── Recorrido típico con entrada a tablero (como el esquema del catálogo) ──
     V['esc-recorrido'] = function () {
-      var A = 40, H = ES.H, R = 30, root = G(), y0 = 230, P = ES.paso;
+      var S = sE({ A: 400, L: 15, ch: 1, cv: 2, ct: 0, susp: 0.9 }), A = ES.A, H = ES.H, R = ES.R, root = G(), y0 = 190 + R + 10, P = ES.paso;
       var save = ES.A; ES.A = A;
       var piezas = [], partes = [];
       function add(M_, et) { var g = pieza(M_, A, H, P); root.add(g); piezas.push([g, et, M_]); return M_; }
@@ -1555,7 +1577,7 @@
       var ecl = G(); piezas.forEach(function (p) { ecl.add(eclisasEn(p[2], 0, A, H)); });
       // soportes trapecio bajo los tramos horizontales
       var sopG = G(); [[60, 0, 0], [240, 0, 0], [e2.p.x, e2.p.z + 60, 1], [e2.p.x, e2.p.z + 170, 1]].forEach(function (s) {
-        ES.A = A; var t = trapecio(0, 0, 320 - y0, 1, A, H, 30); ES.A = save;
+        ES.A = A; var t = trapecio(0, 0, 90, 1, A, H, 30); ES.A = save;
         t.g.position.set(s[0], y0, s[1]); t.g.rotation.y = s[2] ? 0 : Math.PI / 2; sopG.add(t.g);
       });
       var losa_ = box(500, 12, 420, mats.concrete, 150, 326, 120); losa_.visible = false;
@@ -1564,7 +1586,7 @@
       root.add(tab, entrada, ecl, sopG, piso, cab);
       ES.A = save;
       return { root: root, foco: [140, 165, 90, 215], partes: [
-        [1, 'Escalerilla recta 400×100 normal, tiras de 3 m', 3, G(piezas[0][0], piezas[2][0]), [0, 20, 0], [150, y0 + H + 4, A / 2]],
+        [1, 'Escalerilla recta ' + verES() + ' ' + dimES() + ', tiras de 3 m', 3, G(piezas[0][0], piezas[2][0]), [0, 20, 0], [150, y0 + H + 4, A / 2]],
         [2, 'Escalerilla curva horizontal (C.H.) 90°', 1, piezas[1][0], [20, 20, 0], [e2.p.x - 30, y0 + H + 4, 40]],
         [3, 'Escalerilla curva vertical exterior (C.V.E.) 90° hacia el tablero', 1, piezas[3][0], [-20, 0, 0], [-20, y0 + 6, -A / 2]],
         [4, 'Bajada vertical a tablero', 1, piezas[4][0], [-20, 0, 0], [eB.p.x - 30, 178, -A / 2]],
@@ -1573,7 +1595,7 @@
         [7, 'Escalerilla curva vertical interior (C.V.I.) 90° de subida', 1, G(piezas[5][0], piezas[6][0]), [0, 20, 0], [e3.p.x, y0 + 40, e3.p.z + 20]],
         [8, 'Pares de eclisa recta con pernos y tuercas', piezas.length, ecl, [0, 0, 0], [300, y0 + H + 8, -A / 2 - 4]],
         [9, 'Trapecio suspendido riel 42×42 con hilo corrido 3/8"', 4, sopG, [0, -15, 0], [60, y0 + 50, -A / 2 - 10]],
-        [10, 'Cables (referencial)', 1, cab, [0, 25, 0], [100, y0 + 6, 0]]], sim: simEscalerilla({ A: 400, L: 15, ch: 1, cv: 2, ct: 0, susp: 0.9 }) };
+        [10, 'Cables (referencial)', 1, cab, [0, 25, 0], [100, y0 + 6, 0]]], sim: simEscalerilla(S) };
     };
 
     // ── Interfaz ─────────────────────────────────────────────────────────────────────
@@ -1582,7 +1604,8 @@
     var modelo = null, partes = [], etiquetas = [], ex = 0, exObj = 0, simAct = null, tPrev = 0, foco = null;
 
     function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-    function construir() {
+    function construir(mantener) {
+      var foc = mantener && document.activeElement ? document.activeElement.id : '';
       if (modelo) { scene.remove(modelo); etiquetas.forEach(function (l) { l.element.remove(); }); }
       var r = V[estado.v.m]();
       modelo = r.root; partes = r.partes; etiquetas = []; simAct = r.sim || null; foco = r.foco || null;
@@ -1597,10 +1620,14 @@
       });
       scene.add(modelo);
       etiquetas.forEach(function (l) { l.visible = estado.etiquetas; });
-      encuadrar();
+      if (mantener) { // mismo encuadre: solo reubica el despiece y el piso
+        var b3 = new THREE.Box3().setFromObject(modelo); ground.position.y = Math.min(0, b3.min.y) - 0.2; aplicarSeparacion();
+      } else encuadrar();
       pintarPanel();
       if (simAct) simAct.montar();
+      if (foc && $(foc)) $(foc).focus();
     }
+    function reconstruir() { construir(true); }
     function encuadrar() {
       partes.forEach(function (p) { p[3].position.copy(p[3].userData.base); });
       var box3 = new THREE.Box3().setFromObject(modelo);
