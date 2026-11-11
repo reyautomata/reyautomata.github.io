@@ -559,7 +559,8 @@
       '#k3d .k3-ley{overflow:auto;padding:10px 12px;border-left:1px solid #24405f;font-size:12px}#k3d .k3-ley li{margin:0 0 6px}',
       '#k3d .k3-ley ol{margin:0;padding-left:20px}#k3d .k3-ayuda{color:#9fb0c3;font-size:11.5px;margin-top:10px}',
       '#k3d .k3-carga{position:absolute;inset:0;display:grid;place-items:center;color:#9fb0c3}',
-      '@media (max-width:760px){#k3d .k3-cuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 150px}#k3d .k3-ley{border-left:0;border-top:1px solid #24405f}}'
+      '@media (max-width:760px){#k3d .k3-cuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 150px}#k3d .k3-ley{border-left:0;border-top:1px solid #24405f}}',
+      '@media (max-width:700px){#kTutTab,#kNorTab,#kCatTab{top:auto;bottom:0;width:25%;height:54px;writing-mode:horizontal-tb;transform:none;border-radius:0;padding:4px 6px;font-size:11.5px;line-height:1.15;white-space:normal;text-align:center;box-shadow:0 -2px 10px rgba(0,0,0,.35);z-index:61}#kTutTab{left:0}#kNorTab{left:25%}#kCatTab{left:50%;right:auto}body{padding-bottom:58px}body:not(:has(#rsBtn)) #kTutTab,body:not(:has(#rsBtn)) #kNorTab,body:not(:has(#rsBtn)) #kCatTab{width:33.34%}body:not(:has(#rsBtn)) #kNorTab{left:33.33%}body:not(:has(#rsBtn)) #kCatTab{left:66.66%}}'
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -635,7 +636,7 @@
   ];
   function montarTutorial() {
     if ($('#kTut')) return;
-    var pasos = TUT.filter(function (t) { return document.querySelector(t[1]); });
+    var pasos = TUT.filter(function (t) { var e = document.querySelector(t[1]); return e && !e.hidden; });
     var tab = document.createElement('button'); tab.type = 'button'; tab.id = 'kTutTab'; tab.textContent = 'Tutorial'; tab.setAttribute('aria-controls', 'kTut'); tab.setAttribute('aria-expanded', 'false');
     var p = document.createElement('aside'); p.id = 'kTut'; p.setAttribute('aria-label', 'Tutorial');
     p.innerHTML = '<div class="kt-cab"><b>Cómo se usa</b><button type="button" id="kTutCerrar" aria-label="Cerrar tutorial">✕</button></div>' +

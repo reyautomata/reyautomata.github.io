@@ -1,0 +1,19 @@
+{
+  "name": "ReyEngi Conduit · Ductos RIC N°04",
+  "short_name": "Conduit",
+  "description": "Dimensionamiento de ductos (conduit) según el RIC N°04 de la SEC: catálogo de cables, corte, 3D, lámina A3, DXF y Excel. Funciona sin conexión.",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1a2b",
+  "theme_color": "#022A55",
+  "lang": "es",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icono-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

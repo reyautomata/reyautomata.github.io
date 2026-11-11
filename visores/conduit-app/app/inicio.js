@@ -65,5 +65,9 @@
   })();
   // PDF A3 directo desde la app de escritorio (la lámina se arma en #imp y se imprime a archivo)
   if (window.reyPdf) window.print = function () { var c = A.E().cfg; window.reyPdf.guardar('Ductos ' + (c.proyecto || '').replace(/[\\/:*?"<>|]+/g, '-')); };
+  // App instalable (web): service worker para usarla sin conexión
+  if ('serviceWorker' in navigator && !window.reyPdf && (location.protocol === 'https:' || location.hostname === 'localhost') && window.parent === window) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
   refrescar();
 })();

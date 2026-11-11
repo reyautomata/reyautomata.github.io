@@ -2,6 +2,7 @@
  * El modo llega en la dirección (?modo=vigente | porvencer | vencida | sin). No valida claves reales. */
 (function () {
   'use strict';
+  if (window.parent === window) return; // instalada como app: sin licencia simulada
   var modo = (location.search.match(/modo=(\w+)/) || [])[1] || 'vigente';
   function fecha(d) { var x = new Date(); x.setDate(x.getDate() + d); return x.toLocaleDateString('sv-SE'); }
   var base = { equipo: '4F7B-0CB4-9D65-33AC', cliente: 'Empresa Demo SpA', plan: '12m' };
