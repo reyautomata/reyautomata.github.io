@@ -4,9 +4,10 @@
   function pintar(s) {
     $('#eq').textContent = s.equipo || '—';
     var e = $('#est'), cls = 'mal', t = 'Sin licencia', p = s.motivo || '';
-    if (s.ok && s.dias <= 30) { cls = 'av'; t = 'Licencia por vencer'; p = 'Vigente hasta el ' + s.vence + ' (' + s.dias + ' días) · ' + s.cliente; }
-    else if (s.ok) { cls = 'ok'; t = 'Licencia vigente'; p = 'Hasta el ' + s.vence + ' (' + s.dias + ' días) · ' + s.cliente; }
-    else if (s.codigo === 'vencida') { t = 'Licencia vencida'; p = s.motivo + ' Solicita la renovación y pega la nueva clave.'; }
+    var inc = s.incluida ? ' (licencia incluida)' : '';
+    if (s.ok && s.dias <= (s.plan === '30d' ? 7 : 30)) { cls = 'av'; t = 'Licencia por vencer' + inc; p = 'Vigente hasta el ' + s.vence + ' (' + s.dias + ' días) · ' + s.cliente; }
+    else if (s.ok) { cls = 'ok'; t = 'Licencia vigente' + inc; p = 'Hasta el ' + s.vence + ' (' + s.dias + ' días) · ' + s.cliente; }
+    else if (s.codigo === 'vencida') { t = 'Licencia vencida' + inc; p = s.motivo + ' Solicita la renovación y pega la nueva clave.'; }
     else if (s.codigo === 'reloj') t = 'Fecha del sistema no válida';
     else if (s.codigo === 'equipo' || s.codigo === 'invalida') t = 'Licencia no válida';
     e.className = 'est ' + cls; e.innerHTML = '<h2></h2><p></p>'; e.querySelector('h2').textContent = t; e.querySelector('p').textContent = p;
