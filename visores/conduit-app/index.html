@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ReyEngi Conduit · Vista previa de la app para Windows</title>
+<meta name="description" content="Vista previa de ReyEngi Conduit, app portable de Windows para dimensionar ductos según RIC N°04, con licencia de 6 o 12 meses.">
+<meta name="theme-color" content="#022A55">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<script src="../acceso.js"></script>
+<style>
+:root { --bg: #0b1a2b; --panel: #11243a; --fg: #e8eef5; --muted: #9fb0c3; --line: #24405f; --acc: #E8A317; --brand: #022A55; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+a { color: var(--acc); }
+.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 20px; background: var(--brand); border-bottom: 3px solid var(--acc); }
+.top img { height: 30px; }
+.top h1 { margin: 0; font-size: 17px; } .top h1 small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.top .sp { flex: 1; }
+.top a.v { font-size: 13px; color: #cfe0f2; text-decoration: none; border: 1.5px solid #3a5a80; border-radius: 8px; padding: 7px 12px; }
+main { max-width: 1500px; margin: 0 auto; padding: 16px 20px 40px; }
+.ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.ctrl span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+.ctrl button { font: 600 13px inherit; font-family: inherit; color: var(--fg); background: transparent; border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 13px; cursor: pointer; }
+.ctrl button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: #1a1205; }
+.ctrl button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+/* Escritorio de Windows 11 (simulado) */
+.esc { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #2c4a6c;
+  background: radial-gradient(120% 90% at 20% 10%, #2b6cb0 0%, #1d3f73 35%, #0f2346 70%, #0a1830 100%); }
+.lienzo { position: absolute; left: 0; top: 0; width: 1360px; height: 900px; transform-origin: 0 0; }
+.win { position: absolute; background: #0b1a2b; border-radius: 8px; overflow: hidden; border: 1px solid #3b4f66;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35); display: flex; flex-direction: column; }
+.win[hidden] { display: none; }
+.tb { height: 32px; flex: none; display: flex; align-items: center; background: #f3f3f3; color: #1b1b1b; font: 12px "Segoe UI", system-ui, sans-serif; user-select: none; }
+.tb img { width: 16px; height: 16px; margin: 0 8px 0 10px; }
+.tb .t { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb i { width: 46px; height: 32px; display: grid; place-items: center; font-style: normal; font-size: 13px; color: #333; }
+.tb i:last-child:hover { background: #c42b1c; color: #fff; }
+.tb i.off { color: #aaa; }
+.win iframe { border: 0; width: 100%; flex: 1; background: #0b1a2b; display: block; }
+#wMain { left: 40px; top: 24px; width: 1280px; height: 800px; }
+#wLic { left: 370px; top: 44px; width: 620px; height: 812px; z-index: 3; }
+.velo { position: absolute; left: 40px; top: 24px; width: 1280px; height: 800px; background: rgba(0,0,0,.35); border-radius: 8px; z-index: 2; }
+.velo[hidden] { display: none; }
+.barra-tareas { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: rgba(32,32,32,.85); display: flex; justify-content: center; align-items: center; gap: 6px; }
+.barra-tareas b { width: 40px; height: 40px; border-radius: 6px; display: grid; place-items: center; }
+.barra-tareas b.on { background: rgba(255,255,255,.12); box-shadow: inset 0 -3px 0 -1px #60a5fa; }
+.barra-tareas b img { width: 24px; height: 24px; }
+.barra-tareas .w { width: 22px; height: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.barra-tareas .w span { background: #4cc2ff; border-radius: 1px; }
+.reloj { position: absolute; right: 14px; bottom: 6px; font: 11.5px "Segoe UI", sans-serif; color: #fff; text-align: right; line-height: 1.35; }
+.toast { position: absolute; right: 18px; bottom: 60px; width: 340px; background: #202020; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.5); z-index: 5; }
+.toast[hidden] { display: none; }
+/* Notas */
+.notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 18px; }
+.notas section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.notas h2 { margin: 0 0 6px; font-size: 14.5px; color: var(--acc); }
+.notas p, .notas li { margin: 0; color: #cdd8e4; font-size: 13px; }
+.notas ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+@media (max-width: 700px) { .top a.v { display: none; } main { padding: 12px 12px 30px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="../../img/logo-reyengi.png" alt="ReyEngi">
+  <h1>ReyEngi Conduit · app para Windows<small>Vista previa de la app portable: ventana principal y ventana de licencia</small></h1>
+  <span class="sp"></span>
+  <a class="v" href="../">← Suite ReyEngi</a>
+</header>
+<main>
+  <div class="ctrl" role="group" aria-label="Estado de la licencia">
+    <span>Estado de la licencia:</span>
+    <button type="button" data-m="vigente" aria-pressed="true">Vigente</button>
+    <button type="button" data-m="porvencer" aria-pressed="false">Por vencer (≤ 30 días)</button>
+    <button type="button" data-m="vencida" aria-pressed="false">Vencida</button>
+    <button type="button" data-m="sin" aria-pressed="false">Primer uso</button>
+  </div>
+  <div class="esc" id="esc">
+    <div class="lienzo" id="lienzo">
+      <div class="win" id="wMain">
+        <div class="tb"><img src="../../img/favicon.png" alt=""><span class="t">ReyEngi Conduit</span><i>─</i><i>▢</i><i>✕</i></div>
+        <iframe id="fMain" title="Ventana principal de ReyEngi Conduit"></iframe>
+      </div>
+      <div class="velo" id="velo" hidden></div>
+      <div class="win" id="wLic" hidden>
+        <div class="tb"><img src="../../img/favicon.png" alt=""><span class="t">Licencia · ReyEngi Conduit</span><i class="off">─</i><i class="off">▢</i><i>✕</i></div>
+        <iframe id="fLic" title="Ventana de licencia de ReyEngi Conduit"></iframe>
+      </div>
+      <div class="toast" id="toast" hidden></div>
+      <div class="barra-tareas"><b><span class="w"><span></span><span></span><span></span><span></span></span></b><b class="on"><img src="../../img/favicon.png" alt="ReyEngi Conduit"></b></div>
+      <div class="reloj" id="reloj"></div>
+    </div>
+  </div>
+  <div class="notas">
+    <section><h2>Portable, sin instalación</h2><p>Se entrega como una carpeta en .zip: se descomprime en el disco o en un pendrive y se abre «ReyEngi Conduit.exe». Funciona sin conexión.</p></section>
+    <section><h2>Licencia de 6 o 12 meses</h2><ul><li>Primer uso: código de equipo, plan y solicitud por WhatsApp.</li><li>La clave firmada queda asociada al equipo.</li><li>Aviso desde 30 días antes del vencimiento.</li><li>Al vencer solo se abre la renovación; los proyectos .reyconduit se conservan.</li></ul></section>
+    <section><h2>Qué incluye</h2><ul><li>Ocupación según RIC N°04 Tabla 4.21 (referencia NEC).</li><li>Catálogo de cables y dibujo del corte.</li><li>Lámina A3 en PDF, DXF del corte y memoria en Excel.</li></ul></section>
+    <section><h2>Esta página</h2><p>Es una vista previa: la licencia está simulada y no valida claves. Los datos que ingreses quedan solo en este navegador.</p></section>
+  </div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); }, modo = 'vigente', toastT = 0;
+  function escalar() {
+    var esc = $('#esc'), w = esc.clientWidth, k = Math.min(1, w / 1360);
+    $('#lienzo').style.transform = 'scale(' + k + ')'; esc.style.height = Math.round(900 * k) + 'px';
+  }
+  function reloj() { var d = new Date(); $('#reloj').innerHTML = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) + '<br>' + d.toLocaleDateString('es-CL'); }
+  function licencia(abrir) { $('#wLic').hidden = !abrir; $('#velo').hidden = !abrir || $('#wMain').hidden; if (abrir) $('#fLic').src = 'licencia.html?modo=' + modo + '&t=' + Date.now(); }
+  function toast(t) { var e = $('#toast'); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { e.hidden = true; }, 4500); }
+  function poner(m) {
+    modo = m;
+    document.querySelectorAll('.ctrl button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === m)); });
+    var ok = m === 'vigente' || m === 'porvencer';
+    $('#wMain').hidden = !ok;
+    if (ok) $('#fMain').src = 'app/index.html?modo=' + m;
+    licencia(!ok);
+  }
+  document.querySelectorAll('.ctrl button').forEach(function (b) { b.addEventListener('click', function () { poner(b.dataset.m); }); });
+  $('#wLic .tb i:last-child').addEventListener('click', function () { if (modo === 'vigente' || modo === 'porvencer') licencia(false); else toast('Sin licencia vigente la app se cierra al cerrar esta ventana.'); });
+  window.addEventListener('message', function (e) {
+    var t = e.data && e.data.reyDemo; if (!t) return;
+    if (t === 'licencia') licencia(true);
+    else if (t === 'cerrar') { if (modo === 'vigente' || modo === 'porvencer') licencia(false); else toast('Sin licencia vigente la app se cierra al cerrar esta ventana.'); }
+    else toast(t);
+  });
+  window.addEventListener('resize', escalar);
+  escalar(); reloj(); setInterval(reloj, 30000); poner('vigente');
+})();
+</script>
+</body>
+</html>
