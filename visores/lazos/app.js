@@ -664,8 +664,16 @@
   enlazarFlota();
   var v0 = 'lazos'; try { v0 = localStorage.getItem('reyengi-lazos-vista') || 'lazos'; } catch (e) {}
   if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) v0 = location.hash.slice(1);
-  mostrar(v0);
-  window.addEventListener('hashchange', function () { if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
+  // Enlaces del explorador a un entregable concreto: #lazo=<id> abre ese diagrama de lazo; #ducto=<id>, ese ducto
+  function irEntregable() {
+    var m = /^#lazo=(.+)$/.exec(location.hash);
+    if (m) { sel = decodeURIComponent(m[1]); mostrar('lazos'); return true; }
+    m = /^#ducto=(.+)$/.exec(location.hash);
+    if (m) { E.cond = E.cond || { ductos: [], sel: '' }; E.cond.sel = decodeURIComponent(m[1]); mostrar('cond'); return true; }
+    return false;
+  }
+  if (!irEntregable()) mostrar(v0);
+  window.addEventListener('hashchange', function () { if (irEntregable()) return; if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
   window.__LAZOS = { mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
 })();
