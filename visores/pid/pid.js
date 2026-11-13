@@ -541,11 +541,12 @@
   $('#vHoja').addEventListener('change', function () { mostrarHoja(this.value); });
 
   // ── Tabla de revisión ──
-  var selId = null;
+  var selId = null, FX = null; // FX: filtro adicional que pone el explorador (lazo, tipo de señal, búsquedas)
+  function ui(m, a) { if (window.PID_UI && window.PID_UI[m]) window.PID_UI[m](a); }
   var COLS = [['letras', 'Letras', 62, 'l'], ['num', 'Número', 70, 'n'], ['suf', 'Suf.', 40, 'n'], ['area', 'Área', 62, 'n'], ['tipo', 'Señal', 84], ['servicio', 'Servicio', 200], ['equipo', 'Equipo / línea', 130], ['nota', 'Nota', 90]];
   function visibles() {
     var fe = $('#fEstado').value, fh = $('#fHoja').value, q = norm($('#fBuscar').value);
-    return S.cand.filter(function (c) { return (!fe || c.estado === fe) && (!fh || c.hoja === fh) && (!q || norm(tagDe(c) + ' ' + c.servicio + ' ' + c.equipo + ' ' + c.nota).indexOf(q) >= 0); });
+    return S.cand.filter(function (c) { return (!fe || c.estado === fe) && (!fh || c.hoja === fh) && (!FX || FX(c)) && (!q || norm(tagDe(c) + ' ' + c.servicio + ' ' + c.equipo + ' ' + c.nota).indexOf(q) >= 0); });
   }
   function pintarTabla() {
     $('#tCand thead').innerHTML = '<tr><th class="chk"><input type="checkbox" id="cTodo" aria-label="Seleccionar todos"></th><th>Tag</th>' + COLS.map(function (c) { return '<th style="min-width:' + c[2] + 'px">' + c[1] + '</th>'; }).join('') + '<th>Listado</th><th>Origen</th><th>Estado</th><th></th></tr>';
@@ -569,7 +570,7 @@
     S.cand.forEach(function (c) { if (c.estado === 'validado') { v++; if (/^(AI|AO|DI|DO)$/.test(c.tipo)) io++; } else if (c.estado === 'rechazado') r++; else p++; if (c.exportado) x++; });
     $('#resumen').innerHTML = '<span>Total <b>' + n + '</b></span><span>Pendientes <b>' + p + '</b></span><span>Validados <b>' + v + '</b> (' + io + ' con E/S)</span><span>Rechazados <b>' + r + '</b></span><span>Exportados <b>' + x + '</b></span>' + (S.listado ? '<span>En listado <b>' + S.cand.filter(function (c) { return c.enListado; }).length + '</b> / ' + S.listado.items.length + '</span>' : '');
     $('#cuentaCand').textContent = n ? n + ' detectados' : '';
-    var pasos = document.querySelectorAll('#pasos li');
+    var pasos = document.querySelectorAll('#pasos li'); if (pasos.length < 3) return;
     pasos[0].classList.toggle('hecho', S.hojas.length > 0); pasos[1].classList.toggle('hecho', n > 0 && p === 0); pasos[2].classList.toggle('hecho', x > 0 && x >= v && v > 0);
     pasos[1].classList.toggle('on', n > 0 && p > 0); pasos[2].classList.toggle('on', n > 0 && p === 0 && x < v);
   }
@@ -590,10 +591,10 @@
       (!nPl ? 'Ningún instrumento del listado indica como P&amp;ID uno de los planos cargados: revisa el N° de plano de cada hoja para comparar qué falta. ' : f.length ? f.length + ' instrumentos del listado no aparecen en los P&amp;ID cargados: <button type="button" class="mini" id="bAgrFalt">Agregarlos como pendientes</button><details><summary style="cursor:pointer;margin-top:6px">Ver la lista</summary><ul class="falt">' + f.map(function (x) { return '<li>' + esc(x.tag) + '</li>'; }).join('') + '</ul></details>' : 'Los ' + nPl + ' instrumentos del listado de estos planos fueron encontrados.') + ' <button type="button" class="mini" id="bQuitarListado">Quitar listado</button></div>';
   }
   function pintarTodo() { pintarHojas(); pintarTabla(); pintarResumen(); pintarListadoMsg(); pintarVista(); avisarListado(); }
-  function avisarListado() { if (window.PID_LISTADO) window.PID_LISTADO.cambio(); if (window.PID_NORMAS) window.PID_NORMAS.cambio(); }
+  function avisarListado() { if (window.PID_LISTADO) window.PID_LISTADO.cambio(); if (window.PID_NORMAS) window.PID_NORMAS.cambio(); ui('cambio'); }
   function cand(id) { return S.cand.filter(function (c) { return c.id === id; })[0]; }
   function seleccionar(id, desdeVista) {
-    selId = id; var c = cand(id); if (!c) return;
+    selId = id; var c = cand(id); if (!c) return; ui('sel', id);
     document.querySelectorAll('#tCand tr.sel').forEach(function (t) { t.classList.remove('sel'); });
     var tr = document.querySelector('#tCand tr[data-id="' + id + '"]');
     if (tr) { tr.classList.add('sel'); if (desdeVista) tr.scrollIntoView({ block: 'nearest' }); }
@@ -618,7 +619,7 @@
   $('#tCand').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-a]'), tr = e.target.closest('tr[data-id]'); if (!tr) return; var c = cand(tr.dataset.id); if (!c) return;
     if (!b) { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') seleccionar(c.id, false); else if (selId !== c.id) seleccionar(c.id, false); return; }
-    if (b.dataset.a === 'ver') { seleccionar(c.id, false); return; }
+    if (b.dataset.a === 'ver') { ui('tab', 'plano'); seleccionar(c.id, false); return; }
     if (b.dataset.a === 'val' && (!c.letras || !c.num)) { toast('Completa letras y número antes de validar.'); return; }
     marcar(c, b.dataset.a === 'val' ? 'validado' : 'rechazado'); guardar();
     var sig = tr.nextElementSibling; pintarTabla(); pintarResumen(); pintarVista(); avisarListado();
@@ -640,7 +641,7 @@
   $('#tHojas').addEventListener('input', function (e) { var t = e.target, tr = t.closest('tr[data-h]'); if (!tr || !t.dataset.k) return; var h = S.hojas.filter(function (x) { return x.id === tr.dataset.h; })[0]; h[t.dataset.k] = t.value.trim().toUpperCase(); guardar(); if (t.dataset.k === 'plano') pintarTabla(); });
   $('#tHojas').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-a]'), tr = e.target.closest('tr[data-h]'); if (!b || !tr) return; var id = tr.dataset.h, h = S.hojas.filter(function (x) { return x.id === id; })[0];
-    if (b.dataset.a === 'ver') { mostrarHoja(id); $('#visor').scrollIntoView({ block: 'nearest' }); }
+    if (b.dataset.a === 'ver') { mostrarHoja(id); if (window.PID_UI) ui('tab', 'plano'); else $('#visor').scrollIntoView({ block: 'nearest' }); }
     if (b.dataset.a === 'area') { var n = 0; S.cand.forEach(function (c) { if (c.hoja === id && c.estado === 'pendiente' && !c.area) { c.area = h.area; n++; } }); guardar(); pintarTabla(); toast('Área ' + h.area + ' aplicada a ' + n + ' instrumentos.'); }
     if (b.dataset.a === 'quitar') { if (!confirm('¿Quitar la hoja ' + (h.plano || h.nombre) + ' y sus instrumentos no exportados?')) return; S.hojas = S.hojas.filter(function (x) { return x.id !== id; }); S.cand = S.cand.filter(function (c) { return c.hoja !== id; }); idbDel(id); if (V.hoja && V.hoja.id === id) { V.hoja = null; V.img = null; V.seg = null; $('#vVacio').hidden = false; } guardar(); pintarTodo(); }
   });
@@ -741,7 +742,13 @@
   iniciar();
   window.__PID = { estado: function () { return S; }, guardar: guardar, tagDe: tagDe, tipoSugerido: tipoSugerido, esLetras: esLetras,
     idbGet: idbGet, idbPut: idbPut, idbDel: idbDel, recargar: iniciar, listaProy: listaProy, repintar: function () { pintarTodo(); },
+    // Para el explorador: filtro adicional, selección, validación y vista del plano
+    filtrar: function (fn) { FX = fn || null; pintarTabla(); }, visibles: visibles, seleccion: function () { return selId; }, cand: cand,
+    marcarId: function (id, est) { var c = cand(id); if (!c) return false; if (est === 'validado' && (!c.letras || !c.num)) { toast('Completa letras y número antes de validar.'); return false; } marcar(c, est); guardar(); pintarTodo(); return true; },
+    editar: function (id, k, v) { var c = cand(id); if (!c) return; if (k === 'letras' || k === 'suf') v = String(v).toUpperCase(); c[k] = v; if (k === 'letras' && !c.tipoManual) c.tipo = tipoSugerido(v); if (k === 'tipo') c.tipoManual = 1; if (S.listado && (k === 'letras' || k === 'num' || k === 'suf')) cruzar(); guardar(); pintarTabla(); pintarResumen(); pintarVista(); avisarListado(); },
+    verHoja: function (id) { return mostrarHoja(id); }, verEnPlano: function (id) { var c = cand(id); if (c && c.x != null) mostrarHoja(c.hoja, centrarEn(c)); }, hojaVista: function () { return V.hoja ? V.hoja.id : ''; },
+    TIPOS: TIPOS, TIPO_TXT: TIPO_TXT,
     seleccionar: function (id) { // desde otras vistas (verificación ISA): muestra la fila y el plano
       if (!document.querySelector('#tCand tr[data-id="' + id + '"]')) { $('#fEstado').value = ''; $('#fHoja').value = ''; $('#fBuscar').value = ''; pintarTabla(); }
-      seleccionar(id, false); var tr = document.querySelector('#tCand tr[data-id="' + id + '"]'); if (tr) { tr.closest('.blk').scrollIntoView({ block: 'start' }); tr.scrollIntoView({ block: 'center' }); var i = tr.querySelector('input[data-k="letras"]'); if (i) i.focus({ preventScroll: true }); } } };
+      seleccionar(id, false); var tr = document.querySelector('#tCand tr[data-id="' + id + '"]'); if (tr) { ui('explorar'); var bk = tr.closest('.blk'); if (bk) bk.scrollIntoView({ block: 'start' }); tr.scrollIntoView({ block: 'center' }); var i = tr.querySelector('input[data-k="letras"]'); if (i) i.focus({ preventScroll: true }); } } };
 })();

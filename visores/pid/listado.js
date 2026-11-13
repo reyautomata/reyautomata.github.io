@@ -452,7 +452,7 @@
   function nuevoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function aprobar() {
     var rev = (($('#revisor') || {}).value || '').trim();
-    if (!rev) { alert('Indica el nombre del revisor (más arriba, en «Validación del revisor») antes de aprobar.'); var r0 = $('#revisor'); if (r0) { r0.scrollIntoView({ block: 'center' }); r0.focus(); } return; }
+    if (!rev) { alert('Indica el nombre del revisor (más arriba, en «Validación del revisor») antes de aprobar.'); if (window.PID_UI) { window.PID_UI.explorar(); window.PID_UI.tab('rev'); } var r0 = $('#revisor'); if (r0) { r0.scrollIntoView({ block: 'center' }); r0.focus(); } return; }
     var R = filas().filter(function (r) { return val(r, 'tagInst'); });
     if (!R.length) { alert('El Anexo A no tiene instrumentos para aprobar.'); return; }
     var E = P.leer('lazos', null) || { cfg: {}, modulos: [], senales: [], lazos: {}, revs: [], over: {}, doc: {} };

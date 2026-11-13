@@ -238,6 +238,6 @@
   });
   // El contador de la pestaña se actualiza cuando cambia la revisión
   var t0 = 0;
-  window.PID_NORMAS = { cambio: function () { clearTimeout(t0); t0 = setTimeout(function () { if (pn.classList.contains('abierto') && vista === 'ver') pintarVer(); else { var V = verificar(), n = V.hall.filter(function (h) { return REGLAS[h.r][0] !== 'info'; }).length, b = tab.querySelector('.npN'); b.hidden = !n; b.textContent = n; } }, 400); }, verificar: verificar, revisarLetras: revisarLetras };
+  window.PID_NORMAS = { gravedad: function (r) { return REGLAS[r] ? REGLAS[r][0] : 'info'; }, titulo: function (r) { return REGLAS[r] ? REGLAS[r][1] : r; }, cambio: function () { clearTimeout(t0); t0 = setTimeout(function () { if (pn.classList.contains('abierto') && vista === 'ver') pintarVer(); else { var V = verificar(), n = V.hall.filter(function (h) { return REGLAS[h.r][0] !== 'info'; }).length, b = tab.querySelector('.npN'); b.hidden = !n; b.textContent = n; } }, 400); }, verificar: verificar, revisarLetras: revisarLetras };
   window.PID_NORMAS.cambio();
 })();
