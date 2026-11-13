@@ -56,7 +56,7 @@
     var bus = BUSQ.filter(function (b) { return !b[4] || b[4](); }).map(function (b) { var n = C.filter(b[2]).length; return hoja('bus', b[0], b[1], n, 'bus', n ? b[3] : ''); }).join('');
     var nDoc = window.PID_LISTADO ? window.PID_LISTADO.filas().length : '';
     $('#arbol').innerHTML = '<h2>Explorador</h2><ul role="tree" aria-label="Proyecto">' +
-      '<li role="none"><button type="button" role="treeitem" class="nodo" data-t="todos"' + (nodo.t === 'todos' ? ' aria-current="true"' : '') + '><span class="tw">▾</span><span class="ic"></span><span class="tx"><b>' + esc(pr.nombre || pr.proyecto || 'Proyecto') + '</b></span><span class="ct">' + C.length + '</span></button><ul role="group">' +
+      '<li role="none"><button type="button" role="treeitem" class="nodo" data-t="todos"' + (nodo.t === 'todos' ? ' aria-current="true"' : '') + '><span class="tw">▾</span><span class="ic"></span><span class="tx"><b>' + esc(document.body.classList.contains('rs-local') ? 'Todos los instrumentos' : pr.nombre || pr.proyecto || 'Proyecto') + '</b></span><span class="ct">' + C.length + '</span></button><ul role="group">' +
       rama('pid', 'P&ID', s.hojas.length, hojas) +
       rama('lazos', 'Lazos', lazos.length, lazos.map(function (k) { return hoja('lazo', k, k, lz[k]); }).join('')) +
       rama('senal', 'Tipo de señal', null, sen) +
