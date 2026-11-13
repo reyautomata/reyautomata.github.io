@@ -26,20 +26,26 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
 .plano-sec .pbtns button:disabled { opacity: .55; cursor: progress; }
 .plano-sec .pbtns button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .plano-sec .pstat { min-height: 1.2em; }
-.plano-pv .pv-body { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; padding: 12px; overflow: auto; min-height: 0; }
+.plano-pv .pv-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; padding: 10px; overflow: hidden; min-height: 0; }
 .plano-pv .pv-stage { position: relative; display: grid; place-items: center; min-height: 0; }
-.plano-pv canvas { display: block; height: min(calc(100vh - 100px), 1300px); width: auto; max-width: 100%; background: #fff; box-shadow: 0 6px 30px rgba(0, 0, 0, .5); cursor: grab; touch-action: none; }
-.plano-pv canvas:active { cursor: grabbing; }
+.plano-pv canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 90px); background: #fff; box-shadow: 0 6px 30px rgba(0, 0, 0, .5); touch-action: none; }
 .plano-pv .pv-busy { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #EF5A05; color: #fff; font: 600 12.5px var(--f-body, sans-serif); padding: 4px 12px; border-radius: 999px; }
-.plano-pv .pv-panel { color: #E6ECF2; font: 13.5px var(--f-body, sans-serif); display: flex; flex-direction: column; gap: 10px; }
-.plano-pv .pv-panel h3 { margin: 0; font: 700 17px var(--f-display, sans-serif); letter-spacing: .5px; }
-.plano-pv .pv-panel p { margin: 0; color: #9FB0C2; line-height: 1.45; font-size: 12.5px; }
+.plano-pv .pv-panel { color: #E6ECF2; font: 12.5px var(--f-body, sans-serif); display: flex; flex-direction: column; gap: 7px; overflow: auto; min-height: 0; padding-right: 4px; }
+.plano-pv .pv-panel h3 { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #24405f; font: 700 11px var(--f-mono, monospace); letter-spacing: 1px; text-transform: uppercase; color: #FF9A5C; }
+.plano-pv .pv-panel h3:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.plano-pv .pv-panel p { margin: 0; color: #9FB0C2; line-height: 1.4; font-size: 11.5px; }
+.plano-pv .pv-panel select, .plano-pv .pv-panel input[type=text] { width: 100%; box-sizing: border-box; font: 12.5px var(--f-body, sans-serif); color: #E6ECF2; background: #0B1B2E; border: 1px solid #2C5A8C; border-radius: 6px; padding: 4px 7px; min-height: 28px; }
+.plano-pv .pv-panel select:focus-visible, .plano-pv .pv-panel input:focus-visible { outline: 2px solid #EF5A05; outline-offset: 1px; }
+.plano-pv .pv-vista { display: grid; gap: 3px; }
+.plano-pv .pv-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.plano-pv .pv-campos label { display: grid; gap: 2px; font-weight: 600; font-size: 11px; color: #9FB0C2; }
+.plano-pv .pv-btns button.wide { grid-column: 1 / -1; }
 .plano-pv .pv-panel label { display: flex; justify-content: space-between; font-weight: 600; }
 .plano-pv .pv-panel output { font-family: var(--f-mono, monospace); color: #FF9A5C; }
 .plano-pv .pv-panel input[type=range] { width: 100%; accent-color: #EF5A05; }
 .plano-pv .pv-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .plano-pv .pv-btns button { font: 600 12.5px var(--f-body, sans-serif); border-radius: 8px; padding: 8px 8px; min-height: 38px; cursor: pointer; border: 1.5px solid #2C5A8C; background: #0A3B70; color: #fff; }
-@media (max-width: 760px) { .plano-pv .pv-body { grid-template-columns: 1fr; } .plano-pv canvas { height: 58vh; } }
+@media (max-width: 760px) { .plano-pv .pv-body { grid-template-columns: 1fr; overflow: auto; } .plano-pv canvas { max-height: 58vh; } .plano-pv .pv-panel { overflow: visible; } }
 .plano-hint { color: #9fb0c2; font: 12.5px var(--f-body, sans-serif); text-align: center; padding: 8px 0 0; }
 `;
   document.head.appendChild(st);
@@ -47,9 +53,9 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
   // Sección "Plano de montaje" en el panel derecho
   const sec = mk('div', 'group plano-sec');
   sec.appendChild(mk('h2', '', 'Plano de montaje'));
-  sec.appendChild(mk('p', 'note', 'Lámina A3 generada desde el modelo: vistas isométrica, frontal y lateral con globos numerados, lista de ítems y rótulo. Usa la previsualización para ajustar el encuadre de la isométrica.'));
+  sec.appendChild(mk('p', 'note', 'Lámina A3 generada desde el modelo, con globos numerados, lista de ítems y rótulo. En la ventana de ajuste eliges la vista de cada recuadro (isométrica, frontal, posterior, laterales, planta, inferior), mueves los globos y eliges la viñeta antes de exportar.'));
   const pb = mk('div', 'pbtns');
-  const bPrev = mk('button', 'wide pri', 'Previsualizar y ajustar isométrica');
+  const bPrev = mk('button', 'wide pri', 'Ajustar plano antes de exportar');
   pb.appendChild(bPrev);
   const bView = mk('button', 'wide', 'Ver plano'), bGenPdf = mk('button', 'pri', 'Descargar PDF + DXF'), bGenPng = mk('button', '', 'Descargar PNG'), bGenDxf = mk('button', 'wide', 'Solo DXF (AutoCAD)');
   pb.append(bView, bGenPdf, bGenPng, bGenDxf); sec.appendChild(pb);
@@ -336,17 +342,24 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     if (!VO.set) return camera.position.clone().sub(controls.target).normalize();
     const a = VO.az * Math.PI / 180, e = VO.el * Math.PI / 180; return V3(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a));
   }
-  function isoCam(box, w, h, reg) {                    // vista isométrica ortogonal; el modelo ocupa la región reg (fracciones)
-    const c = box.getCenter(V3(0, 0, 0)), dir = viewDir();
+  // Ajustes de la lámina hechos en la ventana de ajuste: vista de cada recuadro, acercamiento, globos movidos y viñeta
+  const PL = { v: ['iso', 'front', 'right'], z: [1, 1, 1], gl: {}, vin: 'reyengi', c: {} };
+  const VISTAS = { iso: ['Isométrica (libre)', 'VISTA ISOMÉTRICA', null], front: ['Frontal', 'VISTA FRONTAL', [0, 0, 1]], back: ['Posterior', 'VISTA POSTERIOR', [0, 0, -1]], right: ['Lateral derecha', 'VISTA LATERAL DERECHA', [1, 0, 0]], left: ['Lateral izquierda', 'VISTA LATERAL IZQUIERDA', [-1, 0, 0]], top: ['Planta (desde arriba)', 'VISTA EN PLANTA', [0, 1, 0]], bottom: ['Inferior (desde abajo)', 'VISTA INFERIOR', [0, -1, 0]], none: ['Sin vista', '', null] };
+  let HITS = [];                                       // globos dibujados en la última composición (para arrastrarlos)
+  const LC = new Map();                                // líneas ya calculadas de cada vista, mientras la ventana de ajuste está abierta
+  function isoCam(box, w, h, reg) { return dirCam(box, w, h, reg, viewDir(), VO.set ? VO.zoom : 1, VO.set ? VO.px : 0, VO.set ? VO.py : 0); }
+  function viewCam(kind, box, w, h, reg, zoom) { return kind === 'iso' ? isoCam(box, w, h, reg) : dirCam(box, w, h, reg, V3(...VISTAS[kind][2]), zoom || 1, 0, 0); }
+  function dirCam(box, w, h, reg, dir, zoom, px, py) { // vista ortogonal desde una dirección; el modelo ocupa la región reg (fracciones)
+    const c = box.getCenter(V3(0, 0, 0));
     const D = box.getSize(V3(0, 0, 0)).length() * 2 + 100;
     const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, D * 4);
     cam.position.copy(c).addScaledVector(dir, D);
-    cam.up.set(0, 1, 0); if (Math.abs(dir.y) > 0.98) cam.up.set(0, 0, -1);
+    cam.up.set(0, 1, 0); if (Math.abs(dir.y) > 0.98) cam.up.set(0, 0, dir.y > 0 ? -1 : 1);
     cam.lookAt(c); cam.updateMatrixWorld(true);
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     corners(box).forEach((p) => { p.applyMatrix4(cam.matrixWorldInverse); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); });
-    const s = Math.max((x1 - x0) / ((reg.x1 - reg.x0) * w), (y1 - y0) / ((reg.y1 - reg.y0) * h)) / (VO.set ? VO.zoom : 1);
-    const cx = (reg.x0 + reg.x1) / 2 * w, cy = (reg.y0 + reg.y1) / 2 * h, px = VO.set ? VO.px : 0, py = VO.set ? VO.py : 0;
+    const s = Math.max((x1 - x0) / ((reg.x1 - reg.x0) * w), (y1 - y0) / ((reg.y1 - reg.y0) * h)) / zoom;
+    const cx = (reg.x0 + reg.x1) / 2 * w, cy = (reg.y0 + reg.y1) / 2 * h;
     cam.left = (x0 + x1) / 2 - cx * s - px * w * s; cam.right = cam.left + w * s;
     cam.top = (y0 + y1) / 2 + cy * s - py * h * s; cam.bottom = cam.top - h * s;
     cam.updateProjectionMatrix();
@@ -365,7 +378,8 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     }
     for (const k of cl) { let y = pos(k); for (const c of k.items) { c.y = y + c.h / 2; y += c.h + gap; } }
   }
-  function drawCallouts(g, list, Vr, ext, BR, off) {   // globos con número de ítem a ambos lados de una vista
+  function drawCallouts(g, list, Vr, ext, BR, off, slot) {   // globos con número de ítem a ambos lados de una vista
+    const occ = {};
     const [mx0, mx1] = ext, midX = (mx0 + mx1) / 2;
     const L = list.filter((c) => c.sx < midX), R = list.filter((c) => c.sx >= midX);
     const byCenter = (a, b2) => Math.abs(a.sx - midX) - Math.abs(b2.sx - midX);
@@ -393,7 +407,17 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
       }
       for (const c of order) {
         g.strokeStyle = INK; g.lineWidth = BR > 20 ? 2 : 1.6;
+        const key = slot + ':' + c.num + ':' + (occ[c.num] = (occ[c.num] || 0) + 1), mv = PL.gl[key];
+        if (mv) {                                        // globo movido a mano: línea recta desde el borde del globo hasta la pieza
+          const bx = Vr.x + mv.fx * Vr.w, by = Vr.y + mv.fy * Vr.h, a2 = Math.atan2(c.sy - by, c.sx - bx);
+          g.beginPath(); g.arc(bx, by, BR, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.stroke();
+          g.fillStyle = INK; g.font = '600 ' + Math.round(BR * (String(c.num).length > 2 ? 0.8 : 1)) + 'px ' + F.s; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.num, bx, by + 1);
+          g.beginPath(); g.moveTo(bx + BR * Math.cos(a2), by + BR * Math.sin(a2)); g.lineTo(c.sx, c.sy); g.stroke();
+          g.beginPath(); g.moveTo(c.sx, c.sy); g.lineTo(c.sx - AR * Math.cos(a2 - 0.3), c.sy - AR * Math.sin(a2 - 0.3)); g.lineTo(c.sx - AR * Math.cos(a2 + 0.3), c.sy - AR * Math.sin(a2 + 0.3)); g.closePath(); g.fill();
+          HITS.push({ k: key, x: bx, y: by, r: BR, slot, num: c.num, tx: c.sx, ty: c.sy }); continue;
+        }
         const cx = side < 0 ? colX + BR + 1 : colX - BR - 1;
+        HITS.push({ k: key, x: cx, y: c.y, r: BR, slot, num: c.num, tx: c.sx, ty: c.sy });
         g.beginPath(); g.arc(cx, c.y, BR, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.stroke();
         g.fillStyle = INK; g.font = '600 ' + Math.round(BR * (String(c.num).length > 2 ? 0.8 : 1)) + 'px ' + F.s; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.num, cx, c.y + 1);
         const ex = cx - side * BR;
@@ -439,16 +463,23 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     const ISO = { x: 90, y: 90, w: 1210, h: 1800 }, FR = { x: 1320, y: 90, w: 720, h: 860 }, LA = { x: 1320, y: 1050, w: 720, h: 840 };
     const tb = tightBox(b, set.meshes); set.size = tb.getSize(V3(0, 0, 0)).length();
     const REG = { x0: 0.27, x1: 0.73, y0: 0.05, y1: 0.95 };
-    const isoC = isoCam(tb, ISO.w, ISO.h, REG), FX = 0.58, FY = 0.9;
-    g.drawImage(renderLines(isoC, ISO.w, ISO.h, set), ISO.x, ISO.y);
-    const frC = opt.isoOnly ? null : orthoCam(tb, 'front', FR.w, FR.h, FX, FY), laC = opt.isoOnly ? null : orthoCam(tb, 'side', LA.w, LA.h, FX, FY);
+    const FX = 0.58, FY = 0.9, REG2 = { x0: (1 - FX) / 2, x1: (1 + FX) / 2, y0: (1 - FY) / 2, y1: (1 + FY) / 2 };
+    const SLOT = [ISO, FR, LA], REGS = [REG, REG2, REG2];
+    HITS = [];
+    const kinds = SLOT.map((_, i) => (i && opt.isoOnly ? 'none' : (VISTAS[PL.v[i]] ? PL.v[i] : 'none')));
+    if (kinds[0] === 'none') kinds[0] = 'iso';
+    const cams = SLOT.map((Vr, i) => (kinds[i] === 'none' ? null : viewCam(kinds[i], tb, Vr.w, Vr.h, REGS[i], PL.z[i])));
+    const lineas = (i) => {                              // líneas de la vista; en la ventana de ajuste se reutilizan mientras no cambie el encuadre
+      const Vr = SLOT[i]; if (REC || !opt.cache) return renderLines(cams[i], Vr.w, Vr.h, set);
+      const k = [i, kinds[i], Vr.w, Vr.h, kinds[i] === 'iso' ? [VO.set, VO.az, VO.el, VO.zoom, VO.px, VO.py, VO.set ? '' : camera.position.toArray().map((n) => n.toFixed(2))].join(',') : PL.z[i]].join('|');
+      if (!LC.has(k)) { if (LC.size > 12) LC.clear(); LC.set(k, renderLines(cams[i], Vr.w, Vr.h, set)); }
+      return LC.get(k);
+    };
+    const isoC = cams[0];
+    cams.forEach((cam, i) => { if (cam) g.drawImage(lineas(i), SLOT[i].x, SLOT[i].y); });
     if (!opt.isoOnly) {
-      g.drawImage(renderLines(frC, FR.w, FR.h, set), FR.x, FR.y);
-      g.drawImage(renderLines(laC, LA.w, LA.h, set), LA.x, LA.y);
       g.__layer = 'TITULOS';
-      viewTitle(g, ISO.x + ISO.w / 2, ISO.y + ISO.h + 52, 'VISTA ISOMÉTRICA');
-      viewTitle(g, FR.x + FR.w / 2, FR.y + FR.h + 46, 'VISTA FRONTAL');
-      viewTitle(g, LA.x + LA.w / 2, LA.y + LA.h + 46, 'VISTA LATERAL');
+      cams.forEach((cam, i) => { if (cam) viewTitle(g, SLOT[i].x + SLOT[i].w / 2, SLOT[i].y + SLOT[i].h + (i ? 46 : 52), VISTAS[kinds[i]][1]); });
     }
     // Numeración común: cada componente lleva el número de ítem de la tabla (si no tiene, se agrega al final)
     const norm = (t) => String(t).toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
@@ -471,12 +502,14 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     const place = (cam, Vr, occl) => items.map((it) => { const v = it.p.clone().project(cam); return { sx: Vr.x + (v.x + 1) / 2 * Vr.w, sy: Vr.y + (1 - v.y) / 2 * Vr.h, num: it.num, z: v.z, p: it.p }; })
       .filter((c) => c.z < 1 && c.z > -1 && c.sx > Vr.x + 4 && c.sx < Vr.x + Vr.w - 4 && c.sy > Vr.y + 4 && c.sy < Vr.y + Vr.h - 4 && (!occl || seen3(cam, c.p)));
     const extent = (cam, Vr, r0, r1) => { let a = Infinity, b2 = -Infinity; corners(tb).forEach((p) => { const v = p.project(cam), x = Vr.x + (v.x + 1) / 2 * Vr.w; a = Math.min(a, x); b2 = Math.max(b2, x); }); return [Math.max(a, Vr.x + Vr.w * r0), Math.min(b2, Vr.x + Vr.w * r1)]; };
-    const isoL = place(isoC, ISO); g.__layer = 'GLOBOS';
-    drawCallouts(g, isoL, ISO, extent(isoC, ISO, REG.x0, REG.x1), isoL.length > 26 ? 21 : 26, 150);
-    if (!opt.isoOnly) for (const [cam, Vr] of [[frC, FR], [laC, LA]]) {
+    g.__layer = 'GLOBOS';
+    cams.forEach((cam, i) => {
+      if (!cam) return; const Vr = SLOT[i];
+      if (!i && kinds[0] === 'iso') { const isoL = place(cam, Vr); drawCallouts(g, isoL, Vr, extent(cam, Vr, REG.x0, REG.x1), isoL.length > 26 ? 21 : 26, 150, 0); return; }
       const seen = new Set(), l = place(cam, Vr, true).filter((c) => (seen.has(c.num) ? false : (seen.add(c.num), true)));
-      drawCallouts(g, l, Vr, extent(cam, Vr, (1 - FX) / 2, (1 + FX) / 2), l.length > 16 ? 15 : 18, 40);
-    }
+      if (i) drawCallouts(g, l, Vr, extent(cam, Vr, REG2.x0, REG2.x1), l.length > 16 ? 15 : 18, 40, i);
+      else drawCallouts(g, l, Vr, extent(cam, Vr, REG.x0, REG.x1), l.length > 26 ? 21 : 26, 150, 0);
+    });
     if (opt.isoOnly) return cv;
     // Columna derecha: lista de materiales, notas y rótulo
     const RX = 2090, RW = W - 90 - RX; g.__layer = 'TABLA';
@@ -520,8 +553,10 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
         y += 8;
       });
     }
-    // Rótulo
+    // Rótulo (viñeta): el diseño se elige en la ventana de ajuste
     const TY = 1540, TH = H - 90 - TY; g.__layer = 'ROTULO';
+    const CA = PL.c || {}, up = (t) => String(t || '').toUpperCase();
+    if (PL.vin === 'neutra') { rotuloNeutro(g, d, RX, TY, RW, TH, CA); return cv; }
     g.lineWidth = 3; g.strokeRect(RX, TY, RW, TH);
     g.fillStyle = NAVY; g.fillRect(RX, TY, RW, 86);
     g.fillStyle = AMBER; g.fillRect(RX, TY + 86, RW, 6);
@@ -553,7 +588,33 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     const src = d.ref ? 'BASADO EN PLANO ' + d.ref + (d.hoja ? ' · HOJA ' + d.hoja : '') : 'MODELO REFERENCIAL REYENGI';
     wrapLines(g, src, RW - 24).slice(0, 2).forEach((l, i) => g.fillText(l, RX + 12, ry + 88 + i * 24));
     g.fillText('DIBUJO GENERADO DESDE MODELO 3D · PROPORCIONES REFERENCIALES', RX + 12, ry + 88 + (src.length > 60 ? 2 : 1) * 24);
+    const extra = [CA.proyecto && 'PROYECTO: ' + up(CA.proyecto), CA.plano && 'PLANO N° ' + up(CA.plano), CA.rev && 'REV. ' + up(CA.rev), CA.dibujo && 'DIB. ' + up(CA.dibujo)].filter(Boolean).join(' · ');
+    if (extra) { g.font = '600 18px ' + F.s; g.fillText(wrapLines(g, extra, RW - 24)[0], RX + 12, ry + 88 + (src.length > 60 ? 3 : 2) * 24); }
     return cv;
+  }
+  // Viñeta neutra: sin marca, con los datos del proyecto y las firmas, para emitir con el formato del mandante
+  function rotuloNeutro(g, d, RX, TY, RW, TH, CA) {
+    const up = (t) => String(t || '').toUpperCase();
+    g.strokeStyle = INK; g.fillStyle = INK; g.lineWidth = 3; g.strokeRect(RX, TY, RW, TH);
+    g.textBaseline = 'middle'; g.textAlign = 'left';
+    const celda = (x, y, w, h, lab, val, big) => { g.lineWidth = 2; g.strokeRect(x, y, w, h); g.font = '16px ' + F.s; g.fillText(lab, x + 10, y + 15); g.font = '600 ' + (big || 24) + 'px ' + F.s; const t = wrapLines(g, up(val), w - 20)[0] || ''; g.fillText(t, x + 10, y + h - 22); };
+    const h1 = 58; let y = TY;
+    celda(RX, y, RW * 0.5, h1, 'CLIENTE', CA.cliente || ''); celda(RX + RW * 0.5, y, RW * 0.5, h1, 'PROYECTO', CA.proyecto || ''); y += h1;
+    // Título con el código del detalle
+    const ht = TH - h1 * 4 - 46; g.lineWidth = 2; g.strokeRect(RX, y, RW, ht);
+    const cy = y + ht / 2; g.lineWidth = 3; g.beginPath(); g.arc(RX + 84, cy, Math.min(60, ht / 2 - 10), 0, Math.PI * 2); g.stroke();
+    g.textAlign = 'center';
+    if (d.code && d.code.length > 11 && d.code.indexOf('-') > 0) { const k = d.code.indexOf('-'); g.font = '700 19px ' + F.s; g.fillText(d.code.slice(0, k), RX + 84, cy - 12); g.fillText(d.code.slice(k + 1), RX + 84, cy + 14); }
+    else { g.font = '700 ' + (d.code.length > 6 ? 20 : d.code.length > 4 ? 32 : 40) + 'px ' + F.s; g.fillText(d.code || 'REF', RX + 84, cy + 2); }
+    g.textAlign = 'left'; g.font = '600 28px ' + F.s; g.fillText('DETALLE DE MONTAJE', RX + 166, cy - 40);
+    g.font = '600 25px ' + F.s;
+    wrapLines(g, (d.name && d.name.toUpperCase().includes(d.main.toUpperCase()) ? d.name : d.main + (d.name ? ' · ' + d.name : '')).toUpperCase(), RW - 186).slice(0, 2).forEach((l, i) => g.fillText(l, RX + 166, cy - 2 + i * 32));
+    y += ht;
+    const today = new Date(), dd = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
+    celda(RX, y, RW * 0.46, h1, 'PLANO N°', CA.plano || ''); celda(RX + RW * 0.46, y, RW * 0.14, h1, 'REV.', CA.rev || ''); celda(RX + RW * 0.6, y, RW * 0.16, h1, 'ESCALA', 'S/E'); celda(RX + RW * 0.76, y, RW * 0.24, h1, 'FECHA', dd, 22); y += h1;
+    celda(RX, y, RW / 3, h1, 'DIBUJÓ', CA.dibujo || ''); celda(RX + RW / 3, y, RW / 3, h1, 'REVISÓ', CA.reviso || ''); celda(RX + RW * 2 / 3, y, RW / 3, h1, 'APROBÓ', CA.aprobo || ''); y += h1;
+    celda(RX, y, RW * 0.76, h1, 'REFERENCIA', d.ref ? 'PLANO ' + d.ref + (d.hoja ? ' · HOJA ' + d.hoja : '') : 'MODELO 3D REFERENCIAL', 20); celda(RX + RW * 0.76, y, RW * 0.24, h1, 'HOJA', '1 DE 1'); y += h1;
+    g.font = '16px ' + F.s; g.textAlign = 'left'; g.fillText('DIBUJO GENERADO DESDE MODELO 3D · PROPORCIONES REFERENCIALES', RX + 10, y + 23);
   }
 
   /* --- PDF de una página con la imagen JPEG (A3 horizontal) --- */
@@ -604,7 +665,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
   const showSheet = (g) => {
     current = g; ttl.textContent = 'Plano ' + (g.d.code || '') + ' · generado desde el modelo';
     bPdf.hidden = bPng.hidden = bDxf.hidden = false; ov.hidden = false;
-    show(ttl.textContent, g.png, (VO.set ? 'La isométrica usa el encuadre ajustado en la previsualización. ' : 'La lámina usa la vista actual del visor (tipo de montaje, despiece y ángulo). ') + 'Toca la imagen para ampliar.');
+    show(ttl.textContent, g.png, (VO.set || Object.keys(PL.gl).length || PL.v.join() !== 'iso,front,right' ? 'La lámina usa lo ajustado en la ventana de ajuste. ' : 'La lámina usa la vista actual del visor (tipo de montaje, despiece y ángulo). ') + 'Toca la imagen para ampliar.');
     bClose.focus();
   };
   bView.addEventListener('click', () => generate(showSheet));
@@ -612,60 +673,146 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
   bGenDxf.addEventListener('click', () => generate((g) => save(g.dxf, g.name + '.dxf')));
   window.__planoGen = (cb) => generate(cb);
   bGenPng.addEventListener('click', () => generate((g) => fetch(g.png).then((r) => r.blob()).then((b) => save(b, g.name + '.png'))));
-  /* --- Previsualización de la isométrica con encuadre ajustable --- */
-  const pv = mk('div', 'plano-ov plano-pv'); pv.hidden = true; pv.setAttribute('role', 'dialog'); pv.setAttribute('aria-modal', 'true'); pv.setAttribute('aria-label', 'Previsualización de la vista isométrica');
-  const pbar = mk('div', 'plano-bar'), pGen = mk('button', 'pri', 'Generar plano'), pPdf = mk('button', '', 'Descargar PDF + DXF'), pPng = mk('button', '', 'Descargar PNG'), pClose = mk('button', '', 'Cerrar');
-  pbar.append(mk('b', '', 'Previsualización · vista isométrica'), pGen, pPdf, pPng, pClose);
+  /* --- Ventana de ajuste: la lámina completa antes de imprimir o exportar ---
+     Se elige la vista de cada recuadro, se gira y acerca la isométrica, se arrastran los globos y se elige la viñeta. */
+  const pv = mk('div', 'plano-ov plano-pv'); pv.hidden = true; pv.setAttribute('role', 'dialog'); pv.setAttribute('aria-modal', 'true'); pv.setAttribute('aria-label', 'Ajustar el plano antes de exportar');
+  const pbar = mk('div', 'plano-bar'), pGen = mk('button', 'pri', 'Ver plano final'), pPdf = mk('button', '', 'Descargar PDF + DXF'), pPng = mk('button', '', 'Descargar PNG'), pClose = mk('button', '', 'Cerrar');
+  pbar.append(mk('b', '', 'Ajustar plano antes de exportar'), pGen, pPdf, pPng, pClose);
   const pbody = mk('div', 'pv-body'), pstage = mk('div', 'pv-stage'), pcv = document.createElement('canvas'), pbusy = mk('div', 'pv-busy', 'Actualizando…');
-  pcv.width = 605; pcv.height = 900; pcv.setAttribute('aria-label', 'Vista isométrica del plano'); pstage.append(pcv, pbusy);
+  pcv.width = W / 2; pcv.height = H / 2; pcv.setAttribute('aria-label', 'Lámina del plano: arrastra un globo para moverlo; arrastra la vista isométrica para girarla'); pstage.append(pcv, pbusy);
   const panel = mk('div', 'pv-panel');
-  panel.append(mk('h3', '', 'Ajustar encuadre'), mk('p', '', 'Arrastra sobre la vista para girarla y usa la rueda para acercar. Los globos se recalculan en cada ajuste. El plano usará este encuadre en la vista isométrica; las vistas frontal y lateral no cambian.'));
-  const SL = [['az', 'Giro', -180, 180, 1, '°', 1], ['el', 'Inclinación', -10, 89, 1, '°', 1], ['zoom', 'Acercamiento', 50, 250, 5, ' %', 100], ['px', 'Mover horizontal', -45, 45, 1, ' %', 100], ['py', 'Mover vertical', -45, 45, 1, ' %', 100]];
+  const sub = (t) => panel.appendChild(mk('h3', '', t));
+  // 1) Vistas de cada recuadro
+  sub('Vistas');
+  panel.appendChild(mk('p', '', 'Elige qué vista va en cada recuadro de la lámina. La rueda del mouse sobre un recuadro lo acerca o aleja.'));
+  const NOM_SLOT = ['Recuadro principal', 'Recuadro superior', 'Recuadro inferior'], selV = [], zV = [];
+  NOM_SLOT.forEach((nom, i) => {
+    const w = mk('div', 'pv-vista'), l = mk('label'), sl = document.createElement('select'), o = mk('output'), r = document.createElement('input');
+    Object.keys(VISTAS).forEach((k) => { if (!i && k === 'none') return; const op = document.createElement('option'); op.value = k; op.textContent = VISTAS[k][0]; sl.appendChild(op); });
+    sl.setAttribute('aria-label', nom); r.type = 'range'; r.min = 50; r.max = 250; r.step = 5; r.setAttribute('aria-label', 'Acercamiento del ' + nom.toLowerCase());
+    l.append(mk('span', '', nom), o); w.append(l, sl, r); panel.appendChild(w);
+    sl.addEventListener('change', () => { PL.v[i] = sl.value; clearGl(i); syncInputs(); pvSchedule(); });
+    r.addEventListener('input', () => { if (PL.v[i] === 'iso') { VO.zoom = +r.value / 100; VO.set = true; clearIso(); } else { PL.z[i] = +r.value / 100; clearGl(i); } syncInputs(); pvSchedule(); });
+    selV.push(sl); zV.push({ r, o });
+  });
+  // 2) Encuadre de la isométrica libre
+  sub('Isométrica libre');
+  panel.appendChild(mk('p', '', 'Arrastra sobre la vista isométrica para girarla, o usa los controles.'));
+  const SL = [['az', 'Giro', -180, 180, 1, '°', 1], ['el', 'Inclinación', -89, 89, 1, '°', 1], ['px', 'Mover horizontal', -45, 45, 1, ' %', 100], ['py', 'Mover vertical', -45, 45, 1, ' %', 100]];
   const inp = {};
   SL.forEach(([k, lab, mn, mx, stp, u, f]) => {
     const w = mk('div'), l = mk('label'), o = mk('output'), r = document.createElement('input');
     r.type = 'range'; r.min = mn; r.max = mx; r.step = stp; r.setAttribute('aria-label', lab);
     l.append(mk('span', '', lab), o); w.append(l, r); panel.appendChild(w);
-    r.addEventListener('input', () => { VO[k] = +r.value / f; VO.set = true; o.textContent = r.value + u; pvSchedule(); });
+    r.addEventListener('input', () => { VO[k] = +r.value / f; VO.set = true; o.textContent = r.value + u; clearIso(); pvSchedule(); });
     inp[k] = { r, o, u, f };
   });
-  const syncInputs = () => SL.forEach(([k]) => { const q = inp[k], v = Math.round(VO[k] * q.f); q.r.value = v; q.o.textContent = v + q.u; });
   const pbt = mk('div', 'pv-btns'), bIso = mk('button', '', 'Isométrica estándar'), bCam = mk('button', '', 'Usar vista del visor'), bCen = mk('button', '', 'Centrar y 100 %'), bFr = mk('button', '', 'Desde el frente');
-  [pGen, pPdf, pPng, pClose, bIso, bCam, bCen, bFr].forEach((b) => { b.type = 'button'; });
   pbt.append(bIso, bFr, bCam, bCen); panel.appendChild(pbt);
-  const pstat = mk('p', ''); panel.appendChild(pstat);
+  // 3) Globos
+  sub('Globos de ítem');
+  panel.appendChild(mk('p', '', 'Arrastra cualquier globo sobre la lámina para ubicarlo donde se lea mejor; la flecha sigue apuntando a su pieza.'));
+  const pbg = mk('div', 'pv-btns'), bGl = mk('button', 'wide', 'Volver los globos a su lugar'); pbg.append(bGl); panel.appendChild(pbg);
+  // 4) Viñeta
+  sub('Viñeta (rótulo)');
+  const wv = mk('div', 'pv-vista'), selVin = document.createElement('select'); selVin.setAttribute('aria-label', 'Tipo de viñeta');
+  [['reyengi', 'ReyEngi (estándar)'], ['neutra', 'Neutra, con datos del proyecto y firmas']].forEach(([k, t]) => { const op = document.createElement('option'); op.value = k; op.textContent = t; selVin.appendChild(op); });
+  wv.append(selVin); panel.appendChild(wv);
+  const CAMPOS = [['cliente', 'Cliente'], ['proyecto', 'Proyecto'], ['plano', 'N° de plano'], ['rev', 'Revisión'], ['dibujo', 'Dibujó'], ['reviso', 'Revisó'], ['aprobo', 'Aprobó']], inC = {};
+  const gc = mk('div', 'pv-campos');
+  CAMPOS.forEach(([k, lab]) => { const l = mk('label', '', lab), x = document.createElement('input'); x.type = 'text'; x.autocomplete = 'off'; l.appendChild(x); gc.appendChild(l); inC[k] = x; x.addEventListener('input', () => { PL.c[k] = x.value; guardarAj(); pvSchedule(); }); });
+  panel.appendChild(gc);
+  selVin.addEventListener('change', () => { PL.vin = selVin.value; guardarAj(); pvSchedule(); });
+  const pstat = mk('p', ''); pstat.setAttribute('aria-live', 'polite'); panel.appendChild(pstat);
+  [pGen, pPdf, pPng, pClose, bIso, bCam, bCen, bFr, bGl].forEach((b) => { b.type = 'button'; });
   pbody.append(pstage, panel); pv.append(pbar, pbody); document.body.appendChild(pv);
+
+  // Los ajustes se recuerdan por detalle en este navegador (si el almacenamiento está disponible)
+  const claveAj = () => 'reyengi-plano:' + (sheetData().code || document.title || 'detalle');
+  function guardarAj() { try { localStorage.setItem(claveAj(), JSON.stringify({ v: PL.v, z: PL.z, gl: PL.gl, vin: PL.vin, vo: VO })); localStorage.setItem('reyengi-plano-campos', JSON.stringify(PL.c)); } catch (e) {} }
+  function cargarAj() {
+    try { const c = JSON.parse(localStorage.getItem('reyengi-plano-campos') || 'null'); if (c) PL.c = c; } catch (e) {}
+    try { const a = JSON.parse(localStorage.getItem(claveAj()) || 'null'); if (a) { if (Array.isArray(a.v) && a.v.length === 3) PL.v = a.v.map((k, i) => (VISTAS[k] && (i || k !== 'none') ? k : PL.v[i])); if (Array.isArray(a.z)) PL.z = a.z.map((n) => +n || 1); PL.gl = a.gl || {}; if (a.vin) PL.vin = a.vin; if (a.vo && a.vo.set) Object.assign(VO, a.vo); } } catch (e) {}
+  }
+  function clearGl(i) { Object.keys(PL.gl).forEach((k) => { if (k.indexOf(i + ':') === 0) delete PL.gl[k]; }); }
+  function clearIso() { PL.v.forEach((k, i) => { if (k === 'iso') clearGl(i); }); }
+  const syncInputs = () => {
+    SL.forEach(([k]) => { const q = inp[k], v = Math.round(VO[k] * q.f); q.r.value = v; q.o.textContent = v + q.u; });
+    PL.v.forEach((k, i) => { selV[i].value = k; const z = Math.round((k === 'iso' ? VO.zoom : PL.z[i]) * 100); zV[i].r.value = z; zV[i].o.textContent = k === 'none' ? '' : z + ' %'; zV[i].r.disabled = k === 'none'; });
+    selVin.value = PL.vin; CAMPOS.forEach(([k]) => { if (document.activeElement !== inC[k]) inC[k].value = PL.c[k] || ''; });
+  };
+  let lastCv = null;
+  function pintarPv(fantasma) {                        // lámina a media resolución; durante un arrastre, además el globo en su nueva posición
+    const g2 = pcv.getContext('2d'); g2.fillStyle = '#fff'; g2.fillRect(0, 0, pcv.width, pcv.height);
+    if (lastCv) g2.drawImage(lastCv, 0, 0, W, H, 0, 0, pcv.width, pcv.height);
+    if (fantasma) {
+      const k = pcv.width / W; g2.save(); g2.scale(k, k);
+      g2.strokeStyle = '#EF5A05'; g2.lineWidth = 4; g2.setLineDash([14, 10]);
+      g2.beginPath(); g2.moveTo(fantasma.x, fantasma.y); g2.lineTo(fantasma.tx, fantasma.ty); g2.stroke(); g2.setLineDash([]);
+      g2.beginPath(); g2.arc(fantasma.x, fantasma.y, fantasma.r, 0, Math.PI * 2); g2.fillStyle = '#fff'; g2.fill(); g2.stroke();
+      g2.fillStyle = '#EF5A05'; g2.font = '600 ' + Math.round(fantasma.r) + 'px ' + F.s; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText(fantasma.num, fantasma.x, fantasma.y + 1);
+      g2.restore();
+    }
+  }
   let pvT = 0;
   function pvRender() {
     pbusy.hidden = false;
     clearTimeout(pvT);
     pvT = setTimeout(() => {
       try {
-        const cv = compose(sheetData(), { isoOnly: true }), g2 = pcv.getContext('2d');
-        g2.fillStyle = '#fff'; g2.fillRect(0, 0, pcv.width, pcv.height);
-        g2.drawImage(cv, 90, 90, 1210, 1800, 0, 0, pcv.width, pcv.height);
-        g2.strokeStyle = '#c9d2db'; g2.lineWidth = 1; g2.strokeRect(0.5, 0.5, pcv.width - 1, pcv.height - 1);
-        pstat.textContent = 'Encuadre: giro ' + Math.round(VO.az) + '°, inclinación ' + Math.round(VO.el) + '°, ' + Math.round(VO.zoom * 100) + ' %.';
-      } catch (e) { pstat.textContent = 'No se pudo dibujar la previsualización en este dispositivo.'; }
+        lastCv = compose(sheetData(), { cache: true }); pintarPv();
+        const mov = Object.keys(PL.gl).length;
+        pstat.textContent = 'Vistas: ' + PL.v.filter((k) => k !== 'none').map((k) => VISTAS[k][0].replace(/ \(.*/, '').toLowerCase()).join(', ') + (mov ? ' · ' + mov + ' globo' + (mov === 1 ? '' : 's') + ' movido' + (mov === 1 ? '' : 's') : '') + '.';
+        guardarAj();
+      } catch (e) { pstat.textContent = 'No se pudo dibujar la lámina en este dispositivo.'; }
       pbusy.hidden = true;
     }, 30);
   }
   let pvD = 0; function pvSchedule() { pbusy.hidden = false; clearTimeout(pvD); pvD = setTimeout(pvRender, 220); }
   const fromCam = () => { const a = camAngles(); Object.assign(VO, { az: a.az, el: a.el, zoom: 1, px: 0, py: 0 }); };
-  bPrev.addEventListener('click', () => { if (!VO.set) fromCam(); syncInputs(); pv.hidden = false; pClose.focus(); pvRender(); });
-  bIso.addEventListener('click', () => { Object.assign(VO, { set: true, az: 45, el: 35 }); syncInputs(); pvSchedule(); });
-  bFr.addEventListener('click', () => { Object.assign(VO, { set: true, az: 20, el: 18 }); syncInputs(); pvSchedule(); });
-  bCam.addEventListener('click', () => { fromCam(); VO.set = false; syncInputs(); pvSchedule(); });
-  bCen.addEventListener('click', () => { Object.assign(VO, { set: true, zoom: 1, px: 0, py: 0 }); syncInputs(); pvSchedule(); });
-  { let dr = null;
-    pcv.addEventListener('pointerdown', (e) => { dr = [e.clientX, e.clientY, VO.az, VO.el]; pcv.setPointerCapture(e.pointerId); });
-    pcv.addEventListener('pointermove', (e) => { if (!dr) return; VO.set = true; VO.az = ((dr[2] - (e.clientX - dr[0]) * 0.45 + 540) % 360) - 180; VO.el = Math.max(-10, Math.min(89, dr[3] + (e.clientY - dr[1]) * 0.35)); syncInputs(); pvSchedule(); });
-    pcv.addEventListener('pointerup', () => { dr = null; });
-    pcv.addEventListener('wheel', (e) => { e.preventDefault(); VO.set = true; VO.zoom = Math.max(0.5, Math.min(2.5, VO.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); syncInputs(); pvSchedule(); }, { passive: false }); }
-  const pvClose = () => { pv.hidden = true; stat.textContent = VO.set ? 'Encuadre isométrico ajustado: se usará al generar el plano.' : ''; };
+  let ajCargado = false;
+  bPrev.addEventListener('click', () => { if (!ajCargado) { cargarAj(); ajCargado = true; } if (!VO.set) fromCam(); LC.clear(); syncInputs(); pv.hidden = false; pClose.focus(); pvRender(); });
+  bIso.addEventListener('click', () => { Object.assign(VO, { set: true, az: 45, el: 35 }); clearIso(); syncInputs(); pvSchedule(); });
+  bFr.addEventListener('click', () => { Object.assign(VO, { set: true, az: 20, el: 18 }); clearIso(); syncInputs(); pvSchedule(); });
+  bCam.addEventListener('click', () => { fromCam(); VO.set = false; clearIso(); syncInputs(); pvSchedule(); });
+  bCen.addEventListener('click', () => { Object.assign(VO, { set: true, zoom: 1, px: 0, py: 0 }); PL.z = [1, 1, 1]; PL.gl = {}; syncInputs(); pvSchedule(); });
+  bGl.addEventListener('click', () => { PL.gl = {}; pvSchedule(); });
+  { // Interacción sobre la lámina: arrastrar globos, girar la isométrica, acercar con la rueda
+    const RECT = [{ x: 90, y: 90, w: 1210, h: 1800 }, { x: 1320, y: 90, w: 720, h: 860 }, { x: 1320, y: 1050, w: 720, h: 840 }];
+    const aLamina = (e) => { const r = pcv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+    const slotEn = (x, y) => RECT.findIndex((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    let dr = null;
+    pcv.addEventListener('pointerdown', (e) => {
+      const [x, y] = aLamina(e), hit = HITS.slice().reverse().find((h) => Math.hypot(h.x - x, h.y - y) <= h.r + 10);
+      if (hit) { dr = { t: 'globo', h: hit, dx: hit.x - x, dy: hit.y - y }; pcv.style.cursor = 'grabbing'; }
+      else { const i = slotEn(x, y); if (i >= 0 && PL.v[i] === 'iso') dr = { t: 'giro', x: e.clientX, y: e.clientY, az: VO.az, el: VO.el }; else return; }
+      pcv.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    pcv.addEventListener('pointermove', (e) => {
+      const [x, y] = aLamina(e);
+      if (!dr) { pcv.style.cursor = HITS.some((h) => Math.hypot(h.x - x, h.y - y) <= h.r + 10) ? 'grab' : (PL.v[slotEn(x, y)] === 'iso' ? 'move' : 'default'); return; }
+      if (dr.t === 'globo') {
+        const q = RECT[dr.h.slot], bx = Math.max(q.x + dr.h.r, Math.min(q.x + q.w - dr.h.r, x + dr.dx)), by = Math.max(q.y + dr.h.r, Math.min(q.y + q.h - dr.h.r, y + dr.dy));
+        dr.pos = { x: bx, y: by }; pintarPv({ x: bx, y: by, r: dr.h.r, num: dr.h.num, tx: dr.h.tx, ty: dr.h.ty });
+      } else { VO.set = true; VO.az = ((dr.az - (e.clientX - dr.x) * 0.45 + 540) % 360) - 180; VO.el = Math.max(-89, Math.min(89, dr.el + (e.clientY - dr.y) * 0.35)); clearIso(); syncInputs(); pvSchedule(); }
+    });
+    const soltar = () => {
+      if (dr && dr.t === 'globo' && dr.pos) { const q = RECT[dr.h.slot]; PL.gl[dr.h.k] = { fx: (dr.pos.x - q.x) / q.w, fy: (dr.pos.y - q.y) / q.h }; pvRender(); }
+      dr = null; pcv.style.cursor = 'default';
+    };
+    pcv.addEventListener('pointerup', soltar); pcv.addEventListener('pointercancel', soltar);
+    pcv.addEventListener('wheel', (e) => {
+      const [x, y] = aLamina(e), i = slotEn(x, y); if (i < 0 || PL.v[i] === 'none') return; e.preventDefault();
+      const f = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+      if (PL.v[i] === 'iso') { VO.set = true; VO.zoom = Math.max(0.5, Math.min(2.5, VO.zoom * f)); clearIso(); } else { PL.z[i] = Math.max(0.5, Math.min(2.5, PL.z[i] * f)); clearGl(i); }
+      syncInputs(); pvSchedule();
+    }, { passive: false }); }
+  window.__ajHits = () => HITS.map((h) => ({ k: h.k, x: h.x, y: h.y, r: h.r, slot: h.slot, num: h.num }));
+  const ajustado = () => VO.set || PL.v.join() !== 'iso,front,right' || Object.keys(PL.gl).length || PL.vin !== 'reyengi';
+  const pvClose = () => { pv.hidden = true; LC.clear(); stat.textContent = ajustado() ? 'Plano ajustado: se usará así al generar o descargar.' : ''; };
   pClose.addEventListener('click', pvClose);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pv.hidden) pvClose(); });
-  pGen.addEventListener('click', () => { pv.hidden = true; generate(showSheet); });
+  pGen.addEventListener('click', () => { pv.hidden = true; LC.clear(); generate(showSheet); });
   pPdf.addEventListener('click', () => generate(savePdfDxf));
   pPng.addEventListener('click', () => generate((g) => fetch(g.png).then((r) => r.blob()).then((b) => save(b, g.name + '.png'))));
   if (bOrig) {
