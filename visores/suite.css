@@ -1,8 +1,17 @@
-/* Suite ReyEngi · marco común de todas las páginas: explorador lateral, barra de estado y tipografía compacta. */
-:root { --rs-w: 244px; }
+/* Suite ReyEngi · marco común de todas las páginas: paleta, explorador lateral, ruta, barra de estado y tipografía compacta. */
+/* ── Paleta única (reemplaza la de cada página) ──
+   Fondo y paneles en pizarra azulada, una sola familia de grises para texto y líneas, naranja solo para la acción
+   principal y la marca, y azul para lo seleccionado, como en los exploradores web. */
+html:root {
+  --rs-w: 252px;
+  --bg: #0C1422; --panel: #121D2F; --panel2: #1A2942; --fg: #E2E8F0; --muted: #94A3B8; --line: #243349;
+  --brand: #0B2545; --brand-fg: #FFFFFF; --brand-muted: #A9B6C6; --accent: #F0691A; --accent-ink: #FF9D5C; --chip: #18263D;
+  --ok: #3FB97A; --warn: #E9B341; --bad: #E5484D;
+  --sel: #58A6FF; --sel-bg: rgba(56, 139, 253, .16); --rs-barra: #0F1A2B;
+}
 /* ── Tipografía compacta (páginas internas) ── */
 body:not(.rs-portada) { font-size: 12.5px; }
-body:not(.rs-portada) .barra { border-bottom-width: 2px !important; padding-top: 5px !important; padding-bottom: 5px !important; }
+body:not(.rs-portada) .barra { background: var(--rs-barra) !important; border-bottom: 1px solid var(--line) !important; padding-top: 5px !important; padding-bottom: 5px !important; }
 body:not(.rs-portada) .barra h1 { font-size: 14px !important; letter-spacing: .2px; line-height: 1.2; }
 body:not(.rs-portada) .barra h1 small { font-size: 10px !important; }
 body:not(.rs-portada) .barra .volver { font-size: 11px !important; }
@@ -24,8 +33,8 @@ body:not(.rs-portada):not(.exp) main table:not(.pg *) th { font-size: 10.5px !im
 body:not(.rs-portada):not(.exp) main legend { font-size: 10.5px !important; }
 
 /* ── Explorador lateral ── */
-.rs-arbol { position: fixed; left: 0; top: 0; bottom: 0; width: var(--rs-w); z-index: 12; display: flex; flex-direction: column; background: #0F2036; color: #E6EDF5; border-right: 1px solid #1E3350; font: 500 11.5px/1.35 var(--f-body, system-ui, "Segoe UI", sans-serif); color-scheme: dark; }
-.rs-cab { flex: none; display: flex; align-items: center; gap: 6px; padding: 7px 8px 7px 10px; background: #022A55; border-bottom: 2px solid #EF5A05; min-height: 38px; }
+.rs-arbol { position: fixed; left: 0; top: 0; bottom: 0; width: var(--rs-w); z-index: 12; display: flex; flex-direction: column; background: var(--rs-barra); color: var(--fg); border-right: 1px solid var(--line); font: 500 11.5px/1.35 var(--f-body, system-ui, "Segoe UI", sans-serif); color-scheme: dark; }
+.rs-cab { flex: none; display: flex; align-items: center; gap: 6px; padding: 7px 8px 7px 10px; background: var(--brand); border-bottom: 2px solid var(--accent); min-height: 38px; }
 .rs-cab a { flex: 1; color: #fff; text-decoration: none; font: 700 13px var(--f-body, system-ui, sans-serif); letter-spacing: .2px; }
 .rs-cab a small { display: block; font: 500 9.5px var(--f-mono, monospace); color: #A9B6C6; }
 .rs-cab button, .rs-abrir { border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff; border-radius: 5px; min-width: 26px; min-height: 26px; padding: 0 6px; font: 600 12px system-ui, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
@@ -36,13 +45,13 @@ body:not(.rs-portada):not(.exp) main legend { font-size: 10.5px !important; }
 .rs-arbol ul { list-style: none; margin: 0; padding: 0; }
 .rs-arbol ul ul { padding-left: 13px; }
 .rs-arbol .nodo { display: flex; align-items: center; gap: 4px; width: 100%; box-sizing: border-box; border: 0 !important; border-radius: 4px; min-height: 22px !important; padding: 1px 5px !important; font: 500 11.5px var(--f-body, system-ui, sans-serif) !important; color: #E6EDF5; text-align: left; justify-content: flex-start; background: transparent; text-decoration: none; cursor: pointer; white-space: nowrap; }
-.rs-arbol .nodo:hover { background: #13284A; }
-.rs-arbol .nodo[aria-current="true"], .rs-arbol .nodo[aria-current="page"] { background: #022A55; box-shadow: inset 2px 0 0 #EF5A05; color: #fff; }
+.rs-arbol .nodo:hover { background: var(--panel2); }
+.rs-arbol .nodo[aria-current="true"], .rs-arbol .nodo[aria-current="page"] { background: var(--sel-bg); box-shadow: inset 2px 0 0 var(--sel); color: #fff; }
 .rs-arbol .nodo .tw { width: 12px; flex: none; color: #A9B6C6; font-size: 9px; text-align: center; }
 .rs-arbol .nodo .ic { width: 13px; height: 11px; flex: none; border-radius: 2px; background: #C99A2E; position: relative; }
 .rs-arbol .nodo .ic::before { content: ""; position: absolute; left: 0; top: -2px; width: 6px; height: 3px; border-radius: 1px 1px 0 0; background: inherit; }
-.rs-arbol .nodo .ic.doc { background: #DCE6F1; width: 10px; height: 12px; border-radius: 1px; }
-.rs-arbol .nodo .ic.doc::before { display: none; }
+.rs-arbol .nodo .ic.doc, .rs-arbol .nodo .ic.fic { background: #C9D6E4; width: 10px; height: 12px; min-height: 0; border-radius: 1px; padding: 0; margin: 0; border: 0; box-shadow: none; display: block; }
+.rs-arbol .nodo .ic.doc::before, .rs-arbol .nodo .ic.fic::before { display: none; }
 .rs-arbol .nodo .ic.bus { background: transparent; border: 1.5px solid #7FB3FF; width: 9px; height: 9px; border-radius: 50%; margin: 0 2px; }
 .rs-arbol .nodo .ic.bus::before { left: 7px; top: 7px; width: 5px; height: 1.5px; background: #7FB3FF; transform: rotate(45deg); border-radius: 0; }
 .rs-arbol .nodo .ic.pt { background: #A9B6C6; width: 5px; height: 5px; border-radius: 50%; margin: 0 4px; }
@@ -60,7 +69,7 @@ body.rs-local main.marco > .divV { display: none; }
 .rs-div { position: fixed; top: 0; bottom: 0; left: calc(var(--rs-w) - 2px); width: 5px; z-index: 13; cursor: col-resize; }
 .rs-div:hover, .rs-div.act { background: #EF5A05; }
 .rs-abrir { display: none; margin-right: 4px; }
-.rs-estado { position: fixed; left: var(--rs-w); right: 0; bottom: 0; z-index: 12; display: flex; gap: 14px; align-items: center; height: 22px; padding: 0 12px; background: #0F2036; border-top: 1px solid #1E3350; font: 500 10.5px var(--f-mono, monospace); color: #A9B6C6; white-space: nowrap; overflow: hidden; }
+.rs-estado { position: fixed; left: var(--rs-w); right: 0; bottom: 0; z-index: 12; display: flex; gap: 14px; align-items: center; height: 22px; padding: 0 12px; background: var(--rs-barra); border-top: 1px solid var(--line); font: 500 10.5px var(--f-mono, monospace); color: #A9B6C6; white-space: nowrap; overflow: hidden; }
 .rs-estado b { color: #E6EDF5; font-weight: 600; } .rs-estado .esp { flex: 1; }
 body.rs-marco { padding-left: var(--rs-w); }
 body.rs-marco.rs-conestado { padding-bottom: 22px; }
@@ -98,7 +107,7 @@ body:not(.rs-portada) dialog button, body:not(.rs-portada) dialog .btn { font-si
 body:not(.rs-portada) dialog input:not([type="checkbox"]):not([type="radio"]), body:not(.rs-portada) dialog select, body:not(.rs-portada) dialog textarea { font-size: 12px !important; min-height: 26px !important; padding: 3px 7px !important; }
 body:not(.rs-portada) .kdlg, body:not(.rs-portada) .chk { font-size: 12px !important; }
 body:not(.rs-portada) .ricbox h3, body:not(.rs-portada) .card h3 { font-size: 13px !important; }
-body:not(.rs-portada) .linea, body:not(.rs-portada) .res .big b, body:not(.rs-portada) .resumen b { font-size: 15px !important; }
+body:not(.rs-portada) .linea, body:not(.rs-portada) .res .big b, body:not(.rs-portada):not(.exp) .resumen b { font-size: 15px !important; }
 body:not(.rs-portada) .lect b { font-size: 13px !important; }
 body:not(.rs-portada) .fp .lect b { font-size: 10px !important; }
 /* Entregables generados bajo cada nodo */
@@ -109,7 +118,7 @@ body:not(.rs-portada) .fp .lect b { font-size: 10px !important; }
 .rs-arbol .nodo.hij b { font: 600 10.5px var(--f-mono, monospace); }
 .rs-arbol .nodo.hij i { font-style: normal; color: #A9B6C6; }
 /* Pestaña para mostrar el explorador retraído (escritorio) */
-.rs-pestana { display: none; position: fixed; left: 0; top: 52px; z-index: 13; writing-mode: vertical-rl; transform: rotate(180deg); background: #022A55; color: #fff; border: 1px solid #EF5A05; border-left: 0; border-radius: 6px 0 0 6px; padding: 10px 4px; font: 700 11px/1 var(--f-body, system-ui, sans-serif); letter-spacing: .5px; cursor: pointer; }
+.rs-pestana { display: none; position: fixed; left: 0; top: 52px; z-index: 13; writing-mode: vertical-rl; transform: rotate(180deg); background: var(--brand); color: #fff; border: 1px solid var(--accent); border-left: 0; border-radius: 6px 0 0 6px; padding: 10px 4px; font: 700 11px/1 var(--f-body, system-ui, sans-serif); letter-spacing: .5px; cursor: pointer; }
 .rs-pestana:hover { background: #EF5A05; } .rs-pestana:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (min-width: 901px) {
   body.rs-plegado .rs-pestana { display: block; }
@@ -122,5 +131,67 @@ body:not(.rs-portada) .fp .lect b { font-size: 10px !important; }
 /* Pestañas de sección (explorador retraído o pantalla angosta): fila compacta de píldoras */
 body:not(.rs-portada) .barra nav.tabs { gap: 4px; padding: 5px 0 1px; border: 0; overflow-x: auto; scrollbar-width: thin; }
 body:not(.rs-portada) .barra nav.tabs button { border: 1px solid rgba(255,255,255,.22) !important; border-radius: 13px !important; min-height: 24px !important; padding: 2px 10px !important; font-size: 11px !important; font-weight: 600; color: #C9D6E4; background: transparent; flex: none; }
-body:not(.rs-portada) .barra nav.tabs button:hover { border-color: #EF5A05 !important; color: #fff; }
-body:not(.rs-portada) .barra nav.tabs button[aria-selected="true"] { background: #EF5A05; border-color: #EF5A05 !important; color: #fff; }
+
+
+
+/* ── Explorador: búsqueda, recientes e iconos ── */
+.rs-herr { flex: none; display: flex; gap: 4px; padding: 6px 6px 4px; border-bottom: 1px solid var(--line); }
+.rs-herr input { flex: 1; min-width: 0; font: 12px var(--f-body, system-ui, sans-serif); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; min-height: 26px; }
+.rs-herr input:focus-visible { outline: 2px solid var(--sel); outline-offset: 0; }
+.rs-herr button { flex: none; width: 26px; min-height: 26px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 5px; cursor: pointer; font: 600 13px system-ui, sans-serif; padding: 0; }
+.rs-herr button:hover { color: #fff; border-color: var(--sel); }
+.rs-herr button:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.rs-arbol .rs-lista > ul + ul { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+.rs-arbol .nodo.grp { color: var(--muted); font-weight: 600 !important; }
+.rs-arbol .nodo.grp[aria-expanded="true"] { color: var(--fg); }
+.rs-arbol .nodo .ic.pry { background: var(--sel); width: 11px; height: 11px; border-radius: 3px; }
+.rs-arbol .nodo .ic.pry::before { display: none; }
+.rs-arbol .nodo .ic.rel { background: transparent; border: 1.5px solid var(--muted); width: 10px; height: 10px; border-radius: 50%; }
+.rs-arbol .nodo .ic.rel::before { left: 3px; top: 1px; width: 1.5px; height: 4px; border-radius: 0; background: var(--muted); }
+.rs-arbol .nodo:focus-visible { outline: 2px solid var(--sel) !important; outline-offset: -2px !important; }
+.rs-nada { margin: 10px 8px; color: var(--muted); font-size: 11.5px; }
+/* ── Ruta de navegación: primera fila de la barra en todas las páginas ── */
+.rs-ruta { display: flex; gap: 6px; align-items: center; font: 500 10.5px var(--f-mono, monospace); color: var(--muted); white-space: nowrap; overflow: hidden; padding: 0 0 4px; max-width: 1600px; margin: 0 auto; }
+.rs-ruta a { color: var(--muted); text-decoration: none; } .rs-ruta a:hover, .rs-ruta a:focus-visible { color: var(--sel); text-decoration: underline; outline: none; }
+.rs-ruta b { color: var(--fg); font-weight: 600; overflow: hidden; text-overflow: ellipsis; } .rs-ruta span { opacity: .6; } .rs-ruta .g { opacity: 1; }
+/* ── Misma estructura de contenido en todos los módulos ── */
+body:not(.rs-portada):not(.exp) main { padding: 10px 14px 34px !important; max-width: none !important; }
+body:not(.rs-portada) .blk { border-radius: 6px !important; padding: 10px 12px !important; margin-bottom: 10px !important; background: var(--panel); border: 1px solid var(--line); }
+body:not(.rs-portada) .blk > h2, body:not(.rs-portada) main fieldset > legend, body:not(.rs-portada) h2.grupo { font: 700 10.5px var(--f-mono, monospace) !important; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-ink); }
+body:not(.rs-portada) main fieldset { border: 1px solid var(--line) !important; border-radius: 6px !important; background: var(--panel); }
+body:not(.rs-portada) .tarjeta, body:not(.rs-portada) .card, body:not(.rs-portada) .itlazo { border-radius: 6px !important; border-width: 1px !important; }
+body:not(.rs-portada) .itlazo[aria-pressed="true"], body:not(.rs-portada) tr.sel > td { background: var(--sel-bg) !important; }
+body:not(.rs-portada) .itlazo[aria-pressed="true"] { border-color: var(--sel) !important; }
+body:not(.rs-portada) main p.intro, body:not(.rs-portada) main p.ayuda { font-size: 11.5px !important; line-height: 1.5; color: var(--muted); max-width: 130ch; margin: 0 0 8px; }
+body:not(.rs-portada) main p.peq { font-size: 11px !important; }
+p.rs-corto { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+p[data-rs] { cursor: pointer; } p[data-rs]:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+p.rs-corto::after { content: ""; }
+/* Pestañas de sección, iguales en toda la suite: fila de píldoras, la activa en azul */
+.barra nav.tabs button:hover, body.rs-portada #tabs button:hover { border-color: var(--sel) !important; color: #fff; }
+.barra nav.tabs button[aria-selected="true"], body.rs-portada #tabs button[aria-selected="true"] { background: var(--sel-bg) !important; border-color: var(--sel) !important; color: #fff !important; }
+/* ── Portada con la misma estructura ── */
+body.rs-portada { font-size: 13px; }
+body.rs-portada header.top { background: var(--rs-barra); border-bottom: 1px solid var(--line); }
+body.rs-portada header.top .rs-ruta { padding: 5px 14px 0; max-width: none; }
+body.rs-portada .topin { max-width: none; padding: 4px 14px 6px; gap: 10px; }
+body.rs-portada .brandlogo { height: 24px; } body.rs-portada .topin .sep { height: 22px; }
+body.rs-portada header.top h1 { font-size: 15px; } body.rs-portada .h1sub { font-size: 10px; }
+body.rs-portada .shell { max-width: none; padding: 12px 14px 34px; }
+body.rs-portada .hero { padding: 16px 18px 14px; margin-bottom: 14px; gap: 16px; border-radius: 6px; }
+body.rs-portada .hero h2 { font-size: clamp(19px, 2vw, 24px); margin-bottom: 8px; }
+body.rs-portada .hero p { font-size: 12.5px; }
+body.rs-portada .kpis dd { font-size: 21px; } body.rs-portada .kpis > div { padding: 8px 10px; }
+body.rs-portada .blk { margin-bottom: 16px; }
+body.rs-portada .blkh h2 { font-size: 15px; } body.rs-portada .blkh small { font-size: 11px; }
+body.rs-portada .card { border-radius: 6px; padding: 9px; } body.rs-portada .card h3 { font-size: 12.5px; }
+body.rs-portada .chip { font-size: 11.5px; padding: 3px 9px; }
+body.rs-portada button, body.rs-portada .btn { font-size: 12px; }
+body.rs-portada #tabs { gap: 4px; border: 0; flex-wrap: wrap; }
+body.rs-portada #tabs button { border: 1px solid var(--line) !important; border-radius: 13px !important; min-height: 24px !important; padding: 2px 10px !important; font-size: 11px !important; color: var(--muted); background: transparent; }
+@media (min-width: 901px) { body.rs-marco.rs-portada:not(.rs-plegado) .topnav { display: none; } }
+/* Los campos nunca ensanchan la página */
+body:not(.rs-portada) main fieldset > *, body:not(.rs-portada) main label { min-width: 0; }
+body:not(.rs-portada) .trio { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+/* Con el explorador a la vista, los botones de la barra que solo llevan a otro módulo sobran */
+@media (min-width: 901px) { body.rs-marco:not(.rs-plegado):not(.rs-portada) .barra a.btn[href^="../"] { display: none; } }
