@@ -13,194 +13,306 @@
   --brand: #022A55; --accent: #EF5A05; --accent-ink: #FF8A45; --ok: #3FBF7F; --warn: #F2B544; --bad: #E5484D;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --arbol: 250px; --lista: 46%;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 12px; line-height: 1.4; display: flex; flex-direction: column; overflow: hidden; }
 [hidden] { display: none !important; }
-button, .btn { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 5px 11px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+button, .btn { font: 600 11.5px var(--f-body); border-radius: 5px; padding: 3px 9px; min-height: 26px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 button.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
 button.ok { background: #1F6F4A; border-color: #2A8C5E; color: #fff; }
 button:hover, .btn:hover { border-color: var(--accent); }
 button:disabled { opacity: .5; cursor: not-allowed; }
-button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button.mini { min-height: 26px; padding: 2px 8px; font-size: 12px; }
-input, select { font: 13px var(--f-body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 32px; width: 100%; }
-label { display: grid; gap: 4px; align-content: start; font: 600 12px var(--f-body); color: var(--muted); }
-.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 3px solid var(--accent); padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); }
-.barra .fila { max-width: 1600px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.barra h1 { margin: 0 auto 0 0; font-size: 17px; font-weight: 700; }
-.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
-.barra a.volver { color: var(--muted); font: 600 12px var(--f-mono); text-decoration: none; }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.mini { min-height: 22px; padding: 1px 7px; font-size: 11px; }
+input, select { font: 12px var(--f-body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; min-height: 26px; width: 100%; }
+label { display: grid; gap: 3px; align-content: start; font: 600 11px var(--f-body); color: var(--muted); }
+/* Letra compacta también frente a los estilos generales de la Suite */
+body.exp main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), body.exp main select, body.exp main textarea { font-size: 12px; }
+body.exp main h2 { font-size: 11px; }
+body.exp main .btn, body.exp main button { font-size: 11.5px !important; min-height: 26px !important; padding: 3px 9px !important; }
+body.exp main button.mini { font-size: 11px !important; min-height: 22px !important; padding: 1px 7px !important; }
+
+/* Barra superior */
+.barra { flex: none; z-index: 10; background: var(--brand); border-bottom: 2px solid var(--accent); padding: 5px max(12px, env(safe-area-inset-right)) 5px max(12px, env(safe-area-inset-left)); }
+.barra .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.barra h1, body.exp .barra h1 { margin: 0 auto 0 0; font-size: 14px !important; font-weight: 700; line-height: 1.2; }
+.barra h1 small, body.exp .barra h1 small { display: block; font: 500 10px var(--f-mono) !important; color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 11px var(--f-mono); text-decoration: none; }
 .barra a.volver:hover { color: var(--accent-ink); }
-.selp { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px var(--f-mono); color: var(--muted); }
+body.exp .barra .btn, body.exp .barra button:not([role="tab"]), body.exp .barra select { font-size: 11.5px !important; min-height: 26px !important; padding: 3px 9px !important; }
+.selp { display: inline-flex; align-items: center; gap: 6px; font: 600 10.5px var(--f-mono); color: var(--muted); }
 .selp select { width: auto; max-width: 220px; }
-main { padding: 14px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); max-width: 1600px; margin: 0 auto; }
-.pasos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; counter-reset: p; }
-.pasos li { counter-increment: p; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px 9px 44px; position: relative; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
-.pasos li::before { content: counter(p); position: absolute; left: 12px; top: 9px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); border: 1px solid var(--accent); color: #fff; font: 700 12px var(--f-mono); display: grid; place-items: center; }
-.pasos li b { display: block; color: var(--fg); font-size: 13px; }
-.pasos li.on { border-color: var(--accent); }
-.pasos li.hecho::before { content: "✓"; background: #1F6F4A; border-color: #2A8C5E; }
-.blk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; }
-.blk > h2 { margin: 0 0 8px; font: 700 12px var(--f-mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--accent-ink); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-.blk > h2 small { font: 500 11.5px var(--f-mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
-.ayuda { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 0 0 10px; max-width: 110ch; }
-.herr { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.herr .esp { flex: 1; }
-.drop { border: 1.5px dashed #2D4A70; border-radius: 8px; padding: 14px; text-align: center; color: var(--muted); font-size: 12.5px; cursor: pointer; }
-.drop.sobre { border-color: var(--accent); background: rgba(239, 90, 5, .06); color: var(--fg); }
-.drop b { color: var(--fg); }
-.fmt { display: inline-block; font: 600 10.5px var(--f-mono); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; margin: 0 2px; color: var(--fg); }
-table.hojas { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
-table.hojas th { text-align: left; font: 600 11px var(--f-mono); color: var(--muted); padding: 5px 6px; border-bottom: 1px solid var(--line); }
-table.hojas td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
-table.hojas td input { min-height: 28px; padding: 3px 6px; }
-.trabajo { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 12px; align-items: start; }
-.trabajo > div { min-width: 0; }
-.filtros { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-.filtros select, .filtros input { width: auto; min-height: 30px; }
-.filtros input[type=search] { flex: 1 1 160px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.seg button { border: 0; border-radius: 0; min-height: 30px; color: var(--muted); }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
-.tscroll { overflow: auto; max-height: calc(100vh - 250px); border: 1px solid var(--line); border-radius: 8px; }
-table.cand { border-collapse: separate; border-spacing: 0; font-size: 12.5px; width: 100%; }
-table.cand th { position: sticky; top: 0; z-index: 1; background: var(--brand); color: #fff; font: 600 11.5px var(--f-body); text-align: left; padding: 6px 5px; white-space: nowrap; }
-table.cand td { padding: 1px 3px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-table.cand td input, table.cand td select { min-height: 28px; border-color: transparent; background: transparent; padding: 3px 5px; font-size: 12.5px; }
+
+/* Cinta de comandos */
+.cinta { flex: none; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; padding: 5px 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.cinta .sep { width: 1px; align-self: stretch; background: var(--line); margin: 2px 4px; }
+.cinta .esp { flex: 1; }
+.cinta button[aria-pressed="true"] { background: var(--brand); border-color: var(--accent); color: #fff; }
+.ruta { font: 500 11px var(--f-mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ruta b { color: var(--fg); font-weight: 600; }
+
+/* Marco: árbol | (lista / panel) */
+main.marco { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--arbol) 5px minmax(0, 1fr); padding-right: 30px; }
+.arbol { min-width: 0; overflow: auto; background: var(--panel); border-right: 1px solid var(--line); padding: 6px 4px 12px; }
+.arbol h2 { margin: 2px 6px 6px; font: 700 10px var(--f-mono) !important; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-ink); }
+.arbol ul { list-style: none; margin: 0; padding: 0; }
+.arbol ul ul { padding-left: 13px; }
+.arbol .nodo { display: flex; align-items: center; gap: 4px; width: 100%; border: 0 !important; border-radius: 4px; min-height: 22px !important; padding: 1px 5px !important; font: 500 11.5px var(--f-body) !important; color: var(--fg); text-align: left; justify-content: flex-start; background: transparent; }
+.arbol .nodo:hover { background: var(--panel2); }
+.arbol .nodo[aria-current="true"] { background: var(--brand); box-shadow: inset 2px 0 0 var(--accent); color: #fff; }
+.arbol .nodo .tw { width: 12px; flex: none; color: var(--muted); font-size: 9px; text-align: center; }
+.arbol .nodo .ic { width: 13px; height: 11px; flex: none; border-radius: 2px; background: #C99A2E; position: relative; }
+.arbol .nodo .ic::before { content: ""; position: absolute; left: 0; top: -2px; width: 6px; height: 3px; border-radius: 1px 1px 0 0; background: inherit; }
+.arbol .nodo .ic.doc { background: #DCE6F1; width: 10px; height: 12px; border-radius: 1px; }
+.arbol .nodo .ic.doc::before { display: none; }
+.arbol .nodo .ic.bus { background: transparent; border: 1.5px solid #7FB3FF; width: 9px; height: 9px; border-radius: 50%; margin: 0 2px; }
+.arbol .nodo .ic.bus::before { left: 7px; top: 7px; width: 5px; height: 1.5px; background: #7FB3FF; transform: rotate(45deg); border-radius: 0; }
+.arbol .nodo .ic.pt { background: var(--muted); width: 5px; height: 5px; border-radius: 50%; margin: 0 4px; }
+.arbol .nodo .ic.pt::before { display: none; }
+.arbol .nodo .tx { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arbol .nodo .ct { flex: none; font: 600 10px var(--f-mono); color: var(--muted); }
+.arbol .nodo .ct.pe { color: var(--warn); }
+.arbol .nodo .ct.er { color: #FF8C8F; }
+.divV { cursor: col-resize; background: transparent; }
+.divH { cursor: row-resize; background: var(--line); height: 5px; flex: none; }
+.divV:hover, .divH:hover, .divV.act, .divH.act { background: var(--accent); }
+.area { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+#vistaExp { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.lista { height: var(--lista); min-height: 90px; display: flex; flex-direction: column; flex: none; }
+.filtros { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+.filtros select, .filtros input { width: auto; }
+.filtros input[type=search] { flex: 1 1 150px; max-width: 280px; }
+.filtros .esp { flex: 1; }
+#fHoja { display: none; }
+.tscroll { flex: 1; min-height: 0; overflow: auto; }
+table.cand { border-collapse: separate; border-spacing: 0; font-size: 11.5px; width: 100%; }
+table.cand th { position: sticky; top: 0; z-index: 1; background: var(--panel2); color: var(--fg); font: 600 10.5px var(--f-body); text-align: left; padding: 4px 5px; white-space: nowrap; border-bottom: 1px solid var(--line); }
+table.cand td { padding: 0 3px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.cand td input, table.cand td select { min-height: 23px; border-color: transparent; background: transparent; padding: 1px 4px; font-size: 11.5px !important; }
 table.cand td input:hover, table.cand td select:hover { border-color: var(--line); }
-table.cand td.l input { font: 700 12.5px var(--f-mono); text-transform: uppercase; }
-table.cand td.n input { font: 600 12.5px var(--f-mono); }
-table.cand tr.sel td { background: rgba(239, 90, 5, .13); }
+table.cand td.l input { font: 700 11.5px var(--f-mono) !important; text-transform: uppercase; }
+table.cand td.n input { font: 600 11.5px var(--f-mono) !important; }
+table.cand td b { font-size: 11.5px !important; }
+table.cand td br { display: none; }
+table.cand td b + br + .conf { margin-left: 6px; }
+table.cand tr:hover td { background: rgba(255, 255, 255, .03); }
+table.cand tr.sel td { background: rgba(239, 90, 5, .16); }
 table.cand tr.validado td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
 table.cand tr.rechazado td { opacity: .5; }
 table.cand tr.rechazado td:first-child { box-shadow: inset 3px 0 0 var(--bad); opacity: 1; }
 table.cand tr.pendiente td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
-table.cand .chk { width: 30px; text-align: center; }
-table.cand .chk input { width: 16px; min-height: 16px; }
+table.cand .chk { width: 26px; text-align: center; }
+table.cand .chk input { width: 14px; min-height: 14px; }
 table.cand td.acc { white-space: nowrap; }
-.est { font: 600 10.5px var(--f-mono); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.est { font: 600 10px var(--f-mono); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
 .est.pendiente { color: var(--warn); border: 1px solid #6B5320; }
 .est.validado { color: var(--ok); border: 1px solid #23573E; }
 .est.rechazado { color: #FF8C8F; border: 1px solid #6B2427; }
-.conf { font: 500 10.5px var(--f-mono); color: var(--muted); }
-.lst { font: 600 10.5px var(--f-mono); }
+.conf { font: 500 10px var(--f-mono); color: var(--muted); }
+.lst { font: 600 10px var(--f-mono); }
 .lst.si { color: var(--ok); }
 .lst.no { color: var(--warn); }
-.visor { position: sticky; top: 64px; background: #fff; border-radius: 8px; overflow: hidden; height: calc(100vh - 150px); min-height: 420px; border: 1px solid var(--line); }
+
+/* Panel inferior con pestañas */
+.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ptabs { flex: none; display: flex; gap: 0; background: var(--panel); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.ptabs button { border: 0 !important; border-radius: 0; min-height: 27px !important; padding: 3px 12px !important; color: var(--muted); border-bottom: 2px solid transparent !important; font-weight: 600; }
+.ptabs button[aria-selected="true"] { color: #fff; background: var(--bg); border-bottom-color: var(--accent) !important; }
+.ptabs .esp { flex: 1; }
+.pcont { flex: 1; min-height: 0; position: relative; }
+.pcont > div { position: absolute; inset: 0; overflow: auto; }
+.pcont > div.pad { padding: 10px 12px; }
+.visor { position: relative; background: #fff; overflow: hidden; height: 100%; }
 .visor canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 .visor.marcar canvas { cursor: crosshair; }
-.vtools { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; pointer-events: none; }
+.vtools { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; gap: 5px; flex-wrap: wrap; align-items: center; pointer-events: none; }
 .vtools > * { pointer-events: auto; }
-.vtools button, .vtools select { background: rgba(2, 18, 38, .88); color: #fff; border-color: #2D4A70; min-height: 30px; width: auto; }
+.vtools button, .vtools select { background: rgba(2, 18, 38, .88); color: #fff; border-color: #2D4A70; width: auto; }
 .vtools button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
-.vinfo { position: absolute; left: 8px; bottom: 8px; background: rgba(2, 18, 38, .85); color: #DCE6F1; font: 500 11.5px var(--f-mono); border-radius: 5px; padding: 3px 8px; }
-.vvacio { position: absolute; inset: 0; display: grid; place-items: center; color: #4A5868; font-size: 13px; text-align: center; padding: 20px; background: #F4F6F8; }
-.resumen { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
-.resumen span { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; font: 500 12px var(--f-mono); color: var(--muted); }
-.resumen b { color: var(--fg); }
-.rev { display: grid; grid-template-columns: minmax(180px, 260px) minmax(140px, 180px) auto; gap: 8px; align-items: end; }
-.aviso { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 8px 0 0; font-size: 12.5px; }
-.okmsg { border: 1px solid #2A8C5E; color: #9BE3BD; border-radius: 8px; padding: 8px 12px; margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
+.vinfo { position: absolute; left: 6px; bottom: 6px; background: rgba(2, 18, 38, .85); color: #DCE6F1; font: 500 10.5px var(--f-mono); border-radius: 4px; padding: 2px 7px; }
+.vvacio { position: absolute; inset: 0; display: grid; place-items: center; color: #4A5868; font-size: 12px; text-align: center; padding: 20px; background: #F4F6F8; }
+.ayuda { color: var(--muted); font-size: 11.5px; line-height: 1.5; margin: 0 0 8px; max-width: 120ch; }
+.herr { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.herr .esp { flex: 1; }
+.drop { border: 1.5px dashed #2D4A70; border-radius: 6px; padding: 10px; text-align: center; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.drop.sobre { border-color: var(--accent); background: rgba(239, 90, 5, .06); color: var(--fg); }
+.drop b { color: var(--fg); }
+.fmt { display: inline-block; font: 600 10px var(--f-mono); background: var(--panel2); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; margin: 0 2px; color: var(--fg); }
+table.hojas { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 8px; }
+table.hojas th { text-align: left; font: 600 10.5px var(--f-mono); color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); }
+table.hojas td { padding: 2px 6px; border-bottom: 1px solid var(--line); }
+table.hojas td input { min-height: 24px; padding: 2px 6px; }
+.rev { display: grid; grid-template-columns: minmax(160px, 240px) minmax(130px, 170px) auto; gap: 8px; align-items: end; }
+.aviso { border: 1px solid var(--warn); color: var(--warn); border-radius: 6px; padding: 6px 10px; margin: 8px 0 0; font-size: 11.5px; }
+.okmsg { border: 1px solid #2A8C5E; color: #9BE3BD; border-radius: 6px; padding: 6px 10px; margin: 8px 0 0; font-size: 11.5px; line-height: 1.5; }
 .okmsg a { color: #fff; }
-ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); color: var(--muted); columns: 3; }
-.toast { position: fixed; right: 16px; bottom: 16px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; padding: 9px 12px; font-size: 12.5px; max-width: min(420px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-@media (max-width: 1100px) { .pasos { grid-template-columns: 1fr 1fr; } .trabajo { grid-template-columns: 1fr; } .visor { position: relative; top: 0; height: 60vh; } .tscroll { max-height: 60vh; } }
-@media (max-width: 700px) { .pasos { grid-template-columns: 1fr; } .rev { grid-template-columns: 1fr; } ul.falt { columns: 1; } }
+ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 11px var(--f-mono); color: var(--muted); columns: 3; }
+/* Propiedades del instrumento */
+.prop { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.prop h3 { margin: 0 0 6px; font: 700 10px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--accent-ink); }
+.prop .cab { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.prop .cab .tag { font: 700 15px var(--f-mono); }
+.prop .cab .desc { color: var(--muted); flex: 1; min-width: 160px; }
+.prop .campos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 8px; }
+.prop .campos .a2 { grid-column: span 2; } .prop .campos .a4 { grid-column: 1 / -1; }
+.prop dl { margin: 0; display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 3px 8px; font-size: 11.5px; }
+.prop dt { color: var(--muted); } .prop dd { margin: 0; overflow-wrap: anywhere; }
+.prop .obs { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 11.5px; }
+.prop .obs li { border-left: 3px solid var(--warn); padding: 1px 0 1px 7px; } .prop .obs li.g-error { border-color: var(--bad); } .prop .obs li.g-info { border-color: #7FB3FF; }
+.prop .lazo { display: flex; gap: 4px; flex-wrap: wrap; }
+.prop .lazo button { font: 600 10.5px var(--f-mono) !important; }
+.prop .vacio, .pvacio { color: var(--muted); padding: 18px; text-align: center; }
+
+/* Vista de documento (Listado de instrumentos) */
+#secListado { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 10px 0; overflow: hidden; }
+#secListado > h2 { margin: 0 0 6px; font: 700 10.5px var(--f-mono); text-transform: uppercase; letter-spacing: 1px; color: var(--accent-ink); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+#secListado > h2 small { font: 500 10.5px var(--f-mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+#secListado > .ayuda { display: none; }
+#secListado .ldoc { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; margin-bottom: 8px; grid-template-columns: 290px minmax(0, 1fr); gap: 10px; }
+#secListado .ldoc.amplio { grid-template-columns: minmax(0, 1fr); }
+#secListado .lform { position: static; max-height: none; height: 100%; overflow: auto; gap: 8px; }
+#secListado .lform fieldset { padding: 6px 8px 8px; gap: 6px; }
+#secListado .lform legend { font-size: 10px; }
+#secListado .lform textarea { font-size: 11.5px; }
+#secListado .lprev, #secListado .ldoc.amplio .lprev { max-height: none; height: 100%; }
+#secListado .laprob { margin: 6px 0; padding: 6px 10px; }
+#secListado .laprob p { font-size: 11.5px; }
+#secListado .lest { margin: 4px 0; font-size: 11px; }
+
+/* Barra de estado */
+.estado { flex: none; display: flex; gap: 12px; align-items: center; padding: 3px 12px; background: var(--panel); border-top: 1px solid var(--line); font: 500 10.5px var(--f-mono); color: var(--muted); white-space: nowrap; overflow: hidden; }
+.estado b { color: var(--fg); }
+.resumen { display: flex; gap: 12px; flex-wrap: nowrap; }
+.estado .esp { flex: 1; }
+.toast { position: fixed; right: 44px; bottom: 30px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 6px; padding: 7px 10px; font-size: 11.5px; max-width: min(400px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+body.exp #npPanel { font-size: 12px; }
+body.exp #npTab { font-size: 11.5px; padding: 10px 6px; }
+
+@media (max-width: 900px) {
+  html, body { height: auto; } body { overflow: auto; display: block; }
+  main.marco { display: block; padding-right: 0; }
+  .arbol { max-height: 34vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  .divV, .divH { display: none; }
+  .lista { height: auto; max-height: 58vh; }
+  .panel { height: 64vh; }
+  #secListado { overflow: visible; }
+  #secListado .ldoc { grid-template-columns: 1fr; grid-template-rows: auto; }
+  #secListado .lform { height: auto; } #secListado .lprev { height: 70vh; }
+  .prop { grid-template-columns: 1fr; } .prop .campos { grid-template-columns: 1fr 1fr; }
+  .rev { grid-template-columns: 1fr; } ul.falt { columns: 1; }
+  .estado { flex-wrap: wrap; white-space: normal; padding-bottom: 60px; } .resumen { flex-wrap: wrap; }
+}
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
 <script src="../suite.js" defer></script>
 </head>
-<body>
+<body class="exp">
 <header class="barra">
   <div class="fila">
-    <a class="volver" href="../">← Suite ReyEngi</a>
-    <h1>Análisis de P&amp;ID<small>Extracción de instrumentos · revisión · exportación a entregables</small></h1>
+    <!--WEB--><a class="volver" href="../">← Suite ReyEngi</a><!--/WEB-->
+    <!--APP <img class="logo" src="logo-reyengi.png" alt="ReyEngi"> APP-->
+    <h1>Análisis de P&amp;ID<small>Instrumentos desde el P&amp;ID · revisión · listado de instrumentos</small></h1>
     <label class="selp">Proyecto <select id="proy" aria-label="Proyecto activo"></select></label>
-    <a class="btn" href="../proyectos/">Proyectos</a>
+    <!--WEB--><a class="btn" href="../proyectos/">Proyectos</a><!--/WEB-->
+    <!--APP <button type="button" id="pNuevo">Nuevo</button>
+    <button type="button" id="pAbrir">Abrir…</button>
+    <button type="button" id="pGuardar">Guardar…</button>
+    <button type="button" id="pLic">Licencia</button> APP-->
   </div>
 </header>
-<main>
-  <ol class="pasos" id="pasos">
-    <li data-p="1"><b>Cargar P&amp;ID</b>DXF de AutoCAD, atributos exportados (ATTOUT / extracción de datos), PDF o archivo de extracción.</li>
-    <li data-p="2"><b>Revisar y validar</b>El revisor confirma, corrige o rechaza cada instrumento contra el plano.</li>
-    <li data-p="3"><b>Exportar a entregables</b>Lo validado pasa al listado de instrumentos, E/S, lazos y circuitos.</li>
-    <li data-p="4"><b>Listado de instrumentos</b>Documento con portada y Anexo A, editable en la vista previa: Excel, Word y PDF.</li>
-  </ol>
-
-  <section class="blk" aria-labelledby="t1">
-    <h2 id="t1">1 · Cargar P&amp;ID <small id="cuentaHojas"></small></h2>
-    <p class="ayuda">La extracción más exacta viene del dibujo original: guarda el P&amp;ID como <b>DXF</b> desde AutoCAD (Guardar como → DXF) o exporta los atributos con <b>ATTOUT</b> o Extracción de datos (TXT/CSV). Los PDF con texto se leen directamente; en los PDF con texto en líneas o escaneados, el plano queda como fondo para marcar cada burbuja con un clic, o se carga el archivo de extracción (.json) preparado con IA.</p>
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Seleccionar archivos de P&amp;ID">
-      Arrastra aquí los archivos o <b>haz clic para elegirlos</b><br>
-      <span class="fmt">DXF</span><span class="fmt">PDF</span><span class="fmt">TXT / CSV de atributos</span><span class="fmt">JSON de extracción</span>
-    </div>
-    <input type="file" id="archivos" multiple accept=".dxf,.pdf,.txt,.csv,.json" hidden>
-    <div class="herr" style="margin-top:10px">
-      <button type="button" id="bListado">Cruzar con listado existente (Excel)</button>
-      <input type="file" id="archListado" accept=".xlsx" hidden>
-      <span class="esp"></span>
-      <button type="button" class="mini peligro" id="bLimpiar">Vaciar análisis</button>
-    </div>
-    <table class="hojas" id="tHojas" hidden><thead><tr><th>Hoja</th><th>N° de plano (P&amp;ID)</th><th>Área por defecto</th><th>Origen</th><th>Instrumentos</th><th></th></tr></thead><tbody></tbody></table>
-    <div id="msgListado"></div>
-  </section>
-
-  <section class="blk" aria-labelledby="t2">
-    <h2 id="t2">2 · Revisión de instrumentos <small id="cuentaCand"></small></h2>
-    <div class="resumen" id="resumen"></div>
-    <div class="trabajo">
-      <div>
+<!--APP <div id="aviso" class="avisoLic" hidden></div> APP-->
+<div class="cinta" role="toolbar" aria-label="Comandos">
+  <button type="button" class="pri" id="bCargar">Cargar P&amp;ID</button>
+  <button type="button" id="bListado" title="Compara con un listado de instrumentos existente en Excel para ver qué falta">Cruzar con listado</button>
+  <input type="file" id="archListado" accept=".xlsx" hidden>
+  <span class="sep"></span>
+  <button type="button" id="bNuevo">+ Agregar instrumento</button>
+  <button type="button" id="bExcelRev">Excel de revisión</button>
+  <span class="sep"></span>
+  <button type="button" id="bDoc" aria-pressed="false">Listado de instrumentos</button>
+  <span class="sep"></span>
+  <span class="ruta" id="ruta" aria-live="polite"></span>
+  <span class="esp"></span>
+  <button type="button" class="mini peligro" id="bLimpiar">Vaciar análisis</button>
+</div>
+<main class="marco">
+  <nav class="arbol" id="arbol" aria-label="Explorador del proyecto"></nav>
+  <div class="divV" id="divV" role="separator" aria-orientation="vertical" aria-label="Ancho del explorador"></div>
+  <div class="area">
+    <section id="vistaExp" aria-label="Instrumentos">
+      <div class="lista" id="lista">
         <div class="filtros">
-          <select id="fEstado" aria-label="Filtrar por estado"><option value="">Todos</option><option value="pendiente" selected>Pendientes</option><option value="validado">Validados</option><option value="rechazado">Rechazados</option></select>
+          <select id="fEstado" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="pendiente" selected>Pendientes</option><option value="validado">Validados</option><option value="rechazado">Rechazados</option></select>
           <select id="fHoja" aria-label="Filtrar por hoja"></select>
           <input type="search" id="fBuscar" placeholder="Buscar tag, servicio, equipo" aria-label="Buscar">
-        </div>
-        <div class="herr" style="margin-bottom:8px">
+          <span class="esp"></span>
           <button type="button" class="ok mini" id="bValSel">✓ Validar seleccionados</button>
           <button type="button" class="mini" id="bRecSel">✗ Rechazar seleccionados</button>
           <button type="button" class="mini" id="bValAlta" title="Valida los de confianza alta que además están en el listado existente o tienen tipo de señal">✓ Validar confianza alta</button>
-          <button type="button" class="mini" id="bNuevo">+ Agregar</button>
-          <span class="esp"></span>
-          <button type="button" class="mini" id="bExcelRev">Excel de revisión</button>
         </div>
         <div class="tscroll"><table class="cand" id="tCand"><thead></thead><tbody></tbody></table></div>
       </div>
-      <div>
-        <div class="visor" id="visor">
-          <canvas id="lienzo" tabindex="0" aria-label="Vista del P&amp;ID: arrastra para mover, rueda para acercar"></canvas>
-          <div class="vtools">
-            <select id="vHoja" aria-label="Hoja visible"></select>
-            <button type="button" id="vAjustar">Ajustar</button>
-            <button type="button" id="vMarcar" aria-pressed="false" title="Haz clic sobre una burbuja del plano para agregar el instrumento en ese punto">+ Marcar en el plano</button>
+      <div class="divH" id="divH" role="separator" aria-orientation="horizontal" aria-label="Alto de la lista"></div>
+      <div class="panel">
+        <div class="ptabs" role="tablist" aria-label="Detalle">
+          <button type="button" role="tab" data-tab="plano" aria-selected="true">Plano</button>
+          <button type="button" role="tab" data-tab="prop" aria-selected="false">Propiedades</button>
+          <button type="button" role="tab" data-tab="hojas" aria-selected="false">Hojas y carga <span id="cuentaHojas" class="conf"></span></button>
+          <button type="button" role="tab" data-tab="rev" aria-selected="false"><!--WEB-->Revisor y exportación<!--/WEB--><!--APP Revisor APP--></button>
+        </div>
+        <div class="pcont">
+          <div id="p-plano" role="tabpanel">
+            <div class="visor" id="visor">
+              <canvas id="lienzo" tabindex="0" aria-label="Vista del P&amp;ID: arrastra para mover, rueda para acercar"></canvas>
+              <div class="vtools">
+                <select id="vHoja" aria-label="Hoja visible"></select>
+                <button type="button" id="vAjustar">Ajustar</button>
+                <button type="button" id="vMarcar" aria-pressed="false" title="Haz clic sobre una burbuja del plano para agregar el instrumento en ese punto">+ Marcar en el plano</button>
+              </div>
+              <div class="vinfo" id="vInfo">Rueda: zoom · arrastrar: mover · clic en un marcador: seleccionar</div>
+              <div class="vvacio" id="vVacio">Carga un P&amp;ID en DXF o PDF para verlo aquí y ubicar cada instrumento.</div>
+            </div>
           </div>
-          <div class="vinfo" id="vInfo">Rueda: zoom · arrastrar: mover · clic en un marcador: seleccionar</div>
-          <div class="vvacio" id="vVacio">Carga un P&amp;ID en DXF o PDF para verlo aquí y ubicar cada instrumento.</div>
+          <div id="p-prop" role="tabpanel" class="pad" hidden></div>
+          <div id="p-hojas" role="tabpanel" class="pad" hidden>
+            <p class="ayuda">La extracción más exacta viene del dibujo original: guarda el P&amp;ID como <b>DXF</b> desde AutoCAD (Guardar como → DXF) o exporta los atributos con <b>ATTOUT</b> o Extracción de datos (TXT/CSV). Los PDF con texto se leen directamente; en los escaneados, el plano queda de fondo para marcar cada burbuja con un clic, o se carga el archivo de extracción (.json).</p>
+            <div class="drop" id="drop" tabindex="0" role="button" aria-label="Seleccionar archivos de P&amp;ID">
+              Arrastra aquí los archivos o <b>haz clic para elegirlos</b>
+              <span class="fmt">DXF</span><span class="fmt">PDF</span><span class="fmt">TXT / CSV de atributos</span><span class="fmt">JSON de extracción</span>
+            </div>
+            <input type="file" id="archivos" multiple accept=".dxf,.pdf,.txt,.csv,.json" hidden>
+            <table class="hojas" id="tHojas" hidden><thead><tr><th>Hoja</th><th>N° de plano (P&amp;ID)</th><th>Área por defecto</th><th>Origen</th><th>Instrumentos</th><th></th></tr></thead><tbody></tbody></table>
+            <div id="msgListado"></div>
+          </div>
+          <div id="p-rev" role="tabpanel" class="pad" hidden>
+            <!--WEB--><p class="ayuda">Solo los instrumentos validados se exportan. Los que tienen señal (AI, AO, DI, DO) entran al listado de E/S y generan su diagrama de lazo y su circuito; los demás entran al listado de instrumentos. Los tags que ya existen en el proyecto no se duplican.</p><!--/WEB-->
+            <!--APP <p class="ayuda">El nombre y la fecha quedan registrados en cada instrumento que valides y en el Excel de revisión.</p> APP-->
+            <div class="rev">
+              <label>Revisor<input id="revisor" autocomplete="name" placeholder="Nombre de quien valida"></label>
+              <label>Fecha de revisión<input id="fechaRev" type="date"></label>
+              <div class="herr" id="cajaExportar"><button type="button" class="pri" id="bExportar">Exportar validados a entregables</button></div>
+            </div>
+            <div id="msgExport"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="blk" aria-labelledby="t3">
-    <h2 id="t3">3 · Validación del revisor y exportación</h2>
-    <p class="ayuda">Solo los instrumentos validados se exportan. Los que tienen señal (AI, AO, DI, DO) entran al listado de E/S y generan su diagrama de lazo y su circuito; los demás (elementos primarios, indicadores locales) entran al listado de instrumentos. Los tags que ya existen en el proyecto no se duplican.</p>
-    <div class="rev">
-      <label>Revisor<input id="revisor" autocomplete="name" placeholder="Nombre de quien valida"></label>
-      <label>Fecha de revisión<input id="fechaRev" type="date"></label>
-      <div class="herr"><button type="button" class="pri" id="bExportar">Exportar validados a entregables</button></div>
-    </div>
-    <div id="msgExport"></div>
-  </section>
-
-  <section class="blk" aria-labelledby="t4" id="secListado">
-    <h2 id="t4">4 · Documento · Listado de instrumentos <small>formato de la Suite: portada, control de cambios, referencias y Anexo A</small></h2>
-    <p class="ayuda">Los instrumentos revisados forman el Anexo A con tag, descripción ISA, servicio, línea o equipo y el P&amp;ID de donde salen. Corrige cualquier dato escribiendo sobre la vista previa; lo que cambies se guarda en el proyecto y no se pierde si vuelves a revisar el P&amp;ID.</p>
-  </section>
+    </section>
+    <section id="secListado" aria-labelledby="t4" hidden>
+      <h2 id="t4">Documento · Listado de instrumentos <small>portada, control de cambios, referencias y Anexo A · escribe sobre la vista previa para corregir</small></h2>
+    </section>
+  </div>
 </main>
+<footer class="estado" id="barraEstado">
+  <span id="selTxt">Sin selección</span>
+  <span class="resumen" id="resumen"></span>
+  <span id="cuentaCand"></span>
+  <span class="esp"></span>
+  <span id="licTxt"></span>
+</footer>
 <script src="../proyectos.js"></script>
 <script src="../hojas-datos/xlsx.js"></script>
 <script src="../lazos/isa.js"></script>
@@ -208,5 +320,6 @@ ul.falt { margin: 6px 0 0; padding-left: 18px; font: 500 12px var(--f-mono); col
 <script src="pid.js"></script>
 <script src="listado.js"></script>
 <script src="normas-pid.js"></script>
+<script src="explorador.js"></script>
 </body>
 </html>
