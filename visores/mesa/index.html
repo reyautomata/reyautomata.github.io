@@ -21,34 +21,6 @@ button:hover { border-color: var(--sel); }
 .barra h1 { margin: 0 auto 0 0; font-size: 16px; } .barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
 main.mt { flex: 1; min-height: 0; padding: 8px 8px 30px; display: flex; }
 #mesa { flex: 1; min-width: 0; min-height: 0; }
-/* ── Paneles acoplables ── */
-.dk { display: flex; position: relative; }
-.dk-div { display: flex; flex: 1; min-width: 0; min-height: 0; } .dk-col { flex-direction: column; }
-.dk-celda { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
-.dk-sep { flex: none; background: transparent; position: relative; z-index: 2; touch-action: none; }
-.dk-row > .dk-sep { width: 6px; cursor: col-resize; } .dk-col > .dk-sep { height: 6px; cursor: row-resize; }
-.dk-sep::after { content: ""; position: absolute; inset: 2px; border-radius: 2px; background: transparent; transition: background .15s, box-shadow .15s; }
-.dk-sep:hover::after, .dk-sep:focus-visible::after { background: var(--sel); box-shadow: 0 0 8px rgba(56, 200, 232, .7); }
-.dk-grupo { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; animation: dk-entra .22s ease-out; }
-@keyframes dk-entra { from { opacity: .35; transform: scale(.985); } }
-.dk-grupo:focus-within { border-color: rgba(56, 200, 232, .55); box-shadow: 0 0 0 1px rgba(56, 200, 232, .18), 0 0 18px rgba(21, 157, 218, .12); }
-.dk-max .dk-grupo:not(.max), .dk-max .dk-sep { display: none; } .dk-max .dk-celda:not(:has(.max)) { display: none; }
-.dk-cab { display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); min-height: 30px; flex: none; }
-.dk-tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; } .dk-tabs::-webkit-scrollbar { display: none; }
-.dk-tab { all: unset; cursor: grab; padding: 0 12px; font: 600 11.5px var(--f-body); color: var(--muted); white-space: nowrap; border-right: 1px solid var(--line); display: flex; align-items: center; position: relative; touch-action: none; transition: color .15s, background .15s; }
-.dk-tab:hover { color: var(--fg); background: rgba(56, 200, 232, .07); }
-.dk-tab.on { color: var(--fg); background: var(--panel); } .dk-tab.on::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); box-shadow: 0 0 8px rgba(255, 140, 50, .8); }
-.dk-tab:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
-.dk-b { all: unset; cursor: pointer; padding: 0 8px; color: var(--muted); font-size: 12px; display: flex; align-items: center; } .dk-b:hover { color: var(--fg); background: rgba(56, 200, 232, .1); } .dk-b:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
-.dk-cuerpo { flex: 1; min-height: 0; overflow: auto; position: relative; }
-.dk-cont { min-height: 100%; }
-.dk-arr { user-select: none; } .dk-arr iframe { pointer-events: none; }
-.dk-fant { position: fixed; z-index: 200; pointer-events: none; background: var(--accent); color: #1b0d02; font: 700 11.5px var(--f-body); padding: 4px 10px; border-radius: 6px; box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
-.dk-marca { position: fixed; z-index: 199; pointer-events: none; display: none; background: rgba(56, 200, 232, .2); border: 2px solid var(--sel); border-radius: 8px; box-shadow: 0 0 24px rgba(56, 200, 232, .45) inset; transition: left .08s, top .08s, width .08s, height .08s; }
-.dk-menu { position: fixed; z-index: 210; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; box-shadow: 0 12px 28px rgba(0, 0, 0, .55); min-width: 190px; }
-.dk-menu button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 5px; font: 500 12.5px var(--f-body); color: var(--fg); } .dk-menu button:hover, .dk-menu button:focus-visible { background: rgba(56, 200, 232, .14); outline: none; }
-.dk-vacio { margin: auto; color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { .dk-grupo { animation: none; } .dk-marca, .dk-sep::after, .dk-tab { transition: none; } }
 /* ── Contenido de los paneles ── */
 .p { padding: 10px 12px; }
 .p h3 { margin: 0 0 6px; font: 600 10.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
@@ -77,6 +49,7 @@ dl.pr { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
+<link rel="stylesheet" href="dock.css">
 <script src="../proyectos.js" defer></script>
 <script src="../entregables.js" defer></script>
 <script src="../suite.js" defer></script>

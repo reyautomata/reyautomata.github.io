@@ -1,0 +1,54 @@
+/* Suite ReyEngi · estilos de los paneles acoplables (mesa/dock.js). Usa las variables de color de la suite. */
+/* ── Paneles acoplables ── */
+.dk { display: flex; position: relative; }
+.dk-div { display: flex; flex: 1; min-width: 0; min-height: 0; } .dk-col { flex-direction: column; }
+.dk-celda { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.dk-sep { flex: none; background: transparent; position: relative; z-index: 2; touch-action: none; }
+.dk-row > .dk-sep { width: 6px; cursor: col-resize; } .dk-col > .dk-sep { height: 6px; cursor: row-resize; }
+.dk-sep::after { content: ""; position: absolute; inset: 2px; border-radius: 2px; background: transparent; transition: background .15s, box-shadow .15s; }
+.dk-sep:hover::after, .dk-sep:focus-visible::after { background: var(--sel); box-shadow: 0 0 8px rgba(56, 200, 232, .7); }
+.dk-grupo { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; animation: dk-entra .22s ease-out; }
+@keyframes dk-entra { from { opacity: .35; transform: scale(.985); } }
+.dk-grupo:focus-within { border-color: rgba(56, 200, 232, .55); box-shadow: 0 0 0 1px rgba(56, 200, 232, .18), 0 0 18px rgba(21, 157, 218, .12); }
+.dk-max .dk-grupo:not(.max), .dk-max .dk-sep { display: none; } .dk-max .dk-celda:not(:has(.max)) { display: none; }
+.dk-cab { display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); min-height: 30px; flex: none; }
+.dk-tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; } .dk-tabs::-webkit-scrollbar { display: none; }
+.dk-tab { all: unset; cursor: grab; padding: 0 12px; font: 600 11.5px var(--f-body); color: var(--muted); white-space: nowrap; border-right: 1px solid var(--line); display: flex; align-items: center; position: relative; touch-action: none; transition: color .15s, background .15s; }
+.dk-tab:hover { color: var(--fg); background: rgba(56, 200, 232, .07); }
+.dk-tab.on { color: var(--fg); background: var(--panel); } .dk-tab.on::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); box-shadow: 0 0 8px rgba(255, 140, 50, .8); }
+.dk-tab:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+.dk-b { all: unset; cursor: pointer; padding: 0 8px; color: var(--muted); font-size: 12px; display: flex; align-items: center; } .dk-b:hover { color: var(--fg); background: rgba(56, 200, 232, .1); } .dk-b:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+.dk-cuerpo { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.dk-cont { min-height: 100%; }
+.dk-arr { user-select: none; } .dk-arr iframe { pointer-events: none; }
+.dk-fant { position: fixed; z-index: 200; pointer-events: none; background: var(--accent); color: #1b0d02; font: 700 11.5px var(--f-body); padding: 4px 10px; border-radius: 6px; box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
+.dk-marca { position: fixed; z-index: 199; pointer-events: none; display: none; background: rgba(56, 200, 232, .2); border: 2px solid var(--sel); border-radius: 8px; box-shadow: 0 0 24px rgba(56, 200, 232, .45) inset; transition: left .08s, top .08s, width .08s, height .08s; }
+.dk-menu { position: fixed; z-index: 210; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; box-shadow: 0 12px 28px rgba(0, 0, 0, .55); min-width: 190px; }
+.dk-menu button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 5px; font: 500 12.5px var(--f-body); color: var(--fg); } .dk-menu button:hover, .dk-menu button:focus-visible { background: rgba(56, 200, 232, .14); outline: none; }
+.dk-vacio { margin: auto; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .dk-grupo { animation: none; } .dk-marca, .dk-sep::after, .dk-tab { transition: none; } }
+/* ── Módulos convertidos en mesa de trabajo (mesa/modulo.js) ── */
+.dkm-host { margin-top: 8px; min-height: 420px; }
+.dkm-p { padding: 10px 12px; }
+.dkm-p > :first-child { margin-top: 0; }
+.dkm-p .dform { position: static; max-height: none; overflow: visible; }
+.dkm-p .tscroll { max-height: none; overflow: visible; border: 0; }
+.dkm-p .herr { margin-top: 0; }
+.dkm-p h3.dkm-t { margin: 0 0 6px; font: 600 10.5px var(--f-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+.dkm-p dl.pr { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 12.5px; } .dkm-p dl.pr dt { color: var(--muted); } .dkm-p dl.pr dd { margin: 0; overflow-wrap: anywhere; }
+.dkm-p .reg { border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; background: var(--bg); font-size: 12.5px; } .dkm-p .reg b { display: block; overflow-wrap: anywhere; } .dkm-p .reg span { color: var(--muted); font-size: 11.5px; }
+.dkm-p .nota { color: var(--muted); font-size: 12px; margin: 4px 0; } .dkm-p a { color: var(--sel); }
+.dkm-barra { display: flex; justify-content: flex-end; gap: 6px; margin: 6px 0 0; }
+.dkm-barra.sola { margin: 0 0 8px; }
+.dkm-barra button { font: 600 11px var(--f-body, system-ui) !important; padding: 2px 9px !important; min-height: 0 !important; border-radius: 5px; border: 1px solid var(--line); background: var(--panel2); color: var(--muted); cursor: pointer; }
+.dkm-barra button:hover { color: var(--fg); border-color: var(--sel); }
+@media (max-width: 900px) { .dkm-host .dk-div { flex-direction: column; } .dkm-host { height: auto !important; } .dkm-host .dk-celda { flex: none !important; } .dkm-host .dk-sep { display: none; } .dkm-host .dk-cuerpo { overflow: visible; } }
+/* Al imprimir, la mesa se aplana: el documento sale completo aunque su panel esté en otra pestaña o cerrado */
+@media print {
+  .dkm-barra, .dk-cab, .dk-sep, .dkm-comun, .dk-menu { display: none !important; }
+  .dkm-host, .dk, .dk-div, .dk-celda, .dk-grupo, .dk-cuerpo, .dk-bodega { display: block !important; overflow: visible !important; height: auto !important; min-height: 0 !important; flex: none !important; border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; position: static !important; animation: none !important; }
+  .dk-cont:not(.dkm-comun) { display: block !important; min-height: 0 !important; padding: 0 !important; }
+}
+.dkm-p .panel, .dkm-p .lado { position: static; max-height: none; border: 0; padding: 0; background: none; }
+/* Barras de acciones que se quedan pegadas: dentro de un panel se pegan a su borde, no al de la página */
+.dkm-p .herr.top { top: -10px; margin: -10px 0 10px; padding: 8px 0; background: var(--panel, var(--bg)); }

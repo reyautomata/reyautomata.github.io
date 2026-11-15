@@ -42,8 +42,9 @@
     function pintar() {
       Object.keys(nodos).forEach(function (id) { if (nodos[id].parentNode) nodos[id].parentNode.removeChild(nodos[id]); });
       raiz.textContent = ''; raiz.classList.add('dk'); raiz.classList.toggle('dk-max', !!max);
-      if (L.t === 'tabs' && !L.p.length) { raiz.append(el('p', 'dk-vacio', 'No hay paneles abiertos. Ábrelos desde el menú «Paneles».')); return; }
-      raiz.append(dibujar(L)); Object.keys(P).forEach(function (id) { if (P[id].alMostrar && nodos[id].parentNode) P[id].alMostrar(nodos[id]); });
+      if (L.t === 'tabs' && !L.p.length) { raiz.append(el('p', 'dk-vacio', 'No hay paneles abiertos. Ábrelos desde el menú «Paneles».')); var b0 = el('div', 'dk-bodega'); b0.hidden = true; cerrados.forEach(function (id) { b0.append(nodos[id]); }); raiz.append(b0); return; }
+      raiz.append(dibujar(L)); if (cerrados.length) { var bod = el('div', 'dk-bodega'); bod.hidden = true; cerrados.forEach(function (id) { bod.append(nodos[id]); }); raiz.append(bod); }
+      Object.keys(P).forEach(function (id) { if (P[id].alMostrar && nodos[id].parentNode) P[id].alMostrar(nodos[id]); });
     }
     function dibujar(n) {
       if (n.t === 'tabs') return grupo(n);
@@ -60,6 +61,7 @@
         s.addEventListener('pointermove', mv); s.addEventListener('pointerup', up); });
       s.addEventListener('keydown', function (e) { var k = e.key, d = (k === 'ArrowLeft' || k === 'ArrowUp') ? -0.03 : (k === 'ArrowRight' || k === 'ArrowDown') ? 0.03 : 0; if (d) { e.preventDefault(); mover(d); guardar(); } });
     }
+    // Las pestañas inactivas siguen en la página, ocultas: el módulo puede seguir usando sus elementos
     function grupo(n) {
       var g = el('section', 'dk-grupo' + (max === n ? ' max' : '')), cab = el('header', 'dk-cab'), tabs = el('div', 'dk-tabs'), cuerpo = el('div', 'dk-cuerpo'); g._n = n; tabs.setAttribute('role', 'tablist');
       n.p.forEach(function (id) { var b = el('button', 'dk-tab' + (id === n.a ? ' on' : ''), P[id].titulo); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', id === n.a); b.dataset.id = id; b.title = 'Arrastra para mover el panel «' + P[id].titulo + '»';
@@ -69,7 +71,7 @@
       mx.onclick = function () { max = max === n ? null : n; raiz.classList.toggle('dk-max', !!max); raiz.querySelectorAll('.dk-grupo.max').forEach(function (x) { x.classList.remove('max'); }); if (max) g.classList.add('max'); mx.textContent = max ? '🗗' : '🗖'; mx.setAttribute('aria-label', max ? 'Restaurar el tamaño' : 'Maximizar el panel'); mx.title = mx.getAttribute('aria-label'); window.dispatchEvent(new Event('resize')); }; // sin redibujar: no recarga la vista
       cx.onclick = function () { var id = n.a; sacar(id); cerrados.push(id); fin(); };
       mas.onclick = function () { menu(mas, [['Acoplar a la izquierda', 'l'], ['Acoplar a la derecha', 'r'], ['Acoplar arriba', 't'], ['Acoplar abajo', 'b']].map(function (o) { return [o[0], function () { acoplar(n.a, null, o[1]); }]; })); };
-      cab.append(tabs, mas, mx, cx); cuerpo.append(nodos[n.a]); cuerpo.setAttribute('role', 'tabpanel'); g.append(cab, cuerpo); return g;
+      cab.append(tabs, mas, mx, cx); n.p.forEach(function (id) { nodos[id].hidden = id !== n.a; cuerpo.append(nodos[id]); }); cuerpo.setAttribute('role', 'tabpanel'); g.append(cab, cuerpo); return g;
     }
     function menu(ancla, items) { var v = document.querySelector('.dk-menu'); if (v) v.remove(); var m = el('div', 'dk-menu'), r = ancla.getBoundingClientRect(); m.setAttribute('role', 'menu');
       items.forEach(function (it) { var b = el('button', '', it[0]); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.onclick = function () { m.remove(); it[1](); }; m.append(b); });
