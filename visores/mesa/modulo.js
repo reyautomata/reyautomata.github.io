@@ -266,7 +266,7 @@
       var h = ce.map(function (id) { return '<button type="button" class="dkm-mostrar" data-id="' + id + '">Mostrar ' + esc(paneles[id].titulo) + '</button>'; }).join('');
       if (ce.length || sep) h = (ce.length ? '<span>Paneles cerrados:</span>' : '<span>Las pestañas están separadas.</span>') + h + '<button type="button" data-re="1">Reagrupar pestañas</button>';
       if (av.dataset.h !== h) { av.dataset.h = h; av.innerHTML = h; av.hidden = !h; if (typeof alto === 'function') alto(); } }
-    av.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.id && b.dataset.id !== principal) dock.abrir(b.dataset.id); else dock.restablecer();   // el plano o documento vuelve a su lugar, a la izquierda setTimeout(avisar, 50); });
+    av.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.id && b.dataset.id !== principal) dock.abrir(b.dataset.id); else dock.restablecer(); /* el plano o documento vuelve a su lugar, a la izquierda */ setTimeout(avisar, 50); });
     setTimeout(avisar, 100);
     // Lo que quedó fuera de los paneles (barras de botones, estados) se junta en la pestaña Acciones
     setTimeout(function () { if (!nAcc) return; [].slice.call(sec.children).forEach(function (c) { if (c === host || /^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) || c.classList.contains('dkm-oculto') || c.classList.contains('dkm-aviso')) return; nAcc.appendChild(c); });
