@@ -4,10 +4,12 @@
    principal y la marca, y azul para lo seleccionado, como en los exploradores web. */
 html:root {
   --rs-w: 252px;
-  --bg: #0C1422; --panel: #121D2F; --panel2: #1A2942; --fg: #E2E8F0; --muted: #94A3B8; --line: #243349;
-  --brand: #0B2545; --brand-fg: #FFFFFF; --brand-muted: #A9B6C6; --accent: #F0691A; --accent-ink: #FF9D5C; --chip: #18263D;
-  --ok: #3FB97A; --warn: #E9B341; --bad: #E5484D;
-  --sel: #58A6FF; --sel-bg: rgba(56, 139, 253, .16); --rs-barra: #0F1A2B;
+  /* Tema ReyEngi Engineering Dark. Para un tema claro futuro basta redefinir estas variables. */
+  --bg: #0B1220; --panel: #111D2E; --panel2: #18283C; --fg: #EAF2F8; --muted: #94A9BE; --line: #22364D;
+  --brand: #0E2238; --brand-fg: #FFFFFF; --brand-muted: #94A9BE; --accent: #FF8C32; --accent-ink: #FFB070; --chip: #18283C;
+  --ok: #27B783; --warn: #E6A23C; --bad: #E35B65; --tec: #159DDA;
+  --sel: #38C8E8; --sel-bg: rgba(21, 157, 218, .18); --rs-barra: #0D1626;
+  --f-body: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 /* ── Tipografía compacta (páginas internas) ── */
 body:not(.rs-portada) { font-size: 12.5px; }
@@ -195,3 +197,47 @@ body:not(.rs-portada) main fieldset > *, body:not(.rs-portada) main label { min-
 body:not(.rs-portada) .trio { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 /* Con el explorador a la vista, los botones de la barra que solo llevan a otro módulo sobran */
 @media (min-width: 901px) { body.rs-marco:not(.rs-plegado):not(.rs-portada) .barra a.btn[href^="../"] { display: none; } }
+
+/* ── Subcategorías del registro de entregables (D01…D09, P01…P10) ── */
+.rs-arbol .rs-sub { display: flex; align-items: center; gap: 6px; padding: 5px 8px 2px 30px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); list-style: none; }
+.rs-arbol .rs-sub .cod { color: var(--sel); font: 700 10px var(--f-mono, monospace); }
+.rs-arbol .rs-sub .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-arbol .rs-sub.dev { opacity: .62; }
+.rs-arbol .rs-dev { font-size: 8.5px; letter-spacing: .04em; border: 1px solid var(--line); border-radius: 8px; padding: 0 5px; white-space: nowrap; }
+/* Línea luminosa discreta del tema */
+.rs-arbol .rs-cab { box-shadow: inset 0 -1px 0 rgba(56, 200, 232, .35); }
+.rs-estado { box-shadow: inset 0 1px 0 rgba(56, 200, 232, .22); }
+/* ── Tablero del proyecto (portada) ── */
+.tb { margin: 14px clamp(12px, 3vw, 28px) 6px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 10px; color: var(--fg); font: 13px/1.45 var(--f-body); scroll-margin-top: 70px; }
+.tb-cab { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.tb-cab > div { flex: 1; min-width: 220px; }
+.tb-k { margin: 0; font: 600 10.5px var(--f-mono, monospace); letter-spacing: .12em; text-transform: uppercase; color: var(--sel); }
+.tb h2 { margin: 2px 0 0; font-size: 20px; }
+.tb-ir { color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; text-decoration: none; font-size: 12.5px; background: var(--panel2); }
+.tb-ir:hover { border-color: var(--sel); }
+.tb-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 18px; margin: 12px 0; }
+.tb-datos div { min-width: 0; }
+.tb-datos dt { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.tb-datos dd { margin: 0; overflow-wrap: anywhere; }
+.tb-fichas { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.tb-f { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.tb-f b { display: block; font: 600 20px var(--f-mono, monospace); color: var(--sel); font-variant-numeric: tabular-nums; }
+.tb-f span { font-size: 11.5px; color: var(--muted); }
+.tb-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.tb-col { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.tb-col h3 { margin: 0 0 6px; font-size: 13px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.tb-col h3 small { font-weight: 400; color: var(--muted); font-size: 11px; }
+.tb-col ul { list-style: none; margin: 0; padding: 0; }
+.tb-col li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; padding: 4px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.tb-col li:first-child { border-top: 0; }
+.tb-col .cod { font: 700 10.5px var(--f-mono, monospace); color: var(--accent-ink); min-width: 26px; }
+.tb-col .nm { color: var(--muted); flex: 1; min-width: 120px; }
+.tb-col a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.tb-col a:hover { text-decoration-color: var(--sel); }
+.tb-col a b { color: var(--sel); font-weight: 600; }
+.tb-col li > a { flex-basis: 100%; padding-left: 34px; }
+.tb-col li > .cod + a { flex-basis: auto; padding-left: 0; }
+.tb-col em { font-style: normal; font-size: 11px; color: var(--muted); }
+.tb-col li.dev { opacity: .7; }
+.tb-n { margin: 0; color: var(--muted); font-size: 11.5px; }
+@media print { .tb { display: none; } }

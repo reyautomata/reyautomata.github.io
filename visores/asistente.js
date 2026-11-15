@@ -5,7 +5,7 @@
   'use strict';
   if (window.__RS_ASIS) return; window.__RS_ASIS = 1;
   var BASE = window.RS_BASE || './', GRUPOS = window.RS_GRUPOS || [], CLAVE = 'reyengi-asistente';
-  var S = { abierto: false, url: 'http://127.0.0.1:11434', modelo: '', nombre: 'ReyAI', inst: '', mem: [], msgs: [] };
+  var S = { abierto: false, url: 'http://127.0.0.1:11434', modelo: '', nombre: 'ReyEngi AI', inst: '', mem: [], msgs: [] };
   try { Object.assign(S, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
   function guardar() { try { S.msgs = S.msgs.slice(-40); while (S.msgs.length && S.msgs[0].role === 'tool') S.msgs.shift(); localStorage.setItem(CLAVE, JSON.stringify(S)); } catch (e) {} }
   var el = function (t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
@@ -53,15 +53,16 @@
 
   // ── Herramientas ──
   function fn(name, description, props, req) { return { type: 'function', function: { name: name, description: description, parameters: { type: 'object', properties: props, required: req || Object.keys(props) } } }; }
-  var MODS = []; GRUPOS.forEach(function (g) { g[2].forEach(function (m) { MODS.push({ grupo: g[1], nombre: m[1], href: m[2] }); }); });
+  var MODS = []; GRUPOS.forEach(function (g) { g[2].forEach(function (m) { if (m[2] && !MODS.some(function (x) { return x.href === m[2]; })) MODS.push({ grupo: g[1], nombre: m[1], href: m[2] }); }); });
   var HERR = [
     fn('ir_a_modulo', 'Abre un módulo o sección de la Suite ReyEngi en la pantalla del usuario.', { nombre: { type: 'string', description: 'Nombre del módulo, tal como aparece en la lista de módulos' } }),
     fn('proyecto_activo', 'Devuelve los datos del proyecto activo y un resumen de lo que contiene (señales, lazos, tarjetas, ductos).', {}),
     fn('listar_instrumentos', 'Lista instrumentos y señales del proyecto activo, con tag, tipo de señal, servicio y lazo. Admite un filtro de texto.', { filtro: { type: 'string', description: 'Texto a buscar en tag, servicio o tipo; vacío para todos' } }, []),
+    fn('buscar_entregables', 'Consulta el registro de entregables de la suite (documentos y planos, con su estado y formatos) y busca en el proyecto activo los lazos e instrumentos asociados a un tag o texto.', { texto: { type: 'string', description: 'Tag o palabras, por ejemplo "LT-101" o "hoja de datos"' } }),
     fn('calcular', 'Evalúa una expresión matemática con exactitud. Úsala siempre para operaciones numéricas.', { expresion: { type: 'string', description: 'Por ejemplo "24/250*1000" o "sqrt(3)*380*12"' } }),
     fn('guardar_recuerdo', 'Guarda un dato duradero sobre el usuario o sus preferencias cuando él pide recordarlo.', { texto: { type: 'string' } })
   ];
-  var ROT = { ir_a_modulo: 'Abrir módulo', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
+  var ROT = { ir_a_modulo: 'Abrir módulo', buscar_entregables: 'Buscó entregables', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
   function datosLazos() { var P = window.REProyectos; try { return window.__LAZOS && window.__LAZOS.E ? window.__LAZOS.E() : (P && P.leer ? P.leer('lazos', null) : null); } catch (e) { return null; } }
   var irA = null;
   function ejecutar(n, a) {
@@ -83,15 +84,24 @@
       var r = L.senales.filter(function (s) { if (!s.tag) return false; var t = norm([s.tag, s.servicio, s.tipo, s.lazo, s.equipo].join(' ')); return f.every(function (w) { return t.indexOf(w) >= 0; }); });
       return { total: r.length, instrumentos: r.slice(0, 60).map(function (s) { var o = { tag: s.tag, tipo: s.tipo || '' }; if (s.servicio) o.servicio = s.servicio; if (s.lazo) o.lazo = s.lazo; if (s.canal) o.canal = s.canal; return o; }), cortado: r.length > 60 };
     }
+    if (n === 'buscar_entregables') {
+      var RG = window.RE_ENTREGABLES, o = { tipos_de_entregable: [], en_el_proyecto: [] }, w = norm(a.texto).split(/\s+/).filter(Boolean);
+      if (RG) { o.tipos_de_entregable = RG.buscar(a.texto).map(function (g) { return { id: g.id, categoria: g.category, subcategoria: g.subcategory, nombre: g.name, estado: g.status, formatos: g.outputFormats }; });
+        if (!o.tipos_de_entregable.length) o.subcategorias_sin_generador = RG.subcategorias.filter(function (x) { return x.status !== 'AVAILABLE' && w.some(function (k) { return norm(x.name).indexOf(k) >= 0; }); }).map(function (x) { return x.id + ' ' + x.name + ' (en desarrollo)'; }); }
+      var HJ = window.RS_HIJOS; L = datosLazos();
+      if (HJ && w.length) HJ('06').forEach(function (l) { if (w.every(function (k) { return norm(l.t + ' ' + l.s).indexOf(k) >= 0; })) o.en_el_proyecto.push({ tipo: 'Diagrama de lazo (P02)', id: l.t, servicio: l.s }); });
+      if (L && L.senales && w.length) L.senales.forEach(function (s) { if (s.tag && w.every(function (k) { return norm(s.tag + ' ' + (s.servicio || '')).indexOf(k) >= 0; })) o.en_el_proyecto.push({ tipo: 'Instrumento en listados (D05)', tag: s.tag, servicio: s.servicio || '' }); });
+      o.en_el_proyecto = o.en_el_proyecto.slice(0, 40); return o;
+    }
     if (n === 'calcular') { try { return { resultado: calcular(a.expresion) }; } catch (e) { return { error: e.message }; } }
     if (n === 'guardar_recuerdo') { var t = String(a.texto || '').trim().slice(0, 300); if (t && S.mem.indexOf(t) < 0) S.mem.push(t); S.mem = S.mem.slice(-40); guardar(); return { guardado: !!t }; }
     return { error: 'Herramienta desconocida.' };
   }
   function sistema() {
     var f = new Date(), P = window.REProyectos, pr = ''; try { var d = P && P.activo(); if (d) pr = d.nombre || d.proyecto || ''; } catch (e) {}
-    return ['Eres ' + (S.nombre || 'ReyAI') + ', el asistente de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
+    return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el asistente de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
       'Responde en español, breve y técnico. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
-      'Puedes abrir módulos de la suite, consultar el proyecto activo y sus instrumentos (solo lectura), calcular y guardar recuerdos. Usa las herramientas cuando la pregunta dependa del proyecto o de un cálculo. No puedes modificar el proyecto: para eso indica al usuario en qué módulo hacerlo.',
+      'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos de la suite, consultar el proyecto activo y sus instrumentos (solo lectura), calcular y guardar recuerdos. Usa las herramientas cuando la pregunta dependa del proyecto o de un cálculo. No puedes modificar el proyecto: para eso indica al usuario en qué módulo hacerlo.',
       'Los enclavamientos y protecciones pertenecen al PLC o al sistema de seguridad; tú solo analizas y asistes.',
       'Módulos de la suite: ' + MODS.map(function (m) { return m.nombre; }).join('; ') + '.',
       'Página abierta: ' + document.title + '.' + (pr ? ' Proyecto activo: ' + pr + '.' : ''),
@@ -145,7 +155,7 @@
   function bajar() { hilo.scrollTop = hilo.scrollHeight; }
   function paso(n, a, res) {
     var d = el('div', 'ra-paso'), det = a.nombre || a.filtro || a.expresion || a.texto || '', fin = '';
-    if (res) { if (res.error) fin = ' — ' + res.error; else if ('resultado' in res) fin = ' = ' + res.resultado; else if ('total' in res) fin = ' — ' + res.total + ' encontrados'; else if (res.abriendo) fin = ' → ' + res.abriendo; }
+    if (res) { if (res.error) fin = ' — ' + res.error; else if ('resultado' in res) fin = ' = ' + res.resultado; else if (res.en_el_proyecto) fin = ' — ' + res.en_el_proyecto.length + ' en el proyecto, ' + res.tipos_de_entregable.length + ' tipos'; else if ('total' in res) fin = ' — ' + res.total + ' encontrados'; else if (res.abriendo) fin = ' → ' + res.abriendo; }
     d.append(el('b', '', ROT[n] || n), el('span', '', String(det).slice(0, 90) + fin)); return d;
   }
   function ayudaConexion() {
@@ -163,7 +173,7 @@
     if (MOTOR === false || (MOTOR && !MODELOS.length)) { hilo.append(ayudaConexion()); return; }
     if (!S.msgs.length) {
       var b = el('div', 'ra-bien'); b.append(el('p', '', 'Hola. Puedo abrir módulos, consultar los instrumentos del proyecto activo, calcular y responder dudas de I&C.'));
-      ['¿Qué instrumentos de nivel tiene el proyecto?', 'Abre los diagramas de lazo', 'Calcula la caída de tensión en 500 m de cable 1,5 mm² con 20 mA', '¿Qué puedes hacer?'].forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { $('#raT').value = t; $('#raT').focus(); }; b.append(x); });
+      ['¿Qué instrumentos de nivel tiene el proyecto?', 'Genera un diagrama de lazo', 'Busca los entregables asociados a LT-0101', 'Calcula la caída de tensión en 500 m de cable 1,5 mm² con 20 mA', '¿Qué puedes hacer?'].forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { $('#raT').value = t; $('#raT').focus(); }; b.append(x); });
       hilo.append(b); return;
     }
     S.msgs.forEach(function (m) {
@@ -207,7 +217,7 @@
   }
   function abrir(v) {
     S.abierto = v; guardar(); pan.hidden = !v; btn.setAttribute('aria-expanded', v); document.body.classList.toggle('ra-abierto', v);
-    if (v) { $('#raNom').textContent = S.nombre || 'ReyAI'; estado().then(function () { pintar(); $('#raT').focus(); }); } else btn.focus();
+    if (v) { $('#raNom').textContent = S.nombre || 'ReyEngi AI'; estado().then(function () { pintar(); $('#raT').focus(); }); } else btn.focus();
   }
   function pintarCfg() {
     $('#raN').value = S.nombre; $('#raI').value = S.inst; $('#raU').value = S.url;
@@ -221,7 +231,7 @@
     $('#raNueva').addEventListener('click', function () { if (ocupado) return; S.msgs = []; guardar(); pintar(); $('#raT').focus(); });
     $('#raAj').addEventListener('click', function () { var c = $('#raCfg'); c.hidden = !c.hidden; $('#raAj').setAttribute('aria-expanded', !c.hidden); if (!c.hidden) pintarCfg(); });
     $('#raCfg').addEventListener('submit', function (e) {
-      e.preventDefault(); S.nombre = $('#raN').value.trim() || 'ReyAI'; S.inst = $('#raI').value; S.modelo = $('#raM').value || S.modelo;
+      e.preventDefault(); S.nombre = $('#raN').value.trim() || 'ReyEngi AI'; S.inst = $('#raI').value; S.modelo = $('#raM').value || S.modelo;
       var u = $('#raU').value.trim().replace(/\/+$/, ''); if (/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(u)) S.url = u; // solo este equipo
       guardar(); $('#raCfg').hidden = true; $('#raAj').setAttribute('aria-expanded', 'false'); $('#raNom').textContent = S.nombre; estado().then(pintar);
     });
@@ -230,6 +240,8 @@
     $('#raT').addEventListener('input', function (e) { e.target.style.height = ''; e.target.style.height = Math.min(140, e.target.scrollHeight + 2) + 'px'; });
     $('#raPar').addEventListener('click', function () { if (ctrl) ctrl.abort(); });
     pan.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !ocupado) abrir(false); });
+    document.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'j') { e.preventDefault(); abrir(pan.hidden); } });
+    btn.title = 'Asistente ReyEngi AI (Ctrl+J)';
     if (S.abierto) abrir(true);
   }
   window.__RS_ASIS = { calcular: calcular, ejecutar: ejecutar };
