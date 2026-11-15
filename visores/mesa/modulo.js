@@ -109,6 +109,32 @@
     return { refrescar: function () { if (st.ultimos && st.modo === 'uno') { var u = unoActual(); if (!u || !u.it || st.ultimos.ids.indexOf(u.it.id) < 0) st.ultimos = null; } pintar(); } };
   }
 
+  // ── Zoom del plano dentro de su panel: rueda para acercar hacia el cursor, arrastrar para mover, botones y doble clic ──
+  function zoomPlano(el) {
+    if (!el || el.dataset.zm) return; el.dataset.zm = '1'; el.classList.add('zm');
+    var z = 1, MAX = 10, barra = document.createElement('div'); barra.className = 'zm-barra';
+    barra.innerHTML = '<button type="button" data-z="-" aria-label="Alejar">−</button><output aria-live="polite">100 %</output><button type="button" data-z="+" aria-label="Acercar">+</button><button type="button" data-z="1">Ajustar</button><span>Rueda: zoom · arrastrar: mover</span>';
+    el.parentNode.insertBefore(barra, el);
+    function caja() { var n = el.parentNode; while (n && n !== document.body) { var o = getComputedStyle(n).overflowY; if (o === 'auto' || o === 'scroll') return n; n = n.parentNode; } return document.scrollingElement; }
+    function poner(nz, cx, cy) {
+      nz = Math.min(MAX, Math.max(1, nz)); if (Math.abs(nz - z) < 0.001) return;
+      var c = caja(), r = el.getBoundingClientRect(); if (cx == null) { var rc = c.getBoundingClientRect(); cx = rc.left + c.clientWidth / 2; cy = rc.top + c.clientHeight / 2; }
+      var fx = r.width ? (cx - r.left) / r.width : 0.5, fy = r.height ? (cy - r.top) / r.height : 0.5;
+      if (z === 1) el.style.width = el.offsetWidth + 'px';        // ancho fijo: así el zoom agranda el plano en vez de reacomodarlo
+      z = nz; el.style.zoom = z === 1 ? '' : z; if (z === 1) el.style.width = ''; el.classList.toggle('zm-on', z > 1);
+      var r2 = el.getBoundingClientRect(); c.scrollLeft += r2.left + fx * r2.width - cx; c.scrollTop += r2.top + fy * r2.height - cy;
+      barra.querySelector('output').textContent = Math.round(z * 100) + ' %';
+    }
+    var cs = caja(); if (cs && cs.addEventListener) cs.addEventListener('scroll', function () { barra.style.transform = cs.scrollLeft ? 'translateX(' + cs.scrollLeft + 'px)' : ''; }, { passive: true });   // la barra no se va con el desplazamiento horizontal
+    barra.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; poner(b.dataset.z === '1' ? 1 : b.dataset.z === '+' ? z * 1.4 : z / 1.4); });
+    el.addEventListener('wheel', function (e) { if (e.shiftKey) return; e.preventDefault(); poner(z * (e.deltaY < 0 ? 1.18 : 1 / 1.18), e.clientX, e.clientY); }, { passive: false });
+    el.addEventListener('dblclick', function (e) { if (e.target.closest('input, select, textarea, button, a, [contenteditable]')) return; poner(z < MAX ? z * 2 : 1, e.clientX, e.clientY); });
+    var arr = null;
+    el.addEventListener('pointerdown', function (e) { if (e.button !== 0 || z === 1 || e.target.closest('input, select, textarea, button, a, [contenteditable]')) return; var c = caja(); arr = { x: e.clientX, y: e.clientY, l: c.scrollLeft, t: c.scrollTop, c: c, mov: false }; });
+    window.addEventListener('pointermove', function (e) { if (!arr) return; var dx = e.clientX - arr.x, dy = e.clientY - arr.y; if (!arr.mov && Math.hypot(dx, dy) < 4) return; arr.mov = true; el.classList.add('zm-arr'); arr.c.scrollLeft = arr.l - dx; arr.c.scrollTop = arr.t - dy; e.preventDefault(); });
+    window.addEventListener('pointerup', function () { if (arr) { el.classList.remove('zm-arr'); arr = null; } });
+  }
+
   // cfg: { clave, paneles: [{ id, titulo, mover: [selector | función(sec) → elemento(s)] }], inicial, limpiar: [selectores a quitar si quedan vacíos] }
   function apagada() { try { return /[?&]simple=1/.test(location.search) || localStorage.getItem('reyengi-mesa-off') === '1'; } catch (e) { return false; } }
   function fijar(off) { try { if (off) localStorage.setItem('reyengi-mesa-off', '1'); else localStorage.removeItem('reyengi-mesa-off'); } catch (e) {} location.href = location.href.replace(/([?&])simple=1&?/, '$1').replace(/[?&]$/, ''); if (!/[?&]simple=1/.test(location.search)) location.reload(); }
@@ -124,6 +150,7 @@
     var paneles = {}; cfg.paneles.forEach(function (p) { paneles[p.id] = { titulo: p.titulo, montar: function (n) { n.classList.add('dkm-p'); piezas[p.id].forEach(function (e) { n.appendChild(e); }); } }; });
     var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
     var dock = window.REDock(host, { clave: 'reyengi-dkm-' + cfg.clave, paneles: paneles, inicial: cfg.inicial, alCambiar: function () { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30); } });
+    cfg.paneles.forEach(function (p) { if (p.zoom) try { zoomPlano(host.querySelector(p.zoom)); } catch (e) {} });
     (cfg.limpiar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host') && !e.children.length) e.remove(); else if (!e.closest('.dkm-host') && e.matches('h2')) e.remove(); }); });
     function comunes() { if (nProp) nProp.innerHTML = htmlProp(); if (!nCtrl) return;
       if (!window.RE_GESTION) { nCtrl.innerHTML = htmlCtrl(); return; }
