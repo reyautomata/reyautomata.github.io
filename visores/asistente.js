@@ -52,6 +52,11 @@
     return r;
   }
 
+  var IDIOMAS = { espanol: 'español', castellano: 'español', spanish: 'español', ingles: 'inglés', english: 'inglés', portugues: 'portugués', portuguese: 'portugués', frances: 'francés', french: 'francés', aleman: 'alemán', german: 'alemán', italiano: 'italiano', italian: 'italiano' };
+  function idiomaPedido(t) { // «cambia a español», «responde en inglés», «speak english»…
+    var n = String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), m = /(cambia|cambiar|responde|respondeme|habla|hablame|contesta|escribe|idioma|switch|speak|answer|reply|respond|language)[^.\n]{0,40}?\b(espanol|castellano|spanish|ingles|english|portugues|portuguese|frances|french|aleman|german|italiano|italian)\b/.exec(n);
+    return m ? IDIOMAS[m[2]] : null;
+  }
   // ── Herramientas ──
   function fn(name, description, props, req) { return { type: 'function', function: { name: name, description: description, parameters: { type: 'object', properties: props, required: req || Object.keys(props) } } }; }
   var MODS = []; GRUPOS.forEach(function (g) { g[2].forEach(function (m) { if (m[2] && !MODS.some(function (x) { return x.href === m[2]; })) MODS.push({ grupo: g[1], nombre: m[1], href: m[2] }); }); });
@@ -64,10 +69,11 @@
     fn('registrar_entregable', 'Propone registrar un documento o plano en el control documental del proyecto. Requiere confirmación del usuario.', { tipo: { type: 'string', description: 'Identificador del registro de entregables, por ejemplo P02-LAZO o D04-HD' }, titulo: { type: 'string' }, codigo: { type: 'string', description: 'Código de documento, si se conoce' } }, ['tipo', 'titulo']),
     fn('cambiar_estado_entregable', 'Propone cambiar el estado de un entregable ya registrado (Borrador, En desarrollo, En revisión, Con observaciones, Aprobado, Emitido, Obsoleto). Requiere confirmación del usuario.', { entregable: { type: 'string', description: 'Código o título del entregable registrado' }, estado: { type: 'string' } }),
     fn('abrir_generador', 'Abre el generador de entregables en el tipo indicado para crear o exportar un documento o plano.', { tipo: { type: 'string', description: 'Identificador del registro, por ejemplo P02-LAZO, D04-HD, D05-INST' } }),
+    fn('cambiar_idioma', 'Cambia el idioma en que respondes cuando el usuario lo pide. Queda guardado.', { idioma: { type: 'string', description: 'Nombre del idioma, por ejemplo español o inglés' } }),
     fn('calcular', 'Evalúa una expresión matemática con exactitud. Úsala siempre para operaciones numéricas.', { expresion: { type: 'string', description: 'Por ejemplo "24/250*1000" o "sqrt(3)*380*12"' } }),
     fn('guardar_recuerdo', 'Guarda un dato duradero sobre el usuario o sus preferencias cuando él pide recordarlo.', { texto: { type: 'string' } })
   ];
-  var ROT = { ir_a_modulo: 'Abrir módulo', agregar_instrumento: 'Agregar instrumento', registrar_entregable: 'Registrar entregable', cambiar_estado_entregable: 'Cambiar estado', abrir_generador: 'Abrir generador', buscar_entregables: 'Buscó entregables', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
+  var ROT = { ir_a_modulo: 'Abrir módulo', cambiar_idioma: 'Cambió el idioma', agregar_instrumento: 'Agregar instrumento', registrar_entregable: 'Registrar entregable', cambiar_estado_entregable: 'Cambiar estado', abrir_generador: 'Abrir generador', buscar_entregables: 'Buscó entregables', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
   function datosLazos() { var P = window.REProyectos; try { return window.__LAZOS && window.__LAZOS.E ? window.__LAZOS.E() : (P && P.leer ? P.leer('lazos', null) : null); } catch (e) { return null; } }
   var irA = null, recargar = false;
   // Toda acción que cambia el proyecto se muestra como propuesta y solo se aplica si el usuario la aprueba
@@ -134,6 +140,7 @@
       if (!es) return { error: 'Estado no válido.', estados: GG.ESTADOS }; if (c2.length !== 1) return { error: c2.length ? 'Hay varios entregables que coinciden: precisa el código.' : 'No hay un entregable registrado que coincida.', coincidencias: c2.slice(0, 8).map(function (x) { return (x.codigo ? x.codigo + ' · ' : '') + x.titulo; }) };
       return confirmar('Cambiar el estado de «' + (c2[0].codigo ? c2[0].codigo + ' · ' : '') + c2[0].titulo + '» de ' + c2[0].estado + ' a ' + es).then(function (ok) { if (!ok) return { error: 'El usuario no aprobó el cambio.' }; GG.estado(c2[0].id, es, 'vía ReyEngi AI'); return { aplicado: true, estado: es }; });
     }
+    if (n === 'cambiar_idioma') { var idn = String(a.idioma || '').trim().toLowerCase().slice(0, 30); if (!idn) return { error: 'Falta el idioma.' }; S.idioma = IDIOMAS[idn.normalize('NFD').replace(/[\u0300-\u036f]/g, '')] || idn; guardar(); return { idioma: S.idioma }; }
     if (n === 'calcular') { try { return { resultado: calcular(a.expresion) }; } catch (e) { return { error: e.message }; } }
     if (n === 'guardar_recuerdo') { var t = String(a.texto || '').trim().slice(0, 300); if (t && S.mem.indexOf(t) < 0) S.mem.push(t); S.mem = S.mem.slice(-40); guardar(); return { guardado: !!t }; }
     return { error: 'Herramienta desconocida.' };
@@ -141,13 +148,13 @@
   function sistema() {
     var f = new Date(), P = window.REProyectos, pr = ''; try { var d = P && P.activo(); if (d) pr = d.nombre || d.proyecto || ''; } catch (e) {}
     return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el asistente de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
-      'Responde en español, breve y técnico. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
+      'Responde siempre en ' + (S.idioma || 'español') + ', aunque el usuario escriba en otro idioma, breve y técnico. Si el usuario pide cambiar de idioma, usa cambiar_idioma y responde en el idioma nuevo. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
       'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos y el generador, consultar el proyecto activo y sus instrumentos, calcular y guardar recuerdos. También puedes proponer tres cambios: agregar un instrumento, registrar un entregable y cambiar el estado de un entregable; cada uno se muestra al usuario como propuesta y solo se aplica si él la aprueba. No afirmes que un cambio quedó hecho si la herramienta no devolvió aplicado. Para cualquier otro cambio, indica al usuario en qué módulo hacerlo.',
       'Los enclavamientos y protecciones pertenecen al PLC o al sistema de seguridad; tú solo analizas y asistes.',
       'Módulos de la suite: ' + MODS.map(function (m) { return m.nombre; }).join('; ') + '.',
       'Página abierta: ' + document.title + '.' + (pr ? ' Proyecto activo: ' + pr + '.' : ''),
       'Fecha: ' + f.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '.',
-      S.mem.length ? 'Lo que recuerdas del usuario:\n- ' + S.mem.join('\n- ') : '', S.inst ? 'Instrucciones del usuario:\n' + S.inst : '', /qwen3/i.test(S.modelo || '') ? '/no_think' : ''].filter(Boolean).join('\n\n');
+      S.mem.length ? 'Lo que recuerdas del usuario:\n- ' + S.mem.join('\n- ') : '', S.inst ? 'Instrucciones del usuario:\n' + S.inst : '', 'IDIOMA DE RESPUESTA OBLIGATORIO: ' + (S.idioma || 'español').toUpperCase() + '.', /qwen3/i.test(S.modelo || '') ? '/no_think' : ''].filter(Boolean).join('\n\n');
   }
 
   // ── Motor (Ollama local, llamado directo desde el navegador) ──
@@ -232,6 +239,7 @@
     if (ocupado || !texto.trim()) return;
     if (!MOTOR || !S.modelo) { estado().then(pintar); return; }
     if (!S.msgs.length) hilo.textContent = '';
+    var idp = idiomaPedido(texto); if (idp) { S.idioma = idp; }
     S.msgs.push({ role: 'user', content: texto.trim() }); hilo.append(el('div', 'ra-yo', texto.trim())); ocupar(true); irA = null;
     var esp = el('div', 'ra-esp', 'Pensando…'); hilo.append(esp); bajar();
     function vuelta(k) {
