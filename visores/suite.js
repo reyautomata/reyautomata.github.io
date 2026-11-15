@@ -11,7 +11,7 @@
   var REG = window.RE_ENTREGABLES;
   function ramas(cat) { var o = []; if (!REG) return o; REG.de(cat).forEach(function (x) { o.push([x.sub.id, x.sub.name, null, x.sub.status === 'AVAILABLE' ? 'sub' : 'dev']); x.gens.forEach(function (g) { if (g.status === 'AVAILABLE') o.push([g.cod, g.name, g.module]); }); }); return o; }
   var GRUPOS = [
-    ['ini', 'Inicio', [['TB', 'Tablero del proyecto', '#tablero'], ['IN', 'Resumen de la suite', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
+    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
     ['ges', 'Proyecto', [['00', 'Proyectos', 'proyectos/'], ['GU', 'Generador de entregables', 'generador/'], ['GD', 'Control documental', 'documentos/'], ['EX', 'Explorador de archivos', 'explorador/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['E1', 'Señales de E/S (datos base)', 'lazos/#io'], ['E2', 'Tarjetas y canales (datos base)', 'lazos/#mod']]],
     ['doc', 'Documentos de ingeniería', ramas('DOCUMENTO')],
     ['pla', 'Planos de ingeniería', ramas('PLANO')],

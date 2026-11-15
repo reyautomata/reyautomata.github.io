@@ -247,3 +247,19 @@ body:not(.rs-portada) .trio { grid-template-columns: repeat(3, minmax(0, 1fr)) !
 .tb-bar { height: 5px; border-radius: 3px; background: var(--panel2); overflow: hidden; margin-bottom: 8px; }
 .tb-bar i { display: block; height: 100%; background: var(--ok); }
 .tb-col h3 small a { color: var(--sel); }
+
+/* ── Portada por ventanas ── */
+.pt-oculta { display: none !important; }
+body.rs-portada .brandlogo.pt-logo { height: 42px; cursor: pointer; border-radius: 6px; transition: filter .15s; }
+.brandlogo.pt-logo:hover { filter: brightness(1.15); }
+.brandlogo.pt-logo:focus-visible { outline: 2px solid var(--sel); outline-offset: 3px; }
+.pt-volver { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 12px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel2); color: var(--fg); font: 600 12.5px var(--f-body); text-decoration: none; }
+.pt-volver:hover { border-color: var(--sel); }
+.pt-menu { margin: 12px clamp(12px, 3vw, 28px); color: var(--fg); font: 13px/1.45 var(--f-body); }
+.pt-menu h2 { font: 600 10.5px var(--f-mono, monospace); letter-spacing: .12em; text-transform: uppercase; color: var(--sel); margin: 0 0 8px; }
+.pt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.pt-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 8px; color: var(--fg); text-decoration: none; }
+.pt-card:hover { border-color: var(--sel); border-left-color: var(--sel); }
+.pt-card b { font-size: 14px; }
+.pt-card span { color: var(--muted); font-size: 12px; }
+.pt-card em { font-style: normal; font-size: 10.5px; color: var(--accent-ink); }
