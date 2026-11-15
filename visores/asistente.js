@@ -91,6 +91,7 @@
       var HJ = window.RS_HIJOS; L = datosLazos();
       if (HJ && w.length) HJ('06').forEach(function (l) { if (w.every(function (k) { return norm(l.t + ' ' + l.s).indexOf(k) >= 0; })) o.en_el_proyecto.push({ tipo: 'Diagrama de lazo (P02)', id: l.t, servicio: l.s }); });
       if (L && L.senales && w.length) L.senales.forEach(function (s) { if (s.tag && w.every(function (k) { return norm(s.tag + ' ' + (s.servicio || '')).indexOf(k) >= 0; })) o.en_el_proyecto.push({ tipo: 'Instrumento en listados (D05)', tag: s.tag, servicio: s.servicio || '' }); });
+      if (window.RE_GESTION && w.length) o.registrados_en_control_documental = window.RE_GESTION.buscar(a.texto).slice(0, 20).map(function (d) { return { codigo: d.codigo, titulo: d.titulo, tipo: d.tipo, subcategoria: d.subcategoria, revision: d.rev, estado: d.estado }; });
       o.en_el_proyecto = o.en_el_proyecto.slice(0, 40); return o;
     }
     if (n === 'calcular') { try { return { resultado: calcular(a.expresion) }; } catch (e) { return { error: e.message }; } }
