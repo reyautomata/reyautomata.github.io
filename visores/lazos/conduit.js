@@ -728,8 +728,12 @@
   var L3 = null, v3 = null;
   var RUTA_3D = (function () { var s = document.currentScript && document.currentScript.src; return window.RE_LIB3D || (s ? new URL('../lib3d.js', s).href : '../lib3d.js'); })();
   function cargar3d(cb) {
-    if (window.__LIB) return cb(window.__LIB);
-    var s = document.createElement('script'); s.src = RUTA_3D; s.onload = function () { cb(window.__LIB); }; s.onerror = function () { cb(null); };
+    if (window.__LIB) { if (window.__VPLUS) window.__VPLUS(); return cb(window.__LIB); }
+    var s = document.createElement('script'); s.src = RUTA_3D; s.onerror = function () { cb(null); };
+    s.onload = function () { // herramientas de exploración comunes (vistas, estilos, corte); si no cargan, el visor abre igual
+      if (window.__VPLUS) { window.__VPLUS(); return cb(window.__LIB); }
+      var p = document.createElement('script'); p.src = RUTA_3D.replace(/lib3d\.js(\?.*)?$/, 'visor-plus.js'); p.onload = p.onerror = function () { cb(window.__LIB); }; document.head.appendChild(p);
+    };
     document.head.appendChild(s);
   }
   function corePos(d, k) { // misma disposición que el corte 2D

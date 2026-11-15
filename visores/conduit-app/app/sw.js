@@ -1,8 +1,8 @@
 /* ReyEngi Conduit instalable: guarda la app para usarla sin conexión. Cambia VERSION al publicar. */
-const VERSION = 'conduit-v1';
+const VERSION = 'conduit-v2';
 const FILES = ['./', './index.html', './estilo.css', './app.css', './shim.js', './inicio.js', './manifest.webmanifest',
   './icono-192.png', './icono-512.png', './icono-512-maskable.png', './vp-lazo.webp', './vp-unilineal.webp', './vp-montaje.webp', './vp-documento.webp',
-  '../demo.js', '../../acceso.js', '../../lazos/conduit.js', '../../hojas-datos/xlsx.js', '../../normas.js', '../../lib3d.js', '../../../img/logo-reyengi.png'];
+  '../demo.js', '../../acceso.js', '../../lazos/conduit.js', '../../hojas-datos/xlsx.js', '../../normas.js', '../../lib3d.js', '../../visor-plus.js', '../../../img/logo-reyengi.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.indexOf('conduit-') === 0 && k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
