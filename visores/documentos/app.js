@@ -31,6 +31,7 @@
       '<div class="acc"><a class="btn" href="../' + esc(d.ref) + '">Abrir en su módulo</a><button type="button" id="pRev">Crear nueva revisión</button><button type="button" id="pDel">Quitar registro</button></div>' +
       '<dl><dt>Categoría</dt><dd>' + (d.categoria === 'PLANO' ? 'Plano de ingeniería' : 'Documento de ingeniería') + '</dd><dt>Subcategoría</dt><dd>' + d.subcategoria + ' ' + esc(SUBN[d.subcategoria]) + '</dd><dt>Tipo</dt><dd>' + esc(d.tipo) + '</dd><dt>Disciplina</dt><dd>' + esc(d.disciplina) + '</dd>' +
       '<dt>Revisión</dt><dd>' + esc(d.rev) + '</dd><dt>Generador</dt><dd>' + esc(d.gen) + '</dd><dt>Creado</dt><dd>' + fecha(d.creado) + '</dd><dt>Modificado</dt><dd>' + fecha(d.modificado) + '</dd></dl>' +
+      ((d.archivos || []).length ? '<h3>Archivos en la carpeta del proyecto</h3><ul class="hist">' + d.archivos.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul><p class="nota" style="margin:0 0 8px"><a href="../explorador/" style="color:var(--sel)">Abrir el explorador de archivos</a></p>' : '') +
       '<h3>Historial</h3><ul class="hist">' + d.historial.slice().reverse().map(function (h) { return '<li><b>' + esc(h.a) + '</b> ' + esc(h.d) + '<small>' + fecha(h.f) + ' · Rev. ' + esc(h.rev) + ' · ' + esc(h.estado) + '</small></li>'; }).join('') + '</ul>';
     $('#pCod').addEventListener('change', function (e) { G.editar(d.id, { codigo: e.target.value }); });
     $('#pTit').addEventListener('change', function (e) { if (e.target.value.trim()) G.editar(d.id, { titulo: e.target.value }); });
