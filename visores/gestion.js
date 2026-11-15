@@ -33,7 +33,8 @@
       guardar(g); return d;
     },
     editar: function (id, c) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return null;
-      ['codigo', 'titulo'].forEach(function (k) { if (typeof c[k] === 'string' && c[k].trim() !== d[k]) { evento(d, 'Editado', (k === 'codigo' ? 'Código: ' : 'Título: ') + c[k].trim()); d[k] = c[k].trim().slice(0, 160); } }); guardar(g); return d; },
+      ['codigo', 'titulo', 'area'].forEach(function (k) { if (typeof c[k] === 'string' && c[k].trim() !== (d[k] || '')) { evento(d, 'Editado', ({ codigo: 'Código: ', titulo: 'Título: ', area: 'Área: ' })[k] + c[k].trim()); d[k] = c[k].trim().slice(0, 160); } }); guardar(g); return d; },
+    anotar: function (id, accion, detalle) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return null; evento(d, accion, detalle); guardar(g); return d; },
     estado: function (id, est, nota) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || ESTADOS.indexOf(est) < 0 || d.estado === est) return d; var antes = d.estado; d.estado = est; evento(d, 'Estado', antes + ' → ' + est + (nota ? ' · ' + nota : '')); guardar(g); return d; },
     nuevaRevision: function (id, nota) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return null; var antes = d.rev; d.rev = sigRev(d.rev); d.estado = 'En desarrollo'; evento(d, 'Revisión', 'Rev. ' + antes + ' → Rev. ' + d.rev + (nota ? ' · ' + nota : '')); guardar(g); return d; },
     // Anota un archivo real guardado en la carpeta del proyecto (ruta relativa a esa carpeta)
