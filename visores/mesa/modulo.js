@@ -257,9 +257,19 @@
     var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return id !== principal; }), ['prop', 'ctrl']);
     var inicial = { t: 'row', c: [{ t: 'tabs', p: [principal], a: principal }, { t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }], s: [0.66, 0.34] };
     var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
-    var dock = window.REDock(host, { clave: 'reyengi-dkm3-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30); } });
+    var dock = window.REDock(host, { clave: 'reyengi-dkm3-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { avisar(); window.dispatchEvent(new Event('resize')); }, 30); } });
+    (cfg.ocultar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host')) e.classList.add('dkm-oculto'); }); });
+    // Barra de recuperación: aparece solo si hay paneles cerrados o si las pestañas se separaron; permite volver a mostrarlos y reagruparlos
+    var av = document.createElement('div'); av.className = 'dkm-aviso'; av.hidden = true; sec.insertBefore(av, host);
+    function forma(n) { return n.t === 'tabs' ? 'T(' + n.p.slice().sort().join(',') + ')' : n.t + '[' + n.c.map(forma).join('|') + ']'; }
+    function avisar() { var ce = dock.cerrados(), sep = false; try { sep = forma(dock.disposicion()) !== forma(inicial); } catch (e) {}
+      var h = ce.map(function (id) { return '<button type="button" class="dkm-mostrar" data-id="' + id + '">Mostrar ' + esc(paneles[id].titulo) + '</button>'; }).join('');
+      if (ce.length || sep) h = (ce.length ? '<span>Paneles cerrados:</span>' : '<span>Las pestañas están separadas.</span>') + h + '<button type="button" data-re="1">Reagrupar pestañas</button>';
+      if (av.dataset.h !== h) { av.dataset.h = h; av.innerHTML = h; av.hidden = !h; if (typeof alto === 'function') alto(); } }
+    av.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.id && b.dataset.id !== principal) dock.abrir(b.dataset.id); else dock.restablecer();   // el plano o documento vuelve a su lugar, a la izquierda setTimeout(avisar, 50); });
+    setTimeout(avisar, 100);
     // Lo que quedó fuera de los paneles (barras de botones, estados) se junta en la pestaña Acciones
-    setTimeout(function () { if (!nAcc) return; [].slice.call(sec.children).forEach(function (c) { if (c === host || /^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) || c.classList.contains('dkm-oculto')) return; nAcc.appendChild(c); });
+    setTimeout(function () { if (!nAcc) return; [].slice.call(sec.children).forEach(function (c) { if (c === host || /^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) || c.classList.contains('dkm-oculto') || c.classList.contains('dkm-aviso')) return; nAcc.appendChild(c); });
       if (!nAcc.children.length) nAcc.innerHTML = '<p class="nota">Este entregable no tiene acciones propias.</p>'; alto(); }, 0);
     cfg.paneles.forEach(function (p) { if (p.zoom) try { zoomPlano(host.querySelector(p.zoom)); } catch (e) {} });
     (cfg.limpiar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host') && !e.children.length) e.remove(); else if (!e.closest('.dkm-host') && e.matches('h2')) e.remove(); }); });
@@ -272,7 +282,7 @@
     var tg = 0, esp = setInterval(function () { if (window.RE_GESTION) { clearInterval(esp); window.RE_GESTION.alCambiar(comunes); comunes(); } else if (++tg > 40) clearInterval(esp); }, 200);
     llena(); setTimeout(llena, 1500); new MutationObserver(function () { setTimeout(llena, 0); if (!sec.hidden) { alto(); comunes(); window.dispatchEvent(new Event('resize')); } }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
     window.addEventListener('resize', alto); alto(); setTimeout(alto, 400); comunes();
-    br.addEventListener('click', function () { dock.restablecer(); });
+    br.textContent = 'Reagrupar pestañas'; br.addEventListener('click', function () { dock.restablecer(); setTimeout(avisar, 50); });
     bp.addEventListener('click', function () { var v = document.querySelector('.dk-menu'); if (v) { v.remove(); return; } var m = document.createElement('div'); m.className = 'dk-menu'; m.setAttribute('role', 'menu'); var r = bp.getBoundingClientRect(), ce = dock.cerrados();
       Object.keys(paneles).forEach(function (id) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitemcheckbox'); var ab = ce.indexOf(id) < 0; b.setAttribute('aria-checked', ab); b.textContent = (ab ? '✓ ' : '   ') + paneles[id].titulo; b.onclick = function () { m.remove(); if (ab) dock.cerrar(id); else dock.abrir(id); }; m.append(b); });
       document.body.append(m); m.style.top = (r.bottom + 4) + 'px'; m.style.left = Math.max(8, r.right - m.offsetWidth) + 'px'; m.firstChild.focus();
