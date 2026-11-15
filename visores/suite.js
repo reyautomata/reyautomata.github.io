@@ -6,16 +6,21 @@
 (function () {
   'use strict';
   var BASE = (function () { try { return new URL('.', document.currentScript.src).href; } catch (e) { return '../'; } })();
+  // El árbol se arma desde el registro central (entregables.js): DOCUMENTOS y PLANOS con sus subcategorías.
+  // Fila de módulo: [código, nombre, enlace]. Fila de subcategoría: [código, nombre, null, 'sub' | 'dev'].
+  var REG = window.RE_ENTREGABLES;
+  function ramas(cat) { var o = []; if (!REG) return o; REG.de(cat).forEach(function (x) { o.push([x.sub.id, x.sub.name, null, x.sub.status === 'AVAILABLE' ? 'sub' : 'dev']); x.gens.forEach(function (g) { if (g.status === 'AVAILABLE') o.push([g.cod, g.name, g.module]); }); }); return o; }
   var GRUPOS = [
-    ['ini', 'Inicio', [['IN', 'Resumen de la suite', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
-    ['ges', 'Gestión del proyecto', [['00', 'Proyecto', 'proyectos/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['11', 'Requisiciones de compra', 'requisiciones/'], ['H4', 'Normativa SEC y reglas', 'normativa/']]],
-    ['pro', 'Procesos y P&ID', [['01', 'Análisis de P&ID', 'pid/'], ['H1', 'Piping para leer P&ID', 'piping/#aprender']]],
-    ['ins', 'Instrumentación', [['02', 'Listado de instrumentos', 'lazos/#inst'], ['03', 'Hojas de datos', 'hojas-datos/'], ['04', 'Especificaciones técnicas', 'especificaciones/'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['10', 'Detalles típicos de montaje', '#montajes']]],
-    ['ctl', 'Control y comunicaciones', [['E1', 'Señales de E/S (edición)', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod'], ['05', 'Listado de entradas y salidas', 'lazos/#doc'], ['06', 'Diagramas de lazo', 'lazos/#lazos'], ['09', 'Diagrama de bloques de control', 'lazos/#blq'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
-    ['ene', 'Energía y canalizaciones', [['07', 'Listado de circuitos', 'lazos/#circ'], ['08', 'Unilineales TDI', 'lazos/#uni'], ['H3', 'Canalizaciones (conduit)', 'lazos/#cond'], ['ES', 'Escalerillas portaconductores', '#escalerillas']]]
+    ['ini', 'Inicio', [['TB', 'Tablero del proyecto', '#tablero'], ['IN', 'Resumen de la suite', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
+    ['ges', 'Proyecto', [['00', 'Proyectos', 'proyectos/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['E1', 'Señales de E/S (datos base)', 'lazos/#io'], ['E2', 'Tarjetas y canales (datos base)', 'lazos/#mod']]],
+    ['doc', 'Documentos de ingeniería', ramas('DOCUMENTO')],
+    ['pla', 'Planos de ingeniería', ramas('PLANO')],
+    ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
+    ['nor', 'Normativa', [['H4', 'Normativa SEC y reglas', 'normativa/']]],
+    ['bib', 'Biblioteca técnica', [['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
   ];
   // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
-  window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE;
+  window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE; window.RS_HIJOS = function (c) { return hijosDe(c); };
   if (window.top === window) { var sa = document.createElement('script'); sa.src = BASE + 'asistente.js'; sa.defer = true; document.head.appendChild(sa); }
   var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [] };
   try { Object.assign(U, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
@@ -101,7 +106,11 @@
     GRUPOS.forEach(function (g) {
       var ab = q ? true : !U.cerrados[g[0]], cuerpo = '';
       g[2].forEach(function (e) {
-        var href = BASE + e[2], act = esActual(href), H = hijosDe(e[0]);
+        if (!e[2]) { // subcategoría (o grupo aún sin generadores)
+          if (q && norm(e[0] + ' ' + e[1]).indexOf(q) < 0) return;
+          cuerpo += '<li role="none" class="rs-sub' + (e[3] === 'dev' ? ' dev' : '') + '" title="' + esc(e[1]) + (e[3] === 'dev' ? ' · generador en desarrollo' : '') + '"><span class="cod">' + e[0] + '</span><span class="tx">' + esc(e[1]) + '</span>' + (e[3] === 'dev' ? '<span class="rs-dev">En desarrollo</span>' : '') + '</li>'; return;
+        }
+        var href = BASE + e[2], act = esActual(href), H = e[0] === 'MC' ? [] : hijosDe(e[0]);
         if (act && esActual(href)) actual = { g: g[1], cod: e[0], t: e[1], href: e[2], hijo: H.filter(function (x) { return x.act; })[0] || null };
         var Hv = q ? H.filter(function (x) { return norm(x.t + ' ' + x.s).indexOf(q) >= 0; }) : H;
         if (q && norm(e[0] + ' ' + e[1]).indexOf(q) < 0 && !Hv.length) return;
@@ -214,5 +223,11 @@
     window.addEventListener('storage', function (ev) { if (ev.key && /reyengi/.test(ev.key) && ev.key !== CLAVE) pintar(); });
     var sp = document.getElementById('proy'); if (sp) sp.addEventListener('change', function () { setTimeout(pintar, 50); });
   }
+  // Atajos: Ctrl+B explorador · Ctrl+K buscar · Ctrl+J asistente (asistente.js)
+  document.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return; var k = e.key.toLowerCase();
+    if (k === 'b') { var pl = document.getElementById(document.body.classList.contains('rs-plegado') ? 'rsPestana' : 'rsPlegar'); if (pl) { e.preventDefault(); pl.click(); } }
+    else if (k === 'k') { var bq = document.getElementById('rsBuscar'); if (bq) { e.preventDefault(); if (document.body.classList.contains('rs-plegado')) { var ps = document.getElementById('rsPestana'); if (ps) ps.click(); } bq.focus(); bq.select(); } }
+  });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
