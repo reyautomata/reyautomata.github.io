@@ -4,6 +4,9 @@
  * Estado: AVAILABLE (módulo operativo) · EN_DESARROLLO (todavía no existe el generador; se muestra como tal, sin enlace). */
 (function () {
   'use strict';
+  // Nombre de la carpeta de cada subcategoría dentro del proyecto (explorador de archivos)
+  var CARP = { D01: 'Memorias_Calculo', D02: 'Criterios_Diseno', D03: 'Especificaciones', D04: 'Hojas_Datos', D05: 'Listados', D06: 'Requisiciones', D07: 'Informes', D08: 'Protocolos', D09: 'Matrices_Registros',
+    P01: 'P&ID', P02: 'Diagramas_Lazo', P03: 'Diagramas_Bloques', P04: 'Unilineales', P05: 'Ubicacion', P06: 'Detalles_Montaje', P07: 'Conexionado', P08: 'Canalizaciones', P09: 'Arquitecturas', P10: 'Disposicion_Tableros' };
   var SUB = [
     // DOCUMENTOS DE INGENIERÍA
     ['D01', 'DOCUMENTO', 'Memorias de cálculo'], ['D02', 'DOCUMENTO', 'Criterios y bases de diseño'], ['D03', 'DOCUMENTO', 'Especificaciones técnicas'],
@@ -13,7 +16,7 @@
     ['P01', 'PLANO', 'Diagramas P&ID'], ['P02', 'PLANO', 'Diagramas de lazo'], ['P03', 'PLANO', 'Diagramas de bloques'], ['P04', 'PLANO', 'Diagramas unilineales'],
     ['P05', 'PLANO', 'Planos de ubicación'], ['P06', 'PLANO', 'Detalles típicos de montaje'], ['P07', 'PLANO', 'Diagramas de conexionado'],
     ['P08', 'PLANO', 'Canalizaciones y escalerillas'], ['P09', 'PLANO', 'Arquitecturas de control y comunicaciones'], ['P10', 'PLANO', 'Disposición de tableros']
-  ].map(function (s) { return { id: s[0], category: s[1], name: s[2] }; });
+  ].map(function (s) { return { id: s[0], category: s[1], name: s[2], folder: s[0] + '_' + CARP[s[0]] }; });
 
   // cod: código corto que ya usa la suite (00 a 11 y herramientas); module: ruta relativa a visores/
   var GENERADORES = [

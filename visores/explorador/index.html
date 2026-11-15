@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explorador de archivos · ReyEngi</title>
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #0B1220; --panel: #111D2E; --panel2: #18283C; --fg: #EAF2F8; --muted: #94A9BE; --line: #22364D; --brand: #0E2238; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #38C8E8;
+  --f-body: Inter, "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); }
+[hidden] { display: none !important; }
+button, .btn { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 6px 11px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #1b0d02; }
+button:hover { border-color: var(--sel); } button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+input, select { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+main.ex { padding: 14px 16px 60px; }
+.inicio { max-width: 720px; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 10px; padding: 18px 20px; }
+.inicio h2 { margin: 0 0 8px; font-size: 17px; } .inicio p { color: var(--muted); margin: 0 0 10px; } .inicio pre { font: 11.5px/1.5 var(--f-mono); color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow: auto; }
+.cab { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.cab .ruta { font: 600 12.5px var(--f-mono); color: var(--accent-ink); margin-right: auto; overflow-wrap: anywhere; }
+.cab label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.filtros input { flex: 1; min-width: 160px; }
+.area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 330px); gap: 14px; align-items: start; }
+@media (max-width: 1050px) { .area { grid-template-columns: minmax(0, 1fr); } }
+.arbol { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; min-height: 240px; overflow: auto; }
+.arbol ul { list-style: none; margin: 0; padding: 0 0 0 16px; } .arbol > ul { padding: 0; }
+.nd { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: none; border: 0; border-radius: 4px; padding: 3px 6px; font: 500 12.5px var(--f-body); }
+.nd:hover { background: rgba(56, 200, 232, .07); } .nd[aria-selected="true"] { background: rgba(21, 157, 218, .2); }
+.nd .tw { width: 12px; color: var(--muted); flex: none; }
+.nd .ic { width: 14px; height: 11px; border-radius: 2px; background: #C99A2E; flex: none; }
+.nd.f .ic { width: 11px; height: 14px; background: #7f93a8; } .nd.f.pdf .ic { background: #E35B65; } .nd.f.dxf .ic, .nd.f.dwg .ic { background: #38C8E8; } .nd.f.xls .ic { background: #27B783; } .nd.f.doc .ic { background: #159DDA; }
+.nd .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nd .mt { color: var(--muted); font: 11px var(--f-mono); white-space: nowrap; }
+.nd .reg { font-size: 10px; border: 1px solid var(--sel); color: var(--sel); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+.nd.falta { opacity: .55; } .nd.falta .ic { background: none; border: 1px dashed var(--muted); }
+.vacio { color: var(--muted); padding: 4px 6px 4px 34px; font-size: 12px; }
+.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: 64px; }
+@media (max-width: 1050px) { .prop { position: static; } }
+.prop h2 { margin: 0 0 8px; font-size: 14px; overflow-wrap: anywhere; }
+.prop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0 0 10px; font-size: 12px; } .prop dt { color: var(--muted); } .prop dd { margin: 0; overflow-wrap: anywhere; }
+.prop h3 { font: 600 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 12px 0 6px; }
+.prop .acc { display: flex; gap: 6px; flex-wrap: wrap; } .prop select { width: 100%; margin-bottom: 6px; }
+.prop ul { list-style: none; margin: 0; padding: 0; font-size: 12px; } .prop li { padding: 3px 0; border-top: 1px solid var(--line); display: flex; gap: 6px; align-items: baseline; } .prop li button { padding: 1px 6px; font-size: 11px; margin-left: auto; }
+.rec button { background: none; border: 0; padding: 0; color: var(--fg); text-align: left; text-decoration: underline; text-decoration-color: var(--line); font-weight: 500; }
+.nota { color: var(--muted); font-size: 11.5px; margin: 10px 0 0; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../proyectos.js" defer></script>
+<script src="../entregables.js" defer></script>
+<script src="../suite.js" defer></script>
+<script src="../gestion.js" defer></script>
+<script src="../archivos.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <h1>Explorador de archivos <small>Carpeta real del proyecto en tu computador</small></h1>
+  <button type="button" id="bEstr" hidden>Crear carpetas que faltan</button>
+  <button type="button" id="bRefrescar" hidden>Actualizar</button>
+  <button type="button" id="bCambiar" hidden>Cambiar carpeta</button>
+</div></div>
+<main class="ex">
+  <section class="inicio" id="inicio" hidden></section>
+  <section id="vista" hidden>
+    <div class="cab"><span class="ruta" id="ruta"></span><label><input type="checkbox" id="cCopia"> Guardar aquí una copia de lo que exporto</label></div>
+    <div class="filtros">
+      <input type="search" id="fTxt" placeholder="Buscar archivo por nombre" aria-label="Buscar archivo">
+      <select id="fCat" aria-label="Carpeta principal"><option value="">Todas las carpetas</option></select>
+      <select id="fTipo" aria-label="Tipo de archivo"><option value="">Todos los tipos</option><option value="pdf">PDF</option><option value="dxf">DXF / DWG</option><option value="xls">Excel / CSV</option><option value="doc">Word</option><option value="img">Imágenes</option><option value="otro">Otros</option></select>
+    </div>
+    <div class="area">
+      <div class="arbol" id="exArbol" role="tree" aria-label="Carpetas y archivos del proyecto"></div>
+      <aside class="prop" id="prop" aria-label="Propiedades"></aside>
+    </div>
+    <p class="nota" id="pie"></p>
+  </section>
+</main>
+</body>
+</html>

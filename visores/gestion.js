@@ -36,6 +36,12 @@
       ['codigo', 'titulo'].forEach(function (k) { if (typeof c[k] === 'string' && c[k].trim() !== d[k]) { evento(d, 'Editado', (k === 'codigo' ? 'Código: ' : 'Título: ') + c[k].trim()); d[k] = c[k].trim().slice(0, 160); } }); guardar(g); return d; },
     estado: function (id, est, nota) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || ESTADOS.indexOf(est) < 0 || d.estado === est) return d; var antes = d.estado; d.estado = est; evento(d, 'Estado', antes + ' → ' + est + (nota ? ' · ' + nota : '')); guardar(g); return d; },
     nuevaRevision: function (id, nota) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return null; var antes = d.rev; d.rev = sigRev(d.rev); d.estado = 'En desarrollo'; evento(d, 'Revisión', 'Rev. ' + antes + ' → Rev. ' + d.rev + (nota ? ' · ' + nota : '')); guardar(g); return d; },
+    // Anota un archivo real guardado en la carpeta del proyecto (ruta relativa a esa carpeta)
+    adjuntar: function (id, ruta) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || !ruta) return null; d.archivos = d.archivos || []; if (d.archivos.indexOf(ruta) < 0) { d.archivos.push(ruta); evento(d, 'Archivo', ruta); guardar(g); } return d; },
+    desvincular: function (id, ruta) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || !d.archivos) return; d.archivos = d.archivos.filter(function (x) { return x !== ruta; }); evento(d, 'Archivo', 'Desvinculado: ' + ruta); guardar(g); },
+    deArchivo: function (ruta) { return leer().docs.filter(function (d) { return (d.archivos || []).indexOf(ruta) >= 0; }); },
+    // Registro del entregable abierto en pantalla (lo crea si falta), según el módulo y el formato
+    actual: function (f, conjunto) { return deActual(f, conjunto, ''); },
     quitar: function (id) { var g = leer(); g.docs = g.docs.filter(function (x) { return x.id !== id; }); guardar(g); },
     resumen: function () { var o = { DOCUMENTO: { total: 0 }, PLANO: { total: 0 } }; leer().docs.forEach(function (d) { var c = o[d.categoria]; if (!c) return; c.total++; c[d.estado] = (c[d.estado] || 0) + 1; }); return o; },
     buscar: function (t) { var q = String(t || '').toLowerCase().split(/\s+/).filter(Boolean); return leer().docs.filter(function (d) { var s = [d.codigo, d.titulo, d.tipo, d.item, d.subcategoria, d.estado].join(' ').toLowerCase(); return q.every(function (w) { return s.indexOf(w) >= 0; }); }); }
@@ -44,11 +50,17 @@
   // ── Registro automático: al pulsar un botón de exportación en un módulo ──
   var POR_COD = {}; R.generadores.forEach(function (x) { if (!POR_COD[x.cod]) POR_COD[x.cod] = x.id; });
   function formato(t) { if (/pegar|vista previa|importar|cargar|plantilla/i.test(t)) return ''; var m = /\b(PDF|DXF|Excel|Word|PNG|CSV)\b/i.exec(t); if (!m) return ''; var f = m[1].toUpperCase(); return f === 'EXCEL' ? 'Excel' : f === 'WORD' ? 'Word' : f; }
+  function deActual(f, todos, formatoEvento) {
+    if (!window.RS_ACTUAL) return null; var a = window.RS_ACTUAL(); if (!a) return null;
+    var id = POR_COD[a.cod]; if (a.cod === 'H3' || a.cod === 'MC') id = f === 'Excel' ? 'D01-CONDUIT' : 'P08-DUCTO'; if (!id) return null;
+    var ge = gen(id), h = todos ? null : a.hijo;
+    return G.registrar({ gen: id, ref: a.href, item: h ? (h.t || h.s) : '', titulo: h ? ((h.t ? h.t + ' · ' : '') + (h.s || ge.name)) : ge.name + (todos ? ' (conjunto)' : ''), formato: formatoEvento });
+  }
+  var ultimoConjunto = false;
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('button, a.btn'); if (!b || b.closest('#rsMarco, #raPanel, .gd')) return;
-    var f = formato(b.textContent || ''); if (!f || !window.RS_ACTUAL) return;
-    var a = window.RS_ACTUAL(); if (!a) return; var id = POR_COD[a.cod]; if (a.cod === 'H3' || a.cod === 'MC') id = f === 'Excel' ? 'D01-CONDUIT' : 'P08-DUCTO'; if (!id) return;
-    var ge = gen(id), todos = /todos|todas/i.test(b.textContent), h = todos ? null : a.hijo;
-    G.registrar({ gen: id, ref: a.href, item: h ? (h.t || h.s) : '', titulo: h ? ((h.t ? h.t + ' · ' : '') + (h.s || ge.name)) : ge.name + (todos ? ' (conjunto)' : ''), formato: f });
+    var f = formato(b.textContent || ''); if (!f) return;
+    ultimoConjunto = /todos|todas/i.test(b.textContent); deActual(f, ultimoConjunto, f);
   }, true);
+  G.conjunto = function () { return ultimoConjunto; };
 })();
