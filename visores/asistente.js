@@ -59,12 +59,24 @@
     fn('proyecto_activo', 'Devuelve los datos del proyecto activo y un resumen de lo que contiene (señales, lazos, tarjetas, ductos).', {}),
     fn('listar_instrumentos', 'Lista instrumentos y señales del proyecto activo, con tag, tipo de señal, servicio y lazo. Admite un filtro de texto.', { filtro: { type: 'string', description: 'Texto a buscar en tag, servicio o tipo; vacío para todos' } }, []),
     fn('buscar_entregables', 'Consulta el registro de entregables de la suite (documentos y planos, con su estado y formatos) y busca en el proyecto activo los lazos e instrumentos asociados a un tag o texto.', { texto: { type: 'string', description: 'Tag o palabras, por ejemplo "LT-101" o "hoja de datos"' } }),
+    fn('agregar_instrumento', 'Propone agregar un instrumento (señal) al proyecto activo. El usuario ve la propuesta y debe confirmarla antes de que se aplique.', { tag: { type: 'string', description: 'Tag ISA con área, por ejemplo 100-LIT-0105' }, tipo: { type: 'string', enum: ['AI', 'AO', 'DI', 'DO'], description: 'Tipo de señal' }, servicio: { type: 'string', description: 'Servicio o descripción del punto de medición' } }),
+    fn('registrar_entregable', 'Propone registrar un documento o plano en el control documental del proyecto. Requiere confirmación del usuario.', { tipo: { type: 'string', description: 'Identificador del registro de entregables, por ejemplo P02-LAZO o D04-HD' }, titulo: { type: 'string' }, codigo: { type: 'string', description: 'Código de documento, si se conoce' } }, ['tipo', 'titulo']),
+    fn('cambiar_estado_entregable', 'Propone cambiar el estado de un entregable ya registrado (Borrador, En desarrollo, En revisión, Con observaciones, Aprobado, Emitido, Obsoleto). Requiere confirmación del usuario.', { entregable: { type: 'string', description: 'Código o título del entregable registrado' }, estado: { type: 'string' } }),
+    fn('abrir_generador', 'Abre el generador de entregables en el tipo indicado para crear o exportar un documento o plano.', { tipo: { type: 'string', description: 'Identificador del registro, por ejemplo P02-LAZO, D04-HD, D05-INST' } }),
     fn('calcular', 'Evalúa una expresión matemática con exactitud. Úsala siempre para operaciones numéricas.', { expresion: { type: 'string', description: 'Por ejemplo "24/250*1000" o "sqrt(3)*380*12"' } }),
     fn('guardar_recuerdo', 'Guarda un dato duradero sobre el usuario o sus preferencias cuando él pide recordarlo.', { texto: { type: 'string' } })
   ];
-  var ROT = { ir_a_modulo: 'Abrir módulo', buscar_entregables: 'Buscó entregables', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
+  var ROT = { ir_a_modulo: 'Abrir módulo', agregar_instrumento: 'Agregar instrumento', registrar_entregable: 'Registrar entregable', cambiar_estado_entregable: 'Cambiar estado', abrir_generador: 'Abrir generador', buscar_entregables: 'Buscó entregables', proyecto_activo: 'Consultó el proyecto', listar_instrumentos: 'Consultó instrumentos', calcular: 'Calculó', guardar_recuerdo: 'Guardó en memoria' };
   function datosLazos() { var P = window.REProyectos; try { return window.__LAZOS && window.__LAZOS.E ? window.__LAZOS.E() : (P && P.leer ? P.leer('lazos', null) : null); } catch (e) { return null; } }
-  var irA = null;
+  var irA = null, recargar = false;
+  // Toda acción que cambia el proyecto se muestra como propuesta y solo se aplica si el usuario la aprueba
+  function confirmar(texto) {
+    return new Promise(function (ok) {
+      var d = el('div', 'ra-pide'); d.setAttribute('role', 'group'); d.setAttribute('aria-label', 'Acción propuesta por el asistente'); d.append(el('small', '', 'Acción propuesta'), el('span', '', texto));
+      var f = el('div'), si = el('button', 'pri', 'Aplicar'), no = el('button', '', 'Cancelar'); si.type = no.type = 'button'; f.append(si, no); d.append(f); hilo.append(d); bajar(); si.focus();
+      function fin(v) { d.remove(); ok(v); } si.onclick = function () { fin(true); }; no.onclick = function () { fin(false); };
+    });
+  }
   function ejecutar(n, a) {
     a = a || {}; var P = window.REProyectos, L;
     if (n === 'ir_a_modulo') {
@@ -94,6 +106,33 @@
       if (window.RE_GESTION && w.length) o.registrados_en_control_documental = window.RE_GESTION.buscar(a.texto).slice(0, 20).map(function (d) { return { codigo: d.codigo, titulo: d.titulo, tipo: d.tipo, subcategoria: d.subcategoria, revision: d.rev, estado: d.estado }; });
       o.en_el_proyecto = o.en_el_proyecto.slice(0, 40); return o;
     }
+    if (n === 'abrir_generador') { var RGa = window.RE_ENTREGABLES, ga = RGa && (RGa.generadores.filter(function (x) { return x.id === String(a.tipo).toUpperCase(); })[0] || RGa.buscar(a.tipo)[0]);
+      if (!ga) return { error: 'No existe ese tipo de entregable o está en desarrollo.', disponibles: RGa ? RGa.generadores.map(function (x) { return x.id + ' ' + x.name; }) : [] };
+      irA = new URL('generador/#g=' + ga.id, BASE).href; return { abriendo: 'Generador · ' + ga.name }; }
+    if (n === 'agregar_instrumento') {
+      var tag = String(a.tag || '').trim().toUpperCase(), tp = String(a.tipo || '').toUpperCase(), sv = String(a.servicio || '').trim().slice(0, 120);
+      if (!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(tag) || !/[A-Z]/.test(tag) || !/\d/.test(tag) || tag.length > 30) return { error: 'Tag no válido. Usa el formato área-letras-número, por ejemplo 100-LIT-0105.' };
+      if (['AI', 'AO', 'DI', 'DO'].indexOf(tp) < 0) return { error: 'Tipo de señal no válido: usa AI, AO, DI o DO.' };
+      if (!P) return { error: 'Esta página no tiene acceso al proyecto.' };
+      L = datosLazos(); if (!L || !L.senales) return { error: 'El proyecto aún no tiene base de señales. Abre una vez «Señales de E/S» para iniciarla.' };
+      if (L.senales.some(function (x) { return String(x.tag || '').toUpperCase() === tag; })) return { error: 'Ya existe un instrumento con el tag ' + tag + '.' };
+      return confirmar('Agregar al proyecto «' + (P.activo().nombre || '') + '» el instrumento ' + tag + ' · ' + tp + (sv ? ' · ' + sv : '')).then(function (ok) {
+        if (!ok) return { error: 'El usuario no aprobó el cambio.' };
+        var nu = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), tag: tag, tipo: tp, hilos: 2, canal: '' }; if (sv) nu.servicio = sv;
+        if (window.__LAZOS && window.__LAZOS.E) { window.__LAZOS.E().senales.push(nu); window.__LAZOS.guardar(); recargar = true; } else { var D = P.leer('lazos', null); D.senales.push(nu); P.escribir('lazos', D); }
+        return { aplicado: true, instrumento: nu.tag, total_senales: L.senales.length + (window.__LAZOS ? 0 : 1) };
+      });
+    }
+    if (n === 'registrar_entregable' || n === 'cambiar_estado_entregable') {
+      var GG = window.RE_GESTION, RG2 = window.RE_ENTREGABLES; if (!GG || !RG2) return { error: 'El control documental no está disponible en esta página.' };
+      if (n === 'registrar_entregable') { var g2 = RG2.generadores.filter(function (x) { return x.id === String(a.tipo).toUpperCase(); })[0] || RG2.buscar(a.tipo)[0], ti = String(a.titulo || '').trim().slice(0, 160);
+        if (!g2) return { error: 'Tipo de entregable desconocido.', disponibles: RG2.generadores.map(function (x) { return x.id + ' ' + x.name; }) }; if (!ti) return { error: 'Falta el título.' };
+        return confirmar('Registrar en el control documental: ' + g2.subcategory + ' · ' + g2.name + ' · «' + ti + '»' + (a.codigo ? ' · ' + a.codigo : '')).then(function (ok) { if (!ok) return { error: 'El usuario no aprobó el cambio.' };
+          var d2 = GG.registrar({ gen: g2.id, titulo: ti, codigo: String(a.codigo || '').trim().slice(0, 60), item: 'ia-' + Date.now().toString(36), manual: true }); GG.anotar(d2.id, 'Asistente', 'Registrado a pedido del usuario por ReyEngi AI'); return { aplicado: true, revision: d2.rev, estado: d2.estado }; }); }
+      var c2 = GG.buscar(a.entregable), es = GG.ESTADOS.filter(function (x) { return norm(x) === norm(a.estado); })[0];
+      if (!es) return { error: 'Estado no válido.', estados: GG.ESTADOS }; if (c2.length !== 1) return { error: c2.length ? 'Hay varios entregables que coinciden: precisa el código.' : 'No hay un entregable registrado que coincida.', coincidencias: c2.slice(0, 8).map(function (x) { return (x.codigo ? x.codigo + ' · ' : '') + x.titulo; }) };
+      return confirmar('Cambiar el estado de «' + (c2[0].codigo ? c2[0].codigo + ' · ' : '') + c2[0].titulo + '» de ' + c2[0].estado + ' a ' + es).then(function (ok) { if (!ok) return { error: 'El usuario no aprobó el cambio.' }; GG.estado(c2[0].id, es, 'vía ReyEngi AI'); return { aplicado: true, estado: es }; });
+    }
     if (n === 'calcular') { try { return { resultado: calcular(a.expresion) }; } catch (e) { return { error: e.message }; } }
     if (n === 'guardar_recuerdo') { var t = String(a.texto || '').trim().slice(0, 300); if (t && S.mem.indexOf(t) < 0) S.mem.push(t); S.mem = S.mem.slice(-40); guardar(); return { guardado: !!t }; }
     return { error: 'Herramienta desconocida.' };
@@ -102,7 +141,7 @@
     var f = new Date(), P = window.REProyectos, pr = ''; try { var d = P && P.activo(); if (d) pr = d.nombre || d.proyecto || ''; } catch (e) {}
     return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el asistente de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
       'Responde en español, breve y técnico. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
-      'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos de la suite, consultar el proyecto activo y sus instrumentos (solo lectura), calcular y guardar recuerdos. Usa las herramientas cuando la pregunta dependa del proyecto o de un cálculo. No puedes modificar el proyecto: para eso indica al usuario en qué módulo hacerlo.',
+      'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos y el generador, consultar el proyecto activo y sus instrumentos, calcular y guardar recuerdos. También puedes proponer tres cambios: agregar un instrumento, registrar un entregable y cambiar el estado de un entregable; cada uno se muestra al usuario como propuesta y solo se aplica si él la aprueba. No afirmes que un cambio quedó hecho si la herramienta no devolvió aplicado. Para cualquier otro cambio, indica al usuario en qué módulo hacerlo.',
       'Los enclavamientos y protecciones pertenecen al PLC o al sistema de seguridad; tú solo analizas y asistes.',
       'Módulos de la suite: ' + MODS.map(function (m) { return m.nombre; }).join('; ') + '.',
       'Página abierta: ' + document.title + '.' + (pr ? ' Proyecto activo: ' + pr + '.' : ''),
@@ -155,8 +194,8 @@
   var hilo, ocupado = false;
   function bajar() { hilo.scrollTop = hilo.scrollHeight; }
   function paso(n, a, res) {
-    var d = el('div', 'ra-paso'), det = a.nombre || a.filtro || a.expresion || a.texto || '', fin = '';
-    if (res) { if (res.error) fin = ' — ' + res.error; else if ('resultado' in res) fin = ' = ' + res.resultado; else if (res.en_el_proyecto) fin = ' — ' + res.en_el_proyecto.length + ' en el proyecto, ' + res.tipos_de_entregable.length + ' tipos'; else if ('total' in res) fin = ' — ' + res.total + ' encontrados'; else if (res.abriendo) fin = ' → ' + res.abriendo; }
+    var d = el('div', 'ra-paso'), det = a.nombre || a.tag || a.titulo || a.entregable || a.tipo || a.filtro || a.expresion || a.texto || '', fin = '';
+    if (res) { if (res.error) fin = ' — ' + res.error; else if ('resultado' in res) fin = ' = ' + res.resultado; else if (res.en_el_proyecto) fin = ' — ' + res.en_el_proyecto.length + ' en el proyecto, ' + res.tipos_de_entregable.length + ' tipos'; else if ('total' in res) fin = ' — ' + res.total + ' encontrados'; else if (res.abriendo) fin = ' → ' + res.abriendo; else if (res.aplicado) fin = ' — aplicado'; }
     d.append(el('b', '', ROT[n] || n), el('span', '', String(det).slice(0, 90) + fin)); return d;
   }
   function ayudaConexion() {
@@ -202,16 +241,16 @@
         if (caja) { if (limpio) caja.innerHTML = md(limpio); else caja.remove(); }
         var m = { role: 'assistant', content: limpio }; if (r.llamadas.length) m.tool_calls = r.llamadas; if (limpio || r.llamadas.length) S.msgs.push(m);
         if (r.cancelado || !r.llamadas.length) { if (!r.cancelado && !limpio) throw new Error('El modelo no entregó respuesta. Intenta de nuevo o cambia de modelo.'); return; }
-        r.llamadas.forEach(function (c) {
+        return r.llamadas.reduce(function (pr, c) { return pr.then(function () {
           var a = c.function.arguments || {}; if (typeof a === 'string') { try { a = JSON.parse(a); } catch (e) { a = {}; } }
           var res; try { res = ejecutar(c.function.name, a); } catch (e) { res = { error: String(e.message || e) }; }
-          hilo.insertBefore(paso(c.function.name, a, res), esp); S.msgs.push({ role: 'tool', tool_name: c.function.name, content: JSON.stringify(res).slice(0, 7000) });
-        });
-        bajar(); return vuelta(k + 1);
+          return Promise.resolve(res).then(function (res) { hilo.insertBefore(paso(c.function.name, a, res), esp); S.msgs.push({ role: 'tool', tool_name: c.function.name, content: JSON.stringify(res).slice(0, 7000) }); });
+        }); }, Promise.resolve()).then(function () { bajar(); return vuelta(k + 1); });
       });
     }
     vuelta(0).catch(function (e) { hilo.append(el('div', 'ra-ia ra-err', String(e.message || e))); }).then(function () {
       esp.remove(); ocupar(false); guardar(); bajar();
+      if (recargar && !irA) { recargar = false; location.reload(); return; }
       if (irA) { var u = irA; irA = null; if (u !== location.href) { var mismo = u.split('#')[0] === location.href.split('#')[0]; location.href = u; if (mismo && u.indexOf('#') < 0) location.reload(); } }
       else $('#raT').focus();
     });

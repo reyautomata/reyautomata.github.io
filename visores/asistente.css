@@ -56,3 +56,10 @@
 .ra-red textarea { resize: none; min-height: 34px; max-height: 140px; }
 .ra-nota { color: #94A9BE; font-size: 10.5px; text-align: center; margin: 3px 8px 8px; }
 @media print { .ra-btn, .ra-panel { display: none !important; } }
+
+.ra-pide { border: 1px solid #FF8C32; border-radius: 8px; padding: 9px 11px; background: rgba(255, 140, 50, .08); display: flex; flex-direction: column; gap: 6px; }
+.ra-pide small { font: 600 10px ui-monospace, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: #FFB070; }
+.ra-pide div { display: flex; gap: 6px; }
+
+/* En pantallas anchas el panel no tapa el trabajo: la página se angosta */
+@media (min-width: 1300px) { body.ra-abierto { padding-right: 400px; } body.ra-abierto .rs-estado { right: 400px; } body.ra-abierto .rs-prop { right: 400px; } }
