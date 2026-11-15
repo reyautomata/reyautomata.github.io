@@ -11,9 +11,10 @@
   var el = function (t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
   var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  function sinPensar(t) { t = String(t || ''); var i = t.lastIndexOf('</think>'); if (i >= 0) return t.slice(i + 8); return /^\s*<think>/.test(t) ? '' : t; } // algunos modelos escriben su razonamiento antes de </think>
   function enLinea(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
   function md(t) {
-    var out = [], ls = String(t || '').replace(/<think>[\s\S]*?(<\/think>|$)/g, '').split('\n'), i = 0, par = [], RL = /^\s*([-*•]|\d+[.)])\s+/;
+    var out = [], ls = sinPensar(t).split('\n'), i = 0, par = [], RL = /^\s*([-*•]|\d+[.)])\s+/;
     function cerrar() { if (par.length) { out.push('<p>' + par.map(enLinea).join('<br>') + '</p>'); par = []; } }
     while (i < ls.length) {
       var l = ls[i];
@@ -146,7 +147,7 @@
       'Módulos de la suite: ' + MODS.map(function (m) { return m.nombre; }).join('; ') + '.',
       'Página abierta: ' + document.title + '.' + (pr ? ' Proyecto activo: ' + pr + '.' : ''),
       'Fecha: ' + f.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '.',
-      S.mem.length ? 'Lo que recuerdas del usuario:\n- ' + S.mem.join('\n- ') : '', S.inst ? 'Instrucciones del usuario:\n' + S.inst : ''].filter(Boolean).join('\n\n');
+      S.mem.length ? 'Lo que recuerdas del usuario:\n- ' + S.mem.join('\n- ') : '', S.inst ? 'Instrucciones del usuario:\n' + S.inst : '', /qwen3/i.test(S.modelo || '') ? '/no_think' : ''].filter(Boolean).join('\n\n');
   }
 
   // ── Motor (Ollama local, llamado directo desde el navegador) ──
@@ -237,7 +238,7 @@
       if (k >= 5) return Promise.resolve();
       var caja = null, hist = S.msgs.slice(-20); while (hist.length && hist[0].role === 'tool') hist.shift();
       return pedir([{ role: 'system', content: sistema() }].concat(hist), function (t) { if (!caja) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); } caja.innerHTML = md(t); bajar(); }).then(function (r) {
-        var limpio = r.texto.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim();
+        var limpio = sinPensar(r.texto).trim();
         if (caja) { if (limpio) caja.innerHTML = md(limpio); else caja.remove(); }
         var m = { role: 'assistant', content: limpio }; if (r.llamadas.length) m.tool_calls = r.llamadas; if (limpio || r.llamadas.length) S.msgs.push(m);
         if (r.cancelado || !r.llamadas.length) { if (!r.cancelado && !limpio) throw new Error('El modelo no entregó respuesta. Intenta de nuevo o cambia de modelo.'); return; }
