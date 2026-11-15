@@ -12,6 +12,18 @@
   var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
   var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
   function sinPensar(t) { t = String(t || ''); var i = t.lastIndexOf('</think>'); if (i >= 0) return t.slice(i + 8); return /^\s*<think>/.test(t) ? '' : t; } // algunos modelos escriben su razonamiento antes de </think>
+  // Texto que se puede mostrar mientras el modelo escribe: nunca su razonamiento interno.
+  // Algunos modelos (qwen3 en versiones antiguas de Ollama) escriben el razonamiento en la respuesta y lo cierran con </think>, a veces sin abrirlo.
+  var RAZONA = {}; try { RAZONA = JSON.parse(localStorage.getItem('reyengi-razona') || '{}'); } catch (e) {}
+  var OLLAMA_NUEVO = false; // desde Ollama 0.9 el razonamiento llega separado y se puede apagar
+  function visible(t, modelo) {
+    t = String(t || ''); var i = t.lastIndexOf('</think>');
+    if (i >= 0) { if (!RAZONA[modelo]) { RAZONA[modelo] = 1; try { localStorage.setItem('reyengi-razona', JSON.stringify(RAZONA)); } catch (e) {} } return t.slice(i + 8); }
+    if (/^\s*<think>/.test(t)) return '';
+    if (RAZONA[modelo] || (!OLLAMA_NUEVO && /qwen3|deepseek-r1|qwq|reason|think/i.test(modelo || ''))) return ''; // se espera el cierre del razonamiento
+    return t;
+  }
+  function versionNueva(v) { var m = /^(\d+)\.(\d+)/.exec(String(v || '')); return !!m && (+m[1] > 0 || +m[2] >= 9); }
   function enLinea(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
   function md(t) {
     var out = [], ls = sinPensar(t).split('\n'), i = 0, par = [], RL = /^\s*([-*•]|\d+[.)])\s+/;
@@ -161,7 +173,7 @@
   var MODELOS = [], MOTOR = null, ctrl = null;
   function comprobar() {
     return fetch(S.url + '/api/tags').then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (j) {
-      MODELOS = (j.models || []).map(function (m) { return m.name; }); MOTOR = true;
+      MODELOS = (j.models || []).map(function (m) { return m.name; }); MOTOR = true; fetch(S.url + '/api/version').then(function (r) { return r.json(); }).then(function (v) { OLLAMA_NUEVO = versionNueva(v.version); }).catch(function () {});
       if (MODELOS.length && MODELOS.indexOf(S.modelo) < 0) { S.modelo = MODELOS.filter(function (m) { return /qwen3/i.test(m); })[0] || MODELOS[0]; guardar(); }
     }).catch(function () { MOTOR = false; MODELOS = []; });
   }
@@ -178,7 +190,7 @@
           throw new Error(r.status === 404 ? 'El modelo «' + S.modelo + '» no está instalado en Ollama.' : e || 'El motor de IA respondió ' + r.status + '.');
         });
         var rd = r.body.getReader(), dec = new TextDecoder(), resto = '', texto = '', llam = [];
-        function linea(l) { if (!l.trim()) return; var o; try { o = JSON.parse(l); } catch (e) { return; } var m = o.message || {}; if (m.content) { texto += m.content; alTexto(texto); } if (m.tool_calls) llam = llam.concat(m.tool_calls); }
+        function linea(l) { if (!l.trim()) return; var o; try { o = JSON.parse(l); } catch (e) { return; } var m = o.message || {}; if (m.content) { texto += m.content; alTexto(visible(texto, S.modelo)); } if (m.tool_calls) llam = llam.concat(m.tool_calls); }
         function leer() { return rd.read().then(function (x) { if (x.done) { linea(resto); return { texto: texto, llamadas: llam }; } resto += dec.decode(x.value, { stream: true }); var ls = resto.split('\n'); resto = ls.pop(); ls.forEach(linea); return leer(); }); }
         return leer().catch(function (e) { if (ctrl.signal.aborted) return { texto: texto, llamadas: [], cancelado: true }; throw e; });
       }, function (e) { if (ctrl.signal.aborted) return { texto: '', llamadas: [], cancelado: true }; throw new Error('No pude conectar con Ollama en este equipo.'); });
@@ -245,8 +257,10 @@
     function vuelta(k) {
       if (k >= 5) return Promise.resolve();
       var caja = null, hist = S.msgs.slice(-20); while (hist.length && hist[0].role === 'tool') hist.shift();
-      return pedir([{ role: 'system', content: sistema() }].concat(hist), function (t) { if (!caja) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); } caja.innerHTML = md(t); bajar(); }).then(function (r) {
+      var envio = hist.map(function (m) { return Object.assign({}, m); }); if (/qwen3/i.test(S.modelo || '')) { for (var q = envio.length - 1; q >= 0; q--) if (envio[q].role === 'user') { envio[q].content += ' /no_think'; break; } }
+      return pedir([{ role: 'system', content: sistema() }].concat(envio), function (t) { if (!t.trim()) return; if (!caja) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); } caja.innerHTML = md(t); bajar(); }).then(function (r) {
         var limpio = sinPensar(r.texto).trim();
+        if (!caja && limpio) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); }
         if (caja) { if (limpio) caja.innerHTML = md(limpio); else caja.remove(); }
         var m = { role: 'assistant', content: limpio }; if (r.llamadas.length) m.tool_calls = r.llamadas; if (limpio || r.llamadas.length) S.msgs.push(m);
         if (r.cancelado || !r.llamadas.length) { if (!r.cancelado && !limpio) throw new Error('El modelo no entregó respuesta. Intenta de nuevo o cambia de modelo.'); return; }
