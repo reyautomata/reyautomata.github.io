@@ -19,6 +19,14 @@
           return '<a href="' + esc(q.module) + '" title="' + esc(q.name + ' · ' + (q.outputFormats.join(', ') || 'visor')) + '">' + esc(q.name) + (N[q.id] ? ' <b>' + N[q.id] + ' ' + U[q.id] + '</b>' : '') + '</a>'; }).join('') : '<em>En desarrollo</em>') + '</li>';
       }).join('') + '</ul></div>';
     }
+    function gestion() {
+      var G = window.RE_GESTION; if (!G) return '';
+      var r = G.resumen(), docs = G.lista(), ult = function (c) { var l = docs.filter(function (x) { return x.categoria === c; }).sort(function (a, b) { return a.modificado < b.modificado ? 1 : -1; })[0]; return l ? '<a href="documentos/">' + esc(l.titulo) + '</a> <em>Rev. ' + esc(l.rev) + ' · ' + esc(l.estado) + '</em>' : '<em>ninguno registrado</em>'; };
+      function fila(c, t) { var x = r[c], pend = (x.Borrador || 0) + (x['En desarrollo'] || 0) + (x['Con observaciones'] || 0);
+        return '<div class="tb-col"><h3>' + t + ' registrados<small><a href="documentos/">Control documental</a></small></h3><div class="tb-est"><span><b>' + x.total + '</b> total</span><span><b>' + pend + '</b> pendientes</span><span><b>' + (x['En revisión'] || 0) + '</b> en revisión</span><span><b>' + (x.Aprobado || 0) + '</b> aprobados</span><span><b>' + (x.Emitido || 0) + '</b> emitidos</span></div>' +
+          (x.total ? '<div class="tb-bar" role="img" aria-label="Avance: ' + ((x.Aprobado || 0) + (x.Emitido || 0)) + ' de ' + x.total + ' aprobados o emitidos"><i style="width:' + Math.round(100 * ((x.Aprobado || 0) + (x.Emitido || 0)) / x.total) + '%"></i></div>' : '') + '<p class="tb-n">Último: ' + ult(c) + '</p></div>'; }
+      return '<div class="tb-cols">' + fila('DOCUMENTO', 'Documentos') + fila('PLANO', 'Planos') + '</div>';
+    }
     var rec = []; try { rec = (JSON.parse(localStorage.getItem('reyengi-marco') || '{}').rec || []).slice(0, 5); } catch (e) {}
     var revs = (L.revs || []).slice(-4).reverse();
     function dato(k, v) { return v ? '<div><dt>' + k + '</dt><dd>' + esc(v) + '</dd></div>' : ''; }
@@ -26,11 +34,13 @@
     sec.innerHTML = '<div class="tb-cab"><div><p class="tb-k">Tablero del proyecto activo</p><h2 id="tbT">' + esc(d.nombre || d.proyecto) + '</h2></div><a class="tb-ir" href="proyectos/">Abrir o cambiar de proyecto</a></div>' +
       '<dl class="tb-datos">' + dato('Código', d.numero) + dato('Proyecto', d.proyecto) + dato('Cliente', d.cliente) + dato('Etapa', d.fase) + dato('Revisión', d.rev) + dato('Ubicación', d.ubicacion) + '</dl>' +
       '<div class="tb-fichas">' + ficha(nInst, 'instrumentos') + ficha((L.senales || []).length, 'señales de E/S') + ficha(H('06').length, 'diagramas de lazo') + ficha((L.modulos || []).length, 'tarjetas') + ficha(H('H3').length, 'ductos') + ficha((PID.hojas || []).length, 'hojas de P&ID cargadas') + '</div>' +
+      gestion() +
       '<div class="tb-cols">' + col('DOCUMENTO', 'Documentos de ingeniería') + col('PLANO', 'Planos de ingeniería') + '</div>' +
       '<div class="tb-cols"><div class="tb-col"><h3>Abierto recientemente</h3>' + (rec.length ? '<ul>' + rec.map(function (r) { return '<li><span class="cod">' + esc(r.c || '') + '</span><a href="' + esc(r.href) + '">' + esc(r.t) + '</a></li>'; }).join('') + '</ul>' : '<p class="tb-n">Aún no abres entregables en este navegador.</p>') + '</div>' +
       '<div class="tb-col"><h3>Revisiones registradas</h3>' + (revs.length ? '<ul>' + revs.map(function (r) { return '<li><span class="cod">' + esc(r.rev) + '</span><span class="nm">' + esc(r.desc || '') + '</span><em>' + esc(r.fecha || '') + '</em></li>'; }).join('') + '</ul>' : '<p class="tb-n">Sin revisiones registradas en la configuración de entregables.</p>') + '</div></div>' +
-      '<p class="tb-n">Las cifras salen de los datos guardados del proyecto. El estado por entregable (en revisión, aprobado, emitido) aún no se registra: llegará con la gestión documental.</p>';
+      '<p class="tb-n">Las cifras salen de los datos guardados del proyecto. Los estados y el avance cuentan solo los entregables registrados en el control documental.</p>';
   }
   pintar();
+  var tg = 0, esperar = setInterval(function () { if (window.RE_GESTION) { clearInterval(esperar); window.RE_GESTION.alCambiar(pintar); pintar(); } else if (++tg > 40) clearInterval(esperar); }, 100);
   window.addEventListener('storage', function (e) { if (e.key && /reyengi/.test(e.key)) pintar(); });
 })();

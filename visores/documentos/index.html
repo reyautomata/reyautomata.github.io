@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control documental · ReyEngi</title>
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #0B1220; --panel: #111D2E; --panel2: #18283C; --fg: #EAF2F8; --muted: #94A9BE; --line: #22364D; --brand: #0E2238; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #38C8E8;
+  --f-body: Inter, "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); }
+[hidden] { display: none !important; }
+button, .btn { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 6px 11px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #1b0d02; }
+button:hover, .btn:hover { border-color: var(--sel); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+input, select, textarea { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+main.gd { padding: 14px 16px 60px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 14px; align-items: start; }
+@media (max-width: 1100px) { main.gd { grid-template-columns: minmax(0, 1fr); } }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.filtros input { flex: 1; min-width: 160px; }
+.res { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.res div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+.res b { font: 600 17px var(--f-mono); color: var(--sel); margin-right: 6px; }
+.res span { color: var(--muted); font-size: 11.5px; }
+.tw { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; }
+th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--panel2); position: sticky; top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: rgba(56, 200, 232, .06); }
+tbody tr[aria-selected="true"] { background: rgba(21, 157, 218, .18); }
+td.cod { font: 600 11.5px var(--f-mono); color: var(--accent-ink); white-space: nowrap; }
+td.mono { font: 12px var(--f-mono); white-space: nowrap; }
+td select { padding: 3px 5px; font-size: 12px; }
+.est { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
+.est.e2 { background: #E6A23C; } .est.e3 { background: #E35B65; } .est.e4 { background: #27B783; } .est.e5 { background: #38C8E8; } .est.e6 { background: #55657a; }
+.vacio { padding: 26px 16px; color: var(--muted); text-align: center; }
+.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: 64px; max-height: calc(100vh - 100px); overflow: auto; }
+@media (max-width: 1100px) { .prop { position: static; max-height: none; } }
+.prop h2 { margin: 0 0 8px; font-size: 14px; }
+.prop label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+.prop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0 0 10px; font-size: 12px; }
+.prop dt { color: var(--muted); } .prop dd { margin: 0; overflow-wrap: anywhere; }
+.prop .acc { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.prop h3 { font: 600 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 10px 0 6px; }
+.hist { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+.hist li { border-left: 2px solid var(--line); padding: 2px 0 8px 10px; }
+.hist li b { color: var(--fg); } .hist li small { display: block; color: var(--muted); font: 11px var(--f-mono); }
+dialog { background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; width: min(480px, 94vw); }
+dialog::backdrop { background: rgba(3, 8, 16, .7); }
+dialog h2 { margin: 0 0 10px; font-size: 15px; }
+dialog label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); margin-bottom: 9px; }
+dialog .pie { display: flex; justify-content: flex-end; gap: 8px; }
+.nota { color: var(--muted); font-size: 11.5px; margin: 10px 0 0; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../proyectos.js" defer></script>
+<script src="../entregables.js" defer></script>
+<script src="../suite.js" defer></script>
+<script src="../gestion.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <h1>Control documental <small>Documentos y planos del proyecto: estado, revisión e historial</small></h1>
+  <button type="button" id="bCsv">Exportar listado (CSV)</button>
+  <button type="button" class="pri" id="bNuevo">Registrar entregable</button>
+</div></div>
+<main class="gd">
+  <section aria-label="Entregables del proyecto">
+    <div class="res" id="res"></div>
+    <div class="filtros">
+      <input type="search" id="fTxt" placeholder="Buscar por código, título, tag o tipo" aria-label="Buscar entregable">
+      <select id="fCat" aria-label="Categoría"><option value="">Documentos y planos</option><option value="DOCUMENTO">Documentos</option><option value="PLANO">Planos</option></select>
+      <select id="fSub" aria-label="Subcategoría"></select>
+      <select id="fEst" aria-label="Estado"></select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Código</th><th>Título</th><th>Tipo</th><th>Sub.</th><th>Rev.</th><th>Estado</th><th>Modificado</th></tr></thead>
+      <tbody id="filas"></tbody>
+    </table><div class="vacio" id="vacio" hidden></div></div>
+    <p class="nota">Un entregable se registra solo la primera vez que lo exportas desde su módulo (PDF, DXF, Excel o Word), y cada exportación queda en su historial. También puedes registrarlo a mano. Los archivos exportados se guardan donde tú los descargas: aquí queda el registro, no una copia del archivo.</p>
+  </section>
+  <aside class="prop" id="prop" aria-label="Propiedades del entregable" hidden></aside>
+</main>
+<dialog id="dNuevo" aria-labelledby="dnT"><form method="dialog">
+  <h2 id="dnT">Registrar entregable</h2>
+  <label>Tipo de entregable<select id="nGen" required></select></label>
+  <label>Título<input id="nTit" required maxlength="160"></label>
+  <label>Código de documento<input id="nCod" maxlength="60"></label>
+  <label>Estado inicial<select id="nEst"></select></label>
+  <div class="pie"><button type="button" id="nX">Cancelar</button><button type="submit" class="pri" value="ok">Registrar</button></div>
+</form></dialog>
+</body>
+</html>

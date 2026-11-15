@@ -12,7 +12,7 @@
   function ramas(cat) { var o = []; if (!REG) return o; REG.de(cat).forEach(function (x) { o.push([x.sub.id, x.sub.name, null, x.sub.status === 'AVAILABLE' ? 'sub' : 'dev']); x.gens.forEach(function (g) { if (g.status === 'AVAILABLE') o.push([g.cod, g.name, g.module]); }); }); return o; }
   var GRUPOS = [
     ['ini', 'Inicio', [['TB', 'Tablero del proyecto', '#tablero'], ['IN', 'Resumen de la suite', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
-    ['ges', 'Proyecto', [['00', 'Proyectos', 'proyectos/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['E1', 'Señales de E/S (datos base)', 'lazos/#io'], ['E2', 'Tarjetas y canales (datos base)', 'lazos/#mod']]],
+    ['ges', 'Proyecto', [['00', 'Proyectos', 'proyectos/'], ['GD', 'Control documental', 'documentos/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['E1', 'Señales de E/S (datos base)', 'lazos/#io'], ['E2', 'Tarjetas y canales (datos base)', 'lazos/#mod']]],
     ['doc', 'Documentos de ingeniería', ramas('DOCUMENTO')],
     ['pla', 'Planos de ingeniería', ramas('PLANO')],
     ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
@@ -21,6 +21,8 @@
   ];
   // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
   window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE; window.RS_HIJOS = function (c) { return hijosDe(c); };
+  window.RS_ACTUAL = function () { return actual; };
+  if (window.top === window && window.REProyectos && !window.RE_GESTION) { var sg = document.createElement('script'); sg.src = BASE + 'gestion.js'; document.head.appendChild(sg); }
   if (window.top === window) { var sa = document.createElement('script'); sa.src = BASE + 'asistente.js'; sa.defer = true; document.head.appendChild(sa); }
   var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [] };
   try { Object.assign(U, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
