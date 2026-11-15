@@ -72,3 +72,11 @@
 .em-hecho { margin: 4px 0 6px; padding: 6px 9px; border-left: 3px solid #27B783; background: rgba(39, 183, 131, .1); border-radius: 0 6px 6px 0; overflow-wrap: anywhere; }
 .em-error { margin: 4px 0; color: #ffb4ae; } .em-des { display: flex; flex-wrap: wrap; gap: 5px; } .em-des button { flex: 1 1 auto; }
 .dkm-em [hidden] { display: none !important; }
+
+/* Zoom del plano dentro de su panel */
+.zm-barra { position: sticky; top: -10px; z-index: 6; display: flex; align-items: center; gap: 5px; margin: -10px 0 8px; padding: 6px 0; background: var(--panel, var(--bg)); font-size: 12px; width: max-content; max-width: 100%; }
+.zm-barra button { font: 600 12.5px var(--f-body, system-ui, sans-serif); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; min-width: 30px; cursor: pointer; }
+.zm-barra button:hover { border-color: var(--sel); } .zm-barra button:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.zm-barra output { min-width: 50px; text-align: center; font: 600 12px var(--f-mono, monospace); color: var(--fg); } .zm-barra span { color: var(--muted); margin-left: 6px; white-space: nowrap; }
+.zm.zm-on { cursor: grab; } .zm.zm-arr { cursor: grabbing; user-select: none; }
+@media print { .zm { zoom: 1 !important; } .zm-barra { display: none !important; } }

@@ -191,10 +191,87 @@
     var sinCanal = L.crudas.filter(function (s) { return !modulo(s.mod) || s.canal === '' || s.canal == null; });
     $('#avisoLazo').hidden = !sinCanal.length;
     $('#avisoLazo').textContent = sinCanal.length ? 'Sin tarjeta o canal asignado: ' + sinCanal.map(function (s) { return s.tag; }).join(', ') + '. Asígnalos en "Tarjetas y canales" o con "Asignar canales automáticamente".' : '';
-    $('#tablaLazo').innerHTML = '<tr><th>Tag</th><th>Tipo</th><th>Hilos</th><th>Módulo</th><th>Canal</th><th>Bornes de tarjeta</th></tr>' + L.senales.map(function (s, i) {
-      var b = s.bornes || {}, txt = Object.keys(b).filter(function (k) { return k !== 'puentes'; }).map(function (k) { return T.nombreRol[k] + ': ' + b[k].n + ' (' + b[k].s + ')'; }).join(' · ');
-      return '<tr><td>' + esc(s.tag) + '</td><td>' + s.tipo + '</td><td>' + s.hilos + '</td><td>' + esc(s.modulo ? s.modulo.nombre + ' · ' + s.modulo.modelo : '—') + '</td><td>' + esc(s.canalVista) + '</td><td class="peq">' + esc(txt) + (s.tarjeta && !s.tarjeta.verificado ? ' <em class="ref">referencial</em>' : '') + '</td></tr>';
+    pintarSenalesLazo(L);
+  }
+  // Señales del lazo, editables: lo que se cambia aquí es el mismo dato del listado de E/S, de las tarjetas y de los planos
+  function pintarSenalesLazo(L) {
+    var tb = $('#tablaLazo'); tb.classList.add('edit');
+    tb.innerHTML = '<caption>Señales del lazo · mismas casillas del listado de E/S</caption><tr><th style="min-width:118px">Tag</th><th>Tipo</th><th>Hilos</th><th style="min-width:150px">Descripción</th><th style="min-width:84px">Caja (JB)</th><th style="min-width:118px">Cable</th><th style="min-width:130px">Tipo de cable</th><th style="min-width:104px">Módulo</th><th>Canal</th><th>Bornes de tarjeta</th></tr>' + L.senales.map(function (r, i) {
+      var s = L.crudas[i], b = r.bornes || {}, txt = Object.keys(b).filter(function (k) { return k !== 'puentes'; }).map(function (k) { return T.nombreRol[k] + ': ' + b[k].n + ' (' + b[k].s + ')'; }).join(' · ');
+      function inp(k, ph) { return '<td><input data-k="' + k + '" value="' + esc(s[k] || '') + '" placeholder="' + esc(ph || '') + '" aria-label="' + k + ' de ' + esc(s.tag) + '"' + (k === 'tag' ? ' data-antes="' + esc(s.tag) + '"' : '') + '></td>'; }
+      function sl(k, ops) { return '<td><select data-k="' + k + '" aria-label="' + k + ' de ' + esc(s.tag) + '">' + ops.map(function (o) { return '<option' + (String(s[k]) === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></td>'; }
+      return '<tr data-id="' + s.id + '">' + inp('tag') + sl('tipo', TIPOS) + sl('hilos', ['2', '3', '4']) + inp('desc', r.desc) + inp('jb') + inp('cable', r.cable) + inp('cableSpec', r.cableSpec) +
+        '<td><select data-k="mod" aria-label="Módulo de ' + esc(s.tag) + '"><option value="">—</option>' + E.modulos.filter(function (m) { return m.tipo === s.tipo; }).map(function (m) { return '<option value="' + m.id + '"' + (m.id === s.mod ? ' selected' : '') + '>' + esc(m.nombre) + '</option>'; }).join('') + '</select></td>' +
+        '<td><select data-k="canal" aria-label="Canal de ' + esc(s.tag) + '">' + opcionesCanal(s) + '</select></td>' +
+        '<td class="peq">' + esc(txt) + (r.tarjeta && !r.tarjeta.verificado ? ' <em class="ref">referencial</em>' : '') + '</td></tr>';
     }).join('');
+    // Cajetín de PLC: datos de las tarjetas que usa este lazo (valen para todas las señales de la tarjeta)
+    var ms = []; L.crudas.forEach(function (s) { var m = modulo(s.mod); if (m && ms.indexOf(m) < 0) ms.push(m); });
+    var tc = $('#tablaCajetin'); tc.classList.add('edit'); tc.hidden = !ms.length;
+    tc.innerHTML = '<caption>Cajetín de PLC · vale para todas las señales de la tarjeta</caption><tr><th>Módulo</th><th>Tarjeta</th><th>Gabinete</th><th>Chasis</th><th>Slot</th><th>Bornera</th><th>Señales en la tarjeta</th></tr>' + ms.map(function (m) {
+      function inp(k, ph) { return '<td><input data-k="' + k + '" value="' + esc(m[k] == null ? '' : m[k]) + '" placeholder="' + esc(ph || '') + '" aria-label="' + k + ' de ' + esc(m.nombre) + '"></td>'; }
+      var n = E.senales.filter(function (s) { return s.mod === m.id; }).length;
+      return '<tr data-mod="' + m.id + '">' + inp('nombre') + '<td>' + esc(m.modelo) + '</td>' + inp('gabinete', E.cfg.gabinete || '') + inp('chasis') + inp('slot') + inp('tb', 'TB' + m.tipo + '-01') + '<td>' + n + '</td></tr>';
+    }).join('');
+    pintarCruce(L);
+  }
+  // Chequeo cruzado del lazo contra el listado de E/S, las tarjetas y los unilineales
+  function cruceLazo(L) {
+    var o = [], tdi = E.tdi || [];
+    L.crudas.forEach(function (s, i) {
+      var r = L.senales[i], m = modulo(s.mod), tj = m ? T.buscar(m.modelo) : null;
+      if (E.senales.filter(function (x) { return x.tag === s.tag; }).length > 1) o.push({ sev: 'mal', txt: 'El tag ' + s.tag + ' está repetido en el listado de E/S.', ref: 'Listado de E/S' });
+      if (!m) o.push({ sev: 'av', txt: s.tag + ' no tiene tarjeta asignada.', ref: 'Tarjetas y canales' });
+      else {
+        if (m.tipo !== s.tipo) o.push({ sev: 'mal', txt: s.tag + ' es ' + s.tipo + ' y está en la tarjeta ' + m.nombre + ' de tipo ' + m.tipo + '.', ref: 'Tarjetas y canales' });
+        if (s.canal === '' || s.canal == null) o.push({ sev: 'av', txt: s.tag + ' no tiene canal asignado en ' + m.nombre + '.', ref: 'Tarjetas y canales' });
+        else {
+          var ot = E.senales.filter(function (x) { return x !== s && x.mod === s.mod && x.canal !== '' && x.canal != null && +x.canal === +s.canal; });
+          if (ot.length) o.push({ sev: 'mal', txt: 'El canal ' + r.canalVista + ' de ' + m.nombre + ' también lo usa ' + ot.map(function (x) { return x.tag; }).join(', ') + '.', ref: 'Tarjetas y canales' });
+          if (tj && +s.canal >= tj.canales) o.push({ sev: 'mal', txt: 'El canal ' + r.canalVista + ' no existe en la tarjeta ' + tj.modelo + ' (' + tj.canales + ' canales).', ref: 'Tarjetas y canales' });
+        }
+      }
+      var cab = E.senales.filter(function (x) { return x !== s && x.tag && resolver(x).cable === r.cable; });
+      if (cab.length && !s.par) o.push({ sev: 'av', txt: 'El cable ' + r.cable + ' de ' + s.tag + ' también figura en ' + cab.map(function (x) { return x.tag; }).join(', ') + '. Si es un multipar, indica el par en el listado de E/S.', ref: 'Listado de E/S' });
+      if (+s.hilos === 4 && (s.tipo === 'AI' || s.tipo === 'AO') && tdi.length && !tdi.some(function (t) { return (t.circ || []).some(function (c) { return c.inst === s.tag; }); }))
+        o.push({ sev: 'av', txt: s.tag + ' es de 4 hilos y no tiene circuito de alimentación en ningún tablero.', ref: 'Unilineales' });
+    });
+    return o;
+  }
+  function pintarCruce(L) {
+    var d = $('#cruceLazo'), o = cruceLazo(L), mal = o.filter(function (c) { return c.sev === 'mal'; }).length, av = o.length - mal;
+    if (!d.dataset.visto) { d.dataset.visto = '1'; d.open = mal > 0; }
+    d.innerHTML = '<summary>Chequeo cruzado <span class="' + (mal ? 'mal' : av ? 'av' : 'bien') + '">' + (mal ? mal + ' error(es)' : av ? '' : 'sin observaciones ✓') + (av ? (mal ? ' · ' : '') + av + ' aviso(s)' : '') + '</span></summary>' +
+      '<ul>' + (o.map(function (c) { return '<li class="' + c.sev + '"><b>' + (c.sev === 'mal' ? '✗' : '!') + '</b><span>' + esc(c.txt) + '</span><small>' + esc(c.ref) + '</small></li>'; }).join('') || '<li class="bien"><b>✓</b><span>Tags, canales, tarjetas y cables de este lazo son coherentes con el listado de E/S, las tarjetas y los unilineales.</span><small></small></li>') + '</ul>';
+  }
+  function editarSenalLazo(t) {
+    var tr = t.closest('tr[data-id]'), k = t.dataset.k; if (!tr || !k) return;
+    var s = senal(tr.dataset.id); if (!s) return; var v = t.value, id = tr.dataset.id;
+    if (k === 'tag') {
+      v = v.toUpperCase().trim(); var antes = s.tag; if (!v || v === antes) { t.value = antes; return; }
+      var lz = lazoId(s), solo = E.senales.filter(function (x) { return x.tag && lazoId(x) === lz; }).length === 1;
+      s.tag = v;
+      if (!s.lazo && lazoId(s) !== lz) {
+        if (solo && !E.senales.some(function (x) { return x !== s && x.tag && lazoId(x) === lazoId(s); })) { var nv = lazoId(s); if (E.lazos[lz] && !E.lazos[nv]) { E.lazos[nv] = E.lazos[lz]; delete E.lazos[lz]; } sel = nv; } // el lazo de una sola señal sigue al tag, con su plano y sus revisiones
+        else s.lazo = lz;                                                                                                                                                        // la señal se queda en este lazo
+      }
+      if (window.LAZOS_DOC) window.LAZOS_DOC.renombrar(antes, v);
+      if (!E.senales.some(function (x) { return x.tag === antes; })) (E.tdi || []).forEach(function (tb) { (tb.circ || []).forEach(function (c) { if (c.inst === antes) c.inst = v; }); });
+    } else {
+      if (k === 'hilos') v = +v;
+      if (k === 'canal') v = v === '' ? '' : +v;
+      if (k === 'tipo' && v !== s.tipo) { s.mod = ''; s.canal = ''; }
+      if (k === 'mod') s.canal = '';
+      s[k] = v;
+    }
+    guardar(); pintarLazos();
+    var f = document.querySelector('#tablaLazo tr[data-id="' + id + '"] [data-k="' + k + '"]'); if (f) f.focus();
+  }
+  function editarCajetin(t) {
+    var tr = t.closest('tr[data-mod]'), k = t.dataset.k, m = tr && modulo(tr.dataset.mod); if (!m || !k) return;
+    var v = t.value.trim(); if (k === 'nombre' && !v) { t.value = m.nombre; return; }
+    m[k] = (k === 'chasis' || k === 'slot') && v !== '' && !isNaN(+v) ? +v : v; guardar(); pintarLazos();
+    var f = document.querySelector('#tablaCajetin tr[data-mod="' + m.id + '"] [data-k="' + k + '"]'); if (f) f.focus();
   }
   function lazoSel() { return lazos().filter(function (l) { return l.id === sel; })[0]; }
 
@@ -645,6 +722,8 @@
       var id = P.activoId(), d = P.datos(id); d[t.dataset.p] = t.value; P.guardar(id, d); refrescarFlota();
     });
     $('#cfgForm').addEventListener('input', function (e) { var t = e.target; if (t.tagName === 'INPUT' && t.dataset.c) { setK(t.dataset.c, t.value); guardar(); } });
+    $('#tablaLazo').addEventListener('change', function (e) { editarSenalLazo(e.target); });
+    $('#tablaCajetin').addEventListener('change', function (e) { editarCajetin(e.target); });
     $('#revs').addEventListener('input', function (e) { var t = e.target; if (t.dataset.r == null) return; E.revs[+t.dataset.r][t.dataset.k] = t.value; guardar(); });
     $('#revs').addEventListener('change', function (e) { var t = e.target; if (t.dataset.r == null) return; E.revs[+t.dataset.r][t.dataset.k] = t.value; guardar(); });
     $('#revs').addEventListener('click', function (e) { var t = e.target; if (t.dataset.rq == null) return; E.revs.splice(+t.dataset.rq, 1); guardar(); pintarCfg(); });

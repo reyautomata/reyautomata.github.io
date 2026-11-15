@@ -368,9 +368,14 @@
     pintarRic(cal);
   }
   function pintarRic(cal) {
-    var R = cal.ric, mal = R.chk.filter(function (c) { return c.sev === 'err'; }).length, av = R.chk.filter(function (c) { return c.sev === 'warn'; }).length;
-    $('#uRic').innerHTML = '<h3>Verificación RIC <span class="' + (mal ? 'mal' : av ? 'av' : 'bien') + '">' + (mal ? mal + ' incumplimientos' : 'cumple') + (av ? ' · ' + av + ' advertencias' : '') + '</span></h3><ul>' +
-      R.chk.map(function (c) { return '<li class="' + (c.sev === 'ok' ? 'bien' : c.sev === 'warn' ? 'av' : 'mal') + '"><b>' + (c.sev === 'ok' ? '✓' : c.sev === 'warn' ? '!' : '✗') + '</b><span>' + esc(c.txt) + '</span><small>' + esc(c.ref) + '</small></li>'; }).join('') + '</ul>';
+    var R = cal.ric, chk = R.chk.slice(), t = actual(), e = E();
+    // Chequeo cruzado con el listado de E/S: circuitos que apuntan a un instrumento que ya no existe e instrumentos de 4 hilos sin circuito
+    (t.circ || []).forEach(function (c) { if (c.inst && !senalDe(c.inst)) chk.push({ sev: 'err', txt: 'El circuito vinculado a ' + c.inst + ' apunta a un instrumento que ya no está en el listado de E/S.', ref: 'Listado de E/S' }); });
+    senales4h().forEach(function (s) { if (!e.tdi.some(function (x) { return x.circ.some(function (c) { return c.inst === s.tag; }); })) chk.push({ sev: 'warn', txt: s.tag + ' es de 4 hilos y no tiene circuito de alimentación en ningún tablero.', ref: 'Listado de E/S' }); });
+    var mal = chk.filter(function (c) { return c.sev === 'err'; }).length, av = chk.filter(function (c) { return c.sev === 'warn'; }).length;
+    var caja = $('#uRic'), ant = caja.querySelector('details'), abierto = ant ? ant.open : false;   // plegado: el plano queda a la vista; se abre para ver el detalle
+    caja.innerHTML = '<details class="ricdet"' + (abierto ? ' open' : '') + '><summary>Verificación RIC <span class="' + (mal ? 'mal' : av ? 'av' : 'bien') + '">' + (mal ? mal + ' incumplimientos' : 'cumple ✓') + (av ? ' · ' + av + ' advertencias' : '') + '</span></summary><ul>' +
+      chk.map(function (c) { return '<li class="' + (c.sev === 'ok' ? 'bien' : c.sev === 'warn' ? 'av' : 'mal') + '"><b>' + (c.sev === 'ok' ? '✓' : c.sev === 'warn' ? '!' : '✗') + '</b><span>' + esc(c.txt) + '</span><small>' + esc(c.ref) + '</small></li>'; }).join('') + '</ul></details>';
   }
   function pintarPrev() {
     var t = actual(), hs = hojas(t, ctx());
