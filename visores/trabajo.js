@@ -1,32 +1,22 @@
-/* Suite ReyEngi · mesa de trabajo: pestañas de lo que se tiene abierto, panel de propiedades y atajos de guardar y abrir.
- * Las pestañas recuerdan los módulos y entregables abiertos (la suite navega entre páginas, así que cada pestaña es un enlace vivo).
+/* Suite ReyEngi · mesa de trabajo: panel de propiedades y atajos de guardar y abrir. Cada selección abre su propia página, sin pestañas.
  * El panel de propiedades muestra lo que la suite sabe del entregable en pantalla: registro, formatos, revisión, estado y archivos. */
 (function () {
   'use strict';
   if (window.__RS_TRABAJO || window.top !== window || !window.RS_ACTUAL) return; window.__RS_TRABAJO = 1;
   var BASE = window.RS_BASE, R = window.RE_ENTREGABLES, P = window.REProyectos, CL = 'reyengi-pestanas';
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var T = { tabs: [], prop: false }; try { Object.assign(T, JSON.parse(localStorage.getItem(CL) || '{}')); } catch (e) {} T.tabs = T.tabs || [];
+  var T = { prop: false }; try { T.prop = !!JSON.parse(localStorage.getItem(CL) || '{}').prop; } catch (e) {}
   function guardar() { try { localStorage.setItem(CL, JSON.stringify(T)); } catch (e) {} }
   var ruta = document.getElementById('rsRuta'); if (!ruta) return;
-  var bar = document.createElement('nav'); bar.className = 'rs-tabsw'; bar.id = 'rsTabs'; bar.setAttribute('aria-label', 'Pestañas de trabajo'); ruta.insertAdjacentElement('afterend', bar);
+  var bar = document.createElement('nav'); bar.className = 'rs-tabsw'; bar.id = 'rsTabs'; bar.setAttribute('aria-label', 'Propiedades'); ruta.insertAdjacentElement('afterend', bar);
   var pan = document.createElement('aside'); pan.className = 'rs-prop'; pan.id = 'rsProp'; pan.setAttribute('aria-label', 'Propiedades'); pan.hidden = true; document.body.appendChild(pan);
   var clave = '';
   function item() { var a = window.RS_ACTUAL(); if (!a) return null; var h = a.hijo; return h ? { k: a.href + '|' + (h.t || h.s), c: h.t || a.cod, t: h.s || a.t, href: h.href.indexOf(BASE) === 0 ? h.href.slice(BASE.length) : (/^#/.test(h.href) ? a.href.replace(/#.*$/, '') + h.href : h.href) } : { k: a.href, c: a.cod, t: a.t, href: a.href }; }
-  function pintarTabs() {
-    var it = item();
-    bar.innerHTML = '<div class="rs-tl" role="list">' + T.tabs.map(function (x, i) { var on = it && x.k === it.k;
-      return '<span class="rs-tab' + (on ? ' on' : '') + '" role="listitem"><a href="' + esc(BASE + x.href) + '"' + (on ? ' aria-current="page"' : '') + ' title="' + esc(x.t) + '"><b>' + esc(x.c || '') + '</b> ' + esc(x.t) + '</a><button type="button" data-x="' + i + '" aria-label="Cerrar la pestaña ' + esc(x.t) + '">×</button></span>'; }).join('') + '</div>' +
-      '<button type="button" id="rsPropBtn" aria-pressed="' + !!T.prop + '" title="Mostrar u ocultar las propiedades">Propiedades</button>';
-    var on = bar.querySelector('.rs-tab.on'), tl = bar.querySelector('.rs-tl'); if (on && tl) tl.scrollLeft = Math.max(0, on.offsetLeft - tl.offsetLeft - 40);
+  function pintarTabs() { // sin pestañas: cada selección abre su página; aquí solo queda el botón de propiedades
+    bar.innerHTML = '<button type="button" id="rsPropBtn" aria-pressed="' + !!T.prop + '" title="Mostrar u ocultar las propiedades">Propiedades</button>';
   }
-  function anotar() { var it = item(); if (!it) return; var i = -1; T.tabs.forEach(function (x, j) { if (x.k === it.k) i = j; });
-    if (i < 0) { T.tabs.push(it); if (T.tabs.length > 9) T.tabs.shift(); guardar(); } }
-  bar.addEventListener('click', function (e) {
-    var x = e.target.closest('[data-x]'); if (x) { var q = T.tabs.splice(+x.dataset.x, 1)[0], it = item(); cerradas[q.k] = 1; guardar(); pintarTabs(); if (it && q.k === it.k) { var sig = T.tabs[T.tabs.length - 1]; location.href = sig ? BASE + sig.href : BASE; } return; }
-    if (e.target.closest('#rsPropBtn')) { T.prop = !T.prop; guardar(); pintarTabs(); pintarProp(); }
-  });
-  var cerradas = {};
+  bar.addEventListener('click', function (e) { if (e.target.closest('#rsPropBtn')) { T.prop = !T.prop; guardar(); pintarTabs(); pintarProp(); } });
+
   // ── Propiedades ──
   function pintarProp() {
     pan.hidden = !T.prop; document.body.classList.toggle('rs-conprop', !!T.prop); if (!T.prop) return;
@@ -43,7 +33,7 @@
     pan.innerHTML = h;
   }
   pan.addEventListener('click', function (e) { if (e.target.closest('#rsPropX')) { T.prop = false; guardar(); pintarTabs(); pintarProp(); } });
-  function ciclo() { var it = item(), k = it ? it.k : ''; if (k === clave) return; clave = k; if (it && !cerradas[it.k]) anotar(); pintarTabs(); pintarProp(); }
+  function ciclo() { var it = item(), k = it ? it.k : ''; if (k === clave) return; clave = k; pintarTabs(); pintarProp(); }
   ciclo(); setInterval(ciclo, 700);
   var tg = 0, esp = setInterval(function () { if (window.RE_GESTION) { clearInterval(esp); window.RE_GESTION.alCambiar(pintarProp); pintarProp(); } else if (++tg > 40) clearInterval(esp); }, 150);
 
