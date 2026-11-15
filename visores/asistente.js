@@ -5,7 +5,7 @@
   'use strict';
   if (window.__RS_ASIS) return; window.__RS_ASIS = 1;
   var BASE = window.RS_BASE || './', GRUPOS = window.RS_GRUPOS || [], CLAVE = 'reyengi-asistente';
-  var S = { abierto: false, url: 'http://127.0.0.1:11434', modelo: '', nombre: 'ReyEngi AI', inst: '', mem: [], msgs: [] };
+  var S = { auto: true, abierto: false, url: 'http://127.0.0.1:11434', modelo: '', nombre: 'ReyEngi AI', inst: '', mem: [], msgs: [] };
   try { Object.assign(S, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
   function guardar() { try { S.msgs = S.msgs.slice(-40); while (S.msgs.length && S.msgs[0].role === 'tool') S.msgs.shift(); localStorage.setItem(CLAVE, JSON.stringify(S)); } catch (e) {} }
   var el = function (t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
@@ -160,7 +160,7 @@
   function sistema() {
     var f = new Date(), P = window.REProyectos, pr = ''; try { var d = P && P.activo(); if (d) pr = d.nombre || d.proyecto || ''; } catch (e) {}
     return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el tutor experto de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
-      'Tu campo es cerrado: el uso de la suite, la instrumentación y el control, la normativa que la suite emplea y la ingeniería de proyectos (conceptual, básica, detalle, construcción y plantas en operación). Si te preguntan algo ajeno a eso, dilo en una frase y vuelve a ofrecer ayuda en estos temas. Cuando recibas material del manual interno, basa tu respuesta en él y razona a partir de ahí; da sugerencias prácticas según la etapa del proyecto.',
+      'Eres proactivo: termina cada respuesta con una pregunta corta sobre cómo seguir o proponiendo el siguiente paso concreto. Tu campo es cerrado: el uso de la suite, la instrumentación y el control, la normativa que la suite emplea y la ingeniería de proyectos (conceptual, básica, detalle, construcción y plantas en operación). Si te preguntan algo ajeno a eso, dilo en una frase y vuelve a ofrecer ayuda en estos temas. Cuando recibas material del manual interno, basa tu respuesta en él y razona a partir de ahí; da sugerencias prácticas según la etapa del proyecto.',
       'Responde siempre en ' + (S.idioma || 'español') + ', aunque el usuario escriba en otro idioma, breve y técnico. Si el usuario pide cambiar de idioma, usa cambiar_idioma y responde en el idioma nuevo. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
       'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos y el generador, consultar el proyecto activo y sus instrumentos, calcular y guardar recuerdos. También puedes proponer tres cambios: agregar un instrumento, registrar un entregable y cambiar el estado de un entregable; cada uno se muestra al usuario como propuesta y solo se aplica si él la aprueba. No afirmes que un cambio quedó hecho si la herramienta no devolvió aplicado. Para cualquier otro cambio, indica al usuario en qué módulo hacerlo.',
       'Los enclavamientos y protecciones pertenecen al PLC o al sistema de seguridad; tú solo analizas y asistes.',
@@ -209,7 +209,7 @@
     '<button type="button" id="raNueva" title="Borrar la conversación">Nueva</button><button type="button" id="raAj" aria-expanded="false">Ajustes</button><button type="button" id="raX" aria-label="Cerrar el asistente">✕</button></header>' +
     '<form id="raCfg" hidden><label>Nombre del asistente<input id="raN" maxlength="40"></label><label>Modelo de Ollama<select id="raM"></select></label>' +
     '<label>Instrucciones propias<textarea id="raI" rows="3" maxlength="2000" placeholder="Ejemplo: responde breve y cita la norma cuando aplique."></textarea></label>' +
-    '<label>Dirección de Ollama<input id="raU" spellcheck="false"></label><div id="raMem"></div><button type="submit" class="pri">Guardar</button></form>' +
+    '<label>Dirección de Ollama<input id="raU" spellcheck="false"></label><label class="ra-chk"><input type="checkbox" id="raAuto"> Ofrecer ayuda al entrar a cada sección</label><div id="raMem"></div><button type="submit" class="pri">Guardar</button></form>' +
     '<div id="raHilo" class="ra-hilo" aria-live="polite"></div>' +
     '<form id="raF" class="ra-red"><textarea id="raT" rows="1" placeholder="Pregunta o pide algo…" aria-label="Mensaje para el asistente"></textarea><button type="submit" class="pri" id="raEnv">Enviar</button><button type="button" id="raPar" hidden>Detener</button></form>' +
     '<p class="ra-nota">IA local: se procesa en tu equipo. Verifica los datos técnicos.</p>';
@@ -236,8 +236,11 @@
     var sinIA = MOTOR === false || (MOTOR && !MODELOS.length), T = window.RE_TUTOR;
     if (sinIA && !T) { hilo.append(ayudaConexion()); return; }
     if (!S.msgs.length) {
-      var b = el('div', 'ra-bien'); b.append(el('p', '', sinIA ? 'Soy el tutor de la Suite ReyEngi. Pregúntame cómo se hace cualquier cosa en la suite, o sobre instrumentación, normativa e ingeniería del proyecto. Ahora respondo con el manual interno; con la IA local conectada además converso y consulto tu proyecto.' : 'Soy el tutor de la Suite ReyEngi. Pregúntame cómo se hace cada cosa, o sobre instrumentación, normativa e ingeniería. También consulto tu proyecto, abro módulos y calculo.'));
-      if (T) T.TEMAS.forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { enviar(t); }; b.append(x); });
+      var b = el('div', 'ra-bien'), aq = aqui(), gs = aq ? guiasDe(aq.href) : [];
+      b.append(el('h4', '', '¿En qué quieres que te ayude?'));
+      b.append(el('p', '', 'Soy el tutor de la Suite ReyEngi' + (aq ? ' y veo que estás en «' + aq.t + '»' : '') + '. Te explico cómo se hace cada cosa, paso a paso, y respondo sobre instrumentación, normativa e ingeniería del proyecto.' + (sinIA ? ' Ahora respondo con el manual interno; con la IA local conectada además converso y consulto tu proyecto.' : ' También consulto tu proyecto, abro módulos y calculo.')));
+      if (gs.length) { b.append(el('small', '', 'En esta sección')); gs.forEach(function (g) { var x = el('button', 'ra-aqui', g.t); x.type = 'button'; x.onclick = function () { enviar(g.t); }; b.append(x); }); b.append(el('small', '', 'Otros temas')); }
+      if (T) T.TEMAS.filter(function (t) { return !gs.length || !/proyecto\?|P&ID\?|lazo\?|instrumentos\?/.test(t); }).slice(0, gs.length ? 5 : 9).forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { enviar(t); }; b.append(x); });
       if (sinIA) { var dt = document.createElement('details'); dt.className = 'ra-det'; var sm = document.createElement('summary'); sm.textContent = 'Conectar la IA local (opcional)'; dt.append(sm, ayudaConexion()); b.append(dt); hilo.append(b); return; }
       ['¿Qué instrumentos de nivel tiene el proyecto?', 'Genera un diagrama de lazo', 'Busca los entregables asociados a LT-0101', 'Calcula la caída de tensión en 500 m de cable 1,5 mm² con 20 mA', '¿Qué puedes hacer?'].forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { $('#raT').value = t; $('#raT').focus(); }; b.append(x); });
       hilo.append(b); return;
@@ -249,6 +252,42 @@
     });
     bajar();
   }
+  // ── Tutor autónomo: sabe en qué sección está el usuario, ofrece ayuda al entrar y pregunta cómo seguir ──
+  function aqui() { try { return window.RS_ACTUAL ? window.RS_ACTUAL() : null; } catch (e) { return null; } }
+  function guiasDe(href) { var B = window.RE_TUTOR_BASE; if (!B || !href) return []; var u = new URL(href, BASE).href, sinH = u.split('#')[0];
+    var ex = B.guias.filter(function (g) { return new URL(g.mod, BASE).href === u; }); if (ex.length) return ex;
+    return B.guias.filter(function (g) { return g.mod.indexOf('#') < 0 && new URL(g.mod, BASE).href === sinH; }); }
+  function seguimos(excluir) { // cierre de cada respuesta: pregunta y propone el siguiente paso
+    var d = el('div', 'ra-sig'), aq = aqui(), gs = (aq ? guiasDe(aq.href) : []).filter(function (g) { return g.id !== excluir; }).slice(0, 3);
+    d.append(el('span', '', '¿En qué seguimos?'));
+    gs.forEach(function (g) { var x = el('button', '', g.t); x.type = 'button'; x.onclick = function () { enviar(g.t); }; d.append(x); });
+    var t = el('button', '', 'Ver todos los temas'); t.type = 'button'; t.onclick = function () { temas(); }; d.append(t);
+    hilo.append(d); bajar();
+  }
+  function temas() { var B = window.RE_TUTOR_BASE, c = el('div', 'ra-ia'); if (!B) return; c.append(el('p', '', 'Estos son los temas del manual. Elige uno o escribe tu pregunta:'));
+    [['Cómo se usa la suite', B.guias], ['Instrumentación', B.saber.filter(function (x) { return x.a === 'Instrumentación'; })], ['Normativa', B.saber.filter(function (x) { return x.a === 'Normativa'; })], ['Ingeniería del proyecto', B.saber.filter(function (x) { return x.a === 'Ingeniería'; })]].forEach(function (g) {
+      var dt = document.createElement('details'); dt.className = 'ra-det'; var sm = document.createElement('summary'); sm.textContent = g[0] + ' (' + g[1].length + ')'; dt.append(sm); var r = el('div', 'ra-rel'); g[1].forEach(function (x) { var bt = el('button', '', x.t); bt.type = 'button'; bt.onclick = function () { enviar(x.t); }; r.append(bt); }); dt.append(r); c.append(dt); });
+    hilo.append(c); bajar(); }
+  var VISTAS = {}; try { VISTAS = JSON.parse(sessionStorage.getItem('rs-tutor-vistas') || '{}'); } catch (e) {}
+  var globo = null, claveSec = '';
+  function quitarGlobo() { if (globo) { globo.remove(); globo = null; } }
+  function mostrarAyudaSeccion(aq) { // dentro del panel: la guía principal de la sección, sin que la pidan
+    var T = window.RE_TUTOR, gs = guiasDe(aq.href); if (!T) return;
+    if (!S.msgs.length) hilo.textContent = '';
+    var c = el('div', 'ra-ia'); c.append(el('p', '', gs.length ? 'Estás en «' + aq.t + '». Así se usa:' : 'Estás en «' + aq.t + '». No tengo una guía específica de esta sección, pero puedo ayudarte con cualquier duda.')); hilo.append(c);
+    if (gs.length) { hilo.append(T.tarjeta(gs[0], enviar, [])); S.msgs.push({ role: 'assistant', content: '[Ayuda de la sección ' + aq.t + ': ' + gs[0].t + ']', guia: gs[0].id }); guardar(); }
+    seguimos(gs.length ? gs[0].id : '');
+  }
+  function alCambiarSeccion() {
+    var aq = aqui(); if (!aq) return; var k = aq.href + (aq.hijo ? '' : ''); if (k === claveSec) return; claveSec = k; quitarGlobo();
+    if (!S.auto || !window.RE_TUTOR || VISTAS[k] || ocupado) return; VISTAS[k] = 1; try { sessionStorage.setItem('rs-tutor-vistas', JSON.stringify(VISTAS)); } catch (e) {}
+    if (!pan.hidden) { mostrarAyudaSeccion(aq); return; }
+    var gs = guiasDe(aq.href); // panel cerrado: un aviso discreto junto al botón
+    globo = el('div', 'ra-globo'); globo.setAttribute('role', 'status'); globo.append(el('b', '', aq.t), el('span', '', gs.length ? '¿Te muestro cómo se usa esta sección?' : '¿Te ayudo con algo de esta sección?'));
+    var f = el('div'), si = el('button', 'pri', gs.length ? 'Sí, muéstrame' : 'Abrir el tutor'), no = el('button', '', 'Ahora no'); si.type = no.type = 'button'; f.append(si, no); globo.append(f); document.body.appendChild(globo);
+    si.onclick = function () { quitarGlobo(); abrir(true); setTimeout(function () { mostrarAyudaSeccion(aq); }, 900); }; no.onclick = quitarGlobo;
+    var g0 = globo; setTimeout(function () { if (globo === g0) quitarGlobo(); }, 14000);
+  }
   function guiaDe(id) { var B = window.RE_TUTOR_BASE; if (!B) return null; return B.guias.concat(B.saber).filter(function (d) { return d.id === id; })[0] || null; }
   // Respuesta del tutor sin IA: la guía que mejor calza, tal cual está en el manual
   function responderManual(texto) {
@@ -259,7 +298,7 @@
     else { var c = el('div', 'ra-ia'); c.append(el('p', '', r.length ? 'No tengo una guía exacta para eso. Lo más cercano en el manual:' : 'No tengo una guía para eso. Soy el tutor de la suite: puedo explicar cómo se usa cada módulo, instrumentación, normativa e ingeniería del proyecto. Prueba con otras palabras o elige un tema:'));
       var lista = r.length ? r.map(function (o) { return o.d.t; }) : (T ? T.TEMAS.slice(0, 6) : []); var rl = el('div', 'ra-rel'); lista.forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { enviar(t); }; rl.append(x); }); c.append(rl); hilo.append(c);
       S.msgs.push({ role: 'assistant', content: 'Sin guía exacta en el manual.' }); }
-    guardar(); bajar(); $('#raT').focus();
+    guardar(); seguimos(r.length && r[0].pct >= 22 ? r[0].d.id : ''); $('#raT').focus();
   }
   function estado() {
     $('#raEst').textContent = 'Comprobando…';
@@ -294,7 +333,7 @@
     }
     vuelta(0).catch(function (e) { hilo.append(el('div', 'ra-ia ra-err', String(e.message || e))); }).then(function () {
       if (tut.length) hilo.insertBefore(T.apoyo(tut[0], enviar, tut.slice(1, 4)), esp);
-      esp.remove(); ocupar(false); guardar(); bajar();
+      esp.remove(); ocupar(false); guardar(); if (!irA && !recargar) seguimos(tut.length ? tut[0].d.id : '');
       if (recargar && !irA) { recargar = false; location.reload(); return; }
       if (irA) { var u = irA; irA = null; if (u !== location.href) { var mismo = u.split('#')[0] === location.href.split('#')[0]; location.href = u; if (mismo && u.indexOf('#') < 0) location.reload(); } }
       else $('#raT').focus();
@@ -302,10 +341,10 @@
   }
   function abrir(v) {
     S.abierto = v; guardar(); pan.hidden = !v; btn.setAttribute('aria-expanded', v); document.body.classList.toggle('ra-abierto', v);
-    if (v) { $('#raNom').textContent = S.nombre || 'ReyEngi AI'; estado().then(function () { pintar(); $('#raT').focus(); }); } else btn.focus();
+    if (v) { quitarGlobo(); $('#raNom').textContent = S.nombre || 'ReyEngi AI'; estado().then(function () { pintar(); $('#raT').focus(); }); } else btn.focus();
   }
   function pintarCfg() {
-    $('#raN').value = S.nombre; $('#raI').value = S.inst; $('#raU').value = S.url;
+    $('#raN').value = S.nombre; $('#raI').value = S.inst; $('#raU').value = S.url; $('#raAuto').checked = S.auto !== false;
     var s = $('#raM'); s.textContent = ''; MODELOS.forEach(function (m) { var o = el('option', '', m); o.value = m; s.append(o); }); s.value = S.modelo; s.disabled = !MODELOS.length;
     var mm = $('#raMem'); mm.textContent = ''; if (S.mem.length) { mm.append(el('small', '', 'Recuerdos (' + S.mem.length + ')')); S.mem.forEach(function (t, i) { var r = el('div', 'ra-rec'); r.append(el('span', '', t)); var x = el('button', '', 'Quitar'); x.type = 'button'; x.onclick = function () { S.mem.splice(i, 1); guardar(); pintarCfg(); }; r.append(x); mm.append(r); }); }
   }
@@ -316,7 +355,7 @@
     $('#raNueva').addEventListener('click', function () { if (ocupado) return; S.msgs = []; guardar(); pintar(); $('#raT').focus(); });
     $('#raAj').addEventListener('click', function () { var c = $('#raCfg'); c.hidden = !c.hidden; $('#raAj').setAttribute('aria-expanded', !c.hidden); if (!c.hidden) pintarCfg(); });
     $('#raCfg').addEventListener('submit', function (e) {
-      e.preventDefault(); S.nombre = $('#raN').value.trim() || 'ReyEngi AI'; S.inst = $('#raI').value; S.modelo = $('#raM').value || S.modelo;
+      e.preventDefault(); S.auto = $('#raAuto').checked; S.nombre = $('#raN').value.trim() || 'ReyEngi AI'; S.inst = $('#raI').value; S.modelo = $('#raM').value || S.modelo;
       var u = $('#raU').value.trim().replace(/\/+$/, ''); if (/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(u)) S.url = u; // solo este equipo
       guardar(); $('#raCfg').hidden = true; $('#raAj').setAttribute('aria-expanded', 'false'); $('#raNom').textContent = S.nombre; estado().then(pintar);
     });
@@ -327,6 +366,7 @@
     pan.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !ocupado) abrir(false); });
     document.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'j') { e.preventDefault(); abrir(pan.hidden); } });
     btn.title = 'Asistente ReyEngi AI (Ctrl+J)';
+    setInterval(alCambiarSeccion, 800); setTimeout(alCambiarSeccion, 1600);
     if (S.abierto) abrir(true);
   }
   window.__RS_ASIS = { calcular: calcular, ejecutar: ejecutar };

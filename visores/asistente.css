@@ -84,3 +84,20 @@ dialog.ra-zoom button { margin-top: 8px; font: 600 12.5px system-ui, sans-serif;
 .ra-dest { outline: 3px solid #FF8C32 !important; outline-offset: 3px !important; box-shadow: 0 0 0 8px rgba(255, 140, 50, .25) !important; animation: ra-dest 1.2s ease-in-out infinite; position: relative; z-index: 5; }
 @keyframes ra-dest { 50% { box-shadow: 0 0 0 14px rgba(255, 140, 50, .05); } }
 @media (prefers-reduced-motion: reduce) { .ra-dest { animation: none; } }
+
+/* ── Tutor autónomo ── */
+.ra-bien h4 { margin: 0 0 4px; font-size: 15px; color: #EAF2F8; }
+.ra-bien small { font: 600 10px ui-monospace, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: #FFB070; margin-top: 4px; }
+.ra-bien .ra-aqui { border-color: #38C8E8 !important; }
+.ra-sig { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 12px; color: #EAF2F8; border-top: 1px dashed #22364D; padding-top: 8px; }
+.ra-sig span { font-weight: 600; margin-right: 2px; }
+.ra-sig button { font-size: 11.5px; padding: 2px 8px; border-radius: 10px; text-align: left; }
+.ra-chk { flex-direction: row !important; align-items: center; gap: 8px !important; color: #EAF2F8 !important; font-size: 12.5px !important; }
+.ra-chk input { width: auto !important; }
+.ra-globo { position: fixed; right: 14px; bottom: 78px; z-index: 61; width: min(280px, calc(100vw - 28px)); background: #111D2E; color: #EAF2F8; border: 1px solid #38C8E8; border-radius: 10px; padding: 10px 12px; font: 12.5px/1.45 system-ui, "Segoe UI", sans-serif; box-shadow: 0 10px 26px rgba(0, 0, 0, .5); display: flex; flex-direction: column; gap: 4px; color-scheme: dark; }
+.ra-globo b { font-size: 13px; } .ra-globo span { color: #94A9BE; }
+.ra-globo div { display: flex; gap: 6px; margin-top: 4px; }
+.ra-globo button { font: 600 12px system-ui, sans-serif; color: #EAF2F8; background: #18283C; border: 1px solid #22364D; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.ra-globo button.pri { background: #FF8C32; border-color: #FF8C32; color: #1b0d02; }
+.ra-globo button:focus-visible { outline: 2px solid #38C8E8; outline-offset: 1px; }
+@media print { .ra-globo { display: none !important; } }
