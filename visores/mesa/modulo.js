@@ -41,7 +41,7 @@
       '<div class="em-2"><label>Revisión<input class="em-rev" maxlength="4" placeholder="automática"></label><label>Fecha<input type="date" class="em-fecha" value="' + hoyIso() + '"></label></div>' +
       '<label>Descripción de la revisión<input class="em-desc" maxlength="60"></label>' +
       '<div class="em-3"><label>Por<input class="em-por" maxlength="6"></label><label>Revisó<input class="em-revi" maxlength="6"></label><label>Aprobó<input class="em-apr" maxlength="6"></label></div>' +
-      '<p class="nota em-ayuda"></p><button type="button" class="em-ok">Emitir</button><div class="em-res" aria-live="polite"></div>';
+      '<p class="nota em-ayuda"></p><div class="em-pasos"><button type="button" class="em-act">1 · Actualizar revisiones</button><button type="button" class="em-ok" disabled>2 · Emitir</button></div><p class="em-pend" hidden></p><div class="em-res" aria-live="polite"></div>';
     var q = function (c) { return nodo.querySelector(c); }, descTocada = false;
     function tipo() { return G.TIPOS.filter(function (t) { return t.id === q('.em-tipo').value; })[0]; }
     function ponerDesc() { if (!descTocada) q('.em-desc').value = tipo().desc; }
@@ -53,7 +53,7 @@
       var l = items(), f = st.filtro.toLowerCase(), v = l.filter(function (x) { return !f || (x.id + ' ' + x.codigo + ' ' + x.titulo).toLowerCase().indexOf(f) >= 0; });
       q('.em-lista').innerHTML = v.map(function (x) { return '<label><input type="checkbox" data-id="' + esc(x.id) + '"' + (st.marcas[x.id] ? ' checked' : '') + '><span><b>' + esc(x.codigo) + '</b> ' + esc(x.titulo) + '</span><small>' + (x.rev ? 'Rev. ' + esc(x.rev) : 'sin rev.') + '</small></label>'; }).join('') || '<p class="nota">No hay planos que coincidan.</p>';
       var n = l.filter(function (x) { return st.marcas[x.id]; }).length; q('.em-n').textContent = n + ' de ' + l.length + ' seleccionados';
-      q('.em-ok').textContent = st.modo === 'lote' ? 'Emitir ' + n + ' plano(s)' : 'Emitir'; q('.em-ok').disabled = st.modo === 'lote' && !n;
+      q('.em-act').textContent = '1 · Actualizar ' + n + ' plano(s)'; q('.em-act').disabled = !n;
     }
     function botones(lista, a) { return '<div class="em-des">' + lista.map(function (f) { return '<button type="button" data-f="' + f + '">' + (f === 'PDF' && a ? 'Imprimir / PDF' : 'Descargar ' + f) + '</button>'; }).join('') + '</div>'; }
     function pintar() {
@@ -64,11 +64,14 @@
       if (u && u.it) o.innerHTML = '<b>' + esc(u.it.codigo) + '</b> ' + esc(u.it.titulo) + '<small>' + (u.it.rev ? 'Revisión vigente: ' + esc(u.it.rev) : 'Sin revisión emitida') + '</small>';
       else if (u) o.innerHTML = '<b>' + esc(u.pantalla.t) + '</b>' + (u.pantalla.hijo ? ' ' + esc((u.pantalla.hijo.t ? u.pantalla.hijo.t + ' · ' : '') + u.pantalla.hijo.s) : '');
       else o.textContent = 'No hay un entregable en pantalla.';
-      q('.em-ayuda').textContent = a ? 'Al emitir se agrega la fila al cuadro de revisiones de cada plano y se actualiza la revisión de su viñeta. Revisión vacía: se usa la siguiente de cada plano.'
-        : 'La emisión queda registrada en el control documental. La viñeta de este entregable toma sus revisiones de la configuración del módulo.';
+      q('.em-ayuda').textContent = a ? 'Primero se actualiza: la fila entra al cuadro de revisiones y a la viñeta de cada plano, sin emitir. Después de revisarla, se emite. Revisión vacía: se usa la siguiente de cada plano.'
+        : 'Primero se prepara la revisión y, una vez revisada, se emite: queda registrada en el control documental. La viñeta de este entregable toma sus revisiones de la configuración del módulo.';
       if (a && !q('.em-por').dataset.ok) { q('.em-por').dataset.ok = '1'; var r = {}; try { r = a.responsables() || {}; } catch (e) {} q('.em-por').value = r.por || ''; q('.em-revi').value = r.reviso || ''; q('.em-apr').value = r.aprobo || ''; }
       pintarCuadro();
-      if (st.modo === 'lote') pintarLista(); else { q('.em-ok').textContent = 'Emitir'; q('.em-ok').disabled = !u; }
+      if (st.modo === 'lote') pintarLista(); else { q('.em-act').textContent = '1 · Actualizar revisión'; q('.em-act').disabled = !u; }
+      var pe = st.pend, np = pe ? (pe.ids ? pe.ids.length : 1) : 0, pp = q('.em-pend');
+      q('.em-ok').disabled = !pe; q('.em-ok').textContent = pe && pe.ids && np > 1 ? '2 · Emitir ' + np + ' plano(s)' : '2 · Emitir';
+      pp.hidden = !pe; if (pe) pp.textContent = (pe.ids ? 'Revisión actualizada en ' + np + ' plano(s): revisa las viñetas' + (np > 1 ? ' (selecciona cada lazo para verlo)' : '') + ' y corrige el cuadro si hace falta.' : 'Rev. ' + pe.rev + ' · ' + pe.fecha + ' · ' + pe.desc + ' preparada.') + ' Cuando esté conforme, pulsa «2 · Emitir».';
       // Emisión vigente del entregable en pantalla, con sus descargas
       var res = q('.em-res'), h = '';
       if (st.ultimos) h = '<p class="em-hecho">' + esc(st.ultimos.txt) + '</p>' + botones(st.ultimos.formatos, st.ultimos.ad);
@@ -98,7 +101,7 @@
     function leerCuadro() { return [].map.call(q('.em-cuadro').querySelectorAll('.em-fila'), function (f) { var r = {}; [].forEach.call(f.querySelectorAll('[data-c]'), function (i) { r[i.dataset.c] = i.value.trim().toUpperCase(); }); return r; }); }
     function guardarCuadro(filas) {
       var c = cuadro(); if (!c) return; filas = filas.filter(function (r) { return r.rev; });
-      if (c.a) { c.a.ponerRevisiones(c.id, filas); var d = regDe(c.a, { id: c.id }); if (d) { G.revisiones(d.id, filas); foto(d.id, c.a, c.id); } }
+      if (c.a) { c.a.ponerRevisiones(c.id, filas); var d = regDe(c.a, { id: c.id }); if (d && d.emision) { G.revisiones(d.id, filas); foto(d.id, c.a, c.id); } }
       else { var d2 = c.d || (filas.length ? G.actual('', false) : null); if (d2) { G.revisiones(d2.id, filas); foto(d2.id); } }
       st.ultimos = null; pintar(); pintarCuadro(true);
     }
@@ -115,6 +118,7 @@
       else if (b.dataset.a) { var f = st.filtro.toLowerCase(); items().forEach(function (x) { if (!f || (x.id + ' ' + x.codigo + ' ' + x.titulo).toLowerCase().indexOf(f) >= 0) { if (b.dataset.a === 'todos') st.marcas[x.id] = true; else delete st.marcas[x.id]; } }); pintarLista(); }
       else if (b.dataset.cq === 'mas') { var fs = leerCuadro(), u2 = fs[fs.length - 1]; fs.push({ rev: G.revPara(u2 ? u2.rev : '', tipo().id), fecha: fechaVin(q('.em-fecha').value), desc: (q('.em-desc').value.trim() || tipo().desc).toUpperCase(), por: u2 ? u2.por : '', reviso: u2 ? u2.reviso : '', aprobo: u2 ? u2.aprobo : '' }); guardarCuadro(fs); }
       else if (b.dataset.cq === 'del') { if (b.dataset.seguro) { var i = +b.closest('.em-fila').dataset.i, f2 = leerCuadro(); f2.splice(i, 1); guardarCuadro(f2); } else { b.dataset.seguro = '1'; b.textContent = '¿Eliminar?'; b.classList.add('em-pel'); setTimeout(function () { if (b.isConnected) { delete b.dataset.seguro; b.textContent = '✕'; b.classList.remove('em-pel'); } }, 4000); } }
+      else if (b.classList.contains('em-act')) actualizar();
       else if (b.classList.contains('em-ok')) emitir();
       else if (b.dataset.f) { var a = ad();
         if (a) { var l = st.ultimos ? st.ultimos.ids : ids(); a.descargar(l, b.dataset.f); l.forEach(function (id) { var d = regDe(a, { id: id }); if (d) G.anotar(d.id, 'Exportado', b.dataset.f); }); }
@@ -122,21 +126,34 @@
     });
     nodo.addEventListener('change', function (e) { var t = e.target; if (t.dataset && t.dataset.c && t.closest('.em-cuadro')) { guardarCuadro(leerCuadro()); return; } if (t.dataset && t.dataset.id != null && t.type === 'checkbox') { if (t.checked) st.marcas[t.dataset.id] = true; else delete st.marcas[t.dataset.id]; pintarLista(); } else if (t.classList.contains('em-tipo')) { descTocada = false; ponerDesc(); } });
     nodo.addEventListener('input', function (e) { var t = e.target; if (t.classList.contains('em-q')) { st.filtro = t.value; pintarLista(); } else if (t.classList.contains('em-desc')) descTocada = true; });
-    function emitir() {
+    // Paso 1 · Actualizar revisiones: escribe la revisión en la viñeta de cada plano para revisarla. No emite.
+    function actualizar() {
       var a = ad(), t = tipo(), rev = q('.em-rev').value.trim().toUpperCase(), fecha = fechaVin(q('.em-fecha').value), desc = (q('.em-desc').value.trim() || t.desc).toUpperCase(), res = q('.em-res');
       if (!desc) { res.dataset.h = ''; res.innerHTML = '<p class="em-error">Escribe la descripción de la revisión.</p>'; q('.em-desc').focus(); return; }
       if (a) {
         var l = ids(); if (!l.length) return; var revs = {}, por = q('.em-por').value.trim().toUpperCase(), revi = q('.em-revi').value.trim().toUpperCase(), apr = q('.em-apr').value.trim().toUpperCase();
-        var n = a.aplicar(l, function (id, vig) { var r = rev || G.revPara(vig, t.id); revs[id] = r; return { rev: r, fecha: fecha, desc: desc, por: por, reviso: revi, aprobo: apr, cliente: '' }; });
-        var its = items(); l.forEach(function (id) { var it = its.filter(function (x) { return x.id === id; })[0]; if (!it || !revs[id]) return;
-          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al emitir' }); if (d) { if (d.codigo !== it.codigo) G.editar(d.id, { codigo: it.codigo }); G.emitir(d.id, { rev: revs[id], fecha: fecha, tipo: t.id, desc: desc }); foto(d.id, a, id); } });
-        var dist = Object.keys(revs).map(function (k) { return revs[k]; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; });
-        st.ultimos = { ids: l, ad: a, formatos: a.formatos, txt: n + ' plano(s) emitido(s) · Rev. ' + dist.join(', ') + ' · ' + fecha + ' · ' + desc };
+        a.aplicar(l, function (id, vig) { var r = rev || G.revPara(vig, t.id); revs[id] = r; return { rev: r, fecha: fecha, desc: desc, por: por, reviso: revi, aprobo: apr, cliente: '' }; });
+        var its = items(); l = l.filter(function (id) { return revs[id]; });
+        l.forEach(function (id) { var it = its.filter(function (x) { return x.id === id; })[0]; if (!it) return;
+          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al actualizar la revisión' }); if (d) { if (d.codigo !== it.codigo) G.editar(d.id, { codigo: it.codigo }); G.estado(d.id, 'En revisión', 'Rev. ' + revs[id] + ' por emitir'); } });
+        st.pend = { ids: l, tipo: t.id, lote: st.modo === 'lote' };
       } else {
-        var d0 = G.actual('', false); if (!d0) return; var r0 = rev || G.revPara(d0.emision ? d0.rev : '', t.id);
-        G.emitir(d0.id, { rev: r0, fecha: fecha, tipo: t.id, desc: desc }); foto(d0.id); st.ultimos = null;
+        var d0 = G.actual('', false); if (!d0) return;
+        st.pend = { doc: d0.id, tipo: t.id, rev: rev || G.revPara(d0.emision ? d0.rev : '', t.id), fecha: fecha, desc: desc }; G.estado(d0.id, 'En revisión', 'Rev. ' + st.pend.rev + ' por emitir');
       }
-      q('.em-rev').value = ''; pintar();
+      st.ultimos = null; q('.em-rev').value = ''; pintar(); pintarCuadro(true);
+    }
+    // Paso 2 · Emitir: registra como emitido lo que ya se actualizó y revisó, con la revisión que tenga la viñeta en ese momento
+    function emitir() {
+      var a = ad(), pe = st.pend; if (!pe) return;
+      if (a && pe.ids) {
+        var its = items(), revs = [], fechas = [], n = 0, hechos = [];
+        pe.ids.forEach(function (id) { var it = its.filter(function (x) { return x.id === id; })[0], f = it && a.revisiones(id).filas.slice(-1)[0]; if (!it || !f || !f.rev) return;   // sin fila en el cuadro no hay nada que emitir
+          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al emitir' }); if (!d) return;
+          G.emitir(d.id, { rev: f.rev, fecha: f.fecha, tipo: pe.tipo, desc: f.desc }); foto(d.id, a, id); n++; hechos.push(id); if (revs.indexOf(f.rev) < 0) revs.push(f.rev); if (fechas.indexOf(f.fecha) < 0) fechas.push(f.fecha); });
+        st.ultimos = n ? { ids: hechos, ad: a, formatos: a.formatos, txt: n + ' plano(s) emitido(s) · Rev. ' + revs.join(', ') + ' · ' + fechas.join(', ') } : null;
+      } else if (pe.doc) { G.emitir(pe.doc, { rev: pe.rev, fecha: pe.fecha, tipo: pe.tipo, desc: pe.desc }); foto(pe.doc); st.ultimos = null; }
+      st.pend = null; pintar();
     }
     ponerDesc(); pintar();
     return { refrescar: function () { if (st.ultimos && st.modo === 'uno') { var u = unoActual(); if (!u || !u.it || st.ultimos.ids.indexOf(u.it.id) < 0) st.ultimos = null; } pintar(); } };

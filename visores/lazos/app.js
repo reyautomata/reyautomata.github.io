@@ -89,7 +89,7 @@
       var vAI = ss.filter(function (s) { return s.tipo === 'AI'; }).map(function (s) { return ISA.analizar(s.tag).variable; });
       var control = ss.some(function (s) { return s.tipo === 'AO' && vAI.indexOf(ISA.analizar(s.tag).variable) >= 0; });
       return { id: k, servicio: L.servicio || (ss.filter(function (s) { return s.servicio; })[0] || {}).servicio || '', plano: L.plano || ((E.cfg.prefijoPlano || '') + pad(L.num, 4)),
-        rev: L.rev || '', revs: L.revs && L.revs.length ? L.revs : null, notas: L.notas || '', tags: ss.map(function (s) { return s.tag; }).join(', '), crudas: ss,
+        rev: L.rev || '', revs: L.revs ? L.revs : null, notas: L.notas || '', tags: ss.map(function (s) { return s.tag; }).join(', '), crudas: ss,
         senales: ss.map(function (s) { return resolver(s, control); }) };
     });
   }
@@ -755,7 +755,7 @@
   window.addEventListener('hashchange', function () { if (irEntregable()) return; if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
   // ── Emisión de planos: cada lazo emitido guarda su propio cuadro de revisiones (parte del cuadro común del proyecto) ──
-  function revVigente(id) { var o = E.lazos[id] || {}, u = (o.revs && o.revs.length ? o.revs : E.revs).slice(-1)[0]; return o.rev || (u && u.rev) || ''; }
+  function revVigente(id) { var o = E.lazos[id] || {}, u = (o.revs ? o.revs : E.revs).slice(-1)[0]; return o.revs ? ((u && u.rev) || '') : (o.rev || (u && u.rev) || ''); }
   function emitirLazos(ids, fila) { // fila(id, revVigente) → { rev, fecha, desc, por, reviso, aprobo, cliente }
     var n = 0;
     ids.forEach(function (id) {

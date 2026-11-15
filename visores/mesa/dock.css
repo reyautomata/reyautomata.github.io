@@ -98,3 +98,8 @@ body.dkm-llena.dkm-shell nav.tabs { display: none !important; }
 .dkm-ir { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 11.5px; }
 .dkm-ir select { font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 @media print { body.dkm-llena.dkm-shell nav.tabs { display: none !important; } }
+
+/* Dos pasos: actualizar revisiones, revisar y recién entonces emitir */
+.em-pasos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dkm-em .em-act { background: var(--tec, #159DDA); border-color: var(--tec, #159DDA); color: #04121c; padding: 7px 8px; }
+.em-pend { margin: 2px 0; padding: 6px 9px; border-left: 3px solid #E6A23C; background: rgba(230, 162, 60, .1); border-radius: 0 6px 6px 0; font-size: 12px; overflow-wrap: anywhere; }
