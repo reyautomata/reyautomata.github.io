@@ -330,13 +330,13 @@
     var e = E(), d = e[K.clave] = e[K.clave] || {}, pr = P.activo();
     return {
       codigo: d.codigo || K.codigo() || '', titulo: d.titulo || K.titulo, tipoDoc: d.tipoDoc || 'LISTA DE EQUIPOS', fecha: d.fecha || pr.porFecha || hoy(),
-      id: d.id || pr.idCliente || '', rev: pr.rev || '', proyecto: pr.proyecto || '', cliente: pr.cliente || '', empresa: pr.contratista || 'ReyEngi', numero: pr.numero || '',
+      id: d.id || pr.idCliente || '', rev: d.revs ? ((d.revs.slice(-1)[0] || {}).rev || '') : pr.rev || '', proyecto: pr.proyecto || '', cliente: pr.cliente || '', empresa: pr.contratista || 'ReyEngi', numero: pr.numero || '',
       anexoA: d.anexoA || K.anexo, anexoB: d.anexoB || '',
       intro: d.intro || (pr.cliente || 'El cliente') + ' ha encargado a ' + (pr.contratista || 'ReyEngi') + ' el desarrollo del proyecto "' + (pr.proyecto || '') + '".\n\nEl presente documento corresponde al ' + K.objeto + ' del proyecto.',
       alcance: d.alcance || K.alcance,
       control: [['Preparado por:', pr.por, d.rolPor || 'Ingeniero de Proyecto', pr.porFecha], ['Revisado por:', pr.reviso, d.rolReviso || 'Jefe de Disciplina', pr.revisoFecha], ['Aprobado por:', pr.aprobo, d.rolAprobo || 'Jefe de Proyecto', pr.aproboFecha],
         ['Revisado ' + (pr.cliente || 'cliente') + ':', pr.revisoCliente, d.rolCliente || '', ''], ['Aprobado ' + (pr.cliente || 'cliente') + ':', pr.aproboCliente, d.rolCliente || '', '']],
-      revs: (e.revs || []).map(function (r) { return [r.rev || '', r.desc || '', r.fecha || '']; }),
+      revs: (d.revs || e.revs || []).map(function (r) { return [r.rev || '', r.desc || '', r.fecha || '']; }),
       cambios: String(d.cambios || '').split(/\r?\n/).filter(Boolean).map(function (l) { var c = l.split(/\s*;\s*/); while (c.length < 5) c.push(''); return c.slice(0, 5); }),
       refs: referencias()
     };

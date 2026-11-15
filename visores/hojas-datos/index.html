@@ -261,6 +261,7 @@ dialog .pie-dlg .izq { margin-right: auto; }
     var z = Math.min(1, (ancho - 4) / max);
     pags.style.zoom = z < 1 ? z.toFixed(3) : 1;
   }
+  window.__HD_EM = { actual: function () { return actual; }, repintar: function () { if (actual) { var y = window.scrollY; mostrarHoja(actual); window.scrollTo(0, y); } }, plantillas: P };
   function mostrarHoja(id) {
     var p = A.plantilla(id); if (!p) return mostrarCatalogo();
     actual = id;

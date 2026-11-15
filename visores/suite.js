@@ -25,6 +25,7 @@
   window.RS_ACTUAL = function () { return actual; };
   if (window.top === window && window.REProyectos && !window.RE_GESTION) { var sg = document.createElement('script'); sg.src = BASE + 'gestion.js'; sg.onload = function () { if (window.RE_ARCHIVOS) return; var sf = document.createElement('script'); sf.src = BASE + 'archivos.js'; document.head.appendChild(sf); }; document.head.appendChild(sg); }
   if (window.top === window) { var sa = document.createElement('script'); sa.src = BASE + 'asistente.js'; sa.defer = true; document.head.appendChild(sa); }
+  if (window.top === window) { var se = document.createElement('script'); se.src = BASE + 'enlaces.js'; se.defer = true; document.head.appendChild(se); }
   var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [] };
   try { Object.assign(U, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
   U.rec = U.rec || []; U.hijos = U.hijos || {}; U.cerrados = U.cerrados || {};

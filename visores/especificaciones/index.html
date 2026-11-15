@@ -166,6 +166,7 @@ main { max-width: 1300px; margin: 0 auto; padding: 22px max(16px, env(safe-area-
       }).join('');
     }).join('');
   }
+  window.__ET_EM = { actual: function () { return actual; }, repintar: function () { if (actual) mostrar(actual); }, familias: F };
   function mostrar(id) {
     var f = A.fam(id); if (!f) return mostrarCat();
     actual = id;

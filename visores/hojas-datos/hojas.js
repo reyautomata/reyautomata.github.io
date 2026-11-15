@@ -34,6 +34,9 @@
   }
 
   function proyecto() { return Object.assign({}, HD.proyecto, leer('proyecto', {})); }
+  // Revisión vigente de una hoja: la última de su propio control de revisiones; si no lo tiene, la del proyecto
+  function revHoja(p, pr) { var d = datosHoja(p.id); if (!d.revs) return pr.rev; var u = d.revs.filter(function (r) { return r && r[0]; }).slice(-1)[0]; return u ? u[0] : ''; }
+  function guardarRevs(id, revs) { var d = datosHoja(id); d.revs = revs; guardar('hoja:' + id, d); }
   function datosHoja(id) { return leer('hoja:' + id, { v: {}, apl: null, prov: {}, notas: [], revs: null }); }
 
   // ── Utilidades ────────────────────────────────────────────────────────────────
@@ -89,7 +92,7 @@
     g.c(2, 9, 'REG', 'lbl c'); g.c(2, 10, 'ING', 'lbl c'); g.c(2, 11, 'FECHA', 'lbl c');
     g.c(3, 0, 'UBICACIÓN', 'lbl', { cs: 3 }); g.c(3, 3, pr.ubicacion, 'vcab', { cs: 3 });
     g.c(3, 9, 'POR', 'lbl c'); g.c(3, 10, pr.por, 'vcab c'); g.c(3, 11, pr.porFecha || hoy(), 'vcab c');
-    g.c(4, 0, 'N° PROYECTO', 'lbl', { cs: 3 }); g.c(4, 3, pr.numero, 'vcab'); g.c(4, 4, 'REV.', 'lbl c'); g.c(4, 5, pr.rev, 'vcab c');
+    g.c(4, 0, 'N° PROYECTO', 'lbl', { cs: 3 }); g.c(4, 3, pr.numero, 'vcab'); g.c(4, 4, 'REV.', 'lbl c'); g.c(4, 5, revHoja(p, pr), 'vcab c');
     g.c(4, 9, 'REV', 'lbl c'); g.c(4, 10, pr.reviso, 'vcab c'); g.c(4, 11, pr.revisoFecha, 'vcab c');
     g.c(5, 0, 'DOC. N°', 'lbl', { cs: 3 }); g.c(5, 3, doc, 'vcab', { cs: 3 });
     g.c(5, 9, 'APR', 'lbl c'); g.c(5, 10, pr.aprobo, 'vcab c'); g.c(5, 11, pr.aproboFecha, 'vcab c');
@@ -242,7 +245,7 @@
     g.c(1, 0, 'PROYECTO', 'lbl'); g.c(1, 1, pr.proyecto, 'vcab', { cs: mitad - 1 }); g.c(1, mitad, 'TABLA DE APLICACIÓN', 'lbl c', { cs: N - mitad });
     g.c(2, 0, 'CLIENTE', 'lbl'); g.c(2, 1, pr.cliente, 'vcab', { cs: mitad - 1 }); g.c(2, mitad, p.hoja, 'tit', { cs: N - mitad, rs: 3 });
     g.c(3, 0, 'UBICACIÓN', 'lbl'); g.c(3, 1, pr.ubicacion, 'vcab', { cs: mitad - 1 });
-    g.c(4, 0, 'DOC. N°', 'lbl'); g.c(4, 1, numeroDoc(p, pr) + '   ·   REV. ' + (pr.rev || ''), 'vcab', { cs: mitad - 1 });
+    g.c(4, 0, 'DOC. N°', 'lbl'); g.c(4, 1, numeroDoc(p, pr) + '   ·   REV. ' + (revHoja(p, pr) || ''), 'vcab', { cs: mitad - 1 });
     var r = 5, conSub = p.aplicacion.columnas.some(function (c) { return c.sub; });
     var c = 0;
     p.aplicacion.columnas.forEach(function (col) {
@@ -493,7 +496,7 @@
     proyecto: proyecto, guardarProyecto: function (v) { guardar('proyecto', v); },
     reiniciarProyecto: function () { borrar('proyecto'); },
     reiniciarHoja: function (id) { borrar('hoja:' + id); },
-    datosHoja: datosHoja, plantilla: plantilla, numeroDoc: numeroDoc, presionBarometrica: presionBarometrica,
+    datosHoja: datosHoja, guardarRevs: guardarRevs, revHoja: revHoja, hoy: hoy, plantilla: plantilla, numeroDoc: numeroDoc, presionBarometrica: presionBarometrica,
     htmlHoja: htmlHoja, guardarCelda: guardarCelda, filaAplicacion: filaAplicacion,
     exportarExcel: exportarExcel, filasAplicacion: filasAplicacion,
     _grillas: { hojaDatos: hojaDatos, tablaAplicacion: tablaAplicacion }

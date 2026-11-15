@@ -254,6 +254,7 @@
     guardar(); pintarHR();
   });
 
+  window.__RQ_EM = { D: function () { return D; }, sel: function () { return sel; }, guardar: guardar, repintar: function () { pintarLista(); pintarEditor(); } };
   pintarCfg(); pintarLista(); pintarEditor();
   tab((location.hash || '#lista').slice(1));
 })();
