@@ -38,7 +38,7 @@
 .dkm-p dl.pr { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 12.5px; } .dkm-p dl.pr dt { color: var(--muted); } .dkm-p dl.pr dd { margin: 0; overflow-wrap: anywhere; }
 .dkm-p .reg { border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; background: var(--bg); font-size: 12.5px; } .dkm-p .reg b { display: block; overflow-wrap: anywhere; } .dkm-p .reg span { color: var(--muted); font-size: 11.5px; }
 .dkm-p .nota { color: var(--muted); font-size: 12px; margin: 4px 0; } .dkm-p a { color: var(--sel); }
-.dkm-barra { display: flex; justify-content: flex-end; gap: 6px; margin: 6px 0 0; }
+.dkm-barra { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
 .dkm-barra.sola { margin: 0 0 8px; }
 .dkm-barra button { font: 600 11px var(--f-body, system-ui) !important; padding: 2px 9px !important; min-height: 0 !important; border-radius: 5px; border: 1px solid var(--line); background: var(--panel2); color: var(--muted); cursor: pointer; }
 .dkm-barra button:hover { color: var(--fg); border-color: var(--sel); }
@@ -87,3 +87,14 @@
 .em-fila { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
 .em-f1 { display: grid; grid-template-columns: 52px 1fr auto; gap: 4px; } .em-f1 input:first-child { font-weight: 700; text-align: center; }
 .em-fila input { background: var(--panel) !important; } .dkm-em button.em-pel { background: #F85149; border-color: #F85149; color: #fff; }
+
+/* Plano o documento a pantalla completa: sin pestañas de sección ni textos de introducción arriba */
+.dkm-oculto { display: none !important; }
+body.dkm-llena.dkm-shell nav.tabs { display: none !important; }
+.dkm-pie { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.dkm-acc { display: flex; flex-direction: column; gap: 10px; }
+.dkm-acc .herr { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; position: static; padding: 0; background: none; }
+.dkm-acc .herr > * { flex: 1 1 auto; } .dkm-acc .herr select, .dkm-acc .herr input { min-width: 0; max-width: 100%; }
+.dkm-ir { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 11.5px; }
+.dkm-ir select { font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+@media print { body.dkm-llena.dkm-shell nav.tabs { display: none !important; } }
