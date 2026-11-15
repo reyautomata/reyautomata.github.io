@@ -228,7 +228,7 @@
     var revs = d.revs || [[pr.rev || 'A', pr.porFecha || R.hoy(), 'Emitido para revisión interna']];
     return {
       datos: [['TIPO DOCUMENTO', 'ESPECIFICACIÓN TÉCNICA'], ['EMPRESA DE INGENIERÍA', pr.contratista || '—'], ['TÍTULO', 'ESPECIFICACIÓN TÉCNICA ' + f.titulo], ['TÍTULO PROYECTO', pr.proyecto], ['CLIENTE', pr.cliente],
-        ['ID', pr.idCliente || '—'], ['CÓDIGO', numeroEt(f, pr)], ['FECHA DOCUMENTO', revs[revs.length - 1][1] || R.hoy()]],
+        ['ID', pr.idCliente || '—'], ['CÓDIGO', numeroEt(f, pr)], ['FECHA DOCUMENTO', (revs[revs.length - 1] || [])[1] || R.hoy()]],
       control: [['Preparado por', pr.por, 'Ingeniero de Proyecto'], ['Revisado por', pr.reviso, 'Jefe de Disciplina'], ['Aprobado por', pr.aprobo, 'Jefe de Proyecto'],
         ['Revisado por el Cliente', pr.revisoCliente, 'Contraparte'], ['Aprobado por el Cliente', pr.aproboCliente, 'Jefe de Proyecto']],
       revs: revs
@@ -302,7 +302,7 @@
       titulo: 'Especificación técnica ' + f.titulo, autor: pr.contratista || 'ReyEngi',
       encabezado: [
         [logo ? { t: '', img: 34, c: true } : { t: 'ReyEngi', b: true, c: true }, { t: pr.proyecto || '', c: true }, { t: codigo, b: true, c: true }],
-        [{ t: pr.cliente || '', c: true }, { t: 'ESPECIFICACIÓN TÉCNICA ' + f.titulo, c: true, b: true }, { t: 'Rev. ' + (P.revs[P.revs.length - 1][0] || '') + '  ·  {PAG}', c: true }]
+        [{ t: pr.cliente || '', c: true }, { t: 'ESPECIFICACIÓN TÉCNICA ' + f.titulo, c: true, b: true }, { t: 'Rev. ' + ((P.revs[P.revs.length - 1] || [])[0] || '') + '  ·  {PAG}', c: true }]
       ],
       logo: logo,
       anchosEncabezado: [42, 86, 42],

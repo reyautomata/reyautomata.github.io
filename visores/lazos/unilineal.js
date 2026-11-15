@@ -135,7 +135,7 @@
     var plano = planoDe(t);
     var tres = t.sistema === '3F', cond = tres ? 'R-S-T-N-G' : 'L-N-G', sis = tres ? '3 FASES + N + T' : '1 FASE + N + T';
     var datosRot = { refs: 'REFERENCIAS: ' + [t.desdePlano && ('ALIMENTACIÓN ' + t.desdePlano), cfg.docCables && ('LISTADO DE CIRCUITOS ' + cfg.docCables), cfg.docIO && ('LISTADO E/S ' + cfg.docIO)].filter(Boolean).join(' · '),
-      titulo: 'DIAGRAMA UNILINEAL', lineas: [cortar(up(t.nombre), 70)[0] || '', 'TAG: ' + up(t.tag)], pie: up(t.ubic || ''), plano: plano, rev: t.rev, de: de };
+      titulo: 'DIAGRAMA UNILINEAL', lineas: [cortar(up(t.nombre), 70)[0] || '', 'TAG: ' + up(t.tag)], pie: up(t.ubic || ''), plano: plano, rev: t.revs ? ((t.revs.slice(-1)[0] || {}).rev || '') : t.rev, revs: t.revs || null, de: de };
     var out = [];
     // Hoja 1: diagrama
     var L = new D.Lienzo(); D.marco(L);
@@ -459,7 +459,7 @@
   function circuitoDe(tag) {
     var r = null; (E().tdi || []).some(function (t) { return t.circ.some(function (c, i) { if (c.inst === tag) { r = { tablero: t.tag, cb: 'CB' + pad(i + 1, 2), tension: (t.v || 220) + ' VAC' }; return true; } return false; }); }); return r;
   }
-  window.LAZOS_UNI = { hojas: hojas, calcular: calcular, circuitoDe: circuitoDe, tableros: tableros };
+  window.LAZOS_UNI = { actual: actual, hojas: hojas, calcular: calcular, circuitoDe: circuitoDe, tableros: tableros };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { uni: pintar });
   if (!$('#v-uni').hidden) pintar();
 })();

@@ -8,6 +8,10 @@
   function antes(id) { return function (s) { var t = s.querySelector(id); t = t && t.closest('.tscroll'); var h = t && t.previousElementSibling; while (h && !h.classList.contains('herr')) h = h.previousElementSibling; return h; }; } // barra de botones de esa tabla
   var COM = { t: 'tabs', p: ['prop', 'ctrl'], a: 'prop' };
   var S = {
+    // Datos base: la tabla ocupa la izquierda y las acciones, propiedades y control documental quedan en pestañas a la derecha, igual que en los entregables
+    'v-io': { principal: 'tabla', paneles: [{ id: 'tabla', titulo: 'Señales de E/S', mover: ['#buscarIO', '#cuentaIO', caja('#tablaIO')] }] },
+    'v-mod': { principal: 'tar', paneles: [{ id: 'tar', titulo: 'Tarjetas y canales', mover: ['#modulos'] }] },
+    'v-cfg': { principal: 'cfg', paneles: [{ id: 'cfg', titulo: 'Configuración', mover: [function (s) { return [].filter.call(s.children, function (c) { return !c.matches('p.intro, h2:first-child'); }); }] }] },
     'v-lazos': { paneles: [{ id: 'lista', titulo: 'Lazos', mover: ['.lazos > div:nth-child(1)'] }, { id: 'datos', titulo: 'Datos del lazo', mover: ['#hojaVacia', '#hojaLazo'] }, { id: 'plano', titulo: 'Plano', mover: ['#hojas'], zoom: '#hojas' }, { id: 'sen', titulo: 'Señales y conexiones', mover: ['#lzSen'] }],
       inicial: { t: 'row', c: [{ t: 'tabs', p: ['lista'], a: 'lista' }, { t: 'col', c: [{ t: 'tabs', p: ['plano'], a: 'plano' }, { t: 'tabs', p: ['datos', 'sen'], a: 'datos' }], s: [0.64, 0.36] }, COM], s: [0.2, 0.57, 0.23] }, limpiar: ['.lazos > div', '.lazos'] },
     'v-doc': { principal: 'prev', paneles: [{ id: 'ident', titulo: 'Identificación', mover: [':scope > .herr', '#dForm'] }, { id: 'prev', titulo: 'Vista previa', mover: ['#dPrev'] }],
@@ -35,8 +39,33 @@
     revisiones: function (id) { return window.__LAZOS.revisionesLazo(id); },
     ponerRevisiones: function (id, filas) { window.__LAZOS.ponerRevisionesLazo(id, filas); },
     vista: function (id) { return window.__LAZOS.vistaLazo(id); },
+    limpiar: function (ids) { window.__LAZOS.limpiarRevisionesLazos(ids); },
     descargar: function (ids, f) { window.__LAZOS.descargarLazos(ids, f); }
   });
+  // Unilineales, diagrama de bloques y documentos (E/S, instrumentos, circuitos): cada uno con su propio cuadro de revisiones.
+  // Mientras no lo tengan, muestran el cuadro común del proyecto (Configuración); al editarlo o actualizarlo pasan a tener el suyo.
+  (function () {
+    var EM = window.RE_EMISION; if (!EM || !EM.simple) return;
+    function Z() { return window.__LAZOS; } function E() { return Z().E(); }
+    function comunes() { return E().revs || []; }
+    function ult(f) { return ((f || []).slice(-1)[0] || {}).rev || ''; }
+    function listo(v) { Z().guardar(); var f = (window.LAZOS_VISTAS || {})[v]; if (f) f(); }
+    EM.simple('v-uni', { gen: 'P04-UNI', item: function (id) { var t = window.LAZOS_UNI.tableros().filter(function (x) { return x.id === id; })[0]; return 'Tablero ' + (t ? t.tag : id); },
+      items: function () { return window.LAZOS_UNI ? window.LAZOS_UNI.tableros().map(function (t) { return { id: t.id, codigo: t.plano || t.tag, titulo: 'Unilineal ' + t.tag + (t.nombre ? ' · ' + t.nombre : ''), rev: t.revs ? ult(t.revs) : (t.rev || ult(comunes())) }; }) : []; },
+      actual: function () { var t = window.LAZOS_UNI && window.LAZOS_UNI.actual(); return t ? t.id : null; },
+      leer: function (id) { var t = window.LAZOS_UNI.tableros().filter(function (x) { return x.id === id; })[0]; return t && t.revs ? t.revs : null; }, comunes: comunes,
+      escribir: function (id, f) { var t = window.LAZOS_UNI.tableros().filter(function (x) { return x.id === id; })[0]; if (t) { t.revs = f; t.rev = ult(f); } }, repintar: function () { listo('uni'); } });
+    EM.simple('v-blq', { gen: 'P03-BLQ', item: function () { return 'Diagrama de bloques'; },
+      items: function () { var b = E().blq; return b ? [{ id: 'blq', codigo: b.plano || 'Diagrama de bloques', titulo: b.titulo || 'Diagrama de bloques de control', rev: b.revs ? ult(b.revs) : (b.rev || ult(comunes())) }] : []; },
+      actual: function () { return E().blq ? 'blq' : null; }, leer: function () { var b = E().blq; return b && b.revs ? b.revs : null; }, comunes: comunes,
+      escribir: function (id, f) { var b = E().blq; if (b) { b.revs = f; b.rev = ult(f); } }, repintar: function () { listo('blq'); } });
+    [['v-doc', 'doc', 'D05-ES', 'Listado de entradas y salidas', 'doc'], ['v-inst', 'docInst', 'D05-INST', 'Listado de instrumentos', 'inst'], ['v-circ', 'docCirc', 'D05-CIRC', 'Listado de circuitos', 'circ']].forEach(function (c) {
+      function d() { var e = E(); return e[c[1]] = e[c[1]] || {}; }
+      EM.simple(c[0], { gen: c[2], item: function () { return c[3]; },
+        items: function () { var x = d(); return [{ id: c[1], codigo: x.codigo || '', titulo: x.titulo || c[3], rev: x.revs ? ult(x.revs) : ult(comunes()) }]; },
+        actual: function () { return c[1]; }, leer: function () { return d().revs || null; }, comunes: comunes, escribir: function (id, f) { d().revs = f; }, repintar: function () { listo(c[4]); } });
+    });
+  })();
   // Descarga pedida desde la página de Control documental
   function pendiente() { var p = null; try { p = JSON.parse(sessionStorage.getItem('reyengi-descargar') || 'null'); sessionStorage.removeItem('reyengi-descargar'); } catch (e) {} if (p && p.gen === 'P02-LAZO' && window.__LAZOS) setTimeout(function () { window.__LAZOS.descargarLazos(p.ids || [], p.f || 'PDF'); }, 600); }
   if (document.readyState === 'complete') setTimeout(pendiente, 400); else window.addEventListener('load', function () { setTimeout(pendiente, 400); });

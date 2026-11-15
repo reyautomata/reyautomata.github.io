@@ -103,3 +103,15 @@ body.dkm-llena.dkm-shell nav.tabs { display: none !important; }
 .em-pasos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .dkm-em .em-act { background: var(--tec, #159DDA); border-color: var(--tec, #159DDA); color: #04121c; padding: 7px 8px; }
 .em-pend { margin: 2px 0; padding: 6px 9px; border-left: 3px solid #E6A23C; background: rgba(230, 162, 60, .1); border-radius: 0 6px 6px 0; font-size: 12px; overflow-wrap: anywhere; }
+
+.em-check { margin: 0; padding: 5px 9px; border-left: 3px solid #27B783; background: rgba(39, 183, 131, .1); border-radius: 0 6px 6px 0; color: var(--fg); font-size: 12px; }
+.em-ir { margin: 6px 0 0; }
+dialog.em-dlg { width: min(460px, 92vw); border: 1px solid #27B783; border-radius: 10px; background: var(--panel, #111D2E); color: var(--fg, #EAF2F8); padding: 18px 20px; font: 14px/1.5 var(--f-body, system-ui, sans-serif); }
+dialog.em-dlg::backdrop { background: rgba(3, 8, 16, .7); } dialog.em-dlg h3 { margin: 0 0 8px; font-size: 17px; color: #27B783; } dialog.em-dlg p { margin: 0 0 10px; overflow-wrap: anywhere; }
+dialog.em-dlg div { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+dialog.em-dlg a.em-si, dialog.em-dlg button { font: 600 13px var(--f-body, system-ui, sans-serif); border-radius: 6px; padding: 8px 14px; cursor: pointer; text-decoration: none; border: 1px solid var(--line, #22364D); background: var(--panel2, #18283C); color: var(--fg, #EAF2F8); }
+dialog.em-dlg a.em-si { background: var(--accent, #FF8C32); border-color: var(--accent, #FF8C32); color: #1b0d02; }
+dialog.em-dlg a:focus-visible, dialog.em-dlg button:focus-visible { outline: 2px solid var(--sel, #38C8E8); outline-offset: 2px; }
+
+.em-campos { display: flex; flex-direction: column; gap: 7px; padding: 8px; border: 1px solid var(--tec, #159DDA); border-radius: 6px; }
+.dkm-em .em-limpiar { color: #ffb4ae; border-color: #7a3438; background: transparent; }

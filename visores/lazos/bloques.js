@@ -233,7 +233,7 @@
     var yN = yE + 34; L.tx(xL, yN, 'NOTAS:', 2.2, 'NOTAS', { b: true }); yN += 4.5;
     NOTAS.concat(String(b.notas || '').split(/\r?\n/).filter(Boolean)).forEach(function (s, i) { cortar((i + 1) + '.- ' + up(s), 62).forEach(function (l2, j) { if (yN < 222) { L.tx(j ? xL + 3.5 : xL, yN, l2, 1.4, 'NOTAS'); yN += 2.4; } }); });
     var plano = planoDe(b), pr = ctx.proyecto || {};
-    D.rotulo(L, ctx, { refs: 'REFERENCIAS: LISTADO DE ENTRADAS Y SALIDAS · ' + up(E().cfg.docIO || '') + (b.ref ? ' · ' + up(b.ref) : ''), titulo: 'DIAGRAMA DE BLOQUES', lineas: [up(b.titulo || 'CONTROL Y COMUNICACIONES'), up(pr.area || pr.nombre || '')].filter(Boolean), plano: plano, rev: b.rev || '', n: 1, de: 1 });
+    D.rotulo(L, ctx, { refs: 'REFERENCIAS: LISTADO DE ENTRADAS Y SALIDAS · ' + up(E().cfg.docIO || '') + (b.ref ? ' · ' + up(b.ref) : ''), titulo: 'DIAGRAMA DE BLOQUES', lineas: [up(b.titulo || 'CONTROL Y COMUNICACIONES'), up(pr.area || pr.nombre || '')].filter(Boolean), plano: plano, rev: b.revs ? ((b.revs.slice(-1)[0] || {}).rev || '') : b.rev || '', revs: b.revs || null, n: 1, de: 1 });
     return [{ prims: L.p, n: 1, de: 1, plano: plano }];
   }
 
