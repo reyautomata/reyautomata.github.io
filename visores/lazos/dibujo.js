@@ -238,7 +238,7 @@
     L.l(10, yR - 1.5, 250, yR - 1.5, 'ROTULO').tx(13, yR + 1.6, o.refs || '', 1.6, 'ROTULO');
     var cols = [10, 20, 40, 170, 190, 210, 230, 250], yT = 260, hr = 5.4;
     L.r(10, yT, 240, 27, 'ROTULO');
-    var revs = (ctx.revisiones || []).slice(-3);
+    var revs = (o.revs || ctx.revisiones || []).slice(-3);   // un plano emitido por separado lleva su propio cuadro de revisiones
     for (var r = 0; r < 4; r++) L.l(10, yT + hr * (r + 1), 250, yT + hr * (r + 1), 'ROTULO');
     cols.slice(1, -1).forEach(function (cx) { L.l(cx, yT, cx, H - 10, 'ROTULO'); });
     ['REV', 'FECHA', 'DESCRIPCIÓN', 'POR', 'REVISÓ', 'APROBÓ', 'CLIENTE'].forEach(function (t, i) { L.tx((cols[i] + cols[i + 1]) / 2, H - 10 - 1.6, t, 1.6, 'ROTULO', { al: 'c', b: true }); });
@@ -300,7 +300,7 @@
     var yn = yZ + 8.2;
     nt.slice(0, 8).forEach(function (t, i) { cortar((i + 1) + '.- ' + t, 128).slice(0, 2).forEach(function (l2, j) { if (yn < 255) { L.tx(j ? 17 : 13, yn, l2, 1.75, 'NOTAS'); yn += 2.9; } }); });
     rotulo(L, ctx, { refs: 'REFERENCIAS: ' + [cfg.docIO && ('LISTADO E/S ' + cfg.docIO), cfg.docCables && ('LISTADO DE CABLES ' + cfg.docCables), cfg.docPid && ('P&ID ' + cfg.docPid)].filter(Boolean).join(' · '),
-      titulo: 'DIAGRAMA DE LAZO', lineas: cortar((lazo.servicio || '').toUpperCase(), 70).slice(0, 2), pie: 'LAZO ' + lazo.id + (lazo.tags ? ' · ' + lazo.tags : ''), plano: lazo.plano, rev: lazo.rev, n: n, de: de });
+      titulo: 'DIAGRAMA DE LAZO', lineas: cortar((lazo.servicio || '').toUpperCase(), 70).slice(0, 2), pie: 'LAZO ' + lazo.id + (lazo.tags ? ' · ' + lazo.tags : ''), plano: lazo.plano, rev: lazo.rev, revs: lazo.revs, n: n, de: de });
     return { prims: L.p, n: n, de: de, plano: lazo.plano };
   }
   function hojas(lazo, ctx) {
