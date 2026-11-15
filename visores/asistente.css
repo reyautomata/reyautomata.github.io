@@ -63,3 +63,24 @@
 
 /* En pantallas anchas el panel no tapa el trabajo: la página se angosta */
 @media (min-width: 1300px) { body.ra-abierto { padding-right: 400px; } body.ra-abierto .rs-estado { right: 400px; } body.ra-abierto .rs-prop { right: 400px; } }
+
+/* ── Tutor: guías, imágenes y botón destacado ── */
+.ra-guia { border: 1px solid #22364D; border-left: 2px solid #FF8C32; border-radius: 8px; padding: 9px 11px; background: #0D1626; }
+.ra-guia small { font: 600 10px ui-monospace, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: #FFB070; }
+.ra-guia h4 { margin: 2px 0 6px; font-size: 14px; }
+.ra-guia ol { margin: 6px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.ra-guia p { margin: 6px 0; } .ra-gn { color: #94A9BE; font-size: 12px; }
+.ra-img { display: block; width: 100%; padding: 0 !important; border-radius: 6px !important; overflow: hidden; margin: 4px 0 6px; background: #0B1220 !important; cursor: zoom-in; }
+.ra-img img { display: block; width: 100%; height: auto; }
+.ra-gp { display: flex; gap: 6px; margin-top: 6px; }
+.ra-rel { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 8px; font-size: 11.5px; color: #94A9BE; }
+.ra-rel button { font-size: 11.5px; padding: 2px 8px; border-radius: 10px; text-align: left; }
+.ra-apoyo { border-left-color: #38C8E8; }
+.ra-det { margin-top: 8px; } .ra-det summary { cursor: pointer; color: #94A9BE; font-size: 12px; padding: 4px 0; } .ra-det .ra-falta { margin-top: 6px; }
+dialog.ra-zoom { border: 1px solid #22364D; border-radius: 10px; background: #0B1220; padding: 10px; max-width: 96vw; max-height: 94vh; }
+dialog.ra-zoom::backdrop { background: rgba(3, 8, 16, .8); }
+dialog.ra-zoom img { display: block; max-width: 92vw; max-height: 82vh; border-radius: 6px; }
+dialog.ra-zoom button { margin-top: 8px; font: 600 12.5px system-ui, sans-serif; color: #EAF2F8; background: #18283C; border: 1px solid #22364D; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.ra-dest { outline: 3px solid #FF8C32 !important; outline-offset: 3px !important; box-shadow: 0 0 0 8px rgba(255, 140, 50, .25) !important; animation: ra-dest 1.2s ease-in-out infinite; position: relative; z-index: 5; }
+@keyframes ra-dest { 50% { box-shadow: 0 0 0 14px rgba(255, 140, 50, .05); } }
+@media (prefers-reduced-motion: reduce) { .ra-dest { animation: none; } }

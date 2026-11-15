@@ -159,7 +159,8 @@
   }
   function sistema() {
     var f = new Date(), P = window.REProyectos, pr = ''; try { var d = P && P.activo(); if (d) pr = d.nombre || d.proyecto || ''; } catch (e) {}
-    return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el asistente de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
+    return ['Eres ' + (S.nombre || 'ReyEngi AI') + ', el tutor experto de la Suite ReyEngi, una herramienta de ingeniería de instrumentación y control (I&C). Funcionas con un modelo local en el computador del usuario.',
+      'Tu campo es cerrado: el uso de la suite, la instrumentación y el control, la normativa que la suite emplea y la ingeniería de proyectos (conceptual, básica, detalle, construcción y plantas en operación). Si te preguntan algo ajeno a eso, dilo en una frase y vuelve a ofrecer ayuda en estos temas. Cuando recibas material del manual interno, basa tu respuesta en él y razona a partir de ahí; da sugerencias prácticas según la etapa del proyecto.',
       'Responde siempre en ' + (S.idioma || 'español') + ', aunque el usuario escriba en otro idioma, breve y técnico. Si el usuario pide cambiar de idioma, usa cambiar_idioma y responde en el idioma nuevo. No inventes datos, tags, normas ni contenidos del proyecto: si no lo sabes o la herramienta no lo entregó, dilo.',
       'La suite organiza los entregables en DOCUMENTOS DE INGENIERÍA (D01 a D09) y PLANOS DE INGENIERÍA (P01 a P10). Cuando pidan generar un entregable, usa buscar_entregables para ubicar su categoría y luego ir_a_modulo para abrir el generador; si la subcategoría está en desarrollo, dilo. Puedes abrir módulos y el generador, consultar el proyecto activo y sus instrumentos, calcular y guardar recuerdos. También puedes proponer tres cambios: agregar un instrumento, registrar un entregable y cambiar el estado de un entregable; cada uno se muestra al usuario como propuesta y solo se aplica si él la aprueba. No afirmes que un cambio quedó hecho si la herramienta no devolvió aplicado. Para cualquier otro cambio, indica al usuario en qué módulo hacerlo.',
       'Los enclavamientos y protecciones pertenecen al PLC o al sistema de seguridad; tú solo analizas y asistes.',
@@ -199,6 +200,8 @@
   }
 
   // ── Interfaz ──
+  ['tutor/base.js', 'tutor/tutor.js'].reduce(function (pr, f) { return pr.then(function () { return new Promise(function (ok) { var sc = document.createElement('script'); sc.src = new URL(f, BASE).href; sc.onload = sc.onerror = ok; document.head.appendChild(sc); }); }); }, Promise.resolve()).then(function () {
+    if (!window.RE_NORMAS) { var sn = document.createElement('script'); sn.src = new URL('normas.js', BASE).href; document.head.appendChild(sn); } if (hilo && !pan.hidden && !S.msgs.length) pintar(); });
   var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = new URL('asistente.css', BASE).href; document.head.appendChild(css);
   var btn = el('button', 'ra-btn'); btn.type = 'button'; btn.id = 'raBtn'; btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'raPanel'); btn.innerHTML = '<i aria-hidden="true"></i><span>Asistente</span>';
   var pan = el('aside', 'ra-panel'); pan.id = 'raPanel'; pan.setAttribute('aria-label', 'Asistente de IA local'); pan.hidden = true;
@@ -230,17 +233,33 @@
   }
   function pintar() {
     hilo.textContent = '';
-    if (MOTOR === false || (MOTOR && !MODELOS.length)) { hilo.append(ayudaConexion()); return; }
+    var sinIA = MOTOR === false || (MOTOR && !MODELOS.length), T = window.RE_TUTOR;
+    if (sinIA && !T) { hilo.append(ayudaConexion()); return; }
     if (!S.msgs.length) {
-      var b = el('div', 'ra-bien'); b.append(el('p', '', 'Hola. Puedo abrir módulos, consultar los instrumentos del proyecto activo, calcular y responder dudas de I&C.'));
+      var b = el('div', 'ra-bien'); b.append(el('p', '', sinIA ? 'Soy el tutor de la Suite ReyEngi. Pregúntame cómo se hace cualquier cosa en la suite, o sobre instrumentación, normativa e ingeniería del proyecto. Ahora respondo con el manual interno; con la IA local conectada además converso y consulto tu proyecto.' : 'Soy el tutor de la Suite ReyEngi. Pregúntame cómo se hace cada cosa, o sobre instrumentación, normativa e ingeniería. También consulto tu proyecto, abro módulos y calculo.'));
+      if (T) T.TEMAS.forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { enviar(t); }; b.append(x); });
+      if (sinIA) { var dt = document.createElement('details'); dt.className = 'ra-det'; var sm = document.createElement('summary'); sm.textContent = 'Conectar la IA local (opcional)'; dt.append(sm, ayudaConexion()); b.append(dt); hilo.append(b); return; }
       ['¿Qué instrumentos de nivel tiene el proyecto?', 'Genera un diagrama de lazo', 'Busca los entregables asociados a LT-0101', 'Calcula la caída de tensión en 500 m de cable 1,5 mm² con 20 mA', '¿Qué puedes hacer?'].forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { $('#raT').value = t; $('#raT').focus(); }; b.append(x); });
       hilo.append(b); return;
     }
     S.msgs.forEach(function (m) {
       if (m.role === 'user') hilo.append(el('div', 'ra-yo', m.content));
+      else if (m.role === 'assistant' && m.guia && T) { var gd = guiaDe(m.guia); if (gd) hilo.append(T.tarjeta(gd, enviar, [])); }
       else if (m.role === 'assistant') { if (m.content) { var d = el('div', 'ra-ia'); d.innerHTML = md(m.content); hilo.append(d); } (m.tool_calls || []).forEach(function (c) { hilo.append(paso(c.function.name, c.function.arguments || {})); }); }
     });
     bajar();
+  }
+  function guiaDe(id) { var B = window.RE_TUTOR_BASE; if (!B) return null; return B.guias.concat(B.saber).filter(function (d) { return d.id === id; })[0] || null; }
+  // Respuesta del tutor sin IA: la guía que mejor calza, tal cual está en el manual
+  function responderManual(texto) {
+    var T = window.RE_TUTOR, r = T ? T.buscar(texto, 4) : [];
+    if (!S.msgs.length) hilo.textContent = '';
+    S.msgs.push({ role: 'user', content: texto.trim() }); hilo.append(el('div', 'ra-yo', texto.trim()));
+    if (r.length && r[0].pct >= 22) { hilo.append(T.tarjeta(r[0].d, enviar, r.slice(1, 4))); S.msgs.push({ role: 'assistant', content: '[' + r[0].d.t + ']', guia: r[0].d.id }); }
+    else { var c = el('div', 'ra-ia'); c.append(el('p', '', r.length ? 'No tengo una guía exacta para eso. Lo más cercano en el manual:' : 'No tengo una guía para eso. Soy el tutor de la suite: puedo explicar cómo se usa cada módulo, instrumentación, normativa e ingeniería del proyecto. Prueba con otras palabras o elige un tema:'));
+      var lista = r.length ? r.map(function (o) { return o.d.t; }) : (T ? T.TEMAS.slice(0, 6) : []); var rl = el('div', 'ra-rel'); lista.forEach(function (t) { var x = el('button', '', t); x.type = 'button'; x.onclick = function () { enviar(t); }; rl.append(x); }); c.append(rl); hilo.append(c);
+      S.msgs.push({ role: 'assistant', content: 'Sin guía exacta en el manual.' }); }
+    guardar(); bajar(); $('#raT').focus();
   }
   function estado() {
     $('#raEst').textContent = 'Comprobando…';
@@ -249,7 +268,8 @@
   function ocupar(v) { ocupado = v; pan.classList.toggle('ra-ocupado', v); $('#raEnv').hidden = v; $('#raPar').hidden = !v; }
   function enviar(texto) {
     if (ocupado || !texto.trim()) return;
-    if (!MOTOR || !S.modelo) { estado().then(pintar); return; }
+    if (!MOTOR || !S.modelo) { if (window.RE_TUTOR) { responderManual(texto); if (MOTOR === null) estado(); } else estado().then(pintar); return; }
+    var T = window.RE_TUTOR, tut = T ? T.buscar(texto, 4).filter(function (o) { return o.pct >= 22; }) : [];
     if (!S.msgs.length) hilo.textContent = '';
     var idp = idiomaPedido(texto); if (idp) { S.idioma = idp; }
     S.msgs.push({ role: 'user', content: texto.trim() }); hilo.append(el('div', 'ra-yo', texto.trim())); ocupar(true); irA = null;
@@ -258,6 +278,7 @@
       if (k >= 5) return Promise.resolve();
       var caja = null, hist = S.msgs.slice(-20); while (hist.length && hist[0].role === 'tool') hist.shift();
       var envio = hist.map(function (m) { return Object.assign({}, m); }); if (/qwen3/i.test(S.modelo || '')) { for (var q = envio.length - 1; q >= 0; q--) if (envio[q].role === 'user') { envio[q].content += ' /no_think'; break; } }
+      if (tut.length && k === 0) { var qi = envio.length - 1; while (qi > 0 && envio[qi].role !== 'user') qi--; envio.splice(qi, 0, { role: 'system', content: T.contexto(tut) }); }
       return pedir([{ role: 'system', content: sistema() }].concat(envio), function (t) { if (!t.trim()) return; if (!caja) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); } caja.innerHTML = md(t); bajar(); }).then(function (r) {
         var limpio = sinPensar(r.texto).trim();
         if (!caja && limpio) { caja = el('div', 'ra-ia'); hilo.insertBefore(caja, esp); }
@@ -272,6 +293,7 @@
       });
     }
     vuelta(0).catch(function (e) { hilo.append(el('div', 'ra-ia ra-err', String(e.message || e))); }).then(function () {
+      if (tut.length) hilo.insertBefore(T.apoyo(tut[0], enviar, tut.slice(1, 4)), esp);
       esp.remove(); ocupar(false); guardar(); bajar();
       if (recargar && !irA) { recargar = false; location.reload(); return; }
       if (irA) { var u = irA; irA = null; if (u !== location.href) { var mismo = u.split('#')[0] === location.href.split('#')[0]; location.href = u; if (mismo && u.indexOf('#') < 0) location.reload(); } }
