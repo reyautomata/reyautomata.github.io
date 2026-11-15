@@ -19,6 +19,96 @@
     var l = G.lista().filter(function (d) { return ids.indexOf(d.gen) >= 0; }).sort(function (x, y) { var px = it && (x.item === it || x.titulo.indexOf(it) >= 0) ? 1 : 0, py = it && (y.item === it || y.titulo.indexOf(it) >= 0) ? 1 : 0; return (py - px) || (x.modificado < y.modificado ? 1 : -1); }).slice(0, 20);
     return '<h3 class="dkm-t">Registros de este entregable</h3>' + (l.length ? l.map(function (d) { return '<div class="reg"><b>' + esc((d.codigo ? d.codigo + ' · ' : '') + d.titulo) + '</b><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:' + (COL[d.estado] || '#94A9BE') + '"></i>' + esc(d.estado) + ' · Rev. ' + esc(d.rev) + ((d.archivos || []).length ? ' · ' + d.archivos.length + ' archivo(s)' : '') + '</span></div>'; }).join('') : '<p class="nota">Sin registros todavía. Se crean al exportar.</p>') + '<p><a href="' + base() + 'documentos/">Abrir el control documental</a></p>'; }
 
+  // ── Emisión desde el panel de Control documental ──
+  // Un módulo puede registrar un adaptador para emitir sus planos de a uno o por lote y actualizar sus viñetas:
+  //   RE_EMISION.registrar(idSeccion, { gen, nombre, items() → [{ id, codigo, titulo, rev }], actual() → id, responsables() → { por, reviso, aprobo },
+  //                                     aplicar(ids, fila(id, revVigente) → fila de revisión) → cantidad, formatos: ['PDF', 'DXF'], descargar(ids, formato) })
+  // Sin adaptador se emite el entregable en pantalla: queda registrado en el control documental y se ofrecen las descargas del módulo.
+  window.RE_EMISION = window.RE_EMISION || { adaptadores: {}, registrar: function (id, ad) { this.adaptadores[id] = ad; } };
+  function fechaVin(iso) { var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || ''); return m ? m[3] + '-' + m[2] + '-' + m[1] : (iso || ''); }
+  function hoyIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function formatoDe(t) { if (/pegar|vista previa|importar|cargar|plantilla|todos|todas/i.test(t)) return ''; var m = /\b(PDF|DXF|Excel|Word|PNG)\b/i.exec(t); return m ? m[1] : ''; }
+  function emision(nodo, sec) {
+    var G = window.RE_GESTION, ad = function () { return window.RE_EMISION.adaptadores[sec.id] || null; };
+    var st = { modo: 'uno', marcas: {}, filtro: '', ultimos: null };
+    nodo.innerHTML = '<h3 class="dkm-t">Emitir</h3>' +
+      '<div class="em-seg" role="group" aria-label="Alcance de la emisión"><button type="button" data-m="uno" aria-pressed="true">En pantalla</button><button type="button" data-m="lote" aria-pressed="false">Por lote</button></div>' +
+      '<p class="em-obj"></p>' +
+      '<div class="em-lote" hidden><div class="em-fl"><input type="search" class="em-q" placeholder="Filtrar planos" aria-label="Filtrar planos"><button type="button" data-a="todos">Todos</button><button type="button" data-a="nada">Ninguno</button></div><div class="em-lista" role="group" aria-label="Planos a emitir"></div><p class="nota em-n"></p></div>' +
+      '<label>Tipo de emisión<select class="em-tipo">' + G.TIPOS.map(function (t) { return '<option value="' + t.id + '">' + esc(t.t) + '</option>'; }).join('') + '</select></label>' +
+      '<div class="em-2"><label>Revisión<input class="em-rev" maxlength="4" placeholder="automática"></label><label>Fecha<input type="date" class="em-fecha" value="' + hoyIso() + '"></label></div>' +
+      '<label>Descripción de la revisión<input class="em-desc" maxlength="60"></label>' +
+      '<div class="em-3"><label>Por<input class="em-por" maxlength="6"></label><label>Revisó<input class="em-revi" maxlength="6"></label><label>Aprobó<input class="em-apr" maxlength="6"></label></div>' +
+      '<p class="nota em-ayuda"></p><button type="button" class="em-ok">Emitir</button><div class="em-res" aria-live="polite"></div>';
+    var q = function (c) { return nodo.querySelector(c); }, descTocada = false;
+    function tipo() { return G.TIPOS.filter(function (t) { return t.id === q('.em-tipo').value; })[0]; }
+    function ponerDesc() { if (!descTocada) q('.em-desc').value = tipo().desc; }
+    function items() { var a = ad(); try { return a ? a.items() : []; } catch (e) { return []; } }
+    function unoActual() { var a = ad(); if (a) { var id = a.actual(), it = items().filter(function (x) { return x.id === id; })[0]; return it ? { ad: a, it: it } : null; } var x = actual(); return x ? { pantalla: x } : null; }
+    function regDe(a, it) { return G.lista().filter(function (d) { return d.gen === a.gen && d.item === a.item(it.id); })[0] || null; }
+    function ids() { return st.modo === 'lote' ? items().filter(function (x) { return st.marcas[x.id]; }).map(function (x) { return x.id; }) : (unoActual() && unoActual().it ? [unoActual().it.id] : []); }
+    function pintarLista() {
+      var l = items(), f = st.filtro.toLowerCase(), v = l.filter(function (x) { return !f || (x.id + ' ' + x.codigo + ' ' + x.titulo).toLowerCase().indexOf(f) >= 0; });
+      q('.em-lista').innerHTML = v.map(function (x) { return '<label><input type="checkbox" data-id="' + esc(x.id) + '"' + (st.marcas[x.id] ? ' checked' : '') + '><span><b>' + esc(x.codigo) + '</b> ' + esc(x.titulo) + '</span><small>' + (x.rev ? 'Rev. ' + esc(x.rev) : 'sin rev.') + '</small></label>'; }).join('') || '<p class="nota">No hay planos que coincidan.</p>';
+      var n = l.filter(function (x) { return st.marcas[x.id]; }).length; q('.em-n').textContent = n + ' de ' + l.length + ' seleccionados';
+      q('.em-ok').textContent = st.modo === 'lote' ? 'Emitir ' + n + ' plano(s)' : 'Emitir'; q('.em-ok').disabled = st.modo === 'lote' && !n;
+    }
+    function botones(lista, a) { return '<div class="em-des">' + lista.map(function (f) { return '<button type="button" data-f="' + f + '">' + (f === 'PDF' && a ? 'Imprimir / PDF' : 'Descargar ' + f) + '</button>'; }).join('') + '</div>'; }
+    function pintar() {
+      var a = ad(), u = unoActual(); if (!a && st.modo === 'lote') st.modo = 'uno';
+      q('.em-seg').hidden = !a; q('.em-3').hidden = !a; q('.em-lote').hidden = st.modo !== 'lote';
+      [].forEach.call(nodo.querySelectorAll('.em-seg button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === st.modo)); });
+      var o = q('.em-obj'); o.hidden = st.modo === 'lote';
+      if (u && u.it) o.innerHTML = '<b>' + esc(u.it.codigo) + '</b> ' + esc(u.it.titulo) + '<small>' + (u.it.rev ? 'Revisión vigente: ' + esc(u.it.rev) : 'Sin revisión emitida') + '</small>';
+      else if (u) o.innerHTML = '<b>' + esc(u.pantalla.t) + '</b>' + (u.pantalla.hijo ? ' ' + esc((u.pantalla.hijo.t ? u.pantalla.hijo.t + ' · ' : '') + u.pantalla.hijo.s) : '');
+      else o.textContent = 'No hay un entregable en pantalla.';
+      q('.em-ayuda').textContent = a ? 'Al emitir se agrega la fila al cuadro de revisiones de cada plano y se actualiza la revisión de su viñeta. Revisión vacía: se usa la siguiente de cada plano.'
+        : 'La emisión queda registrada en el control documental. La viñeta de este entregable toma sus revisiones de la configuración del módulo.';
+      if (a && !q('.em-por').dataset.ok) { q('.em-por').dataset.ok = '1'; var r = {}; try { r = a.responsables() || {}; } catch (e) {} q('.em-por').value = r.por || ''; q('.em-revi').value = r.reviso || ''; q('.em-apr').value = r.aprobo || ''; }
+      if (st.modo === 'lote') pintarLista(); else { q('.em-ok').textContent = 'Emitir'; q('.em-ok').disabled = !u; }
+      // Emisión vigente del entregable en pantalla, con sus descargas
+      var res = q('.em-res'), h = '';
+      if (st.ultimos) h = '<p class="em-hecho">' + esc(st.ultimos.txt) + '</p>' + botones(st.ultimos.formatos, st.ultimos.ad);
+      else if (st.modo === 'uno' && u) {
+        var d = u.it ? regDe(a, u.it) : null;
+        if (!u.it) { var x = u.pantalla, k = x.hijo ? (x.hijo.t || x.hijo.s) : ''; d = G.lista().filter(function (r2) { return r2.emision && gens(x).some(function (g) { return g.id === r2.gen; }) && r2.item === k; })[0] || null; }
+        if (d && d.emision) h = '<p class="em-hecho">Emitido · Rev. ' + esc(d.emision.rev) + (d.emision.fecha ? ' · ' + esc(d.emision.fecha) : '') + '<small>' + esc(d.emision.desc) + '</small></p>' + botones(a ? a.formatos : formatosSec(), a);
+      }
+      if (res.dataset.h !== h) { res.dataset.h = h; res.innerHTML = h; }
+    }
+    function botonesSec() { return [].filter.call(sec.querySelectorAll('button, a.btn'), function (b) { return !b.closest('.dkm-comun') && formatoDe(b.textContent || ''); }); }
+    function formatosSec() { var v = []; botonesSec().forEach(function (b) { var f = formatoDe(b.textContent); if (v.indexOf(f) < 0) v.push(f); }); return v; }
+    nodo.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.m) { st.modo = b.dataset.m; st.ultimos = null; if (st.modo === 'lote' && !Object.keys(st.marcas).length) { var u = unoActual(); if (u && u.it) st.marcas[u.it.id] = true; } pintar(); }
+      else if (b.dataset.a) { var f = st.filtro.toLowerCase(); items().forEach(function (x) { if (!f || (x.id + ' ' + x.codigo + ' ' + x.titulo).toLowerCase().indexOf(f) >= 0) { if (b.dataset.a === 'todos') st.marcas[x.id] = true; else delete st.marcas[x.id]; } }); pintarLista(); }
+      else if (b.classList.contains('em-ok')) emitir();
+      else if (b.dataset.f) { var a = ad();
+        if (a) { var l = st.ultimos ? st.ultimos.ids : ids(); a.descargar(l, b.dataset.f); l.forEach(function (id) { var d = regDe(a, { id: id }); if (d) G.anotar(d.id, 'Exportado', b.dataset.f); }); }
+        else { var bt = botonesSec().filter(function (x) { return formatoDe(x.textContent) === b.dataset.f; })[0]; if (bt) bt.click(); } }
+    });
+    nodo.addEventListener('change', function (e) { var t = e.target; if (t.dataset && t.dataset.id != null && t.type === 'checkbox') { if (t.checked) st.marcas[t.dataset.id] = true; else delete st.marcas[t.dataset.id]; pintarLista(); } else if (t.classList.contains('em-tipo')) { descTocada = false; ponerDesc(); } });
+    nodo.addEventListener('input', function (e) { var t = e.target; if (t.classList.contains('em-q')) { st.filtro = t.value; pintarLista(); } else if (t.classList.contains('em-desc')) descTocada = true; });
+    function emitir() {
+      var a = ad(), t = tipo(), rev = q('.em-rev').value.trim().toUpperCase(), fecha = fechaVin(q('.em-fecha').value), desc = (q('.em-desc').value.trim() || t.desc).toUpperCase(), res = q('.em-res');
+      if (!desc) { res.dataset.h = ''; res.innerHTML = '<p class="em-error">Escribe la descripción de la revisión.</p>'; q('.em-desc').focus(); return; }
+      if (a) {
+        var l = ids(); if (!l.length) return; var revs = {}, por = q('.em-por').value.trim().toUpperCase(), revi = q('.em-revi').value.trim().toUpperCase(), apr = q('.em-apr').value.trim().toUpperCase();
+        var n = a.aplicar(l, function (id, vig) { var r = rev || G.revPara(vig, t.id); revs[id] = r; return { rev: r, fecha: fecha, desc: desc, por: por, reviso: revi, aprobo: apr, cliente: '' }; });
+        var its = items(); l.forEach(function (id) { var it = its.filter(function (x) { return x.id === id; })[0]; if (!it || !revs[id]) return;
+          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al emitir' }); if (d) { if (d.codigo !== it.codigo) G.editar(d.id, { codigo: it.codigo }); G.emitir(d.id, { rev: revs[id], fecha: fecha, tipo: t.id, desc: desc }); } });
+        var dist = Object.keys(revs).map(function (k) { return revs[k]; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+        st.ultimos = { ids: l, ad: a, formatos: a.formatos, txt: n + ' plano(s) emitido(s) · Rev. ' + dist.join(', ') + ' · ' + fecha + ' · ' + desc };
+      } else {
+        var d0 = G.actual('', false); if (!d0) return; var r0 = rev || G.revPara(d0.emision ? d0.rev : '', t.id);
+        G.emitir(d0.id, { rev: r0, fecha: fecha, tipo: t.id, desc: desc }); st.ultimos = null;
+      }
+      q('.em-rev').value = ''; pintar();
+    }
+    ponerDesc(); pintar();
+    return { refrescar: function () { if (st.ultimos && st.modo === 'uno') { var u = unoActual(); if (!u || !u.it || st.ultimos.ids.indexOf(u.it.id) < 0) st.ultimos = null; } pintar(); } };
+  }
+
   // cfg: { clave, paneles: [{ id, titulo, mover: [selector | función(sec) → elemento(s)] }], inicial, limpiar: [selectores a quitar si quedan vacíos] }
   function apagada() { try { return /[?&]simple=1/.test(location.search) || localStorage.getItem('reyengi-mesa-off') === '1'; } catch (e) { return false; } }
   function fijar(off) { try { if (off) localStorage.setItem('reyengi-mesa-off', '1'); else localStorage.removeItem('reyengi-mesa-off'); } catch (e) {} location.href = location.href.replace(/([?&])simple=1&?/, '$1').replace(/[?&]$/, ''); if (!/[?&]simple=1/.test(location.search)) location.reload(); }
@@ -32,10 +122,13 @@
     var barra = document.createElement('div'); barra.className = 'dkm-barra'; var bp = document.createElement('button'); bp.type = 'button'; bp.textContent = 'Paneles'; bp.setAttribute('aria-haspopup', 'menu'); var br = document.createElement('button'); br.type = 'button'; br.textContent = 'Restablecer disposición'; var bc = document.createElement('button'); bc.type = 'button'; bc.textContent = 'Vista clásica'; bc.title = 'Volver al diseño anterior, sin paneles'; bc.onclick = function () { fijar(true); }; barra.append(bp, br, bc);
     var host = document.createElement('div'); host.className = 'dkm-host'; sec.append(barra, host);
     var paneles = {}; cfg.paneles.forEach(function (p) { paneles[p.id] = { titulo: p.titulo, montar: function (n) { n.classList.add('dkm-p'); piezas[p.id].forEach(function (e) { n.appendChild(e); }); } }; });
-    var nProp, nCtrl; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
+    var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
     var dock = window.REDock(host, { clave: 'reyengi-dkm-' + cfg.clave, paneles: paneles, inicial: cfg.inicial, alCambiar: function () { setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30); } });
     (cfg.limpiar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host') && !e.children.length) e.remove(); else if (!e.closest('.dkm-host') && e.matches('h2')) e.remove(); }); });
-    function comunes() { if (nProp) nProp.innerHTML = htmlProp(); if (nCtrl) nCtrl.innerHTML = htmlCtrl(); }
+    function comunes() { if (nProp) nProp.innerHTML = htmlProp(); if (!nCtrl) return;
+      if (!window.RE_GESTION) { nCtrl.innerHTML = htmlCtrl(); return; }
+      if (!nReg) { nCtrl.innerHTML = ''; var ne = document.createElement('div'); ne.className = 'dkm-em'; nReg = document.createElement('div'); nCtrl.append(ne, nReg); try { em = emision(ne, sec); } catch (e) { console.warn('Emisión', e); } }
+      nReg.innerHTML = htmlCtrl(); if (em) em.refrescar(); }
     function alto() { if (sec.hidden || window.matchMedia('(max-width: 900px)').matches) return; var t = host.getBoundingClientRect().top + window.scrollY - (sec.getBoundingClientRect().top + window.scrollY), top = host.getBoundingClientRect().top; host.style.height = Math.max(460, window.innerHeight - Math.max(top, 90) - 30) + 'px'; }
     var clave = ''; setInterval(function () { if (sec.hidden) return; var a = actual(), k = a ? a.href + '|' + (a.hijo ? (a.hijo.t || a.hijo.s) : '') : ''; if (k !== clave) { clave = k; comunes(); } }, 900);
     var tg = 0, esp = setInterval(function () { if (window.RE_GESTION) { clearInterval(esp); window.RE_GESTION.alCambiar(comunes); comunes(); } else if (++tg > 40) clearInterval(esp); }, 200);

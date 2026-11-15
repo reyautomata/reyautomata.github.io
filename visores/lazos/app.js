@@ -89,7 +89,7 @@
       var vAI = ss.filter(function (s) { return s.tipo === 'AI'; }).map(function (s) { return ISA.analizar(s.tag).variable; });
       var control = ss.some(function (s) { return s.tipo === 'AO' && vAI.indexOf(ISA.analizar(s.tag).variable) >= 0; });
       return { id: k, servicio: L.servicio || (ss.filter(function (s) { return s.servicio; })[0] || {}).servicio || '', plano: L.plano || ((E.cfg.prefijoPlano || '') + pad(L.num, 4)),
-        rev: L.rev || '', notas: L.notas || '', tags: ss.map(function (s) { return s.tag; }).join(', '), crudas: ss,
+        rev: L.rev || '', revs: L.revs && L.revs.length ? L.revs : null, notas: L.notas || '', tags: ss.map(function (s) { return s.tag; }).join(', '), crudas: ss,
         senales: ss.map(function (s) { return resolver(s, control); }) };
     });
   }
@@ -179,7 +179,7 @@
     var Ls = lazos(), q = ($('#buscarLazo').value || '').toLowerCase();
     if (!sel || !Ls.some(function (l) { return l.id === sel; })) sel = Ls[0] ? Ls[0].id : null;
     $('#listaLazos').innerHTML = Ls.filter(function (l) { return !q || (l.id + ' ' + l.servicio + ' ' + l.tags).toLowerCase().indexOf(q) >= 0; }).map(function (l) {
-      return '<button type="button" class="itlazo" data-id="' + esc(l.id) + '" aria-pressed="' + (l.id === sel) + '"><b>' + esc(l.id) + '</b><span>' + esc(l.servicio || '—') + '</span><small>' + esc(l.plano) + ' · ' + l.senales.length + ' señal(es)</small></button>';
+      return '<button type="button" class="itlazo" data-id="' + esc(l.id) + '" aria-pressed="' + (l.id === sel) + '"><b>' + esc(l.id) + '</b><span>' + esc(l.servicio || '—') + '</span><small>' + esc(l.plano) + (l.rev ? ' · Rev. ' + esc(l.rev) : '') + ' · ' + l.senales.length + ' señal(es)</small></button>';
     }).join('') || '<p class="vacio">Aún no hay lazos. Crea uno típico o agrega señales al listado de E/S.</p>';
     var L = Ls.filter(function (l) { return l.id === sel; })[0];
     $('#hojaVacia').hidden = !!L; $('#hojaLazo').hidden = !L;
@@ -675,5 +675,26 @@
   if (!irEntregable()) mostrar(v0);
   window.addEventListener('hashchange', function () { if (irEntregable()) return; if (/^#(io|mod|cfg|lazos|doc|inst|circ|cond|uni|blq)$/.test(location.hash)) mostrar(location.hash.slice(1)); });
   function mirarLazo(id) { if (!flotaVisible() || !id || id === FL.lazo || !lazos().some(function (l) { return l.id === id; })) return; FL.lazo = id; FL.hoja = 0; pintarFlota(); }
-  window.__LAZOS = { mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
+  // ── Emisión de planos: cada lazo emitido guarda su propio cuadro de revisiones (parte del cuadro común del proyecto) ──
+  function revVigente(id) { var o = E.lazos[id] || {}, u = (o.revs && o.revs.length ? o.revs : E.revs).slice(-1)[0]; return o.rev || (u && u.rev) || ''; }
+  function emitirLazos(ids, fila) { // fila(id, revVigente) → { rev, fecha, desc, por, reviso, aprobo, cliente }
+    var n = 0;
+    ids.forEach(function (id) {
+      if (!lazos().some(function (l) { return l.id === id; })) return;
+      var o = E.lazos[id] = E.lazos[id] || {}, rv = fila(id, revVigente(id)); if (!rv || !rv.rev) return;
+      if (!o.revs) o.revs = JSON.parse(JSON.stringify(E.revs || []));
+      var u = o.revs[o.revs.length - 1];
+      if (u && String(u.rev) === String(rv.rev)) o.revs[o.revs.length - 1] = rv; else o.revs.push(rv);   // misma revisión: se corrige la fila, no se duplica
+      o.rev = rv.rev; n++;
+    });
+    if (n) { guardar(); pintarLazos(); }
+    return n;
+  }
+  function descargarLazos(ids, formato) {
+    var Ls = lazos().filter(function (l) { return ids.indexOf(l.id) >= 0; }); if (!Ls.length) return;
+    if (formato === 'PDF') return imprimir(Ls);
+    if (Ls.length === 1) return descargar(nombreArch(Ls[0].plano) + '.dxf', dxfLazo(Ls[0]), 'application/dxf');
+    descargar('Diagramas de lazo emitidos.zip', window.XLSX_RE._zip(Ls.map(function (L) { return { nombre: nombreArch(L.plano) + '.dxf', datos: dxfLazo(L) }; })), 'application/zip');
+  }
+  window.__LAZOS = { emitir: emitirLazos, revVigente: revVigente, descargarLazos: descargarLazos, seleccionado: function () { return sel; }, mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
 })();

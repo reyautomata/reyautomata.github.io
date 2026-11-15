@@ -24,6 +24,19 @@
     'v-cond': { paneles: [{ id: 'ductos', titulo: 'Ductos', mover: [':scope > .herr', '#kEstado', caja('#kDuctos')] }, { id: 'datos', titulo: 'Datos del ducto', mover: ['.uni > div:nth-child(1)'] }, { id: 'corte', titulo: 'Corte y memoria', mover: ['.uni > div:nth-child(2)'] }, { id: 'cables', titulo: 'Cables', mover: [antes('#kCables'), caja('#kCables')] }],
       inicial: { t: 'row', c: [{ t: 'col', c: [{ t: 'tabs', p: ['ductos'], a: 'ductos' }, { t: 'tabs', p: ['datos'], a: 'datos' }], s: [0.4, 0.6] }, { t: 'col', c: [{ t: 'tabs', p: ['corte'], a: 'corte' }, { t: 'tabs', p: ['cables'], a: 'cables' }], s: [0.6, 0.4] }, COM], s: [0.27, 0.5, 0.23] }, limpiar: ['.uni', ':scope > h2.grupo'] }
   };
+  // Emisión de diagramas de lazo desde el panel de Control documental: de a uno o por lote, con actualización de viñetas
+  if (window.RE_EMISION) window.RE_EMISION.registrar('v-lazos', {
+    gen: 'P02-LAZO', nombre: 'diagramas de lazo', formatos: ['PDF', 'DXF'],
+    item: function (id) { return 'Lazo ' + id; },
+    items: function () { var Z = window.__LAZOS; return Z ? Z.lazos().map(function (l) { return { id: l.id, codigo: l.plano, titulo: 'Lazo ' + l.id + (l.servicio ? ' · ' + l.servicio : ''), rev: Z.revVigente(l.id) }; }) : []; },
+    actual: function () { return window.__LAZOS ? window.__LAZOS.seleccionado() : null; },
+    responsables: function () { var E = window.__LAZOS.E(), u = (E.revs || []).slice(-1)[0] || {}; return { por: u.por || '', reviso: u.reviso || '', aprobo: u.aprobo || '' }; },
+    aplicar: function (ids, fila) { return window.__LAZOS.emitir(ids, fila); },
+    descargar: function (ids, f) { window.__LAZOS.descargarLazos(ids, f); }
+  });
+  // Descarga pedida desde la página de Control documental
+  function pendiente() { var p = null; try { p = JSON.parse(sessionStorage.getItem('reyengi-descargar') || 'null'); sessionStorage.removeItem('reyengi-descargar'); } catch (e) {} if (p && p.gen === 'P02-LAZO' && window.__LAZOS) setTimeout(function () { window.__LAZOS.descargarLazos(p.ids || [], p.f || 'PDF'); }, 600); }
+  if (document.readyState === 'complete') setTimeout(pendiente, 400); else window.addEventListener('load', function () { setTimeout(pendiente, 400); });
   function montar(id) { var sec = document.getElementById(id), c = S[id]; if (!sec || !c || sec.hidden || sec.dataset.dkm) return; try { window.REMesaModulo(sec, { clave: id, paneles: c.paneles, inicial: c.inicial, limpiar: c.limpiar }); } catch (e) { console.warn('Mesa de trabajo', id, e); } }
   function todas() { Object.keys(S).forEach(montar); }
   // Las secciones se muestran de a una: cada mesa se arma la primera vez que su sección queda visible
