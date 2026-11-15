@@ -1,0 +1,58 @@
+/* Suite ReyEngi · asistente de IA local (panel lateral derecho) */
+.ra-btn { position: fixed; right: 14px; bottom: 34px; z-index: 60; display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 20px; border: 1px solid #F0691A; background: #0B2545; color: #fff; font: 600 12.5px/1 system-ui, "Segoe UI", sans-serif; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .45); }
+.ra-btn:hover { background: #12356a; }
+.ra-btn i, .ra-nuc { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #58A6FF; background: radial-gradient(circle, #cfe6ff 0 22%, #58A6FF 26% 44%, transparent 50%); flex: none; }
+.ra-btn[aria-expanded="true"] { display: none; }
+.ra-panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 100vw); z-index: 90; display: flex; flex-direction: column; background: #121D2F; color: #E2E8F0; border-left: 1px solid #243349; box-shadow: -12px 0 30px rgba(0, 0, 0, .45); font: 13px/1.5 system-ui, "Segoe UI", sans-serif; color-scheme: dark; }
+.ra-panel[hidden] { display: none; }
+.ra-panel * { box-sizing: border-box; }
+.ra-panel button, .ra-panel input, .ra-panel select, .ra-panel textarea { font: inherit; color: inherit; }
+.ra-panel button { background: #1A2942; border: 1px solid #243349; border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+.ra-panel button:hover { border-color: #58A6FF; }
+.ra-panel button.pri { background: #F0691A; border-color: #F0691A; color: #1b0d02; font-weight: 600; }
+.ra-panel :focus-visible, .ra-btn:focus-visible { outline: 2px solid #58A6FF; outline-offset: 1px; }
+.ra-panel input, .ra-panel select, .ra-panel textarea { width: 100%; background: #0C1422; border: 1px solid #243349; border-radius: 6px; padding: 6px 8px; }
+.ra-panel > header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #243349; background: #0F1A2B; }
+.ra-panel > header div { flex: 1; min-width: 0; }
+.ra-panel > header b { display: block; font-size: 14px; }
+.ra-panel > header small { color: #94A3B8; font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ra-panel > header small.ok::before, .ra-panel > header small.mal::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #3FB950; }
+.ra-panel > header small.mal::before { background: #F85149; }
+.ra-panel > header button { font-size: 12px; }
+.ra-nuc { width: 24px; height: 24px; }
+.ra-ocupado .ra-nuc { animation: ra-pulso 1.1s ease-in-out infinite; }
+@keyframes ra-pulso { 50% { border-color: #F0691A; box-shadow: 0 0 0 5px rgba(240, 105, 26, .2); } }
+@media (prefers-reduced-motion: reduce) { .ra-ocupado .ra-nuc { animation: none; border-color: #F0691A; } }
+#raCfg { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #243349; background: #0F1A2B; max-height: 60vh; overflow: auto; }
+#raCfg[hidden] { display: none; }
+#raCfg label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: #94A3B8; }
+#raMem small { color: #94A3B8; }
+.ra-rec { display: flex; gap: 6px; align-items: center; font-size: 12px; padding: 3px 0; }
+.ra-rec span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ra-rec button { font-size: 11px; padding: 2px 6px; }
+.ra-hilo { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ra-yo { align-self: flex-end; max-width: 88%; background: #1A2942; border: 1px solid #243349; border-radius: 10px 10px 2px 10px; padding: 6px 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ra-ia { border-left: 2px solid #58A6FF; padding-left: 10px; overflow-wrap: anywhere; }
+.ra-ia p { margin: 0 0 6px; } .ra-ia p:last-child { margin-bottom: 0; }
+.ra-ia h4 { margin: 8px 0 3px; font-size: 13.5px; }
+.ra-ia ul, .ra-ia ol { margin: 3px 0 6px; padding-left: 20px; }
+.ra-ia code, .ra-falta code { font: 12px Consolas, monospace; background: #1A2942; padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+.ra-ia pre { background: #08101c; border: 1px solid #243349; border-radius: 6px; padding: 8px; overflow: auto; margin: 5px 0; }
+.ra-ia pre code { background: none; padding: 0; }
+.ra-tw { overflow: auto; }
+.ra-ia table { border-collapse: collapse; font-size: 12px; margin: 5px 0; }
+.ra-ia th, .ra-ia td { border: 1px solid #243349; padding: 2px 6px; text-align: left; }
+.ra-err { border-left-color: #F85149; color: #ffb4ae; }
+.ra-paso { font-size: 11.5px; color: #94A3B8; display: flex; gap: 6px; padding-left: 10px; }
+.ra-paso b { color: #FF9D5C; font-weight: 600; white-space: nowrap; }
+.ra-esp { color: #94A3B8; font-size: 12px; padding-left: 10px; }
+.ra-bien { display: flex; flex-direction: column; gap: 6px; color: #94A3B8; }
+.ra-bien p { margin: 0 0 4px; }
+.ra-bien button { text-align: left; font-size: 12.5px; }
+.ra-falta { border: 1px solid #F85149; border-radius: 8px; padding: 10px 12px; }
+.ra-falta ol { margin: 6px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+.ra-falta p { color: #94A3B8; font-size: 12px; margin: 8px 0 0; }
+.ra-red { display: flex; gap: 6px; padding: 8px 12px 2px; align-items: flex-end; }
+.ra-red textarea { resize: none; min-height: 34px; max-height: 140px; }
+.ra-nota { color: #94A3B8; font-size: 10.5px; text-align: center; margin: 3px 8px 8px; }
+@media print { .ra-btn, .ra-panel { display: none !important; } }

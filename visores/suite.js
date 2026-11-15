@@ -14,6 +14,9 @@
     ['ctl', 'Control y comunicaciones', [['E1', 'Señales de E/S (edición)', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod'], ['05', 'Listado de entradas y salidas', 'lazos/#doc'], ['06', 'Diagramas de lazo', 'lazos/#lazos'], ['09', 'Diagrama de bloques de control', 'lazos/#blq'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
     ['ene', 'Energía y canalizaciones', [['07', 'Listado de circuitos', 'lazos/#circ'], ['08', 'Unilineales TDI', 'lazos/#uni'], ['H3', 'Canalizaciones (conduit)', 'lazos/#cond'], ['ES', 'Escalerillas portaconductores', '#escalerillas']]]
   ];
+  // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
+  window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE;
+  if (window.top === window) { var sa = document.createElement('script'); sa.src = BASE + 'asistente.js'; sa.defer = true; document.head.appendChild(sa); }
   var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [] };
   try { Object.assign(U, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
   U.rec = U.rec || []; U.hijos = U.hijos || {}; U.cerrados = U.cerrados || {};
