@@ -32,6 +32,9 @@
     actual: function () { return window.__LAZOS ? window.__LAZOS.seleccionado() : null; },
     responsables: function () { var E = window.__LAZOS.E(), u = (E.revs || []).slice(-1)[0] || {}; return { por: u.por || '', reviso: u.reviso || '', aprobo: u.aprobo || '' }; },
     aplicar: function (ids, fila) { return window.__LAZOS.emitir(ids, fila); },
+    revisiones: function (id) { return window.__LAZOS.revisionesLazo(id); },
+    ponerRevisiones: function (id, filas) { window.__LAZOS.ponerRevisionesLazo(id, filas); },
+    vista: function (id) { return window.__LAZOS.vistaLazo(id); },
     descargar: function (ids, f) { window.__LAZOS.descargarLazos(ids, f); }
   });
   // Descarga pedida desde la página de Control documental

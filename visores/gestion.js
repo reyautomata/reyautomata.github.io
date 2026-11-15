@@ -26,6 +26,8 @@
   function evento(d, a, det) { d.historial.push({ f: ahora(), a: a, d: det || '', rev: d.rev, estado: d.estado }); if (d.historial.length > 150) d.historial.splice(0, d.historial.length - 150); d.modificado = ahora(); }
   function clave(o) { return o.gen + '|' + (o.ref || '') + '|' + (o.item || ''); }
 
+  var _bd = null;
+  function bd() { return _bd || (_bd = new Promise(function (ok, mal) { var r = indexedDB.open('reyengi-emitidos', 1); r.onupgradeneeded = function () { r.result.createObjectStore('vistas'); }; r.onsuccess = function () { ok(r.result); }; r.onerror = function () { _bd = null; mal(r.error); }; })); }
   var G = window.RE_GESTION = {
     ESTADOS: ESTADOS, TIPOS: TIPOS,
     // Revisión que corresponde a una emisión nueva, a partir de la vigente y del tipo de emisión
@@ -59,13 +61,22 @@
       d.emision = { rev: d.rev, fecha: e.fecha || '', tipo: t.id, desc: (e.desc || t.desc).slice(0, 120), f: ahora() };
       d.emisiones = (d.emisiones || []).concat([d.emision]).slice(-40);
       evento(d, 'Emitido', 'Rev. ' + d.rev + (e.fecha ? ' · ' + e.fecha : '') + ' · ' + d.emision.desc); guardar(g); return d; },
+    // Cuadro de revisiones editado a mano (corregir, quitar o agregar filas): la última fila es la emisión vigente
+    revisiones: function (id, filas) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return null;
+      var l = (filas || []).filter(function (r) { return r && String(r.rev || '').trim(); }).map(function (r) { var v = (d.emisiones || []).filter(function (e) { return e.rev === r.rev; })[0] || {}; return { rev: String(r.rev).trim().slice(0, 6), fecha: r.fecha || '', tipo: v.tipo || 'otra', desc: String(r.desc || '').slice(0, 120), f: v.f || ahora() }; });
+      d.emisiones = l.slice(-40); d.emision = l.length ? l[l.length - 1] : null;
+      if (d.emision) { d.rev = d.emision.rev; d.estado = 'Emitido'; } else if (d.estado === 'Emitido') d.estado = 'En desarrollo';
+      evento(d, 'Revisiones', 'Cuadro de revisiones editado: ' + (l.map(function (r) { return r.rev; }).join(', ') || 'sin revisiones')); guardar(g); return d; },
+    // Vista previa de lo emitido: copia de la hoja tal como salió, guardada en este navegador (fuera de los datos del proyecto, por tamaño)
+    guardarVista: function (id, v) { return bd().then(function (db) { return new Promise(function (ok) { var t = db.transaction('vistas', 'readwrite'); t.objectStore('vistas').put(Object.assign({ f: ahora() }, v), id); t.oncomplete = function () { ok(true); }; t.onerror = t.onabort = function () { ok(false); }; }); }).catch(function () { return false; }); },
+    vista: function (id) { return bd().then(function (db) { return new Promise(function (ok) { var r = db.transaction('vistas').objectStore('vistas').get(id); r.onsuccess = function () { ok(r.result || null); }; r.onerror = function () { ok(null); }; }); }).catch(function () { return null; }); },
     // Anota un archivo real guardado en la carpeta del proyecto (ruta relativa a esa carpeta)
     adjuntar: function (id, ruta) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || !ruta) return null; d.archivos = d.archivos || []; if (d.archivos.indexOf(ruta) < 0) { d.archivos.push(ruta); evento(d, 'Archivo', ruta); guardar(g); } return d; },
     desvincular: function (id, ruta) { var g = leer(), d = g.docs.filter(function (x) { return x.id === id; })[0]; if (!d || !d.archivos) return; d.archivos = d.archivos.filter(function (x) { return x !== ruta; }); evento(d, 'Archivo', 'Desvinculado: ' + ruta); guardar(g); },
     deArchivo: function (ruta) { return leer().docs.filter(function (d) { return (d.archivos || []).indexOf(ruta) >= 0; }); },
     // Registro del entregable abierto en pantalla (lo crea si falta), según el módulo y el formato
     actual: function (f, conjunto) { return deActual(f, conjunto, ''); },
-    quitar: function (id) { var g = leer(); g.docs = g.docs.filter(function (x) { return x.id !== id; }); guardar(g); },
+    quitar: function (id) { var g = leer(); g.docs = g.docs.filter(function (x) { return x.id !== id; }); guardar(g); bd().then(function (db) { db.transaction('vistas', 'readwrite').objectStore('vistas').delete(id); }).catch(function () {}); },
     resumen: function () { var o = { DOCUMENTO: { total: 0 }, PLANO: { total: 0 } }; leer().docs.forEach(function (d) { var c = o[d.categoria]; if (!c) return; c.total++; c[d.estado] = (c[d.estado] || 0) + 1; }); return o; },
     buscar: function (t) { var q = String(t || '').toLowerCase().split(/\s+/).filter(Boolean); return leer().docs.filter(function (d) { var s = [d.codigo, d.titulo, d.tipo, d.item, d.subcategoria, d.estado].join(' ').toLowerCase(); return q.every(function (w) { return s.indexOf(w) >= 0; }); }); }
   };

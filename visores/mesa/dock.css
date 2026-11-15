@@ -80,3 +80,10 @@
 .zm-barra output { min-width: 50px; text-align: center; font: 600 12px var(--f-mono, monospace); color: var(--fg); } .zm-barra span { color: var(--muted); margin-left: 6px; white-space: nowrap; }
 .zm.zm-on { cursor: grab; } .zm.zm-arr { cursor: grabbing; user-select: none; }
 @media print { .zm { zoom: 1 !important; } .zm-barra { display: none !important; } }
+
+/* Cuadro de revisiones editable en el panel de Control documental */
+.em-cuadro { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 10px; border-bottom: 1px dashed var(--line); margin-bottom: 4px; }
+.em-cuadro h3 { margin: 0 !important; } .em-cuadro .nota { margin: 0; }
+.em-fila { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.em-f1 { display: grid; grid-template-columns: 52px 1fr auto; gap: 4px; } .em-f1 input:first-child { font-weight: 700; text-align: center; }
+.em-fila input { background: var(--panel) !important; } .dkm-em button.em-pel { background: #F85149; border-color: #F85149; color: #fff; }
