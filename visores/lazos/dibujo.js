@@ -271,7 +271,7 @@
     });
     L.l(x1 - 22, 272, x1 - 22, H - 10, 'ROTULO');
     L.tx(x0 + 2, 275.6, 'PLANO N°', 1.6, 'ROTULO', { b: true }).tx(x0 + 64, 283.2, o.plano + (o.de > 1 ? ' (' + o.n + '/' + o.de + ')' : ''), 3.4, 'ROTULO', { al: 'c', b: true });
-    L.tx(x1 - 20, 275.6, 'REV.', 1.6, 'ROTULO', { b: true }).tx(x1 - 11, 283.4, o.rev || P.rev || '', 3.4, 'ROTULO', { al: 'c', b: true });
+    L.tx(x1 - 20, 275.6, 'REV.', 1.6, 'ROTULO', { b: true }).tx(x1 - 11, 283.4, (o.revs ? o.rev || '' : o.rev || P.rev || ''), 3.4, 'ROTULO', { al: 'c', b: true });
   }
 
   // ── Hoja completa ──
