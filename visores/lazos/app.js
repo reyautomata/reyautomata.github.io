@@ -769,11 +769,17 @@
     if (n) { guardar(); pintarLazos(); }
     return n;
   }
+  function revisionesLazo(id) { var o = E.lazos[id] || {}, propio = !!(o.revs); return { filas: JSON.parse(JSON.stringify(propio ? o.revs : E.revs || [])), comun: !propio }; }
+  function ponerRevisionesLazo(id, filas) { // al editar, el lazo pasa a tener su propio cuadro
+    var o = E.lazos[id] = E.lazos[id] || {}; o.revs = (filas || []).map(function (r) { return { rev: r.rev || '', fecha: r.fecha || '', desc: r.desc || '', por: r.por || '', reviso: r.reviso || '', aprobo: r.aprobo || '', cliente: r.cliente || '' }; });
+    var u = o.revs[o.revs.length - 1]; o.rev = u ? u.rev : ''; guardar(); pintarLazos();
+  }
+  function vistaLazo(id) { var L = lazos().filter(function (l) { return l.id === id; })[0]; return L ? '<div class="hojas">' + D.hojas(L, ctx()).map(function (h) { return '<div class="hoja">' + D.svg(h, { mm: false }) + '</div>'; }).join('') + '</div>' : ''; }
   function descargarLazos(ids, formato) {
     var Ls = lazos().filter(function (l) { return ids.indexOf(l.id) >= 0; }); if (!Ls.length) return;
     if (formato === 'PDF') return imprimir(Ls);
     if (Ls.length === 1) return descargar(nombreArch(Ls[0].plano) + '.dxf', dxfLazo(Ls[0]), 'application/dxf');
     descargar('Diagramas de lazo emitidos.zip', window.XLSX_RE._zip(Ls.map(function (L) { return { nombre: nombreArch(L.plano) + '.dxf', datos: dxfLazo(L) }; })), 'application/zip');
   }
-  window.__LAZOS = { emitir: emitirLazos, revVigente: revVigente, descargarLazos: descargarLazos, seleccionado: function () { return sel; }, mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
+  window.__LAZOS = { revisionesLazo: revisionesLazo, ponerRevisionesLazo: ponerRevisionesLazo, vistaLazo: vistaLazo, emitir: emitirLazos, revVigente: revVigente, descargarLazos: descargarLazos, seleccionado: function () { return sel; }, mirarLazo: mirarLazo, uid: uid, E: function () { return E; }, resolver: resolver, modulo: modulo, base: base, guardar: guardar, descargar: descargar, lazoId: lazoId, refrescarFlota: function () { refrescarFlota(); }, esc: esc, pad: pad, lazos: lazos, asignarAuto: asignarAuto, importarFilas: importarFilas, parseTabla: parseTabla, leerXlsx: leerXlsx, dxfLazo: dxfLazo, crearTipico: crearTipico };
 })();

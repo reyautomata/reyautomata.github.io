@@ -28,12 +28,14 @@
   function fechaVin(iso) { var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || ''); return m ? m[3] + '-' + m[2] + '-' + m[1] : (iso || ''); }
   function hoyIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function formatoDe(t) { if (/pegar|vista previa|importar|cargar|plantilla|todos|todas/i.test(t)) return ''; var m = /\b(PDF|DXF|Excel|Word|PNG)\b/i.exec(t); return m ? m[1] : ''; }
-  function emision(nodo, sec) {
+  function estilos() { var css = [].map.call(document.querySelectorAll('style'), function (e) { return e.id === 'vp-css' ? '' : e.textContent; }).join('\n'), enl = [].map.call(document.querySelectorAll('link[rel=stylesheet]'), function (l) { return l.href; }); return { css: css.slice(0, 400000), enlaces: enl }; }
+  function emision(nodo, sec, cfg) {
     var G = window.RE_GESTION, ad = function () { return window.RE_EMISION.adaptadores[sec.id] || null; };
     var st = { modo: 'uno', marcas: {}, filtro: '', ultimos: null };
     nodo.innerHTML = '<h3 class="dkm-t">Emitir</h3>' +
       '<div class="em-seg" role="group" aria-label="Alcance de la emisión"><button type="button" data-m="uno" aria-pressed="true">En pantalla</button><button type="button" data-m="lote" aria-pressed="false">Por lote</button></div>' +
       '<p class="em-obj"></p>' +
+      '<div class="em-cuadro"></div>' +
       '<div class="em-lote" hidden><div class="em-fl"><input type="search" class="em-q" placeholder="Filtrar planos" aria-label="Filtrar planos"><button type="button" data-a="todos">Todos</button><button type="button" data-a="nada">Ninguno</button></div><div class="em-lista" role="group" aria-label="Planos a emitir"></div><p class="nota em-n"></p></div>' +
       '<label>Tipo de emisión<select class="em-tipo">' + G.TIPOS.map(function (t) { return '<option value="' + t.id + '">' + esc(t.t) + '</option>'; }).join('') + '</select></label>' +
       '<div class="em-2"><label>Revisión<input class="em-rev" maxlength="4" placeholder="automática"></label><label>Fecha<input type="date" class="em-fecha" value="' + hoyIso() + '"></label></div>' +
@@ -65,6 +67,7 @@
       q('.em-ayuda').textContent = a ? 'Al emitir se agrega la fila al cuadro de revisiones de cada plano y se actualiza la revisión de su viñeta. Revisión vacía: se usa la siguiente de cada plano.'
         : 'La emisión queda registrada en el control documental. La viñeta de este entregable toma sus revisiones de la configuración del módulo.';
       if (a && !q('.em-por').dataset.ok) { q('.em-por').dataset.ok = '1'; var r = {}; try { r = a.responsables() || {}; } catch (e) {} q('.em-por').value = r.por || ''; q('.em-revi').value = r.reviso || ''; q('.em-apr').value = r.aprobo || ''; }
+      pintarCuadro();
       if (st.modo === 'lote') pintarLista(); else { q('.em-ok').textContent = 'Emitir'; q('.em-ok').disabled = !u; }
       // Emisión vigente del entregable en pantalla, con sus descargas
       var res = q('.em-res'), h = '';
@@ -76,18 +79,48 @@
       }
       if (res.dataset.h !== h) { res.dataset.h = h; res.innerHTML = h; }
     }
+    // ── Cuadro de revisiones del entregable en pantalla: se ve lo ya emitido y se puede corregir, quitar o agregar filas ──
+    function regPantalla(x) { var k = x.hijo ? (x.hijo.t || x.hijo.s) : ''; return G.lista().filter(function (r2) { return gens(x).some(function (g) { return g.id === r2.gen; }) && r2.item === k; })[0] || null; }
+    function cuadro() { var a = ad(), u = unoActual(); if (!u) return null;
+      if (a && u.it) { var r = a.revisiones ? a.revisiones(u.it.id) : { filas: [] }; return { a: a, id: u.it.id, filas: r.filas, comun: r.comun }; }
+      if (!u.pantalla) return null; var d = regPantalla(u.pantalla); return { d: d, filas: ((d && d.emisiones) || []).map(function (e) { return { rev: e.rev, fecha: e.fecha, desc: e.desc }; }) }; }
+    function pintarCuadro(forzar) {
+      var n = q('.em-cuadro'), c = st.modo === 'uno' ? cuadro() : null; n.hidden = !c; if (!c) return;
+      var h = '<h3 class="dkm-t">Cuadro de revisiones</h3>' + (c.comun ? '<p class="nota">Este plano usa el cuadro común del proyecto. Si lo editas aquí, pasa a tener su propio cuadro.</p>' : '') +
+        (c.filas.map(function (r, i) { return '<div class="em-fila" data-i="' + i + '"><div class="em-f1"><input data-c="rev" value="' + esc(r.rev) + '" maxlength="4" aria-label="Revisión"><input data-c="fecha" value="' + esc(r.fecha) + '" maxlength="10" placeholder="dd-mm-aaaa" aria-label="Fecha de la revisión ' + esc(r.rev) + '"><button type="button" data-cq="del" aria-label="Eliminar la revisión ' + esc(r.rev) + '">✕</button></div>' +
+          '<input data-c="desc" value="' + esc(r.desc) + '" maxlength="60" placeholder="Descripción" aria-label="Descripción de la revisión ' + esc(r.rev) + '">' +
+          (c.a ? '<div class="em-3"><input data-c="por" value="' + esc(r.por) + '" maxlength="6" placeholder="Por" aria-label="Por"><input data-c="reviso" value="' + esc(r.reviso) + '" maxlength="6" placeholder="Revisó" aria-label="Revisó"><input data-c="aprobo" value="' + esc(r.aprobo) + '" maxlength="6" placeholder="Aprobó" aria-label="Aprobó"></div>' : '') + '</div>'; }).join('') || '<p class="nota">Sin revisiones todavía.</p>') +
+        '<button type="button" data-cq="mas">+ Agregar revisión</button>';
+      var k = (c.id || (c.d && c.d.id) || '') + '|' + h; if (n.dataset.h === k) return;
+      if (!forzar && n.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // no se redibuja mientras se escribe
+      n.dataset.h = k; n.innerHTML = h;
+    }
+    function leerCuadro() { return [].map.call(q('.em-cuadro').querySelectorAll('.em-fila'), function (f) { var r = {}; [].forEach.call(f.querySelectorAll('[data-c]'), function (i) { r[i.dataset.c] = i.value.trim().toUpperCase(); }); return r; }); }
+    function guardarCuadro(filas) {
+      var c = cuadro(); if (!c) return; filas = filas.filter(function (r) { return r.rev; });
+      if (c.a) { c.a.ponerRevisiones(c.id, filas); var d = regDe(c.a, { id: c.id }); if (d) { G.revisiones(d.id, filas); foto(d.id, c.a, c.id); } }
+      else { var d2 = c.d || (filas.length ? G.actual('', false) : null); if (d2) { G.revisiones(d2.id, filas); foto(d2.id); } }
+      st.ultimos = null; pintar(); pintarCuadro(true);
+    }
+    // Copia de la hoja tal como queda emitida, para la vista previa del control documental
+    function foto(docId, a, id) { try { var html = '', ancho = 0;
+        if (a && a.vista) html = a.vista(id);
+        else { var sl = (cfg.paneles || []).map(function (p) { return p.zoom; }).filter(Boolean)[0], el = sl && sec.querySelector(sl); if (el) { var cl = el.cloneNode(true); cl.style.zoom = ''; cl.style.width = ''; html = cl.outerHTML; ancho = Math.round(el.scrollWidth / (parseFloat(el.style.zoom) || 1)); } }
+        if (html) { var e = estilos(); G.guardarVista(docId, { html: html.slice(0, 6000000), css: e.css, enlaces: e.enlaces, base: location.href, ancho: ancho }); } } catch (er) { console.warn('Vista previa', er); } }
     function botonesSec() { return [].filter.call(sec.querySelectorAll('button, a.btn'), function (b) { return !b.closest('.dkm-comun') && formatoDe(b.textContent || ''); }); }
     function formatosSec() { var v = []; botonesSec().forEach(function (b) { var f = formatoDe(b.textContent); if (v.indexOf(f) < 0) v.push(f); }); return v; }
     nodo.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       if (b.dataset.m) { st.modo = b.dataset.m; st.ultimos = null; if (st.modo === 'lote' && !Object.keys(st.marcas).length) { var u = unoActual(); if (u && u.it) st.marcas[u.it.id] = true; } pintar(); }
       else if (b.dataset.a) { var f = st.filtro.toLowerCase(); items().forEach(function (x) { if (!f || (x.id + ' ' + x.codigo + ' ' + x.titulo).toLowerCase().indexOf(f) >= 0) { if (b.dataset.a === 'todos') st.marcas[x.id] = true; else delete st.marcas[x.id]; } }); pintarLista(); }
+      else if (b.dataset.cq === 'mas') { var fs = leerCuadro(), u2 = fs[fs.length - 1]; fs.push({ rev: G.revPara(u2 ? u2.rev : '', tipo().id), fecha: fechaVin(q('.em-fecha').value), desc: (q('.em-desc').value.trim() || tipo().desc).toUpperCase(), por: u2 ? u2.por : '', reviso: u2 ? u2.reviso : '', aprobo: u2 ? u2.aprobo : '' }); guardarCuadro(fs); }
+      else if (b.dataset.cq === 'del') { if (b.dataset.seguro) { var i = +b.closest('.em-fila').dataset.i, f2 = leerCuadro(); f2.splice(i, 1); guardarCuadro(f2); } else { b.dataset.seguro = '1'; b.textContent = '¿Eliminar?'; b.classList.add('em-pel'); setTimeout(function () { if (b.isConnected) { delete b.dataset.seguro; b.textContent = '✕'; b.classList.remove('em-pel'); } }, 4000); } }
       else if (b.classList.contains('em-ok')) emitir();
       else if (b.dataset.f) { var a = ad();
         if (a) { var l = st.ultimos ? st.ultimos.ids : ids(); a.descargar(l, b.dataset.f); l.forEach(function (id) { var d = regDe(a, { id: id }); if (d) G.anotar(d.id, 'Exportado', b.dataset.f); }); }
         else { var bt = botonesSec().filter(function (x) { return formatoDe(x.textContent) === b.dataset.f; })[0]; if (bt) bt.click(); } }
     });
-    nodo.addEventListener('change', function (e) { var t = e.target; if (t.dataset && t.dataset.id != null && t.type === 'checkbox') { if (t.checked) st.marcas[t.dataset.id] = true; else delete st.marcas[t.dataset.id]; pintarLista(); } else if (t.classList.contains('em-tipo')) { descTocada = false; ponerDesc(); } });
+    nodo.addEventListener('change', function (e) { var t = e.target; if (t.dataset && t.dataset.c && t.closest('.em-cuadro')) { guardarCuadro(leerCuadro()); return; } if (t.dataset && t.dataset.id != null && t.type === 'checkbox') { if (t.checked) st.marcas[t.dataset.id] = true; else delete st.marcas[t.dataset.id]; pintarLista(); } else if (t.classList.contains('em-tipo')) { descTocada = false; ponerDesc(); } });
     nodo.addEventListener('input', function (e) { var t = e.target; if (t.classList.contains('em-q')) { st.filtro = t.value; pintarLista(); } else if (t.classList.contains('em-desc')) descTocada = true; });
     function emitir() {
       var a = ad(), t = tipo(), rev = q('.em-rev').value.trim().toUpperCase(), fecha = fechaVin(q('.em-fecha').value), desc = (q('.em-desc').value.trim() || t.desc).toUpperCase(), res = q('.em-res');
@@ -96,12 +129,12 @@
         var l = ids(); if (!l.length) return; var revs = {}, por = q('.em-por').value.trim().toUpperCase(), revi = q('.em-revi').value.trim().toUpperCase(), apr = q('.em-apr').value.trim().toUpperCase();
         var n = a.aplicar(l, function (id, vig) { var r = rev || G.revPara(vig, t.id); revs[id] = r; return { rev: r, fecha: fecha, desc: desc, por: por, reviso: revi, aprobo: apr, cliente: '' }; });
         var its = items(); l.forEach(function (id) { var it = its.filter(function (x) { return x.id === id; })[0]; if (!it || !revs[id]) return;
-          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al emitir' }); if (d) { if (d.codigo !== it.codigo) G.editar(d.id, { codigo: it.codigo }); G.emitir(d.id, { rev: revs[id], fecha: fecha, tipo: t.id, desc: desc }); } });
+          var d = G.registrar({ gen: a.gen, item: a.item(id), titulo: it.titulo, codigo: it.codigo, nota: 'Registrado al emitir' }); if (d) { if (d.codigo !== it.codigo) G.editar(d.id, { codigo: it.codigo }); G.emitir(d.id, { rev: revs[id], fecha: fecha, tipo: t.id, desc: desc }); foto(d.id, a, id); } });
         var dist = Object.keys(revs).map(function (k) { return revs[k]; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; });
         st.ultimos = { ids: l, ad: a, formatos: a.formatos, txt: n + ' plano(s) emitido(s) · Rev. ' + dist.join(', ') + ' · ' + fecha + ' · ' + desc };
       } else {
         var d0 = G.actual('', false); if (!d0) return; var r0 = rev || G.revPara(d0.emision ? d0.rev : '', t.id);
-        G.emitir(d0.id, { rev: r0, fecha: fecha, tipo: t.id, desc: desc }); st.ultimos = null;
+        G.emitir(d0.id, { rev: r0, fecha: fecha, tipo: t.id, desc: desc }); foto(d0.id); st.ultimos = null;
       }
       q('.em-rev').value = ''; pintar();
     }
@@ -154,7 +187,7 @@
     (cfg.limpiar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host') && !e.children.length) e.remove(); else if (!e.closest('.dkm-host') && e.matches('h2')) e.remove(); }); });
     function comunes() { if (nProp) nProp.innerHTML = htmlProp(); if (!nCtrl) return;
       if (!window.RE_GESTION) { nCtrl.innerHTML = htmlCtrl(); return; }
-      if (!nReg) { nCtrl.innerHTML = ''; var ne = document.createElement('div'); ne.className = 'dkm-em'; nReg = document.createElement('div'); nCtrl.append(ne, nReg); try { em = emision(ne, sec); } catch (e) { console.warn('Emisión', e); } }
+      if (!nReg) { nCtrl.innerHTML = ''; var ne = document.createElement('div'); ne.className = 'dkm-em'; nReg = document.createElement('div'); nCtrl.append(ne, nReg); try { em = emision(ne, sec, cfg); } catch (e) { console.warn('Emisión', e); } }
       nReg.innerHTML = htmlCtrl(); if (em) em.refrescar(); }
     function alto() { if (sec.hidden || window.matchMedia('(max-width: 900px)').matches) return; var t = host.getBoundingClientRect().top + window.scrollY - (sec.getBoundingClientRect().top + window.scrollY), top = host.getBoundingClientRect().top; host.style.height = Math.max(460, window.innerHeight - Math.max(top, 90) - 30) + 'px'; }
     var clave = ''; setInterval(function () { if (sec.hidden) return; var a = actual(), k = a ? a.href + '|' + (a.hijo ? (a.hijo.t || a.hijo.s) : '') : ''; if (k !== clave) { clave = k; comunes(); } }, 900);
