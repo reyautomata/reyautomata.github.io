@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Configuración · ReyEngi</title>
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #0B1220; --panel: #111D2E; --panel2: #18283C; --fg: #EAF2F8; --muted: #94A9BE; --line: #22364D; --brand: #0E2238; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #38C8E8;
+  --f-body: Inter, "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.5 var(--f-body); }
+[hidden] { display: none !important; }
+button, .btn { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 6px 11px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-block; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #1b0d02; }
+button:hover, .btn:hover { border-color: var(--sel); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+input, select, textarea { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; min-width: 0; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra h1 { margin: 0; font-size: 16px; } .barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+main.cg { padding: 14px 16px 60px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; align-items: start; max-width: 1300px; }
+.caja { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.caja h2 { margin: 0 0 8px; font: 600 10.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+.caja label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+.caja label.chk { flex-direction: row; align-items: center; gap: 8px; color: var(--fg); font-size: 13px; } .caja label.chk input { width: auto; }
+.caja p { margin: 0 0 8px; color: var(--muted); font-size: 12px; } .caja p b { color: var(--fg); }
+.caja .fila { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.caja a { color: var(--sel); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; } td { padding: 3px 0; border-top: 1px solid var(--line); } td:first-child { font: 600 11px var(--f-mono); color: var(--sel); white-space: nowrap; padding-right: 12px; }
+.msg { color: var(--sel); min-height: 18px; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../proyectos.js" defer></script>
+<script src="../entregables.js" defer></script>
+<script src="../suite.js" defer></script>
+<script src="../gestion.js" defer></script>
+<script src="../archivos.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="barra"><h1>Configuración <small>Proyecto, interfaz, almacenamiento y motor de IA</small></h1></div>
+<main class="cg">
+  <section class="caja" aria-labelledby="c1"><h2 id="c1">Proyecto</h2>
+    <p id="pProy"></p>
+    <div class="fila"><a class="btn" href="../proyectos/">Datos del proyecto</a><a class="btn" href="../lazos/#cfg">Configuración de entregables</a><a class="btn" href="../documentos/">Control documental</a></div>
+  </section>
+  <section class="caja" aria-labelledby="c2"><h2 id="c2">Almacenamiento</h2>
+    <p id="pAlm"></p>
+    <label class="chk"><input type="checkbox" id="cCopia"> Guardar en la carpeta del proyecto una copia de lo que exporto</label>
+    <div class="fila"><a class="btn" href="../explorador/">Explorador de archivos</a><button type="button" id="bResp">Guardar respaldo ahora (Ctrl+S)</button><button type="button" id="bRest">Abrir un respaldo…</button></div>
+    <p class="msg" id="mAlm" role="status"></p>
+    <p>Los datos de la suite viven en este navegador. El respaldo es un archivo con todo el proyecto activo; al abrirlo se agrega como proyecto nuevo, sin tocar los existentes.</p>
+  </section>
+  <section class="caja" aria-labelledby="c3"><h2 id="c3">Motor de IA · ReyEngi AI</h2>
+    <label>Nombre del asistente<input id="aNom" maxlength="40"></label>
+    <label>Dirección de Ollama en este equipo<input id="aUrl" spellcheck="false"></label>
+    <label>Modelo<select id="aMod"></select></label>
+    <label>Instrucciones propias<textarea id="aIns" rows="3" maxlength="2000"></textarea></label>
+    <div class="fila"><button type="button" class="pri" id="bIa">Guardar</button><button type="button" id="bProbar">Probar conexión</button></div>
+    <p class="msg" id="mIa" role="status"></p>
+    <p>Motor compatible hoy: <b>Ollama</b> en este computador. llama.cpp y node-llama-cpp quedan para la app de Windows; aún no están integrados.</p>
+  </section>
+  <section class="caja" aria-labelledby="c4"><h2 id="c4">Interfaz</h2>
+    <p>Tema <b>ReyEngi Engineering Dark</b>. El tema claro aún no está disponible.</p>
+    <div class="fila"><button type="button" id="bDisp">Restablecer paneles y pestañas</button></div>
+    <p class="msg" id="mInt" role="status"></p>
+    <table><tbody>
+      <tr><td>Ctrl + K</td><td>Buscar en el explorador</td></tr><tr><td>Ctrl + B</td><td>Mostrar u ocultar el explorador</td></tr><tr><td>Ctrl + J</td><td>Mostrar u ocultar ReyEngi AI</td></tr>
+      <tr><td>Ctrl + S</td><td>Guardar un respaldo del proyecto</td></tr><tr><td>Ctrl + O</td><td>Abrir el control documental</td></tr>
+    </tbody></table>
+  </section>
+</main>
+</body>
+</html>

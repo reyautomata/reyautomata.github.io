@@ -17,6 +17,7 @@
     ['pla', 'Planos de ingeniería', ramas('PLANO')],
     ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
     ['nor', 'Normativa', [['H4', 'Normativa SEC y reglas', 'normativa/']]],
+    ['cfg', 'Configuración', [['CG', 'Configuración general', 'configuracion/']]],
     ['bib', 'Biblioteca técnica', [['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
   ];
   // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
@@ -231,5 +232,7 @@
     if (k === 'b') { var pl = document.getElementById(document.body.classList.contains('rs-plegado') ? 'rsPestana' : 'rsPlegar'); if (pl) { e.preventDefault(); pl.click(); } }
     else if (k === 'k') { var bq = document.getElementById('rsBuscar'); if (bq) { e.preventDefault(); if (document.body.classList.contains('rs-plegado')) { var ps = document.getElementById('rsPestana'); if (ps) ps.click(); } bq.focus(); bq.select(); } }
   });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+  function trabajo() { if (window.top !== window) return; var st = document.createElement('script'); st.src = BASE + 'trabajo.js'; document.head.appendChild(st);
+    var lf = document.createElement('link'); lf.rel = 'stylesheet'; lf.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'; document.head.appendChild(lf); } // sin conexión se usa Segoe UI
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { iniciar(); trabajo(); }); else { iniciar(); trabajo(); }
 })();
