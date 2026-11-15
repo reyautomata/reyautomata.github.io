@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mesa de trabajo · ReyEngi</title>
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #0B1220; --panel: #111D2E; --panel2: #18283C; --fg: #EAF2F8; --muted: #94A9BE; --line: #22364D; --brand: #0E2238; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #38C8E8; --tec: #159DDA; --ok: #27B783; --warn: #E6A23C; --bad: #E35B65;
+  --f-body: Inter, "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); display: flex; flex-direction: column; }
+[hidden] { display: none !important; }
+button { font: 600 12.5px var(--f-body); border-radius: 6px; padding: 6px 11px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); }
+button:hover { border-color: var(--sel); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.barra { background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; flex: none; }
+.barra .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; } .barra h1 small { display: block; font: 500 11px var(--f-mono); color: var(--muted); }
+main.mt { flex: 1; min-height: 0; padding: 8px 8px 30px; display: flex; }
+#mesa { flex: 1; min-width: 0; min-height: 0; }
+/* ── Paneles acoplables ── */
+.dk { display: flex; position: relative; }
+.dk-div { display: flex; flex: 1; min-width: 0; min-height: 0; } .dk-col { flex-direction: column; }
+.dk-celda { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.dk-sep { flex: none; background: transparent; position: relative; z-index: 2; touch-action: none; }
+.dk-row > .dk-sep { width: 6px; cursor: col-resize; } .dk-col > .dk-sep { height: 6px; cursor: row-resize; }
+.dk-sep::after { content: ""; position: absolute; inset: 2px; border-radius: 2px; background: transparent; transition: background .15s, box-shadow .15s; }
+.dk-sep:hover::after, .dk-sep:focus-visible::after { background: var(--sel); box-shadow: 0 0 8px rgba(56, 200, 232, .7); }
+.dk-grupo { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; animation: dk-entra .22s ease-out; }
+@keyframes dk-entra { from { opacity: .35; transform: scale(.985); } }
+.dk-grupo:focus-within { border-color: rgba(56, 200, 232, .55); box-shadow: 0 0 0 1px rgba(56, 200, 232, .18), 0 0 18px rgba(21, 157, 218, .12); }
+.dk-max .dk-grupo:not(.max), .dk-max .dk-sep { display: none; } .dk-max .dk-celda:not(:has(.max)) { display: none; }
+.dk-cab { display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); min-height: 30px; flex: none; }
+.dk-tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; } .dk-tabs::-webkit-scrollbar { display: none; }
+.dk-tab { all: unset; cursor: grab; padding: 0 12px; font: 600 11.5px var(--f-body); color: var(--muted); white-space: nowrap; border-right: 1px solid var(--line); display: flex; align-items: center; position: relative; touch-action: none; transition: color .15s, background .15s; }
+.dk-tab:hover { color: var(--fg); background: rgba(56, 200, 232, .07); }
+.dk-tab.on { color: var(--fg); background: var(--panel); } .dk-tab.on::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); box-shadow: 0 0 8px rgba(255, 140, 50, .8); }
+.dk-tab:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+.dk-b { all: unset; cursor: pointer; padding: 0 8px; color: var(--muted); font-size: 12px; display: flex; align-items: center; } .dk-b:hover { color: var(--fg); background: rgba(56, 200, 232, .1); } .dk-b:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+.dk-cuerpo { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.dk-cont { min-height: 100%; }
+.dk-arr { user-select: none; } .dk-arr iframe { pointer-events: none; }
+.dk-fant { position: fixed; z-index: 200; pointer-events: none; background: var(--accent); color: #1b0d02; font: 700 11.5px var(--f-body); padding: 4px 10px; border-radius: 6px; box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
+.dk-marca { position: fixed; z-index: 199; pointer-events: none; display: none; background: rgba(56, 200, 232, .2); border: 2px solid var(--sel); border-radius: 8px; box-shadow: 0 0 24px rgba(56, 200, 232, .45) inset; transition: left .08s, top .08s, width .08s, height .08s; }
+.dk-menu { position: fixed; z-index: 210; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; box-shadow: 0 12px 28px rgba(0, 0, 0, .55); min-width: 190px; }
+.dk-menu button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 5px; font: 500 12.5px var(--f-body); color: var(--fg); } .dk-menu button:hover, .dk-menu button:focus-visible { background: rgba(56, 200, 232, .14); outline: none; }
+.dk-vacio { margin: auto; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .dk-grupo { animation: none; } .dk-marca, .dk-sep::after, .dk-tab { transition: none; } }
+/* ── Contenido de los paneles ── */
+.p { padding: 10px 12px; }
+.p h3 { margin: 0 0 6px; font: 600 10.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+.p input[type=search] { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; }
+.lst { list-style: none; margin: 0; padding: 0; }
+.lst li h4 { margin: 10px 0 3px; font: 600 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--sel); }
+.lst button { all: unset; cursor: pointer; display: flex; gap: 8px; align-items: baseline; width: 100%; padding: 5px 8px; border-radius: 5px; font-size: 12.5px; border-left: 2px solid transparent; transition: background .12s; }
+.lst button:hover { background: rgba(56, 200, 232, .08); } .lst button[aria-current="true"] { background: rgba(21, 157, 218, .2); border-left-color: var(--accent); }
+.lst button:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+.lst .cod { font: 700 10px var(--f-mono); color: var(--accent-ink); min-width: 22px; } .lst .ct { margin-left: auto; font: 600 10.5px var(--f-mono); color: var(--sel); }
+.lst .dev { opacity: .55; padding: 4px 8px; font-size: 12px; display: flex; gap: 8px; } .lst .dev em { margin-left: auto; font-style: normal; font-size: 10.5px; }
+iframe.vista { display: block; width: 100%; height: 100%; min-height: 300px; border: 0; background: var(--bg); position: absolute; inset: 0; }
+dl.pr { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 12.5px; } dl.pr dt { color: var(--muted); } dl.pr dd { margin: 0; overflow-wrap: anywhere; }
+.p a { color: var(--sel); }
+.reg { border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; background: var(--bg); font-size: 12.5px; } .reg b { display: block; overflow-wrap: anywhere; } .reg span { color: var(--muted); font-size: 11.5px; }
+.est { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
+.nota { color: var(--muted); font-size: 12px; margin: 4px 0; }
+.barras { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 14px; }
+.bar { display: grid; grid-template-columns: 130px 1fr 44px; gap: 8px; align-items: center; font-size: 12px; }
+.bar i { display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--tec), var(--sel)); box-shadow: 0 0 10px rgba(56, 200, 232, .35); width: 0; transition: width .7s cubic-bezier(.2, .8, .2, 1); min-width: 2px; }
+.bar b { font: 600 12px var(--f-mono); color: var(--sel); text-align: right; } .bar span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dona { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; } .dona svg { width: 120px; height: 120px; flex: none; } .dona circle { transition: stroke-dasharray .7s cubic-bezier(.2, .8, .2, 1); }
+.dona ul { list-style: none; margin: 0; padding: 0; font-size: 12px; } .dona li { display: flex; gap: 6px; align-items: center; padding: 1px 0; } .dona li i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+@media (prefers-reduced-motion: reduce) { .bar i, .dona circle { transition: none; } }
+@media (max-width: 900px) { body { height: auto; } main.mt { min-height: 140vh; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<script src="../proyectos.js" defer></script>
+<script src="../entregables.js" defer></script>
+<script src="../suite.js" defer></script>
+<script src="../gestion.js" defer></script>
+<script src="dock.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <h1>Mesa de trabajo <small>Paneles acoplables: arrastra las pestañas para ordenar tu espacio</small></h1>
+  <button type="button" id="bPaneles" aria-haspopup="menu">Paneles</button>
+  <button type="button" id="bReset">Restablecer disposición</button>
+</div></div>
+<main class="mt"><div id="mesa"></div></main>
+</body>
+</html>
