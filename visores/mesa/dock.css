@@ -115,3 +115,15 @@ dialog.em-dlg a:focus-visible, dialog.em-dlg button:focus-visible { outline: 2px
 
 .em-campos { display: flex; flex-direction: column; gap: 7px; padding: 8px; border: 1px solid var(--tec, #159DDA); border-radius: 6px; }
 .dkm-em .em-limpiar { color: #ffb4ae; border-color: #7a3438; background: transparent; }
+
+/* Recuperar paneles cerrados y reagrupar pestañas separadas */
+.dkm-aviso { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 6px; padding: 5px 8px; border: 1px solid #E6A23C; border-radius: 8px; background: rgba(230, 162, 60, .08); font-size: 12.5px; color: var(--fg); }
+.dkm-aviso[hidden] { display: none; } .dkm-aviso span { color: var(--muted); }
+.dkm-aviso button { font: 600 12px var(--f-body, system-ui, sans-serif); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.dkm-aviso button.dkm-mostrar { background: var(--accent); border-color: var(--accent); color: #1b0d02; }
+.dkm-aviso button:hover { border-color: var(--sel); } .dkm-aviso button:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+@media print { .dkm-aviso { display: none !important; } }
+/* Análisis de P&ID dentro de la mesa: cada pestaña propia del módulo pasa a ser un panel */
+.dkm-p > [role=tabpanel] { position: static !important; display: block !important; inset: auto !important; }
+.dkm-p:has(> #p-plano) { padding: 0; height: 100%; box-sizing: border-box; } .dkm-p > #p-plano { height: 100%; overflow: hidden !important; }
+.dkm-p > .lista { height: auto !important; max-height: none !important; }

@@ -6,6 +6,8 @@
   if (/\/hojas-datos\//.test(ruta)) { sec = document.getElementById('vista'); C = { clave: 'hd', paneles: [{ id: 'hoja', titulo: 'Hoja de datos', mover: ['#lienzo'], zoom: '#lienzo' }], inicial: { t: 'row', c: [{ t: 'tabs', p: ['hoja'], a: 'hoja' }, COM], s: [0.77, 0.23] } }; }
   else if (/\/especificaciones\//.test(ruta)) { sec = document.getElementById('vista'); C = { clave: 'et', paneles: [{ id: 'cont', titulo: 'Contenido y acciones', mover: [':scope > .panel'] }, { id: 'doc', titulo: 'Documento', mover: [':scope > .lienzo'], zoom: '.lienzo' }], inicial: { t: 'row', c: [{ t: 'tabs', p: ['cont'], a: 'cont' }, { t: 'tabs', p: ['doc'], a: 'doc' }, COM], s: [0.22, 0.56, 0.22] } }; }
   else if (/\/requisiciones\//.test(ruta)) { sec = document.querySelector('main > section'); C = { clave: 'rq', principal: 'ed', paneles: [{ id: 'lista', titulo: 'Requisiciones', mover: ['.lay > .lado'] }, { id: 'ed', titulo: 'Requisición', mover: ['#editor'] }], inicial: { t: 'row', c: [{ t: 'tabs', p: ['lista'], a: 'lista' }, { t: 'tabs', p: ['ed'], a: 'ed' }, COM], s: [0.22, 0.56, 0.22] }, limpiar: ['.lay'] }; }
+  else if (/\/pid\//.test(ruta)) { sec = document.getElementById('vistaExp'); C = { clave: 'pid', principal: 'plano', ocultar: ['.panel', '.divH'], seguir: { 'p-prop': 'pprop', 'p-hojas': 'hojas', 'p-rev': 'rev' },
+    paneles: [{ id: 'plano', titulo: 'Plano P&ID', mover: ['#p-plano'] }, { id: 'cand', titulo: 'Instrumentos', mover: ['#lista'] }, { id: 'pprop', titulo: 'Instrumento', mover: ['#p-prop'] }, { id: 'hojas', titulo: 'Hojas y carga', mover: ['#p-hojas'] }, { id: 'rev', titulo: 'Revisor y exportación', mover: ['#p-rev'] }] }; }
   // Cuadro de revisiones propio de cada hoja de datos, especificación y requisición, editable desde Control documental (de a una o por lote)
   (function () {
     var EM = window.RE_EMISION; if (!EM || !EM.simple || !sec) return;
@@ -37,7 +39,10 @@
         repintar: function () { Q().guardar(); Q().repintar(); } }); }
   })();
   if (!sec || !C) return;
-  function montar() { if (sec.hidden || sec.dataset.dkm) return; try { window.REMesaModulo(sec, C); } catch (e) { console.warn('Mesa de trabajo', e); } }
+  function montar() { if (sec.hidden || sec.dataset.dkm) return; try { var dock = window.REMesaModulo(sec, C);
+      // Cuando el módulo cambia a una de sus pestañas (por ejemplo al elegir un instrumento), se trae al frente el panel equivalente
+      if (dock && C.seguir) Object.keys(C.seguir).forEach(function (id) { var n = document.getElementById(id); if (n) new MutationObserver(function () { if (!n.hidden) dock.abrir(C.seguir[id]); }).observe(n, { attributes: true, attributeFilter: ['hidden'] }); });
+    } catch (e) { console.warn('Mesa de trabajo', e); } }
   new MutationObserver(function () { setTimeout(montar, 0); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] });
   if (document.readyState === 'complete') setTimeout(montar, 300); else window.addEventListener('load', function () { setTimeout(montar, 300); });
 })();
