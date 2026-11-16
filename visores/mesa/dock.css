@@ -127,3 +127,5 @@ dialog.em-dlg a:focus-visible, dialog.em-dlg button:focus-visible { outline: 2px
 .dkm-p > [role=tabpanel] { position: static !important; display: block !important; inset: auto !important; }
 .dkm-p:has(> #p-plano) { padding: 0; height: 100%; box-sizing: border-box; } .dkm-p > #p-plano { height: 100%; overflow: hidden !important; }
 .dkm-p > .lista { height: auto !important; max-height: none !important; }
+
+.dkm-em, .dkm-em *, .dkm-acc, .dkm-acc * { box-sizing: border-box; }

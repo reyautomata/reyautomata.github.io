@@ -242,7 +242,7 @@
     var sobra = [].filter.call(sec.children, function (c) { return !/^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) && !todas.some(function (e) { return c === e || c.contains(e); }); });
     sobra.forEach(function (c) { if (c.matches('p.intro, .intro, h2')) c.classList.add('dkm-oculto'); });
     var nAcc = null;
-    var nav = document.querySelector('nav.tabs'), principal = cfg.principal || (cfg.paneles.filter(function (p) { return p.zoom; })[0] || cfg.paneles[0]).id;
+    var nav = cfg.sinNav ? null : document.querySelector('nav.tabs'), principal = cfg.principal || (cfg.paneles.filter(function (p) { return p.zoom; })[0] || cfg.paneles[0]).id;
     sec.dataset.dkm = '1';
     var barra = document.createElement('div'); barra.className = 'dkm-barra'; var bp = document.createElement('button'); bp.type = 'button'; bp.textContent = 'Paneles'; bp.setAttribute('aria-haspopup', 'menu'); var br = document.createElement('button'); br.type = 'button'; br.textContent = 'Restablecer disposición'; var bc = document.createElement('button'); bc.type = 'button'; bc.textContent = 'Vista clásica'; bc.title = 'Volver al diseño anterior, sin paneles'; bc.onclick = function () { fijar(true); }; barra.append(bp, br, bc);
     var host = document.createElement('div'); host.className = 'dkm-host'; sec.append(host); var pie = document.createElement('div'); pie.className = 'dkm-pie'; pie.innerHTML = '<h3 class="dkm-t">Disposición de paneles</h3>'; pie.append(barra);
@@ -254,8 +254,9 @@
         sl.addEventListener('change', function () { var b = nav.querySelectorAll('button, a')[+sl.value]; if (b) b.click(); }); lb.append(sl); n.append(lb);
         new MutationObserver(function () { [].forEach.call(nav.querySelectorAll('button, a'), function (b, i) { if (b.getAttribute('aria-selected') === 'true') sl.value = i; }); }).observe(nav, { attributes: true, subtree: true, attributeFilter: ['aria-selected'] }); }
       nAcc = n; } };
-    var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return id !== principal; }), ['prop', 'ctrl']);
-    var inicial = { t: 'row', c: [{ t: 'tabs', p: [principal], a: principal }, { t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }], s: [0.66, 0.34] };
+    var prs = cfg.principales || [principal];   // uno o más paneles principales a la izquierda (por ejemplo visor 3D y plano 2D, a la par)
+    var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return prs.indexOf(id) < 0; }), ['prop', 'ctrl']);
+    var inicial = { t: 'row', c: prs.map(function (id) { return { t: 'tabs', p: [id], a: id }; }).concat([{ t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }]), s: prs.length > 1 ? prs.map(function () { return 0.72 / prs.length; }).concat([0.28]) : [0.66, 0.34] };
     var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
     var dock = window.REDock(host, { clave: 'reyengi-dkm3-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { avisar(); window.dispatchEvent(new Event('resize')); }, 30); } });
     (cfg.ocultar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host')) e.classList.add('dkm-oculto'); }); });
@@ -266,10 +267,10 @@
       var h = ce.map(function (id) { return '<button type="button" class="dkm-mostrar" data-id="' + id + '">Mostrar ' + esc(paneles[id].titulo) + '</button>'; }).join('');
       if (ce.length || sep) h = (ce.length ? '<span>Paneles cerrados:</span>' : '<span>Las pestañas están separadas.</span>') + h + '<button type="button" data-re="1">Reagrupar pestañas</button>';
       if (av.dataset.h !== h) { av.dataset.h = h; av.innerHTML = h; av.hidden = !h; if (typeof alto === 'function') alto(); } }
-    av.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.id && b.dataset.id !== principal) dock.abrir(b.dataset.id); else dock.restablecer(); /* el plano o documento vuelve a su lugar, a la izquierda */ setTimeout(avisar, 50); });
+    av.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.id && (b.dataset.id !== principal || prs.length > 1)) dock.abrir(b.dataset.id); else dock.restablecer(); /* el plano o documento vuelve a su lugar, a la izquierda */ setTimeout(avisar, 50); });
     setTimeout(avisar, 100);
     // Lo que quedó fuera de los paneles (barras de botones, estados) se junta en la pestaña Acciones
-    setTimeout(function () { if (!nAcc) return; [].slice.call(sec.children).forEach(function (c) { if (c === host || /^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) || c.classList.contains('dkm-oculto') || c.classList.contains('dkm-aviso')) return; nAcc.appendChild(c); });
+    setTimeout(function () { if (!nAcc) return; [].slice.call(sec.children).forEach(function (c) { if (c === host || /^(DIALOG|SCRIPT|STYLE|TEMPLATE)$/.test(c.tagName) || c.classList.contains('dkm-oculto') || c.classList.contains('dkm-aviso') || c.classList.contains('dkm-fijo')) return; nAcc.appendChild(c); });
       if (!nAcc.children.length) nAcc.innerHTML = '<p class="nota">Este entregable no tiene acciones propias.</p>'; alto(); }, 0);
     cfg.paneles.forEach(function (p) { if (p.zoom) try { zoomPlano(host.querySelector(p.zoom)); } catch (e) {} });
     (cfg.limpiar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host') && !e.children.length) e.remove(); else if (!e.closest('.dkm-host') && e.matches('h2')) e.remove(); }); });
