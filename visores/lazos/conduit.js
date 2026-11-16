@@ -208,6 +208,40 @@
     o.r = Math.max(o.ducto || 0, o.cable ? o.cable.r : 0); o.manda = o.cable && o.cable.r > (o.ducto || 0) ? 'cable' : 'ducto';
     return o;
   }
+  // ── Soportación y cajas de paso del tramo (materiales de referencia) ──
+  //    Distancia entre soportes: RIC N°04 7.16.4.4 (metálica, 1,50 m) y Tabla N°4.24 (no metálica). Cajas: RIC N°04 5.23 y, como referencia de tamaño,
+  //    NEC 314.28 (largo ≥ 8 × diámetro comercial en tiro recto). Medidas de abrazaderas, rieles y cajas: catálogo MJM de escalerillas y accesorios (ed. 13-09-2023).
+  var MJM = 'Catálogo MJM (ed. 13-09-2023)';
+  var ABZ_RUC = { '1/2"': [10, 32, 40, 2], '3/4"': [12.5, 32, 44, 2], '1"': [16, 32, 52, 2], '1 1/4"': [20, 32, 61, 2], '1 1/2"': [25, 32, 71, 2.5], '2"': [31.5, 32, 85, 2.5], '2 1/2"': [37.5, 32, 99, 2.5], '3"': [45, 32, 112, 2.5], '4"': [55, 32, 137, 2.5], '5"': [62.5, 32, 164, 2.5], '6"': [80, 32, 180, 2.5] };
+  var ABZ_RT = { '3/4"': [9.5, 26, 34, 2], '1"': [12.5, 26, 40, 2] };   // tubería (EMT); el catálogo llega a 1"
+  var CAJ_N4 = [[100, 100, 75], [100, 100, 100], [150, 100, 100], [150, 150, 100], [200, 100, 100], [200, 150, 100], [250, 150, 100], [300, 150, 100], [300, 200, 100], [400, 300, 100], [400, 300, 150], [500, 400, 150]];
+  var CAJ_ESP = [['Tipo D', 390, 250, 190], ['Tipo C', 640, 520, 240], ['Tipo B', 730, 720, 200]];
+  var T424 = [[25, 1.2], [63, 1.5], [90, 1.8], [140, 2.0], [160, 2.5]];
+  function nCajas(dc) { var Lm = parseFloat(String(dc.largo).replace(',', '.')), N = Math.max(0, Math.round(parseFloat(dc.curvas) || 0));
+    return dc.cond === 'normal' && Lm > 0 ? Math.max(Lm > 20 ? Math.ceil(Lm / 20) - 1 : 0, N > 2 ? Math.ceil(N / 2) - 1 : 0) : dc.cond === 'subt' && Lm > 90 ? Math.ceil(Lm / 90) - 1 : 0; }
+  function soportacion(dc, r, s) {
+    var o = { items: [], nSop: 0, sep: 0, cajas: nCajas(dc), caja: null, abz: null, riel: '' }; if (!s) return o;
+    var Lm = parseFloat(String(dc.largo).replace(',', '.')) || 0, med = s[0], pulg = med.split(' ').reduce(function (a, t) { var q = t.replace('"', '').split('/'); return a + (q.length === 2 ? q[0] / q[1] : +q[0]); }, 0), dn = DN[med] || Math.round(s[1]);
+    var metal = !/PVC/i.test(r.T.c), emt = /EMT/i.test(r.T.c);
+    // soportes
+    if (dc.cond === 'subt') o.notaSop = 'Ducto subterráneo: va enterrado, sin abrazaderas ni riel.';
+    else if (dc.cond === 'niple') o.notaSop = 'Tubería de unión de hasta 1 m: se sostiene en los gabinetes que une.';
+    else { o.sep = metal ? 1.5 : (T424.filter(function (x) { return x[0] >= dn; })[0] || T424[4])[1]; o.refSep = metal ? 'RIC N°04 7.16.4.4: tubería metálica, soportes a no más de 1,50 m' : 'RIC N°04 Tabla N°4.24: tubería no metálica de ' + dn + ' mm, soportes cada ' + n1(o.sep, 2) + ' m';
+      if (Lm > 0) o.nSop = Math.ceil(Lm / o.sep) + 1 + 2 * o.cajas;
+      var t = emt ? ABZ_RT[med] : ABZ_RUC[med];
+      o.abz = { tipo: emt ? 'RT (tubería)' : 'RUC (cañería)', med: med, d: t || null };
+      o.riel = emt ? 'Riel 35*35*2,0 mm (o 19*35 en cargas livianas), tira de 3000 mm' : 'Riel 42*42*2,0 mm (42*25 o 42*35 según carga), tira de 3000 mm';
+      if (o.nSop) { o.items.push({ cant: o.nSop, un: 'un', desc: 'Abrazadera ' + o.abz.tipo + ' ' + med + (t ? ' · ancho ' + t[1] + ' mm, alto ' + t[2] + ' mm, espesor ' + String(t[3]).replace('.', ',') + ' mm' : ' · medida fuera del catálogo, consultar al fabricante') + ', zincada o galvanizada', ref: MJM });
+        var mR = o.nSop * 0.3; o.rielM = mR; o.items.push({ cant: Math.ceil(mR / 3), un: 'tira', desc: o.riel + ' · ' + o.nSop + ' tramos de 0,30 m (' + n1(mR, 1) + ' m) para un ducto', ref: MJM }); } }
+    // caja de paso
+    if (dc.cond !== 'niple') { var Lmin = 8 * pulg * 25.4, An = s[1] + 50, Pr = s[1] + 25, c = CAJ_N4.filter(function (x) { return x[0] >= Lmin && x[1] >= An && x[2] >= Pr; })[0];
+      if (c) o.caja = { n: 'Caja de derivación NEMA 4 ' + c[0] + 'x' + c[1] + 'x' + c[2] + ' mm', d: c };
+      else { var e = CAJ_ESP.filter(function (x) { return x[1] >= Lmin && x[2] >= An && x[3] >= Pr; })[0]; o.caja = e ? { n: 'Caja especial ' + e[0] + ' ' + e[1] + 'x' + e[2] + 'x' + e[3] + ' mm', d: [e[1], e[2], e[3]] } : { n: 'Caja a medida de al menos ' + Math.ceil(Lmin / 50) * 50 + ' mm de largo', d: [Math.ceil(Lmin / 50) * 50, Math.ceil(An / 50) * 50 + 100, Math.ceil(Pr / 50) * 50 + 50], medida: true }; }
+      o.caja.ref = 'Largo ≥ 8 × ' + med + ' = ' + n1(Lmin, 0) + ' mm (referencia NEC 314.28, tiro recto); RIC N°04 5.23 pide 25 % de volumen libre';
+      if (dc.cond === 'subt') o.caja.n = 'Cámara de paso (obra civil); como registro: ' + o.caja.n;
+      if (o.cajas) o.items.unshift({ cant: o.cajas, un: 'un', desc: o.caja.n + ' · con tapa apernada', ref: o.caja.medida ? 'A medida' : MJM }); }
+    return o;
+  }
   function cm(mm) { return n1(mm / 10, mm / 10 >= 20 ? 0 : 1) + ' cm'; }
   // ── Verificación de cumplimiento (RIC N°04): cada requisito con su estado, la cláusula y qué hacer si no cumple ──
   //    sev: ok (cumple), warn (advertencia o dato faltante), err (no cumple). «s» es el tamaño que se está mirando.
@@ -420,6 +454,8 @@
     ];
     var cuP = s && r.n ? curvatura(dc, r, s) : null;
     if (cuP && cuP.r) pasos.push(['Radio de curvatura', 'Tubería: ' + esc(cuP.refDucto) + '. Cables (RIC N°04 6.2.8): ' + cuP.cables.slice(0, 4).map(function (c) { return esc(c.tag) + ' ' + c.fac + ' × ' + n1(c.d, 1) + ' mm = ' + cm(c.r); }).join('; ') + (cuP.cables.length > 4 ? '…' : '') + '. Las curvas se hacen con radio no menor a <b>' + cm(cuP.r) + '</b> (manda ' + (cuP.manda === 'cable' ? 'el cable' : 'la tubería') + ').']);
+    var soP = s && r.n ? soportacion(dc, r, s) : null;
+    if (soP && (soP.sep || soP.caja)) pasos.push(['Soportes y cajas', (soP.sep ? esc(soP.refSep) + (soP.nSop ? ': <b>' + soP.nSop + ' abrazaderas ' + esc(soP.abz.tipo) + ' ' + esc(soP.abz.med) + '</b> sobre riel' : ' (indica el largo para contar abrazaderas)') + '. ' : esc(soP.notaSop || '') + ' ') + (soP.caja ? (soP.cajas ? '<b>' + soP.cajas + ' × ' + esc(soP.caja.n) + '</b>' : 'Si se intercala una caja de paso: ' + esc(soP.caja.n)) + ' (' + esc(soP.caja.ref) + ').' : '') + ' Medidas de referencia: ' + MJM + '.']);
     $('#kPasos').innerHTML = pasos.map(function (p, i) { return '<li><b>' + (i + 1) + '. ' + p[0] + '.</b> ' + p[1] + '</li>'; }).join('');
     $('#kAvisos').innerHTML = ''; $('#kAvisos').hidden = true;   // los avisos sueltos pasan a la verificación, con su sugerencia
     pintarRic(dc, r, s);
@@ -596,6 +632,10 @@
     var g = lb.hoja('CABLES', { orientacion: 'landscape' }); g.cols([12, 6, 22, 14, 40, 10, 12]);
     ['DUCTO', 'N°', 'TAG CIRCUITO', 'CÓDIGO', 'CABLE', 'Ø mm', 'ÁREA mm²'].forEach(function (t, i) { g.celda(0, i, t, { b: true, fill: AZ, color: 'FFFFFF', h: 'center' }); });
     var f = 1; b.ductos.forEach(function (dc) { calcular(dc).lista.forEach(function (x, i) { [dc.tag, i + 1, x.c.tag || '', x.k.cod, FAM[x.k.f] + ' · ' + x.k.desc, n1(x.d, 1), n1(area(x.d), 1)].forEach(function (v, j) { g.celda(f, j, String(v), { sz: 9 }); }); f++; }); });
+    var so = lb.hoja('SOPORTACION', { orientacion: 'landscape' }); so.cols([12, 10, 8, 90, 30]);
+    ['DUCTO', 'CANTIDAD', 'UNIDAD', 'MATERIAL DE REFERENCIA', 'FUENTE'].forEach(function (t, i) { so.celda(0, i, t, { b: true, fill: AZ, color: 'FFFFFF', h: 'center' }); });
+    var fs = 1; b.ductos.forEach(function (dc) { var r = calcular(dc); if (!r.elegido) return; soportacion(dc, r, r.elegido.s).items.forEach(function (it) { [dc.tag, it.cant, it.un, it.desc, it.ref].forEach(function (v, j) { so.celda(fs, j, String(v), { sz: 9, wrap: j === 3 }); }); fs++; }); });
+    so.celda(fs + 1, 3, 'Cantidades referenciales. Soportes: RIC N°04 7.16.4.4 y Tabla N°4.24. Cajas: RIC N°04 5.23 y referencia NEC 314.28. Medidas: ' + MJM + '.', { sz: 9, wrap: true, borde: 'none' });
     var n = lb.hoja('CRITERIOS'); n.cols([110]);
     ['RIC N°04 (SEC, 2020) 7.16.1.14 y Tabla N°4.21: el conductor o haz de conductores, incluida la aislación, ocupará como máximo 50 % (1 conductor), 33 % (2) o 33 % (3 o más) de la sección de la tubería.',
       'Tabla N°4.21, nota: en tuberías de unión de gabinetes de tableros o similares de hasta 1 m se acepta hasta 60 %. Si el conductor de tierra va en el haz se incluye en el cálculo.',
@@ -740,7 +780,7 @@
       '#k3d .k3-dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}#k3d .k3-dl dt{color:#9fb0c3}#k3d .k3-dl dd{margin:0;font-weight:600}#k3d .k3-ley small{display:block;color:#9fb0c3;font-weight:400;font-size:11px}',
       '#k3d .k3-r{margin:0 0 8px;padding:8px 10px;border:1.5px solid #E8A317;border-radius:8px;background:rgba(232,163,23,.1)}#k3d .k3-r b{font-size:17px;color:#ffd27a;white-space:nowrap}',
       '#k3d .k3-ok,#k3d .k3-av,#k3d .k3-mal{margin:8px 0 0;padding:6px 9px;border-radius:6px;border-left:3px solid #3FB950;background:rgba(63,185,80,.1)}#k3d .k3-av{border-color:#E6A23C;background:rgba(230,162,60,.1)}#k3d .k3-mal{border-color:#F85149;background:rgba(248,81,73,.12)}',
-      '#k3d ol.k3-cab{display:block;padding:0 0 0 18px;margin:0;background:none;border:0}#k3d .k3-lbl.k3-cur{border-color:#38C8E8}#k3d .k3-lbl.k3-sug{border-color:#FF8C32;background:#FF8C32;color:#1b0d02}',
+      '#k3d ol.k3-cab{display:block;padding:0 0 0 18px;margin:0;background:none;border:0}#k3d .k3-lbl.k3-cur{border-color:#38C8E8}#k3d .k3-lbl.k3-sop{border-color:#E8A317;color:#ffd27a}#k3d .k3-mat{width:100%;border-collapse:collapse;font-size:12px}#k3d .k3-mat td{padding:4px 6px;border-bottom:1px solid #223a57;vertical-align:top}#k3d .k3-mat td:first-child{white-space:nowrap;font-weight:700;color:#ffd27a}#k3d .k3-lbl.k3-sug{border-color:#FF8C32;background:#FF8C32;color:#1b0d02}',
       '@media (max-width:760px){#k3d .k3-cuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 150px}#k3d .k3-ley{border-left:0;border-top:1px solid #24405f}}',
       '@media (max-width:700px){#kTutTab,#kNorTab,#kCatTab{top:auto;bottom:0;width:25%;height:54px;writing-mode:horizontal-tb;transform:none;border-radius:0;padding:4px 6px;font-size:11.5px;line-height:1.15;white-space:normal;text-align:center;box-shadow:0 -2px 10px rgba(0,0,0,.35);z-index:61}#kTutTab{left:0}#kNorTab{left:25%}#kCatTab{left:50%;right:auto}body{padding-bottom:58px}body:not(:has(#rsBtn)) #kTutTab,body:not(:has(#rsBtn)) #kNorTab,body:not(:has(#rsBtn)) #kCatTab{width:33.34%}body:not(:has(#rsBtn)) #kNorTab{left:33.33%}body:not(:has(#rsBtn)) #kCatTab{left:66.66%}}'
     ].join('\n');
@@ -960,6 +1000,9 @@
         '<h4 class="k3-h">Radio de curvatura</h4><p class="k3-r">Curvar con radio no menor a <b>' + (cu.r ? cm(cu.r) : '—') + '</b><br>manda ' + (cu.manda === 'cable' ? 'el cable ' + esc(cu.cable.tag) : 'la tubería') + '</p>' +
         '<dl class="k3-dl"><dt>Tubería</dt><dd>' + (cu.ducto ? cm(cu.ducto) : '—') + '<small>' + esc(cu.refDucto) + '</small></dd></dl>' +
         '<h4 class="k3-h">Cables · RIC N°04 6.2.8</h4><ol class="k3-cab">' + cu.cables.map(function (c) { return '<li><b>' + esc(c.tag) + '</b> · ' + cm(c.r) + '<small>' + esc(c.clase) + ': ' + c.fac + ' × Ø ' + n1(c.d, 1) + ' mm</small></li>'; }).join('') + '</ol>' +
+        (function () { var so = soportacion(dc, r, s); return '<h4 class="k3-h">Materiales de referencia</h4>' + (so.items.length ? '<table class="k3-mat"><tbody>' + so.items.map(function (i) { return '<tr><td>' + i.cant + ' ' + i.un + '</td><td>' + esc(i.desc) + '</td></tr>'; }).join('') + '</tbody></table>' : '') +
+          (so.sep ? '<p class="k3-ayuda">' + esc(so.refSep) + ', más una abrazadera a cada lado de cada caja.' + (so.nSop ? '' : ' Indica el largo del tramo para contar los soportes.') + '</p>' : '<p class="k3-ayuda">' + esc(so.notaSop || '') + '</p>') +
+          (so.caja ? '<p class="k3-ayuda">' + (so.cajas ? '' : 'Este tramo no necesita caja de paso; si se intercala una: ' + esc(so.caja.n) + '. ') + esc(so.caja.ref) + '.</p>' : '') + '<p class="k3-ayuda">Medidas según ' + MJM + '. Cantidades referenciales: confirmar en terreno y con el fabricante.</p>'; })() +
         '<p class="k3-ayuda">Flexible 4 ×, alambre o cableado concéntrico 8 ×, apantallado 12 × el diámetro exterior. Tubería metálica según Tabla N°4.22 si el fabricante no indica otro radio.</p>' +
         '<p class="k3-ayuda">El diámetro del tubo se dibuja ampliado para poder verlo; los largos y las curvas mantienen su proporción. Arrastra para girar y usa la rueda para acercar.</p>';
     } else
@@ -1062,8 +1105,16 @@
     // extremos (cajas o gabinetes) y cajas de paso sugeridas por la verificación
     var mCaja = new THREE.MeshStandardMaterial({ color: 0x4a5f78, roughness: 0.6, metalness: 0.3 }), mPaso = new THREE.MeshStandardMaterial({ color: 0xFF8C32, roughness: 0.5, metalness: 0.2 }), lado = Rv * 5;
     [[pts[0], 'Inicio'], [pts[pts.length - 1], 'Fin · ' + (Lm > 0 ? n1(Lm, 1) + ' m' : 'largo sin dato')]].forEach(function (e) { var m = new THREE.Mesh(new THREE.BoxGeometry(lado, lado, lado), mCaja); m.position.copy(e[0]); g.add(m); etiqueta(e[0].clone().setY(lado * 0.4), e[1]); });
-    var cajas = dc.cond === 'normal' && Lm > 0 ? Math.max(Lm > 20 ? Math.ceil(Lm / 20) - 1 : 0, N > 2 ? Math.ceil(N / 2) - 1 : 0) : dc.cond === 'subt' && Lm > 90 ? Math.ceil(Lm / 90) - 1 : 0;
-    for (var q = 1; q <= cajas; q++) { var pc = camino.getPointAt(q / (cajas + 1)), mb = new THREE.Mesh(new THREE.BoxGeometry(lado * 0.8, lado * 0.8, lado * 0.8), mPaso); mb.position.copy(pc); g.add(mb); etiqueta(pc.clone().setY(lado * 1.6), (dc.cond === 'subt' ? 'Cámara' : 'Caja de paso') + ' sugerida', 'k3-sug'); }
+    var so = soportacion(dc, r, s), cajas = so.cajas, esk = Rv / Re, cd = so.caja ? so.caja.d : [250, 150, 100], ejeY = V(0, 1, 0);
+    for (var q = 1; q <= cajas; q++) { var u = q / (cajas + 1), pc = camino.getPointAt(u), tg = camino.getTangentAt(u), mb = new THREE.Mesh(new THREE.BoxGeometry(cd[1] * esk, cd[2] * esk, cd[0] * esk), mPaso); mb.position.copy(pc); mb.rotation.y = Math.atan2(tg.x, tg.z); g.add(mb);
+      var tp = new THREE.Mesh(new THREE.BoxGeometry(cd[1] * esk * 1.06, cd[2] * esk * 0.08, cd[0] * esk * 1.06), mCaja); tp.position.copy(pc); tp.position.y += cd[2] * esk * 0.54; tp.rotation.y = mb.rotation.y; g.add(tp);
+      etiqueta(pc.clone().setY(cd[2] * esk * 0.6), (dc.cond === 'subt' ? 'Cámara · ' : 'Caja · ') + cd[0] + 'x' + cd[1] + 'x' + cd[2], 'k3-sug'); }
+    // soportes: abrazadera sobre un tramo de riel, repartidos a la distancia máxima permitida
+    if (so.nSop) { var nS = Math.min(so.nSop, 300), gA = new THREE.TorusGeometry(Rv * 1.18, Rv * 0.2, 8, 20), gR = new THREE.BoxGeometry(Rv * 6, Rv * 0.9, Rv * 0.9), mA = new THREE.MeshStandardMaterial({ color: 0xE8A317, roughness: 0.4, metalness: 0.6 }), mR = new THREE.MeshStandardMaterial({ color: 0x7f8a94, roughness: 0.45, metalness: 0.7 });
+      for (var w = 0; w < nS; w++) { var uu = (w + 0.5) / nS, ps = camino.getPointAt(uu), ts = camino.getTangentAt(uu), ry = Math.atan2(ts.x, ts.z);
+        var ab = new THREE.Mesh(gA, mA); ab.position.copy(ps); ab.rotation.y = ry; g.add(ab);
+        var ri = new THREE.Mesh(gR, mR); ri.position.copy(ps); ri.position.y -= Rv * 1.5; ri.rotation.y = ry; g.add(ri); }
+      var p0 = camino.getPointAt(0.5 / nS); etiqueta(p0.clone().setY(-Rv * 5), 'Abrazadera ' + so.abz.tipo.split(' ')[0] + ' ' + so.abz.med + ' sobre riel · cada ' + n1(so.sep, 2) + ' m', 'k3-sop'); }
     marcas.forEach(function (m) { etiqueta(m.p, m.txt, m.t === 'curva' ? 'k3-cur' : ''); });
     var caja = new THREE.Box3().setFromPoints(pts), cen = caja.getCenter(V(0, 0, 0)), tam = caja.getSize(V(0, 0, 0)), D = Math.max(tam.x, tam.z, Rv * 20);
     var rej = new THREE.GridHelper(D * 1.6, 16, 0x2c4563, 0x1b2f47); rej.position.set(cen.x, -Rv * 3, cen.z); g.add(rej);
@@ -1115,7 +1166,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
-  window.LAZOS_COND = { curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
