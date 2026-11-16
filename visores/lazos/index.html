@@ -79,6 +79,7 @@ table.io td input, table.io td select { min-height: 32px; border-color: transpar
 table.io td input:hover, table.io td select:hover { border-color: var(--line); }
 table.io td input::placeholder { color: #6E8299; }
 table.io .chk { width: 34px; text-align: center; }
+table.io tr.excl td { opacity: .45; } table.io tr.excl td.chk { opacity: 1; }
 table.io .chk input { width: 18px; min-height: 18px; }
 table.io tr:hover td { background: rgba(255, 255, 255, .03); }
 table.io td:nth-child(2) input { font: 600 13px var(--f-mono); }
@@ -266,6 +267,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <button type="button" role="tab" data-v="doc" aria-selected="false">Documento E/S</button>
     <button type="button" role="tab" data-v="inst" aria-selected="false">Listado de instrumentos</button>
     <button type="button" role="tab" data-v="circ" aria-selected="false">Listado de circuitos</button>
+    <button type="button" role="tab" data-v="mat" aria-selected="false">Listado de materiales</button>
     <button type="button" role="tab" data-v="cond" aria-selected="false">Canalizaciones</button>
     <button type="button" role="tab" data-v="uni" aria-selected="false">Unilineal TDI</button>
     <button type="button" role="tab" data-v="blq" aria-selected="false">Bloques de control</button>
@@ -402,6 +404,30 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
     <div class="docio">
       <form id="cForm" class="dform" onsubmit="return false"></form>
       <div class="dprev" id="cPrev"></div>
+    </div>
+  </section>
+
+  <section id="v-mat" hidden>
+    <p class="intro">Listado de materiales de instrumentación y control: cables desde el listado de circuitos, conduit desde las canalizaciones y materiales de montaje según el detalle típico asignado a cada instrumento.</p>
+    <div class="herr">
+      <button type="button" class="pri" id="mAgregar">+ Agregar material</button>
+      <label style="display:inline-flex;grid-auto-flow:column;align-items:center;gap:6px">Suministro por defecto<input id="mSumi" placeholder="POR CONTRATISTA" style="width:190px"></label>
+      <span class="esp"></span>
+    </div>
+    <p class="estado" id="mCuenta"></p>
+    <div class="tscroll"><table class="io" id="tablaMat"><thead></thead><tbody></tbody></table></div>
+    <h2 class="grupo" style="margin-top:26px">Detalle de montaje de cada instrumento</h2>
+    <div class="tscroll"><table class="io" id="tablaMont"><thead></thead><tbody></tbody></table></div>
+    <h2 class="grupo" style="margin-top:26px">Documento · Listado de materiales</h2>
+    <div class="herr">
+      <button type="button" class="pri" id="mExcel">Excel · Anexo A</button>
+      <button type="button" id="mWord">Word · documento completo</button>
+      <button type="button" id="mPdf">Imprimir / PDF</button>
+      <span class="esp"></span><span class="estado" id="mEstado"></span>
+    </div>
+    <div class="docio">
+      <form id="mForm" class="dform" onsubmit="return false"></form>
+      <div class="dprev" id="mPrev"></div>
     </div>
   </section>
 
@@ -581,6 +607,7 @@ fieldset .ancho, fieldset.rotulo p.ancho { grid-column: 1 / -1; }
 <script src="../especificaciones/plantillas-et2.js"></script>
 <script src="../especificaciones/plantillas-et3.js"></script>
 <script src="app.js"></script>
+<script src="../equipos/catalogo-montajes.js"></script>
 <script src="docio.js"></script>
 <script src="ric.js"></script>
 <script src="unilineal.js"></script>

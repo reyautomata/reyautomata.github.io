@@ -329,7 +329,7 @@
   function datosDoc() {
     var e = E(), d = e[K.clave] = e[K.clave] || {}, pr = P.activo();
     return {
-      codigo: d.codigo || K.codigo() || '', titulo: d.titulo || K.titulo, tipoDoc: d.tipoDoc || 'LISTA DE EQUIPOS', fecha: d.fecha || pr.porFecha || hoy(),
+      codigo: d.codigo || K.codigo() || '', titulo: d.titulo || K.titulo, tipoDoc: d.tipoDoc || K.tipoDoc || 'LISTA DE EQUIPOS', fecha: d.fecha || pr.porFecha || hoy(),
       id: d.id || pr.idCliente || '', rev: d.revs ? ((d.revs.slice(-1)[0] || {}).rev || '') : pr.rev || '', proyecto: pr.proyecto || '', cliente: pr.cliente || '', empresa: pr.contratista || 'ReyEngi', numero: pr.numero || '',
       anexoA: d.anexoA || K.anexo, anexoB: d.anexoB || '',
       intro: d.intro || (pr.cliente || 'El cliente') + ' ha encargado a ' + (pr.contratista || 'ReyEngi') + ' el desarrollo del proyecto "' + (pr.proyecto || '') + '".\n\nEl presente documento corresponde al ' + K.objeto + ' del proyecto.',
@@ -508,7 +508,7 @@
   function campos() {
     return [
       { g: 'Identificación', c: [['codigo', 'Código del documento', function () { return K.codigo(); }], ['fecha', 'Fecha del documento', function () { return P.activo().porFecha || hoy(); }],
-        ['tipoDoc', 'Tipo de documento', function () { return 'LISTA DE EQUIPOS'; }], ['titulo', 'Título', function () { return K.titulo; }], ['id', 'ID / contrato del cliente', function () { return P.activo().idCliente; }]] },
+        ['tipoDoc', 'Tipo de documento', function () { return K.tipoDoc || 'LISTA DE EQUIPOS'; }], ['titulo', 'Título', function () { return K.titulo; }], ['id', 'ID / contrato del cliente', function () { return P.activo().idCliente; }]] },
       { g: 'Firmas (roles)', c: [['rolPor', 'Rol de quien prepara', function () { return 'Ingeniero de Proyecto'; }], ['rolReviso', 'Rol de quien revisa', function () { return 'Jefe de Disciplina'; }], ['rolAprobo', 'Rol de quien aprueba', function () { return 'Jefe de Proyecto'; }], ['rolCliente', 'Rol en el cliente', function () { return 'Jefe de Proyecto'; }]] },
       { g: 'Contenido', c: [['intro', 'Introducción', null, 'a'], ['alcance', 'Alcance', null, 'a'], ['refs', 'Referencias adicionales (código ; rev ; nombre, una por línea)', function () { return ''; }, 'a'], ['cambios', 'Control de cambios (rev ; fecha ; página ; descripción ; responsable)', function () { return ''; }, 'a'],
         ['anexoA', 'Título del Anexo A', function () { return K.anexo; }], ['anexoB', 'Anexo B (opcional)', function () { return ''; }]] }
@@ -706,7 +706,95 @@
     A.guardar();
   }
 
-  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: VIO.todo, inst: pintarInst, circ: pintarCirc });
+  // ══ Listado de materiales ══
+  // Dos orígenes en un mismo documento: (1) cables del listado de circuitos y conduit de las canalizaciones, y
+  // (2) los materiales de cada detalle de montaje multiplicados por los instrumentos del proyecto que usan ese montaje.
+  // Cada fila calculada se puede ajustar (cantidad, unidad, suministro, documentos, observaciones) o excluir; también hay filas manuales.
+  function catMont() { return window.RE_MONTAJES || []; }
+  function montSugerido(r) { if (/^Z[SI][OC]?$/.test(ISA.analizar(r.tag || '').letras || '')) return '';   /* los finales de carrera van montados en su válvula: no suman materiales propios */
+    var id = (r.x && r.x.hd) || r.hdAuto, pl = plantillasHD().filter(function (x) { return x.id === id; })[0], v = pl && pl.visores && pl.visores[0]; if (!v) return ''; var m = catMont().filter(function (x) { return x.visor === v; })[0]; return m ? m.code : ''; }
+  function montDe(r) { var v = r.x && r.x.montaje; return v === '-' ? '' : (v || montSugerido(r)); }
+  function datosMat() { var e = E(); e.mat = e.mat || {}; e.mat.x = e.mat.x || {}; e.mat.manual = e.mat.manual || []; return e.mat; }
+  function numCant(t) { var m = /^\s*(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(String(t || '')); return m ? { n: +m[1].replace(',', '.'), u: m[2].trim().toLowerCase() } : { n: 1, u: '' }; }
+  var GRUPOS_MAT = ['CABLES', 'CANALIZACIONES', 'MATERIALES DE MONTAJE DE INSTRUMENTOS', 'OTROS MATERIALES'];
+  function materiales() {
+    var e = E(), cfg = e.cfg, M = datosMat(), out = [];
+    // 1a) Cables: metros por tipo y diseño, desde el listado de circuitos
+    var cab = {}; circuitos().forEach(function (c) {
+      var tipo = up(valCirc(c, 'tipo')), dis = up(valCirc(c, 'diseno')), l = parseFloat(String(valCirc(c, 'largo')).replace(',', '.')) || 0; if (!tipo && !dis) return;
+      var k = tipo + '|' + dis, o = cab[k] = cab[k] || { tipo: tipo, dis: dis, l: 0, n: 0, sin: 0 }; o.l += l; o.n++; if (!l) o.sin++; });
+    Object.keys(cab).sort().forEach(function (k) { var o = cab[k]; out.push({ key: 'c:' + k, grupo: GRUPOS_MAT[0], un: 'm', cant: Math.ceil(o.l), mat: [o.tipo, o.dis].filter(Boolean).join(', '), docs: up(cfg.docCables || ''), nota: o.n + ' circuito(s)' + (o.sin ? ', ' + o.sin + ' sin largo en el listado de circuitos' : '') }); });
+    // 1b) Conduit: metros por tipo y diámetro, desde las canalizaciones
+    var con = {}; ((e.cond && e.cond.ductos) || []).forEach(function (dc) {
+      var l = parseFloat(String(dc.largo).replace(',', '.')) || 0, r = null; try { r = window.LAZOS_COND && window.LAZOS_COND.calcular(dc); } catch (er) {}
+      if (!r || !r.elegido || !r.n) return; var k = r.T.c + '|' + r.elegido.s[0], o = con[k] = con[k] || { t: r.T.c, d: r.elegido.s[0], l: 0, n: 0, sin: 0, tags: [] }; o.l += l; o.n++; if (!l) o.sin++; o.tags.push(dc.tag); });
+    Object.keys(con).sort().forEach(function (k) { var o = con[k]; out.push({ key: 'd:' + k, grupo: GRUPOS_MAT[1], un: 'm', cant: Math.ceil(o.l), mat: 'CONDUIT ' + up(o.t) + ' Ø ' + o.d, docs: up(o.tags.slice(0, 6).join(', ') + (o.tags.length > 6 ? '…' : '')), nota: o.n + ' ducto(s)' + (o.sin ? ', ' + o.sin + ' sin largo en canalizaciones' : '') }); });
+    // 2) Montaje: lista de materiales de cada detalle × instrumentos que lo usan
+    var mm = {}, orden = []; instrumentos().forEach(function (r) {
+      var code = montDe(r), m = code && catMont().filter(function (x) { return x.code === code; })[0]; if (!m) return;
+      m.bom.forEach(function (bm) { var q = numCant(bm[2]), d = up(bm[1]), k = d + '|' + q.u, o = mm[k]; if (!o) { o = mm[k] = { d: d, u: q.u, n: 0, det: {}, inst: 0 }; orden.push(k); } o.n += q.n; o.det[code] = 1; o.inst++; }); });
+    orden.forEach(function (k) { var o = mm[k], dt = Object.keys(o.det); out.push({ key: 'm:' + k, grupo: GRUPOS_MAT[2], un: o.u || 'c/u', cant: Math.round(o.n * 100) / 100, mat: o.d, docs: 'DETALLE DE MONTAJE ' + dt.join(', '), nota: 'en ' + o.inst + ' instrumento(s)' }); });
+    // Ajustes y filas manuales
+    out.forEach(function (f) { var x = M.x[f.key] || {}; f.auto = { un: f.un, cant: f.cant, docs: f.docs }; ['un', 'cant', 'docs'].forEach(function (k) { if (x[k] != null && x[k] !== '') f[k] = x[k]; }); f.suministro = x.suministro || ''; f.obs = x.obs || ''; f.excl = !!x.excl; });
+    M.manual.forEach(function (x) { out.push({ key: 'x:' + x.id, manual: true, grupo: GRUPOS_MAT.indexOf(x.grupo) >= 0 ? x.grupo : GRUPOS_MAT[3], un: x.un || 'c/u', cant: x.cant || '', mat: up(x.mat || ''), docs: x.docs || '', suministro: x.suministro || '', obs: x.obs || '', excl: !!x.excl, auto: {}, x: x }); });
+    return out;
+  }
+  function gruposMat() {
+    var M = datosMat(), sumi = up(M.suministro || 'POR CONTRATISTA'), rev = datosDoc().rev, n = 0, L = materiales().filter(function (f) { return !f.excl; });
+    return GRUPOS_MAT.map(function (g) { return { titulo: g, filas: L.filter(function (f) { return f.grupo === g; }).map(function (f) { return { n: ++n, un: f.un, cant: f.cant === '' || f.cant == null ? '' : String(f.cant).replace('.', ','), mat: up(f.mat), suministro: up(f.suministro || sumi), docs: up(f.docs || ''), obs: up(f.obs || ''), rev: rev }; }) }; }).filter(function (g) { return g.filas.length; });
+  }
+  var COLS_MAT = [['n', 'ÍTEM', '', 7, 8], ['un', 'UN', '', 8, 9], ['cant', 'CANT.', '', 10, 11], ['mat', 'MATERIALES', '', 70, 82], ['suministro', 'SUMINISTRO', '', 26, 30], ['docs', 'DOCUMENTOS RELACIONADOS', '', 34, 40], ['obs', 'OBSERVACIONES', '', 30, 36], ['rev', 'REV', '', 7, 8]];
+  var K_MAT = {
+    clave: 'docMat', tipoDoc: 'LISTA DE MATERIALES', archivo: 'Listado de materiales', cols: COLS_MAT, grupos: gruposMat, unir: [], nw: ['un', 'cant'], izq: ['mat', 'suministro', 'docs', 'obs'], notas: ['Las cantidades de cable y conduit provienen de los largos del listado de circuitos y de las canalizaciones; son referenciales y deben verificarse en terreno.', 'Los materiales de montaje corresponden a los detalles típicos de montaje asignados a cada instrumento.'],
+    titulo: 'LISTADO DE MATERIALES DE INSTRUMENTACIÓN Y CONTROL', anexo: 'LISTADO DE MATERIALES', objeto: 'listado de materiales de instrumentación y control',
+    codigo: function () { return E().cfg.docMat; },
+    alcance: 'Este documento corresponde al listado de materiales de instrumentación y control del proyecto: cables, canalizaciones y materiales de montaje de instrumentos, con su unidad, cantidad, responsable del suministro y documentos relacionados.\n\nLas cantidades son referenciales, no consideran pérdidas de montaje salvo indicación expresa, y deberán ser verificadas por el contratista antes de la compra.',
+    refs: function (add) { var c = E().cfg; if (c.docCables) add(c.docCables, '', 'Listado de circuitos'); if (c.docInst) add(c.docInst, '', 'Listado de instrumentos'); },
+    ids: { form: '#mForm', prev: '#mPrev', estado: '#mEstado', excel: '#mExcel', word: '#mWord', pdf: '#mPdf', vista: '#v-mat' },
+    estado: function (G) { var n = 0; G.forEach(function (g) { n += g.filas.length; }); return n + ' ítems · ' + G.length + ' grupo(s)'; },
+    extraForm: function () { return '<fieldset><legend>Anexo A</legend><p class="ayuda ancho">Las filas salen del listado de circuitos, de las canalizaciones y de los detalles de montaje asignados. Se ajustan o excluyen en la tabla de materiales. Cliente, proyecto y responsables se toman del proyecto activo.</p></fieldset>'; }
+  };
+  var VMAT = document.querySelector('#v-mat') ? vistaDoc(K_MAT) : null, tPrevM = 0;
+  function cambioM(todo) { A.guardar(); if (todo) pintarTablaM(); clearTimeout(tPrevM); tPrevM = setTimeout(function () { if (VMAT) VMAT.prev(); }, 300); }
+  function pintarTablaM() {
+    var L = materiales(), M = datosMat(), sumi = up(M.suministro || 'POR CONTRATISTA'), inp = function (f, k, ph, w) { return '<td><input data-m="' + k + '" value="' + esc(f.manual ? (f.x[k] == null ? '' : f.x[k]) : ((M.x[f.key] || {})[k] == null ? '' : (M.x[f.key] || {})[k])) + '" placeholder="' + esc(ph == null ? '' : ph) + '" aria-label="' + k + ' de ' + esc(f.mat) + '"' + (w ? ' style="min-width:' + w + 'px"' : '') + '></td>'; };
+    $('#tablaMat thead').innerHTML = '<tr><th class="chk" title="Incluir en el documento">Incl.</th><th style="min-width:120px">Grupo</th><th style="min-width:54px">Un.</th><th style="min-width:70px">Cant.</th><th style="min-width:300px">Material</th><th style="min-width:130px">Suministro</th><th style="min-width:170px">Documentos relacionados</th><th style="min-width:190px">Observaciones</th><th></th></tr>';
+    $('#tablaMat tbody').innerHTML = L.map(function (f) {
+      return '<tr data-key="' + esc(f.key) + '"' + (f.excl ? ' class="excl"' : '') + '><td class="chk"><input type="checkbox" data-m="incl"' + (f.excl ? '' : ' checked') + ' aria-label="Incluir ' + esc(f.mat) + '"></td>' +
+        (f.manual ? '<td><select data-m="grupo" aria-label="Grupo">' + GRUPOS_MAT.map(function (g) { return '<option' + (g === f.grupo ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>' : '<td class="peq">' + esc(f.grupo) + '</td>') +
+        inp(f, 'un', f.auto.un || 'c/u') + inp(f, 'cant', f.auto.cant) +
+        (f.manual ? inp(f, 'mat', 'Descripción del material', 280) : '<td title="' + esc(f.nota || '') + '">' + esc(f.mat) + (f.nota ? '<small class="peq" style="display:block;color:var(--muted)">' + esc(f.nota) + '</small>' : '') + '</td>') +
+        inp(f, 'suministro', sumi) + inp(f, 'docs', f.auto.docs) + inp(f, 'obs', '') +
+        '<td>' + (f.manual ? '<button type="button" class="mini" data-m="quitar" aria-label="Quitar ' + esc(f.mat) + '">✕</button>' : '') + '</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="vacio">Aún no hay materiales. Completa los largos en el listado de circuitos y en canalizaciones, y asigna el detalle de montaje de cada instrumento.</td></tr>';
+    var inc = L.filter(function (f) { return !f.excl; }).length; $('#mCuenta').textContent = L.length + ' materiales · ' + inc + ' incluidos · ' + L.filter(function (f) { return f.manual; }).length + ' manuales';
+    $('#mSumi').value = M.suministro || '';
+    // Montaje por instrumento
+    var I = instrumentos().filter(function (r) { return r.tag; }), C = catMont(), porV = {}; C.forEach(function (m) { (porV[m.titulo] = porV[m.titulo] || []).push(m); });
+    $('#tablaMont thead').innerHTML = '<tr><th style="min-width:120px">Tag</th><th style="min-width:200px">Descripción</th><th style="min-width:260px">Detalle de montaje</th><th>Ítems</th></tr>';
+    $('#tablaMont tbody').innerHTML = I.map(function (r) {
+      var v = (r.x && r.x.montaje) || '', sg = montSugerido(r), ms = C.filter(function (m) { return m.code === sg; })[0], act = C.filter(function (m) { return m.code === montDe(r); })[0];
+      return '<tr data-tag="' + esc(r.tag) + '"><td>' + esc(r.tag) + '</td><td>' + esc(valInst(r, 'desc')) + '</td><td><select data-mont="1" aria-label="Detalle de montaje de ' + esc(r.tag) + '"><option value="">' + (ms ? 'Sugerido · ' + esc(ms.code + ' ' + ms.titulo + ' · ' + ms.name) : 'Sin detalle sugerido') + '</option><option value="-"' + (v === '-' ? ' selected' : '') + '>Sin montaje (no aporta materiales)</option>' +
+        Object.keys(porV).map(function (t) { return '<optgroup label="' + esc(t) + '">' + porV[t].map(function (m) { return '<option value="' + esc(m.code) + '"' + (v === m.code ? ' selected' : '') + '>' + esc(m.code + ' · ' + m.name) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select></td><td>' + (act ? act.bom.length : '—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="vacio">No hay instrumentos en el proyecto.</td></tr>';
+  }
+  function pintarMat() { if (!VMAT) return; pintarTablaM(); VMAT.todo(); }
+  if (VMAT) {
+    $('#tablaMat').addEventListener('change', function (ev) {
+      var t = ev.target, tr = t.closest('tr[data-key]'), k = t.dataset.m; if (!tr || !k) return; var key = tr.dataset.key, M = datosMat();
+      if (key.indexOf('x:') === 0) { var x = M.manual.filter(function (m) { return 'x:' + m.id === key; })[0]; if (!x) return; if (k === 'incl') x.excl = !t.checked; else x[k] = t.value.trim(); }
+      else { var o = M.x[key] = M.x[key] || {}; if (k === 'incl') o.excl = !t.checked; else o[k] = t.value.trim(); if (!Object.keys(o).some(function (q) { return o[q]; })) delete M.x[key]; }
+      cambioM(k === 'incl' || k === 'grupo');
+    });
+    $('#tablaMat').addEventListener('click', function (ev) { var b = ev.target.closest('[data-m=quitar]'); if (!b) return; var key = b.closest('tr').dataset.key, M = datosMat(); M.manual = M.manual.filter(function (m) { return 'x:' + m.id !== key; }); cambioM(true); });
+    $('#tablaMont').addEventListener('change', function (ev) {
+      var t = ev.target, tr = t.closest('tr[data-tag]'); if (!tr || !t.dataset.mont) return; var r = instrumentos().filter(function (q) { return q.tag === tr.dataset.tag; })[0]; if (!r) return;
+      if (!r.x && !t.value) return; var x = r.x || entrada(r); x.montaje = t.value; cambioM(true);
+    });
+    $('#mAgregar').addEventListener('click', function () { datosMat().manual.push({ id: A.uid(), grupo: GRUPOS_MAT[3], un: 'c/u', cant: '1', mat: '' }); cambioM(true); var f = document.querySelectorAll('#tablaMat tr[data-key^="x:"] [data-m=mat]'); if (f.length) f[f.length - 1].focus(); });
+    $('#mSumi').addEventListener('change', function () { datosMat().suministro = this.value.trim(); cambioM(true); });
+  }
+  window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { doc: VIO.todo, inst: pintarInst, circ: pintarCirc, mat: pintarMat });
   window.LAZOS_DOC = { renombrar: renombrar, circuitos: circuitos, gruposCirc: gruposCirc, tagSenal: tagSenal, descSenal: descSenal, rangoUnidad: rangoUnidad, alarma: alarma, grupos: gruposIO, instrumentos: instrumentos, gruposInst: gruposInst, hdSugerida: hdSugerida,
     excel: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return excel(); }, word: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return word(); }, pdf: pdf,
     html: function (k) { K = ({ inst: K_INST, circ: K_CIRC })[k] || K_IO; return htmlDoc(); } };
