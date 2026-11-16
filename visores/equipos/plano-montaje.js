@@ -182,7 +182,8 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     const P = (p) => [p[0] * K, (H - p[1]) * K];
     const aci = (c) => { c = String(c).toLowerCase(); return c === '#034488' ? 5 : c === '#ef5a05' ? 30 : c === '#c9d6e3' ? 9 : (c === '#fff' || c === '#ffffff') ? 255 : 7; };
     const R = { layer: 'MARCO', E };
-    const ent = (type, layer, color, codes) => E.push('0\n' + type + '\n8\n' + layer + '\n' + (color !== 7 ? '62\n' + color + '\n' : '') + codes.map(([g, v]) => g + '\n' + v).join('\n') + '\n');
+    const BD = (() => { try { const d = window.RE_DIBUJO || (window.parent && window.parent.RE_DIBUJO); return d && d.activo() ? d : null; } catch (e) { return null; } })();   // bases de dibujo del proyecto
+    const ent = (type, layer, color, codes) => E.push('0\n' + type + '\n8\n' + (BD ? BD.capa(layer, type === 'TEXT' ? { t: 'tx', h: 2.5 } : null) : layer) + '\n' + (color !== 7 ? '62\n' + color + '\n' : '') + codes.map(([g, v]) => g + '\n' + v).join('\n') + '\n');
     R.line = (a, b, layer, c = 7) => { const p = P(a), q = P(b); ent('LINE', layer, c, [[10, f(p[0])], [20, f(p[1])], [30, 0], [11, f(q[0])], [21, f(q[1])], [31, 0]]); };
     R.strokePath = (path, col) => {
       const c = aci(col);
