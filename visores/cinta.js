@@ -115,7 +115,9 @@
 
     // ── Estructura ──
     var cinta = d.createElement('div'); cinta.id = 'rsCinta'; cinta.className = 'rc'; cinta.setAttribute('role', 'navigation'); cinta.setAttribute('aria-label', 'Cinta de opciones');
-    cinta.innerHTML = '<div class="rc-fila"><div class="rc-tabs" role="tablist" aria-label="Pestañas de la cinta">' +
+    cinta.innerHTML = '<div class="rc-fila"><a class="rc-logo" href="' + B + '#inicio" title="ReyEngi · Tablero de inicio" aria-label="ReyEngi, ir al tablero de inicio">' +
+      '<img class="rc-lo-o" src="' + B + '../img/logo-reyengi-light.png" alt=""><img class="rc-lo-c" src="' + B + '../img/logo-reyengi.png" alt=""></a>' +
+      '<div class="rc-tabs" role="tablist" aria-label="Pestañas de la cinta">' +
       tabs.map(function (tb) { return '<button type="button" class="rc-t" role="tab" id="rcT-' + tb.id + '" data-t="' + tb.id + '" aria-controls="rcPan">' + esc(tb.t) + '</button>'; }).join('') + '</div>' +
       '<div class="rc-bus">' + svg('buscar') + '<input type="search" id="rcBuscar" placeholder="Buscar una tarea" aria-label="Buscar una tarea de la suite" role="combobox" aria-expanded="false" aria-controls="rcRes" aria-autocomplete="list" autocomplete="off" spellcheck="false"><kbd>Ctrl K</kbd><div class="rc-res" id="rcRes" role="listbox" aria-label="Tareas encontradas" hidden></div></div>' +
       '<button type="button" class="rc-min" id="rcMin" aria-pressed="false"></button></div><div class="rc-pan" id="rcPan" role="tabpanel"></div>';

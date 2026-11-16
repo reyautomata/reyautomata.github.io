@@ -61,6 +61,21 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
 .pen li { padding: 5px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
 .pen li:last-child { border-bottom: 0; }
 .vacio { color: var(--muted); font-size: 13px; }
+/* Asistente paso a paso */
+.pasos ol { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.pasos li { flex: 1 1 0; min-width: 0; }
+.pasos button { width: 100%; min-height: 0; padding: 6px 8px; display: flex; gap: 8px; align-items: center; text-align: left; font-weight: 400; font-size: 12px; background: var(--panel); border: 1px solid var(--line); border-bottom: 3px solid var(--line); }
+.pasos button .num { width: 22px; height: 22px; font-size: 11px; flex: none; }
+.pasos button span.t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pasos button[aria-current="step"] { border-bottom-color: var(--accent); background: var(--panel2); font-weight: 600; }
+.pasos button:disabled { opacity: .55; cursor: not-allowed; }
+.paso .tarj { padding: 18px 20px; }
+.paso h3 { font-size: 18px; }
+.paso .pen { margin-top: 4px; }
+.nav2 { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; }
+.nav2 span { flex: 1; text-align: right; color: var(--warn); font-size: 12.5px; }
+.nav2 button.pri { background: var(--accent); border-color: var(--accent); color: var(--sobre-acento, #1B0D02); }
+.nav2 button:disabled { opacity: .5; cursor: not-allowed; }
 .aviso { grid-column: 1 / -1; font-size: 12.5px; color: var(--warn); }
 .caja.cam { border-color: var(--warn); }
 .cam .grp { border-bottom: 1px solid var(--line); padding: 8px 0; }
@@ -77,7 +92,7 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
 <link rel="stylesheet" href="../fluent.css" id="rsFluent">
-<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?37:121))+'px')}}catch(e){}</script>
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?33:103))+'px')}}catch(e){}</script>
 <script src="../entregables.js" defer></script>
 <script src="../cinta.js" defer></script>
 <script src="../suite.js" defer></script>
@@ -91,8 +106,10 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
 </div></div>
 <main class="fl">
   <section>
-    <p class="sub">Instrumentación, control y comunicaciones. Cada fase toma los datos de la anterior desde la base del proyecto; una fase se habilita cuando la anterior ya tiene datos.</p>
-    <ol class="fases" id="fases"></ol>
+    <p class="sub">Instrumentación, control y comunicaciones. Avanza fase por fase: cada una toma los datos de la anterior desde la base del proyecto y «Siguiente» se habilita cuando la fase actual ya tiene datos.</p>
+    <nav class="pasos" aria-label="Fases del flujo"><ol id="pasos"></ol></nav>
+    <div class="paso" id="paso" aria-live="polite"></div>
+    <div class="nav2"><button type="button" id="ant">← Anterior</button><span id="motivoSig"></span><button type="button" class="pri" id="sig">Siguiente →</button></div>
   </section>
   <aside class="lado">
     <div class="caja cam" id="cajaCam" hidden>
@@ -100,11 +117,6 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
       <p class="nota">Cambios en la base que todavía no se revisan en los entregables que dependen de ellos.</p>
       <div id="cam"></div>
       <div class="pie"><small class="vacio" id="camN"></small><button type="button" id="camTodo">Marcar todo revisado</button></div>
-    </div>
-    <div class="caja">
-      <h3>Pendientes</h3>
-      <p class="nota">Lo que falta en la base para cerrar las fases en curso.</p>
-      <ul class="pen" id="pend"></ul>
     </div>
     <div class="caja">
       <h3>Entregables complementarios</h3>
@@ -184,6 +196,11 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
         datos: m.circuitos ? 'Calculable con ' + m.circuitos + ' circuitos' : 'Sin circuitos aún', est: m.circuitos ? 'ok' : 'pend',
         links: [['Listado de materiales', '../lazos/#mat', 1]], dev: [] }
     ];
+    F[0].pen = m.tags ? [] : [['Cargar instrumentos desde el P&ID', '../pid/']];
+    F[1].pen = m.modulos ? [] : [['Definir gabinetes y tarjetas de E/S', '../lazos/#mod']];
+    F[2].pen = m.sinCanal.map(function (s) { return [s.tag + ' sin canal asignado', '../lazos/#io']; });
+    F[3].pen = m.sinJb.map(function (s) { return [s.tag + ' sin caja de conexiones', '../lazos/#io']; });
+    F[4].pen = []; F[5].pen = m.montajes ? [] : [['Registrar los detalles típicos de montaje', '../#montajes']]; F[6].pen = [];
     F.forEach(function (f, i) {
       var prev = F[i - 1];
       if (prev && (prev.est === 'pend' || prev.est === 'bloq')) { f.est = 'bloq'; f.motivo = 'Se habilita cuando «' + prev.t + '» tenga datos.'; }
@@ -194,6 +211,8 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
   var CAMPO = { tag: 'Tag', tipo: 'Tipo de señal', hilos: 'Hilos', sensor: 'Sensor', senal: 'Señal', rango: 'Rango', desc: 'Descripción', servicio: 'Servicio',
     marca: 'Marca', modeloInst: 'Modelo', mod: 'Tarjeta', canal: 'Canal', lazo: 'Lazo', hmi: 'Funciones HMI', jb: 'Caja de conexiones', par: 'Par',
     cable: 'Cable', cableSpec: 'Especificación del cable', cable2: 'Multipar', cable2Spec: 'Especificación del multipar', alimTab: 'Tablero de alimentación' };
+  var cur = (function () { var m = /^#fase=(\d+)$/.exec(location.hash); return m ? +m[1] : null; })();
+  var CORTA = ['P&ID', 'Arquitectura', 'Entradas y salidas', 'Conexiones', 'Circuitos', 'Montaje', 'Materiales'];
   var NOMBRE = { ok: 'Con datos', act: 'En curso', pend: 'Por iniciar', bloq: 'Bloqueada' };
 
   function pintar() {
@@ -201,30 +220,31 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     var CP = (P.cambios ? P.cambios() : []).filter(function (c) { return !c.rev; });
     F.forEach(function (f, i) { f.cam = CP.filter(function (c) { return (c.afecta || []).some(function (k) { return FASE_ENT[i].indexOf(k) >= 0; }); }).length; });
     $('proy').textContent = (d.numero ? d.numero + ' · ' : '') + (d.nombre || 'Proyecto');
-    $('fases').innerHTML = F.map(function (f, i) {
-      var bloq = f.est === 'bloq';
-      return '<li class="fase ' + f.est + '"><div class="riel"><span class="num" aria-hidden="true">' + i + '</span></div><div class="tarj">' +
-        '<div><h3>' + esc(f.t) + ' <span class="pill">' + NOMBRE[f.est] + '</span></h3><p>' + esc(f.d) + '</p></div>' +
-        '<div><span class="et">En la base</span><span class="dato">' + esc(f.datos) + '</span></div>' +
-        '<div><span class="et">Generadores</span>' + f.links.map(function (l) { return esc(l[0]); }).join(' · ') + '</div>' +
-        (bloq ? '<div class="motivo">' + esc(f.motivo) + '</div>' : '') +
-        (f.cam ? '<div class="aviso">' + f.cam + (f.cam === 1 ? ' cambio' : ' cambios') + ' en la base por revisar en estos entregables</div>' : '') +
-        '<div class="acc">' + f.links.map(function (l) {
-          return '<a class="btn' + (l[2] ? ' pri' : '') + '" href="' + esc(l[1]) + '"' + (bloq ? ' aria-disabled="true" tabindex="-1"' : '') + '>' + esc(l[0]) + '</a>';
-        }).join('') + f.dev.map(function (x) { return '<span class="dev">' + esc(x) + ' · en desarrollo</span>'; }).join('') + '</div>' +
-        '</div></li>';
+    var n = F.length;
+    if (cur == null) { cur = 0; while (cur < n - 1 && F[cur].est === 'ok') cur++; }
+    while (cur > 0 && F[cur].est === 'bloq') cur--;          // no se puede quedar en una fase bloqueada
+    var f = F[cur], conDatos = f.est === 'ok' || f.est === 'act';
+    $('pasos').innerHTML = F.map(function (x, i) {
+      return '<li class="' + x.est + '"><button type="button" data-i="' + i + '"' + (i === cur ? ' aria-current="step"' : '') + ' title="' + esc(x.est === 'bloq' ? x.motivo : x.t) + '"' + (x.est === 'bloq' ? ' disabled' : '') + '>' +
+        '<span class="num" aria-hidden="true">' + (x.est === 'ok' ? '✓' : i) + '</span><span class="t">' + esc(CORTA[i]) + '</span></button></li>';
     }).join('');
-
-    var pen = [];
-    if (!m.tags) pen.push(['Cargar instrumentos desde el P&ID', '../pid/']);
-    if (!m.modulos) pen.push(['Definir tarjetas y gabinetes', '../lazos/#mod']);
-    m.sinCanal.slice(0, 6).forEach(function (s) { pen.push([s.tag + ' sin canal asignado', '../lazos/#io']); });
-    if (m.sinCanal.length > 6) pen.push(['… y ' + (m.sinCanal.length - 6) + ' señales más sin canal', '../lazos/#io']);
-    m.sinJb.slice(0, 4).forEach(function (s) { pen.push([s.tag + ' sin caja de conexiones', '../lazos/#io']); });
-    if (m.sinJb.length > 4) pen.push(['… y ' + (m.sinJb.length - 4) + ' señales más sin caja de conexiones', '../lazos/#io']);
-    $('pend').innerHTML = pen.length ? pen.map(function (p) { return '<li><span>' + esc(p[0]) + '</span><a href="' + esc(p[1]) + '">Ir</a></li>'; }).join('')
-      : '<li class="vacio">Sin pendientes en la base.</li>';
-
+    var MAXP = 12;
+    $('paso').innerHTML = '<div class="fase ' + f.est + '" style="display:block"><div class="tarj">' +
+      '<div><span class="et">Fase ' + cur + ' de ' + (n - 1) + '</span><h3>' + esc(f.t) + ' <span class="pill">' + NOMBRE[f.est] + '</span></h3><p>' + esc(f.d) + '</p></div>' +
+      '<div><span class="et">En la base</span><span class="dato">' + esc(f.datos) + '</span></div>' +
+      '<div><span class="et">Pendientes de esta fase</span>' + (f.pen.length ? '<ul class="pen">' + f.pen.slice(0, MAXP).map(function (p) { return '<li><span>' + esc(p[0]) + '</span><a href="' + esc(p[1]) + '" data-ir="1">Ir</a></li>'; }).join('') +
+        (f.pen.length > MAXP ? '<li><span>… y ' + (f.pen.length - MAXP) + ' más</span></li>' : '') + '</ul>' : '<span class="vacio">Sin pendientes.</span>') + '</div>' +
+      (f.cam ? '<div class="aviso">' + f.cam + (f.cam === 1 ? ' cambio' : ' cambios') + ' en la base por revisar en estos entregables (ver «Propagación de cambios»)</div>' : '') +
+      '<div class="acc">' + f.links.map(function (l) { return '<a class="btn' + (l[2] ? ' pri' : '') + '" href="' + esc(l[1]) + '" data-ir="1">' + esc(l[0]) + '</a>'; }).join('') +
+        f.dev.map(function (x) { return '<span class="dev">' + esc(x) + ' · en desarrollo</span>'; }).join('') + '</div>' +
+      '</div></div>';
+    $('ant').disabled = cur === 0;
+    var ult = cur === n - 1, sigBloq = !ult && !conDatos;
+    $('sig').textContent = ult ? 'Ir al control documental →' : 'Siguiente: ' + F[cur + 1].t + ' →';
+    $('sig').disabled = sigBloq;
+    $('motivoSig').textContent = sigBloq ? 'Completa los datos de esta fase para continuar.' : '';
+    if (location.hash !== '#fase=' + cur) history.replaceState(null, '', '#fase=' + cur);
+    try { sessionStorage.setItem('reyengi-flujo', JSON.stringify({ fase: cur, t: f.t, n: n })); } catch (e) {}
     pintarCambios(CP);
     var A = P.leer('flujo', {}) || {}, alc = A.alcance || {};
     $('comp').innerHTML = COMP.map(function (c) {
@@ -256,6 +276,13 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     }).join('');
     $('camN').textContent = CP.length + (CP.length === 1 ? ' cambio pendiente' : ' cambios pendientes') + (orden.length > MAX ? ' · se muestran los ' + MAX + ' tags más recientes' : '');
   }
+  $('pasos').addEventListener('click', function (e) { var b = e.target.closest('button[data-i]'); if (!b || b.disabled) return; cur = +b.dataset.i; pintar(); });
+  $('ant').addEventListener('click', function () { if (cur > 0) { cur--; pintar(); } });
+  $('sig').addEventListener('click', function () {
+    if (cur >= 6) { location.href = '../documentos/'; return; }
+    cur++; pintar(); $('paso').scrollIntoView({ block: 'nearest' });
+  });
+  window.addEventListener('hashchange', function () { var m = /^#fase=(\d+)$/.exec(location.hash); if (m && +m[1] !== cur) { cur = +m[1]; pintar(); } });
   $('cam').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-ids]'); if (!b) return;
     P.revisarCambios(b.dataset.ids.split(',')); pintar();
