@@ -25,7 +25,28 @@
     EMT: { n: 'Tubería metálica eléctrica liviana (EMT) · ANSI C80.3', c: 'EMT', f: 'NEC Cap. 9 Tabla 4 (EMT)', s: [['1/2"', 17.9, 15.8], ['3/4"', 23.4, 20.9], ['1"', 29.5, 26.6], ['1 1/4"', 38.4, 35.1], ['1 1/2"', 44.2, 40.9], ['2"', 55.8, 52.5], ['2 1/2"', 73.0, 69.4], ['3"', 88.9, 85.2], ['3 1/2"', 101.6, 97.4], ['4"', 114.3, 110.1]] },
     PVC40: { n: 'Tubería PVC rígida Schedule 40', c: 'PVC SCH40', f: 'NEC Cap. 9 Tabla 4 (PVC Sch 40)', s: [['1/2"', 21.3, 15.3], ['3/4"', 26.7, 20.4], ['1"', 33.4, 26.1], ['1 1/4"', 42.2, 34.5], ['1 1/2"', 48.3, 40.4], ['2"', 60.3, 52.0], ['2 1/2"', 73.0, 62.1], ['3"', 88.9, 77.3], ['3 1/2"', 101.6, 89.4], ['4"', 114.3, 101.5], ['5"', 141.3, 127.4], ['6"', 168.3, 153.2]] }
   };
-  var ORDEN_TUBOS = ['CAG', 'SCH40', 'EMT', 'PVC40'];
+  // Tuberías rígidas con las mismas medidas interiores del conduit rígido pesado (NEC Cap. 9 Tabla 4, RMC): cambian el material o el recubrimiento
+  TUBOS.CAGPVC = { n: 'Cañería acero galvanizado con recubrimiento de PVC · ambientes corrosivos', c: 'C.A.G. REVESTIDO', f: 'NEC Cap. 9 Tabla 4 (RMC) + recubrimiento 1 mm', s: TUBOS.CAG.s.map(function (x) { return [x[0], Math.round((x[1] + 2) * 10) / 10, x[2]]; }) };
+  TUBOS.INOX = { n: 'Conduit rígido de acero inoxidable 316', c: 'ACERO INOX.', f: 'NEC Cap. 9 Tabla 4 (RMC)', s: TUBOS.CAG.s };
+  TUBOS.ALU = { n: 'Conduit rígido de aluminio · ANSI C80.5', c: 'ALUMINIO', f: 'NEC Cap. 9 Tabla 4 (RMC)', s: TUBOS.CAG.s };
+  var ORDEN_TUBOS = ['CAG', 'SCH40', 'EMT', 'PVC40', 'CAGPVC', 'INOX', 'ALU'];
+  // ── Ambiente de instalación → tipo de tubería recomendado (práctica habitual de proyectos industriales; RIC N°04 5.12.2, 5.41 y 7.16.4; áreas clasificadas: RIC N°12) ──
+  //    rec: tuberías recomendadas en orden de preferencia · no: tuberías que no convienen · alt: alternativas fuera del catálogo de la app
+  var AMB = {
+    '': { n: 'Sin definir' },
+    seco: { n: 'Interior seco (salas, oficinas, bodegas)', rec: ['EMT', 'CAG'], no: [], txt: 'Sin humedad ni agentes agresivos: basta tubería metálica liviana. Usa conduit rígido donde pueda recibir golpes.', ref: 'RIC N°04 7.16.4' },
+    ext: { n: 'Exterior a la intemperie', rec: ['CAG', 'SCH40', 'ALU'], no: ['EMT'], txt: 'Lluvia, sol y cambios de temperatura: conduit rígido galvanizado en caliente con accesorios estancos. El PVC a la vista solo si es resistente a rayos UV.', ref: 'RIC N°04 5.12.2 y 7.16.4' },
+    humedo: { n: 'Húmedo o con lavado frecuente', rec: ['CAG', 'CAGPVC', 'PVC40'], no: ['EMT'], txt: 'Humedad permanente: tubería metálica protegida contra la corrosión por dentro y por fuera, con cajas y uniones estancas; el PVC rígido también sirve.', ref: 'RIC N°04 5.41 y 5.18' },
+    corrosivo: { n: 'Corrosivo (ácidos, SX-EW, costa, agua de mar)', rec: ['CAGPVC', 'PVC40', 'INOX'], no: ['EMT', 'CAG', 'SCH40', 'ALU'], txt: 'Neblina ácida, sales o químicos: el galvanizado solo no dura. Usa conduit rígido con recubrimiento de PVC, PVC rígido o acero inoxidable.', ref: 'RIC N°04 5.41', alt: 'Tubería de fibra de vidrio (RTRC): muy resistente a químicos; dimensiónala con las medidas del fabricante.' },
+    explosivo: { n: 'Área clasificada (gases, vapores o polvos combustibles)', rec: ['CAG', 'SCH40', 'INOX'], no: ['EMT', 'PVC40'], txt: 'Atmósfera explosiva: conduit rígido roscado con al menos cinco hilos de rosca apretados, sellos cortafuego y cajas y accesorios certificados para la zona.', ref: 'RIC N°12 (RIC N°04 remite a este pliego)', alt: 'Si además hay corrosión, conduit rígido con recubrimiento de PVC certificado para área clasificada.' },
+    mecanico: { n: 'Con riesgo de golpes (chancado, correas, tránsito)', rec: ['CAG', 'SCH40'], no: ['EMT', 'PVC40'], txt: 'Golpes, vibración o caída de material: conduit rígido de acero pesado, bien soportado.', ref: 'RIC N°04 7.16.4.1 y Tabla N°4.23' },
+    calor: { n: 'Alta temperatura (hornos, fundición, sobre 50 °C)', rec: ['CAG', 'SCH40', 'INOX'], no: ['PVC40', 'CAGPVC'], txt: 'El PVC se ablanda con el calor: usa tubería metálica y cables aptos para esa temperatura.', ref: 'RIC N°04 Tabla N°4.23 (temperatura de servicio)' },
+    enterrado: { n: 'Enterrado directo o en banco de ductos', rec: ['PVC40', 'CAGPVC', 'CAG'], no: ['EMT'], txt: 'Bajo tierra: PVC rígido (o HDPE) en banco de ductos; si es metálico, con protección contra la corrosión.', ref: 'RIC N°04 5.41 y 7.9.7', alt: 'Ducto de polietileno de alta densidad (HDPE): dimensiónalo con las medidas del fabricante.' },
+    hormigon: { n: 'Embebido en hormigón o losa', rec: ['PVC40', 'CAG'], no: [], txt: 'Embebida en hormigón la tubería queda protegida: PVC rígido o conduit metálico, con uniones selladas para que no entre lechada.', ref: 'RIC N°04 7.16.5 y Tabla N°4.26' },
+    sanitario: { n: 'Sanitario o de alimentos', rec: ['INOX', 'CAGPVC'], no: ['EMT', 'CAG', 'SCH40'], txt: 'Lavado con químicos y exigencia de higiene: acero inoxidable con accesorios del mismo material.', ref: 'Práctica habitual; RIC N°04 5.41' }
+  };
+  var ORDEN_AMB = ['', 'seco', 'ext', 'humedo', 'corrosivo', 'explosivo', 'mecanico', 'calor', 'enterrado', 'hormigon', 'sanitario'];
+  function ambiente(dc) { var a = AMB[dc.amb || '']; if (!a || !a.rec) return null; var pos = a.rec.indexOf(dc.tubo); return { a: a, ok: pos >= 0, mejor: a.rec[0], evitar: a.no.indexOf(dc.tubo) >= 0 }; }
 
   // ── Criterios de ocupación ──
   var CRIT = {
@@ -212,7 +233,7 @@
     if (s) { var dn = DN[s[0]] || parseFloat(s[0]) || Math.round(s[1]);
       if (dc.cond === 'subt') { o.ducto = 10 * s[1]; o.refDucto = '7.9.7.8: 10 veces el diámetro del ducto (' + n1(s[1], 1) + ' mm)'; }
       else { var f = T422.filter(function (x) { return x[0] >= dn; })[0]; if (f) { o.ducto = f[1] * 10; o.refDucto = 'Tabla N°4.22: tubería de ' + f[0] + ' mm → ' + f[1] + ' cm al borde interior'; } else o.refDucto = 'Tabla N°4.22 no cubre este diámetro: usar el radio que indique el fabricante'; }
-      if (!/C\.A\.G|EMT|SCH40|ACERO|RMC|IMC/i.test(r.T.c + ' ' + r.T.n) && dc.cond !== 'subt' && o.ducto) o.refDucto += ' (tabla de tuberías metálicas, usada como referencia: confirmar con el fabricante)'; }
+      if (!/C\.A\.G|EMT|SCH40|ACERO|RMC|IMC|ALUMINIO/i.test(r.T.c + ' ' + r.T.n) && dc.cond !== 'subt' && o.ducto) o.refDucto += ' (tabla de tuberías metálicas, usada como referencia: confirmar con el fabricante)'; }
     var vistos = {};
     r.lista.forEach(function (x) { var k = x.k, fac = k.rc ? 0 : k.ap ? 12 : /FLEX/i.test(k.cod + ' ' + k.desc) ? 4 : 8, id = (x.c.tag || '') + '|' + k.id; if (vistos[id]) return; vistos[id] = 1;
       o.cables.push({ tag: x.c.tag || '(sin tag)', desc: (k.cod !== '—' ? k.cod + ' ' : '') + k.desc, d: x.d, fac: fac, clase: k.rc ? 'fibra óptica' : k.ap ? 'apantallado' : fac === 4 ? 'cobre flexible' : 'alambre o cableado concéntrico', r: k.rc || fac * x.d, como: k.rc ? 'radio mínimo del fabricante' : fac + ' × Ø ' + n1(x.d, 1) + ' mm' }); });
@@ -332,6 +353,8 @@
     if (r.nFuerza > 1 && dc.cond !== 'niple') add('warn', 'Hay ' + r.nFuerza + ' cables de fuerza: en una misma tubería solo van conductores de un mismo circuito.', '5.27', 'Si son circuitos distintos, sepáralos en ductos propios o usa bandeja o escalerilla.');
     // 6) Atascamiento (referencial)
     if (f && r.n === 3 && r.lista.every(function (x) { return x.d === r.lista[0].d; })) { var rz = s[2] / r.lista[0].d; if (rz >= 2.8 && rz <= 3.2) add('warn', 'Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con tres cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar.', 'NEC Cap. 9 (referencial)', 'Considera el tamaño siguiente.'); }
+    // 6b) Tipo de tubería según el ambiente de instalación
+    var am = ambiente(dc); if (am) { if (am.ok) add('ok', 'La tubería ' + T.c + ' es adecuada para el ambiente «' + am.a.n + '».', am.a.ref); else o.push({ sev: am.evitar ? 'err' : 'warn', txt: 'La tubería ' + T.c + (am.evitar ? ' no conviene' : ' no es la recomendada') + ' para el ambiente «' + am.a.n + '».', ref: am.a.ref, sug: 'Cambia el tipo de tubería a ' + am.a.rec.map(function (k) { return TUBOS[k].c; }).join(', o ') + '.', acc: '', ir: '#kForm [data-k=tubo]' }); }
     // 7) Radio de curvatura recomendado para las curvas del tramo
     if (f && ric && dc.cond !== 'niple') { var cu = curvatura(dc, r, s); if (cu.r) add(cv > 0 ? 'ok' : 'ok', 'Curvas con radio no menor a ' + cm(cu.r) + ': manda ' + (cu.manda === 'cable' ? 'el cable ' + cu.cable.tag + ' (' + cu.cable.clase + ', ' + cu.cable.como + ')' : 'la tubería') + '.', cu.manda === 'cable' ? '6.2.8' : (dc.cond === 'subt' ? '7.9.7.8' : 'Tabla N°4.22')); }
     o.norma = nor; return o;
@@ -340,7 +363,7 @@
   // Sugerencia aplicada: los cables de señal pasan a un ducto nuevo con las mismas condiciones
   var CLASE_SENAL = { fos: 1, fod: 1, foa: 1, fou: 1, folt: 1, folta: 1, par: 1, mpar: 1, mtri: 1, pvicp: 1, pvict: 1, gfip: 1, gfit: 1 };
   function separarSenal() { var b = datos(), dc = actual(), sen = dc.cables.filter(function (c) { var k = CATI[c.cat]; return k && CLASE_SENAL[k.f]; }); if (!sen.length || sen.length === dc.cables.length) return;
-    var d = nuevo(b.ductos.length + 1); d.tag = dc.tag + '-S'; d.ruta = dc.ruta; d.tubo = dc.tubo; d.crit = dc.crit; d.cond = dc.cond; d.min = dc.min; d.reserva = dc.reserva; d.largo = dc.largo; d.curvas = dc.curvas; d.cables = sen;
+    var d = nuevo(b.ductos.length + 1); d.tag = dc.tag + '-S'; d.ruta = dc.ruta; d.amb = dc.amb; d.tubo = dc.tubo; d.crit = dc.crit; d.cond = dc.cond; d.min = dc.min; d.reserva = dc.reserva; d.largo = dc.largo; d.curvas = dc.curvas; d.cables = sen;
     dc.cables = dc.cables.filter(function (c) { return sen.indexOf(c) < 0; }); b.ductos.splice(b.ductos.indexOf(dc) + 1, 0, d); }
   // Lleva al lugar donde se corrige: abre su pestaña si está en otra, lo deja a la vista, con el foco y destacado
   function irA(sel) {
@@ -500,6 +523,7 @@
       ['Tamaño comercial', el ? 'El menor ' + esc(r.T.c) + ' con área interior ≥ ' + n1(r.req, 0) + ' mm², no menor a ' + esc(dc.min) + ' y en que los cables caben: <b>Ø ' + esc(el.s[0]) + '</b> (Ø int. ' + n1(el.s[2], 1) + ' mm, área ' + n1(el.Ai, 0) + ' mm², ocupación ' + n1(el.occ, 1) + ' %).' : (r.n ? '<span class="kmal">Ningún tamaño alcanza.</span>' : '—')],
       ['Espacio disponible', el && r.n ? 'Queda ' + n1(el.Ai - r.suma, 0) + ' mm² libres; hasta el límite de la norma se pueden sumar ' + n1(Math.max(0, el.util - r.suma), 0) + ' mm² de cables (≈ ' + Math.floor(Math.max(0, el.util - r.suma) / area(r.dmax || 1)) + ' cables más del mayor Ø).' : '—']
     ];
+    var amP = ambiente(dc); if (amP) pasos.push(['Ambiente', '«' + esc(amP.a.n) + '»: ' + esc(amP.a.txt) + ' Tubería recomendada: <b>' + amP.a.rec.map(function (k) { return esc(TUBOS[k].c); }).join(', ') + '</b> (' + esc(amP.a.ref) + ').' + (amP.ok ? '' : ' <b>La tubería elegida no está entre las recomendadas.</b>')]);
     var cuP = s && r.n ? curvatura(dc, r, s) : null;
     if (cuP && cuP.r) pasos.push(['Radio de curvatura', 'Tubería: ' + esc(cuP.refDucto) + '. Cables (RIC N°04 6.2.8): ' + cuP.cables.slice(0, 4).map(function (c) { return esc(c.tag) + ' ' + c.como + ' = ' + cm(c.r); }).join('; ') + (cuP.cables.length > 4 ? '…' : '') + '. Las curvas se hacen con radio no menor a <b>' + cm(cuP.r) + '</b> (manda ' + (cuP.manda === 'cable' ? 'el cable' : 'la tubería') + ').']);
     var soP = s && r.n ? soportacion(dc, r, s) : null;
@@ -713,6 +737,11 @@
   }
   // La hoja se ajusta al ancho de su ventana (el zoom de la barra se aplica encima para ver detalles)
   function ajustarDoc() { var c = $('#kDoc'), k = c && c.querySelector('.kdoc'); if (!k || c.offsetParent === null) return; var zc = parseFloat(c.style.zoom) || 1, w = (c.parentNode.clientWidth || c.clientWidth) - 32; [].forEach.call(k.children, function (h) { h.style.zoom = ''; var nat = h.offsetWidth; if (zc === 1 && nat > w && w > 120) h.style.zoom = Math.max(0.2, w / nat); }); }
+  function pintarAmb() { var f = $('#kForm'), q = f && f.querySelector('[data-k=amb]'), box = $('#kAmb'); if (!q || !box) return; var dc = actual(); if (document.activeElement !== q) q.value = dc.amb || ''; var am = ambiente(dc);
+    if (!am) { box.innerHTML = '<p class="kamb-n">Elige el ambiente para ver qué tipo de tubería conviene.</p>'; return; }
+    box.innerHTML = '<p>' + esc(am.a.txt) + '</p><div class="kamb-op">' + am.a.rec.map(function (k, i) { var act = k === dc.tubo; return '<button type="button" data-usa="' + k + '"' + (act ? ' class="act" aria-pressed="true"' : '') + ' title="' + esc(TUBOS[k].n) + '">' + (i === 0 ? '★ ' : '') + esc(TUBOS[k].c) + (act ? ' · en uso' : '') + '</button>'; }).join('') + '</div>' +
+      (am.ok ? '<p class="kamb-ok">✓ La tubería elegida es adecuada para este ambiente.</p>' : '<p class="kamb-mal">' + (am.evitar ? '✗ ' : '! ') + esc(TUBOS[dc.tubo].c) + (am.evitar ? ' no conviene' : ' no es la recomendada') + ' aquí. Toca una de las opciones para cambiarla.</p>') +
+      (am.a.no.length ? '<p class="kamb-n">Evitar: ' + am.a.no.map(function (k) { return esc(TUBOS[k].c); }).join(', ') + '.</p>' : '') + (am.a.alt ? '<p class="kamb-n">Alternativa: ' + esc(am.a.alt) + '</p>' : '') + '<p class="kamb-n">Referencia: ' + esc(am.a.ref) + '. Recomendación de práctica habitual: confírmala con la especificación del proyecto.</p>'; }
   function pintarDoc(forzar) {
     var box = docCaja(); if (!box) return; if (!forzar && box.offsetParent === null) return;
     var id = docs().sel, l = lstDatos(), mesa = !!(window.RE_EMISION && window.RE_EMISION.adaptadores && window.RE_EMISION.adaptadores['v-cond']);
@@ -875,6 +904,7 @@
       '#k3d .kd-svg{display:block;width:100%;height:auto}.kd-svg text{font:10px Arial,Helvetica,sans-serif;fill:#17212C}.kd-svg .kd-t{font-weight:700;font-size:10.5px;fill:#022A55}.kd-svg .kd-n{font-size:9px;fill:#5A6573}.kd-svg .kd-c path{stroke:#B3261E;stroke-width:.7;fill:none}.kd-svg .kd-c text{fill:#B3261E;font-size:10px}.kd-svg .kd-r{fill:#c7ced6;stroke:#1F2A36;stroke-width:1.2}.kd-svg .kd-r2{fill:#fff;stroke:#1F2A36;stroke-linejoin:miter}.kd-svg .kd-l{stroke:#1F2A36;stroke-width:.7;fill:none}.kd-svg .kd-d{fill:#e3e7ec;stroke:#1F2A36;stroke-width:1.2}.kd-svg .kd-di{fill:#fff;stroke:#1F2A36;stroke-width:.7}.kd-svg .kd-a{fill:none;stroke:#C8901E;stroke-linecap:butt}.kd-svg .kd-a2{fill:#E8B94A;stroke:#7a5608;stroke-width:1}.kd-svg .kd-p{fill:#1F2A36}.kd-svg .kd-k{fill:#F2A65A;stroke:#1F2A36;stroke-width:1.3}.kd-svg .kd-l2{fill:none;stroke:#1F2A36;stroke-width:.7}',
       '#k3d .k3-dt{width:100%;border-collapse:collapse;font-size:12px}#k3d .k3-dt th{text-align:left;font-weight:700;color:#022A55;padding:4px 12px;width:38%;vertical-align:top;border-top:1px solid #DCE3EB}#k3d .k3-dt td{padding:4px 12px 4px 0;border-top:1px solid #DCE3EB;color:#17212C}',
       '#k3d .k3-esc .labels{z-index:2}#k3d .k3-esc .labels .k3-lbl.k3-sug,#k3d .k3-esc .labels .k3-lbl.k3-sop{pointer-events:auto!important;cursor:pointer}',
+      '.kamb{grid-column:1/-1;font-size:12.5px;line-height:1.45}.kamb p{margin:0 0 6px}.kamb .kamb-n{color:#9fb0c3;font-size:12px}.kamb .kamb-ok{color:#5fd07a;font-weight:600}.kamb .kamb-mal{color:#ffb454;font-weight:600}.kamb-op{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.kamb-op button{font:inherit;font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;border:1.5px solid #E8A317;background:transparent;color:inherit;cursor:pointer}.kamb-op button.act{background:#E8A317;color:#1b1203}',
       '#k3d{width:min(1280px,96vw);height:min(860px,92vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}',
       '#k3d[open]{display:flex;flex-direction:column}#k3d::backdrop{background:rgba(0,0,0,.6)}',
       '#k3d .k3-cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#022A55;border-bottom:2px solid #E8A317}',
@@ -1256,11 +1286,13 @@
   var listo = false;
   function enganchar() {
     if (listo) return; listo = true;
-    docCaja(); var _pintar = pintar; pintar = function () { _pintar.apply(this, arguments); try { pintarDoc(); } catch (e) { console.warn('Documento', e); } };
+    docCaja(); var _pintar = pintar; pintar = function () { _pintar.apply(this, arguments); try { pintarAmb(); pintarDoc(); } catch (e) { console.warn('Documento', e); } };
     cssExtra(); montarCatalogo();
     var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
     var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
     var kx = $('#kExcel'); if (kx && !$('#kLista')) { var bl = document.createElement('button'); bl.type = 'button'; bl.id = 'kLista'; bl.className = 'pri'; bl.textContent = 'Listado de canalizaciones'; bl.addEventListener('click', lstAbrir); kx.parentNode.insertBefore(bl, kx.nextSibling); }
+    var kf0 = $('#kForm'), f0 = kf0 && kf0.querySelector('fieldset'); if (f0 && !kf0.querySelector('[data-k=amb]')) { var fa = document.createElement('fieldset'); fa.innerHTML = '<legend>Ambiente de instalación</legend><label class="ancho">Dónde va el ducto<select data-k="amb">' + ORDEN_AMB.map(function (k) { return '<option value="' + k + '">' + esc(AMB[k].n) + '</option>'; }).join('') + '</select></label><div class="kamb" id="kAmb" aria-live="polite"></div>'; f0.parentNode.insertBefore(fa, f0.nextSibling);
+      fa.addEventListener('click', function (e) { var b = e.target.closest('button[data-usa]'); if (!b) return; var dc = actual(); dc.tubo = b.dataset.usa; var T = TUBOS[dc.tubo]; if (T.s.map(function (x) { return x[0]; }).indexOf(dc.min) < 0) dc.min = T.s[0][0]; verTam = null; cambio(); }); }
     var kf = $('#kForm'), f1 = kf && kf.querySelector('fieldset'); if (f1 && !kf.querySelector('[data-k=serv]')) { var fs = document.createElement('fieldset'); fs.innerHTML = '<legend>Datos para el listado</legend><label>Servicio [V]<input data-k="serv" placeholder="Ej.: 480, 120, 24 VDC"></label><label>Revisión<input data-k="rev" placeholder="Ej.: A, 0"></label><label class="ancho">Plano de disposición / canalización<input data-k="plano" placeholder="N° del plano donde aparece el ducto"></label><label class="ancho">Observaciones<input data-k="obs" placeholder="Sector, existente, nota…"></label>'; f1.parentNode.insertBefore(fs, f1.nextSibling); }
     setTimeout(function () { montarNorma(); montarTutorial(); }, 0); // después de que la app agregue sus botones
     $('#kForm').addEventListener('input', leerForm); $('#kForm').addEventListener('change', leerForm);
@@ -1288,7 +1320,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
-  window.LAZOS_COND = { docs: docs, docRevs: docRevs, docHtml: docHtml, docNum: docNum, DOCS: DOCS, docPoner: function (id, f) { docs()[id].revs = f; }, docSel: function () { return docs().sel; }, docDescargar: function (id, f) { if (/excel/i.test(f)) { if (id === 'listado') lstExcel(); else excel(); } else { $('#imp').innerHTML = docHtml(id); setTimeout(function () { window.print(); }, 150); } }, soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { AMB: AMB, ambiente: ambiente, docs: docs, docRevs: docRevs, docHtml: docHtml, docNum: docNum, DOCS: DOCS, docPoner: function (id, f) { docs()[id].revs = f; }, docSel: function () { return docs().sel; }, docDescargar: function (id, f) { if (/excel/i.test(f)) { if (id === 'listado') lstExcel(); else excel(); } else { $('#imp').innerHTML = docHtml(id); setTimeout(function () { window.print(); }, 150); } }, soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
