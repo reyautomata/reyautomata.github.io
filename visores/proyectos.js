@@ -187,7 +187,53 @@
 
   // Datos de cada proyecto para los módulos (hojas de datos, ET)
   function leer(sub, def) { return get('p:' + activoId() + ':' + sub, def); }
-  function escribir(sub, v) { return set('p:' + activoId() + ':' + sub, v); }
+  function escribir(sub, v) {
+    if (sub === 'lazos') { try { registrarCambios(get('p:' + activoId() + ':lazos', null), v); } catch (e) {} }
+    return set('p:' + activoId() + ':' + sub, v);
+  }
+
+  // ── Propagación de cambios ──────────────────────────────────────────────────
+  // Cada vez que se guardan las señales del proyecto se compara con lo guardado antes. Cada campo que cambia
+  // queda en el registro «cambios» con los entregables que dependen de él, pendiente hasta que alguien lo revise.
+  // Mientras se escribe, los cambios seguidos del mismo campo se juntan en una sola línea (se conserva el valor original).
+  var AFECTA = {
+    tag: ['inst', 'es', 'lazo', 'circ', 'hd', 'mat'], tipo: ['inst', 'es', 'lazo'], hilos: ['es', 'lazo', 'circ', 'mat'], sensor: ['inst', 'es', 'lazo', 'hd'],
+    senal: ['inst', 'es', 'lazo', 'hd'], rango: ['inst', 'lazo', 'hd'], desc: ['inst', 'es', 'lazo'], servicio: ['inst', 'es', 'lazo', 'hd'],
+    marca: ['inst', 'hd'], modeloInst: ['inst', 'hd'], mod: ['es', 'lazo'], canal: ['es', 'lazo'], lazo: ['es', 'lazo'], hmi: ['lazo'],
+    jb: ['lazo', 'circ', 'mat'], par: ['lazo', 'circ'], cable: ['lazo', 'circ', 'mat'], cableSpec: ['lazo', 'circ', 'mat'],
+    cable2: ['lazo', 'circ', 'mat'], cable2Spec: ['lazo', 'circ', 'mat'], alimTab: ['lazo', 'circ']
+  };
+  var ENTREGABLE = { inst: 'Listado de instrumentos', es: 'Listado de E/S', lazo: 'Diagrama de lazo', circ: 'Listado de circuitos', mat: 'Listado de materiales', hd: 'Hoja de datos' };
+  function txt(x) { return x == null ? '' : String(x); }
+  function registrarCambios(antes, despues) {
+    if (!antes || !despues) return;          // la primera vez (proyecto nuevo o ejemplo) no hay contra qué comparar
+    var A = {}, B = {}, nuevos = [];
+    (antes.senales || []).forEach(function (s) { if (s.id) A[s.id] = s; });
+    (despues.senales || []).forEach(function (s) { if (s.id) B[s.id] = s; });
+    Object.keys(B).forEach(function (id) {
+      var b = B[id], a = A[id];
+      if (!a) { if (b.tag) nuevos.push({ sid: id, tag: b.tag, campo: '+', antes: '', despues: 'agregado' }); return; }
+      Object.keys(AFECTA).forEach(function (k) { if (txt(a[k]) !== txt(b[k]) && (a.tag || b.tag)) nuevos.push({ sid: id, tag: b.tag || a.tag, campo: k, antes: txt(a[k]), despues: txt(b[k]) }); });
+    });
+    Object.keys(A).forEach(function (id) { if (!B[id] && A[id].tag) nuevos.push({ sid: id, tag: A[id].tag, campo: '-', antes: 'existente', despues: 'eliminado' }); });
+    if (!nuevos.length) return;
+    var R = get('p:' + activoId() + ':cambios', []) || [], ahora = Date.now();
+    nuevos.forEach(function (n, j) {
+      var ya = null;
+      for (var i = R.length - 1; i >= 0 && i >= R.length - 60; i--) { var r = R[i]; if (!r.rev && r.sid === n.sid && r.campo === n.campo) { ya = r; break; } }
+      if (ya) { ya.despues = n.despues; ya.tag = n.tag; ya.t = ahora; return; }
+      n.id = 'c' + ahora.toString(36) + j.toString(36) + Math.random().toString(36).slice(2, 5); n.t = ahora; n.afecta = n.campo === '+' || n.campo === '-' ? AFECTA.tag : AFECTA[n.campo]; R.push(n);
+    });
+    R = R.filter(function (r) { return r.rev || r.campo === '+' || r.campo === '-' || r.antes !== r.despues; });   // si volvió al valor original, no hay cambio
+    if (R.length > 600) R = R.slice(R.length - 600);
+    set('p:' + activoId() + ':cambios', R);
+  }
+  function cambios() { return get('p:' + activoId() + ':cambios', []) || []; }
+  function revisarCambios(ids) {   // ids de los cambios revisados; sin lista, todos los pendientes
+    var R = cambios(), hoyTs = Date.now();
+    R.forEach(function (r) { if (!r.rev && (!ids || ids.indexOf(r.id) >= 0)) r.rev = hoyTs; });
+    set('p:' + activoId() + ':cambios', R);
+  }
   function borrar(sub) { del('p:' + activoId() + ':' + sub); }
 
   function exportar(id) {
@@ -226,6 +272,7 @@
     lista: lista, activoId: activoId, activo: activo, datos: datos, guardar: guardar,
     seleccionar: seleccionar, crear: crear, eliminar: eliminar,
     leer: leer, escribir: escribir, borrar: borrar,
+    cambios: cambios, revisarCambios: revisarCambios, ENTREGABLE: ENTREGABLE,
     exportar: exportar, importar: importar,
     presionBarometrica: presionBarometrica, numCL: numCL, filasTexto: filasTexto, hoy: hoy
   };
