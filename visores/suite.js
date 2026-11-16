@@ -95,7 +95,7 @@
   }
   // Tamaño del texto de la interfaz: normal, compacto (por defecto) o mínimo. Se recuerda en este navegador.
   // Capa de diseño Windows 11 / Fluent: se carga al final para que mande sobre las hojas de cada página. Tema oscuro o claro, recordado en este navegador.
-  (function () { var lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = BASE + 'fluent.css'; lk.id = 'rsFluent'; (document.head || document.documentElement).appendChild(lk); })();
+  (function () { if (document.getElementById('rsFluent') || document.querySelector('link[href*="fluent.css"]')) return; var lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = BASE + 'fluent.css'; lk.id = 'rsFluent'; (document.head || document.documentElement).appendChild(lk); })();
   var tema = 'oscuro'; try { if (localStorage.getItem('reyengi-tema') === 'claro') tema = 'claro'; } catch (e) {}
   function ponerTema() { document.documentElement.setAttribute('data-tema', tema); }
   ponerTema();
