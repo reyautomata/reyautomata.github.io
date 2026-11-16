@@ -5,10 +5,10 @@
   'use strict';
   if (window.top !== window || !window.RS_GRUPOS || window.RE_ENLACES) return; window.RE_ENLACES = true;
   // Qué se conecta con qué (por código del explorador): comparten tags, señales, circuitos o instrumentos
-  var CON = { '06': ['E1', 'E2', '05', '02'], 'E1': ['06', 'E2', '05', '02', '07'], 'E2': ['E1', '06'], '05': ['E1', '06'], '02': ['E1', '03', '04', '11', '10'], '07': ['08', 'MC', 'E1'], '08': ['07', 'E1'],
-    '09': ['E1', '06'], 'MC': ['07', '08'], 'H3': ['07', '08'], '03': ['02', '04', '11'], '04': ['03', '11', '02'], '11': ['02', '03', '04'], '10': ['02', '03'], '01': ['02', 'E1'], 'CF': ['06', 'E1'] };
+  var CON = { '06': ['E1', 'E2', '05', '02'], 'E1': ['06', 'E2', '05', '02', '07'], 'E2': ['E1', '06'], '05': ['E1', '06'], '02': ['E1', '03', '04', '11', '10', '12'], '07': ['08', 'MC', 'E1', '12'], '08': ['07', 'E1'],
+    '09': ['E1', '06'], 'MC': ['07', '08'], 'H3': ['07', '08'], '03': ['02', '04', '11'], '04': ['03', '11', '02'], '11': ['02', '03', '04'], '10': ['02', '03', '12'], '01': ['02', 'E1'], 'CF': ['06', 'E1'], '12': ['07', '02', 'MC', '10'] };
   var CORTO = { '06': 'Diagramas de lazo', 'E1': 'Señales de E/S', 'E2': 'Tarjetas y canales', '05': 'Listado de E/S', '02': 'Instrumentos', '07': 'Circuitos', '08': 'Unilineales', '09': 'Bloques', 'MC': 'Canalizaciones', 'H3': 'Canalizaciones',
-    '03': 'Hojas de datos', '04': 'Especificaciones', '11': 'Requisiciones', '10': 'Montaje', '01': 'P&ID', 'CF': 'Configuración' };
+    '03': 'Hojas de datos', '04': 'Especificaciones', '11': 'Requisiciones', '10': 'Montaje', '01': 'P&ID', 'CF': 'Configuración', '12': 'Materiales' };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   function item(cod) { var r = null; window.RS_GRUPOS.forEach(function (g) { g[2].forEach(function (e) { if (!r && e[0] === cod && e[2]) r = e; }); }); return r; }
   function url(href) { return new URL(href, window.RS_BASE).href; }
