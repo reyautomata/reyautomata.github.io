@@ -15,7 +15,7 @@
   // Cada módulo aparece una sola vez; la configuración está en el botón «Configuración» al pie del explorador.
   var GRUPOS = [
     ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio']]],
-    ['ges', 'Proyecto y datos base', [['00', 'Proyectos', 'proyectos/'], ['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']]],
+    ['ges', 'Proyecto y datos base', [['00', 'Proyectos', 'proyectos/'], ['FL', 'Flujo de ingeniería', 'flujo/'], ['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']]],
     ['doc', 'En trabajo · Documentos', ramas('DOCUMENTO')],
     ['pla', 'En trabajo · Planos', ramas('PLANO')],
     ['ctl', 'Control documental', [['GD', 'Todos los entregables', 'documentos/'], ['B1', 'En trabajo', 'documentos/#trabajo'], ['B2', 'Revisión de la especialidad', 'documentos/#esp'], ['B3', 'Coordinación interna', 'documentos/#coord'], ['B4', 'Firmas', 'documentos/#firmas'], ['B5', 'Para emitir', 'documentos/#emitir'], ['B6', 'Emitidos', 'documentos/#emitido'], ['EX', 'Archivos del proyecto', 'explorador/']]],

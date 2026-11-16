@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flujo de ingeniería · ReyEngi</title>
+<meta name="theme-color" content="#202020">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #202020; --panel: #2B2B2B; --panel2: #323232; --fg: #FFFFFF; --muted: #C8C8C8; --line: #3F3F3F; --brand: #1C1C1C; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #60CDFF;
+  --ok: #6CCB5F; --warn: #F2C661; --bad: #FF99A4; --f-body: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px/20px var(--f-body); }
+[hidden] { display: none !important; }
+button, .btn { font: 600 13px var(--f-body); border-radius: 4px; padding: 6px 12px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--sobre-acento, #1B0D02); }
+.btn:hover { border-color: var(--sel); }
+.btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+main.fl { padding: 20px 16px 60px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 20px; align-items: start; }
+@media (max-width: 1100px) { main.fl { grid-template-columns: minmax(0, 1fr); } }
+h2.tit { margin: 0; font-size: 28px; line-height: 36px; font-weight: 600; }
+p.sub { margin: 0 0 16px; color: var(--muted); }
+.fases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fase { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
+.num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--panel2); color: var(--muted); }
+.riel { display: flex; flex-direction: column; align-items: center; }
+.riel::after { content: ""; flex: 1; width: 2px; background: var(--line); margin-top: 4px; }
+.fase:last-child .riel::after { display: none; }
+.tarj { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px 18px; }
+@media (max-width: 820px) { .tarj { grid-template-columns: minmax(0, 1fr); } }
+.tarj h3 { margin: 0; font-size: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tarj p { margin: 4px 0 0; color: var(--muted); }
+.et { font: 600 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+.dato { font: 13px var(--f-mono); color: var(--sel); }
+.pill { font: 600 11px var(--f-body); padding: 2px 8px; border-radius: 10px; background: var(--panel2); color: var(--muted); }
+.ok .pill { color: var(--ok); } .ok .num { background: var(--ok); color: #102010; }
+.act .pill { color: var(--warn); } .act .num { background: var(--accent); color: #1B0D02; } .act .tarj { border-color: var(--accent); }
+.pend .pill { color: var(--fg); }
+.bloq .tarj { opacity: .7; }
+.acc { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; grid-column: 1 / -1; }
+.dev { font-size: 12px; color: var(--muted); border: 1px dashed var(--line); border-radius: 4px; padding: 5px 10px; }
+.motivo { grid-column: 1 / -1; font-size: 12.5px; color: var(--warn); }
+aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(64px + var(--rs-cinta, 0px)); }
+@media (max-width: 1100px) { aside.lado { position: static; } }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.caja h3 { margin: 0 0 4px; font-size: 20px; line-height: 28px; font-weight: 600; }
+.caja .nota { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
+.comp { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.comp li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line); }
+.comp li:last-child { border-bottom: 0; }
+.comp small { font: 11.5px var(--f-mono); color: var(--muted); }
+.comp a { font-size: 12px; color: var(--sel); }
+.pen { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.pen li { padding: 5px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
+.pen li:last-child { border-bottom: 0; }
+.vacio { color: var(--muted); font-size: 13px; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<link rel="stylesheet" href="../fluent.css" id="rsFluent">
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?37:121))+'px')}}catch(e){}</script>
+<script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <a class="volver" href="../">← Suite ReyEngi</a>
+  <h1>Flujo de ingeniería <small id="proy">Proyecto activo</small></h1>
+  <a class="btn" href="../proyectos/">Datos del proyecto</a>
+  <a class="btn" href="../documentos/">Control documental</a>
+</div></div>
+<main class="fl">
+  <section>
+    <p class="sub">Instrumentación, control y comunicaciones. Cada fase toma los datos de la anterior desde la base del proyecto; una fase se habilita cuando la anterior ya tiene datos.</p>
+    <ol class="fases" id="fases"></ol>
+  </section>
+  <aside class="lado">
+    <div class="caja">
+      <h3>Pendientes</h3>
+      <p class="nota">Lo que falta en la base para cerrar las fases en curso.</p>
+      <ul class="pen" id="pend"></ul>
+    </div>
+    <div class="caja">
+      <h3>Entregables complementarios</h3>
+      <p class="nota">Según normas ISA / IEC. Marca los que entran en el alcance del proyecto; queda guardado en el proyecto.</p>
+      <ul class="comp" id="comp"></ul>
+    </div>
+  </aside>
+</main>
+<script src="../proyectos.js"></script>
+<script>
+(function () {
+  'use strict';
+  var P = window.REProyectos, $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function up(s) { return String(s || '').trim().toUpperCase(); }
+  function lazoDe(s) {
+    if (s.lazo && String(s.lazo).trim()) return String(s.lazo).trim();
+    var m = /^(?:([A-Z0-9]+)-)?([A-Z]+)-?(\d+[A-Z]?)$/i.exec(String(s.tag || '').trim());
+    return m ? (m[1] ? m[1] + '-' : '') + m[3] : String(s.tag || '');
+  }
+
+  // Entregables complementarios: [clave, nombre, norma, módulo de la suite o vacío si el generador aún no existe]
+  var COMP = [
+    ['hd', 'Hojas de datos de instrumentos', 'ISA-TR20.00.01', '../hojas-datos/'],
+    ['logica', 'Diagramas lógicos y enclavamientos', 'ISA-5.2', ''],
+    ['loopcheck', 'Protocolos de verificación de lazos', 'IEC 62382', ''],
+    ['hmi', 'Filosofía y pantallas de HMI', 'ISA-101', ''],
+    ['sif', 'Listado de SIF y matriz causa-efecto', 'ISA-84 / IEC 61511', ''],
+    ['alarmas', 'Racionalización de alarmas', 'ISA-18.2', ''],
+    ['ciber', 'Zonas y conductos de red', 'ISA/IEC 62443', ''],
+    ['ex', 'Áreas clasificadas y certificados Ex', 'IEC 60079', ''],
+    ['aire', 'Distribución de aire de instrumentos', 'ISA-7', '']
+  ];
+
+  function medir() {
+    var E = P.leer('lazos', null) || {}, S = P.leer('pid', null) || {}, M = P.leer('montaje', null) || {};
+    var sen = (E.senales || []).filter(function (s) { return s.tag; });
+    var tags = {}; sen.forEach(function (s) { tags[up(s.tag)] = 1; });
+    (E.inst || []).forEach(function (x) { if (x.tag && !x.oculto) tags[up(x.tag)] = 1; });
+    var asig = sen.filter(function (s) { return s.mod && s.canal !== '' && s.canal != null; });
+    var lz = {}; sen.forEach(function (s) { lz[lazoDe(s)] = 1; });
+    var gab = {}; (E.modulos || []).forEach(function (m) { gab[m.gabinete || (E.cfg || {}).gabinete || 'PLC'] = 1; });
+    return {
+      hojasPid: (S.hojas || []).length,
+      tags: Object.keys(tags).length,
+      modulos: (E.modulos || []).length, gabinetes: Object.keys(gab).length,
+      senales: sen.length, asignadas: asig.length,
+      sinCanal: sen.filter(function (s) { return asig.indexOf(s) < 0; }),
+      sinJb: asig.filter(function (s) { return !s.jb; }),
+      lazos: Object.keys(lz).length,
+      circuitos: asig.length + (E.circ || []).filter(function (c) { return c.manual; }).length,
+      montajes: Object.keys(M.det || {}).length
+    };
+  }
+
+  function fases(m) {
+    var F = [
+      { t: 'P&ID del proyecto', d: 'Rastrear el P&ID entregado por Piping o actualizarlo con la capa de instrumentación. Los instrumentos y lazos quedan en la base.',
+        datos: m.hojasPid + ' hojas de P&ID · ' + m.tags + ' instrumentos en la base', est: m.tags ? 'ok' : (m.hojasPid ? 'act' : 'pend'),
+        links: [['Análisis de P&ID', '../pid/', 1], ['Listado de instrumentos', '../lazos/#inst']], dev: [] },
+      { t: 'Arquitectura de control', d: 'Controladores, RIO y gabinetes, su ubicación y el protocolo hacia el sistema de control existente o proyectado.',
+        datos: m.gabinetes + ' gabinetes · ' + m.modulos + ' tarjetas de E/S', est: m.modulos ? 'ok' : 'pend',
+        links: [['Tarjetas y canales', '../lazos/#mod', 1], ['Bloques de control', '../lazos/#blq']], dev: ['Plano de arquitectura de control y comunicaciones (P09)'] },
+      { t: 'Listado de entradas y salidas', d: 'Cada instrumento a su canal de tarjeta o a su dirección en la red (Modbus, Profibus, Profinet).',
+        datos: m.asignadas + ' de ' + m.senales + ' señales con canal', est: !m.senales ? 'pend' : (m.asignadas === m.senales ? 'ok' : (m.asignadas ? 'act' : 'pend')),
+        links: [['Señales de E/S', '../lazos/#io', 1], ['Listado E/S', '../lazos/#doc']], dev: [] },
+      { t: 'Diagramas de conexión', d: 'Según el enlace de cada instrumento: diagrama de lazo, interconexionado, segmento de red de campo o fibra óptica.',
+        datos: m.lazos + ' lazos · ' + m.sinJb.length + ' señales sin caja de conexiones', est: !m.asignadas ? 'pend' : (m.asignadas === m.senales ? 'ok' : 'act'),
+        links: [['Diagramas de lazo', '../lazos/#lazos', 1], ['Unilineales TDI', '../lazos/#uni']], dev: ['Interconexionados (P07)', 'Diagramas de segmentos', 'Diagramas de fibra óptica'] },
+      { t: 'Listado de circuitos', d: 'Se arma desde la base con los cables de cada señal; no se dibuja.',
+        datos: m.circuitos + ' circuitos', est: m.circuitos ? 'ok' : 'pend',
+        links: [['Listado de circuitos', '../lazos/#circ', 1]], dev: [] },
+      { t: 'Detalles de montaje', d: 'Un típico de montaje por tipo de instrumento, asociado a cada tag.',
+        datos: m.montajes + ' detalles con revisión registrada', est: m.montajes ? 'ok' : 'pend',
+        links: [['Detalles típicos de montaje', '../#montajes', 1]], dev: [] },
+      { t: 'Listado de materiales', d: 'Suma de cables, accesorios y materiales de cada típico de montaje.',
+        datos: m.circuitos ? 'Calculable con ' + m.circuitos + ' circuitos' : 'Sin circuitos aún', est: m.circuitos ? 'ok' : 'pend',
+        links: [['Listado de materiales', '../lazos/#mat', 1]], dev: [] }
+    ];
+    F.forEach(function (f, i) {
+      var prev = F[i - 1];
+      if (prev && (prev.est === 'pend' || prev.est === 'bloq')) { f.est = 'bloq'; f.motivo = 'Se habilita cuando «' + prev.t + '» tenga datos.'; }
+    });
+    return F;
+  }
+  var NOMBRE = { ok: 'Con datos', act: 'En curso', pend: 'Por iniciar', bloq: 'Bloqueada' };
+
+  function pintar() {
+    var d = P.activo(), m = medir(), F = fases(m);
+    $('proy').textContent = (d.numero ? d.numero + ' · ' : '') + (d.nombre || 'Proyecto');
+    $('fases').innerHTML = F.map(function (f, i) {
+      var bloq = f.est === 'bloq';
+      return '<li class="fase ' + f.est + '"><div class="riel"><span class="num" aria-hidden="true">' + i + '</span></div><div class="tarj">' +
+        '<div><h3>' + esc(f.t) + ' <span class="pill">' + NOMBRE[f.est] + '</span></h3><p>' + esc(f.d) + '</p></div>' +
+        '<div><span class="et">En la base</span><span class="dato">' + esc(f.datos) + '</span></div>' +
+        '<div><span class="et">Generadores</span>' + f.links.map(function (l) { return esc(l[0]); }).join(' · ') + '</div>' +
+        (bloq ? '<div class="motivo">' + esc(f.motivo) + '</div>' : '') +
+        '<div class="acc">' + f.links.map(function (l) {
+          return '<a class="btn' + (l[2] ? ' pri' : '') + '" href="' + esc(l[1]) + '"' + (bloq ? ' aria-disabled="true" tabindex="-1"' : '') + '>' + esc(l[0]) + '</a>';
+        }).join('') + f.dev.map(function (x) { return '<span class="dev">' + esc(x) + ' · en desarrollo</span>'; }).join('') + '</div>' +
+        '</div></li>';
+    }).join('');
+
+    var pen = [];
+    if (!m.tags) pen.push(['Cargar instrumentos desde el P&ID', '../pid/']);
+    if (!m.modulos) pen.push(['Definir tarjetas y gabinetes', '../lazos/#mod']);
+    m.sinCanal.slice(0, 6).forEach(function (s) { pen.push([s.tag + ' sin canal asignado', '../lazos/#io']); });
+    if (m.sinCanal.length > 6) pen.push(['… y ' + (m.sinCanal.length - 6) + ' señales más sin canal', '../lazos/#io']);
+    m.sinJb.slice(0, 4).forEach(function (s) { pen.push([s.tag + ' sin caja de conexiones', '../lazos/#io']); });
+    if (m.sinJb.length > 4) pen.push(['… y ' + (m.sinJb.length - 4) + ' señales más sin caja de conexiones', '../lazos/#io']);
+    $('pend').innerHTML = pen.length ? pen.map(function (p) { return '<li><span>' + esc(p[0]) + '</span><a href="' + esc(p[1]) + '">Ir</a></li>'; }).join('')
+      : '<li class="vacio">Sin pendientes en la base.</li>';
+
+    var A = P.leer('flujo', {}) || {}, alc = A.alcance || {};
+    $('comp').innerHTML = COMP.map(function (c) {
+      return '<li><input type="checkbox" id="c_' + c[0] + '" data-k="' + c[0] + '"' + (alc[c[0]] ? ' checked' : '') + '>' +
+        '<label for="c_' + c[0] + '">' + esc(c[1]) + '<br><small>' + esc(c[2]) + '</small></label>' +
+        (c[3] ? '<a href="' + esc(c[3]) + '">Abrir</a>' : '<small>En desarrollo</small>') + '</li>';
+    }).join('');
+  }
+
+  $('comp').addEventListener('change', function (e) {
+    var k = e.target.dataset.k; if (!k) return;
+    var A = P.leer('flujo', {}) || {}; A.alcance = A.alcance || {}; A.alcance[k] = e.target.checked;
+    if (!P.escribir('flujo', A)) window.alert('No se pudo guardar: el almacenamiento del navegador está lleno.');
+  });
+  // Si otro módulo cambia los datos del proyecto (P&ID, lazos, montaje), se actualiza el flujo
+  window.addEventListener('storage', function (ev) { if (ev.key && ev.key.indexOf('reyengi-proy-v1:') === 0) pintar(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) pintar(); });
+  pintar();
+})();
+</script>
+</body>
+</html>
