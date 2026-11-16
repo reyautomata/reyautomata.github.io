@@ -175,7 +175,7 @@
   function montar() {
     var cont = $('#kCjBox'); if (!cont) return null; var r = $('#kCj'); if (r) return r; css();
     r = document.createElement('div'); r.id = 'kCj';
-    r.innerHTML = '<div class="cj-cab"><b>Caja de paso / derivación</b><select id="cjSel" aria-label="Caja"></select><button type="button" data-a="nueva">+ Nueva caja</button><button type="button" data-a="borrar" class="pel">Eliminar</button><span class="esp"></span><button type="button" class="pri" data-a="ducto" title="Agrega al proyecto un ducto con los cables y el tamaño de la salida">Crear ducto de salida</button><button type="button" data-a="pdf">Imprimir / PDF</button></div>' +
+    r.innerHTML = '<div class="cj-cab"><b>Caja de paso / derivación</b><select id="cjSel" aria-label="Caja"></select><button type="button" data-a="nueva">+ Nueva caja</button><button type="button" data-a="borrar" class="pel">Eliminar</button><span class="esp"></span><button type="button" class="pri" data-a="ducto" title="Lleva al proyecto un ducto por cada entrada y el ducto de salida, con sus circuitos, rutas y tags">Crear ductos en el proyecto</button><button type="button" data-a="pdf">Imprimir / PDF</button></div>' +
       '<div class="cj-cuerpo"><div class="cj-izq" id="cjIzq"></div><div class="cj-cen"><span class="cj-vista" role="group" aria-label="Vista"><button type="button" data-v="2d" aria-pressed="true">Vista 2D</button><button type="button" data-v="3d" aria-pressed="false">Vista 3D</button></span><div id="cjDib"></div><div class="cj-3d" id="cj3d" hidden></div><p class="cj-ay" id="cjAy"></p></div><div class="cj-der" id="cjDer"></div></div>';
     cont.appendChild(r);
     r.addEventListener('click', clic); r.addEventListener('input', entrada); r.addEventListener('change', entrada);
@@ -281,7 +281,7 @@
         '<label>Tipo de caja<select data-c="modo">' + opc(MODOS, cj.modo) + '</select></label><label>Criterio de medidas<select data-c="crit">' + opc(CRIT, cj.crit) + '</select></label>' +
         '<label>Tipo de tubería<select data-c="tubo">' + I.ORDEN_TUBOS.map(function (k) { return '<option value="' + k + '"' + (k === cj.tubo ? ' selected' : '') + '>' + esc(C.TUBOS[k].n) + '</option>'; }).join('') + '</select></label>' +
         '<h4>Salida</h4><div class="cj-2"><label>Cara<select data-s="lado">' + opc(LADOS, cj.salida.lado) + '</select></label><label>Tamaño<select data-s="med">' + meds(cj, cj.salida.med, o.sal.auto ? o.sal.auto[0] : '') + '</select></label></div>' +
-        '<h4>Entradas (' + cj.ent.length + ')</h4><div class="cj-lista">' + (o.ent.map(function (x, i) { return '<button type="button" class="cj-it' + (x.e.id === selE ? ' sel' : '') + '" data-it="' + x.e.id + '"><span>' + (i + 1) + ' · ' + esc(x.e.tag || 'sin tag') + '<small>' + esc((x.n > 1 ? x.n + ' × ' : '') + x.k.desc) + ' · cara ' + LADOS[x.e.lado].toLowerCase() + '</small></span><b>' + esc(x.t.s[0]) + '</b></button>'; }).join('') || '<p class="cj-ay">Sin entradas. Toca un + en el dibujo.</p>') + '</div>';
+        '<label>Destino de la salida<input data-c="destino" value="' + esc(cj.destino || '') + '" placeholder="Ej.: sala eléctrica, gabinete"></label><h4>Entradas (' + cj.ent.length + ')</h4><div class="cj-lista">' + (o.ent.map(function (x, i) { return '<button type="button" class="cj-it' + (x.e.id === selE ? ' sel' : '') + '" data-it="' + x.e.id + '"><span>' + (i + 1) + ' · ' + esc(x.e.tag || 'sin tag') + '<small>' + esc((x.n > 1 ? x.n + ' × ' : '') + x.k.desc) + ' · cara ' + LADOS[x.e.lado].toLowerCase() + '</small></span><b>' + esc(x.t.s[0]) + '</b></button>'; }).join('') || '<p class="cj-ay">Sin entradas. Toca un + en el dibujo.</p>') + '</div>';
       if (sel) h += '<div class="cj-ed"><h4 style="margin:0">Entrada seleccionada</h4><label>Tag del instrumento o del ducto<input data-en="tag" value="' + esc(sel.e.tag) + '" placeholder="Ej.: FIT-101"></label><label>Cable<select data-en="cat">' + I.opcionesCat(sel.k.id) + '</select></label><div class="cj-2"><label>Cantidad<input data-en="n" type="number" min="1" step="1" value="' + sel.n + '"></label><label>Cara<select data-en="lado">' + opc(LADOS, sel.e.lado) + '</select></label></div><label>Tamaño del ducto<select data-en="med">' + meds(cj, sel.e.med, sel.t.auto ? sel.t.auto[0] : '') + '</select></label><div class="cj-2"><button type="button" data-a="dup">Duplicar</button><button type="button" data-a="quitar" class="pel">Quitar entrada</button></div></div>';
       else h += '<p class="cj-ay">Toca una entrada del dibujo o de la lista para editar su cable, cantidad, cara y tamaño.</p>';
       $('#cjIzq').innerHTML = h;
@@ -294,11 +294,17 @@
       '<h4>Materiales de referencia</h4><table class="cj-mat"><tbody>' + o.mats.map(function (x) { return '<tr><td>' + x.c + ' ' + x.u + '</td><td>' + esc(x.d) + '<br><small>' + esc(x.f) + '</small></td></tr>'; }).join('') + '</tbody></table><p class="cj-ay">Cantidades y medidas de referencia: confírmalas con el fabricante y con la especificación del proyecto.</p>';
     $('#cjDer').innerHTML = r;
   }
+  // Lleva la caja al proyecto: un ducto por cada entrada (instrumento → caja) y el ducto de salida (caja → destino), con sus circuitos y su tag
   function crearDucto() {
-    var cj = actual(), o = calcular(cj), b = I.datos(), tag = (cj.tag || 'JB') + '-S', d = b.ductos.filter(function (x) { return x.caja === cj.id; })[0];
-    if (!d) { d = I.nuevo(b.ductos.length + 1); b.ductos.push(d); d.caja = cj.id; }
-    d.tag = tag; d.ruta = 'SALIDA DE ' + up(cj.tag); d.tubo = cj.tubo; d.min = cj.salida.med || '3/4"'; d.cables = o.cables.map(function (x) { return { tag: x.tag || '', cat: x.cat, n: x.n }; }); b.sel = d.id;
-    I.cambio(); var est = $('#kEstado'); if (est) est.textContent = 'Se ' + 'creó o actualizó el ducto ' + tag + ' con los cables de salida de la caja ' + cj.tag + '.';
+    var cj = actual(), o = calcular(cj), b = I.datos(), ids = {}, n = 0;
+    function pone(d, cables, eq, desde, hasta, med) { d.tubo = cj.tubo; d.min = med || '3/4"'; d.cables = cables; d.eq = eq; d.desde = desde; d.hasta = hasta; d.ruta = up(desde || '') + (hasta ? ' → ' + up(hasta) : ''); d.tag = ''; d.tag = I.tagAuto(d); n++; }
+    o.ent.forEach(function (x, i) { var e = x.e; ids[e.id] = 1; var d = b.ductos.filter(function (q) { return q.caja === cj.id && q.cajaEnt === e.id; })[0]; if (!d) { d = I.nuevo(b.ductos.length + 1); b.ductos.push(d); d.caja = cj.id; d.cajaEnt = e.id; }
+      pone(d, [{ tag: e.tag || '', cat: x.k.id, n: x.n }], e.tag || cj.tag, e.tag || 'ENTRADA ' + (i + 1), cj.tag, e.med); });
+    b.ductos = b.ductos.filter(function (q) { return !(q.caja === cj.id && q.cajaEnt && !ids[q.cajaEnt]); });
+    var s = b.ductos.filter(function (q) { return q.caja === cj.id && !q.cajaEnt; })[0]; if (!s) { s = I.nuevo(b.ductos.length + 1); b.ductos.push(s); s.caja = cj.id; }
+    pone(s, o.cables.map(function (x) { return { tag: x.tag || '', cat: x.cat, n: x.n }; }), cj.tag, cj.tag, cj.destino || '', cj.salida.med); b.sel = s.id;
+    I.cambio(); var est = $('#kEstado'); if (est) est.textContent = 'Caja ' + cj.tag + ': se crearon o actualizaron ' + n + ' ductos (' + o.ent.length + ' de entrada y el de salida ' + s.tag + '), con sus circuitos y rutas.';
+    var av = $('#cjAy'); if (av) av.innerHTML = '✓ ' + n + ' ductos de la caja ' + esc(cj.tag) + ' en el proyecto: revísalos en la pestaña «Ductos» y en el listado.';
   }
   function imprimir() {
     var cj = actual(), o = calcular(cj), m = o.min, imp = $('#imp'); if (!imp) return;
