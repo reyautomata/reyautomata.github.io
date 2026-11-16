@@ -188,7 +188,72 @@
     if (dc.cond === 'subt' && +dc.largo > 90) avisos.push('RIC N°04 7.9.7.8: distancia máxima entre cámaras de 90 m (hasta 120 m en tramos rectos con ductos ≥ 50 mm).');
     if (elegido && n === 3 && Object.keys(dist).length === 1) { var rz = elegido.s[2] / lista[0].d; if (rz >= 2.8 && rz <= 3.2) avisos.push('Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con 3 cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar (NEC Cap. 9, nota informativa). Considera el tamaño siguiente.'); }
     if (dc.cond === 'subt' && dc.crit === 'RIC') avisos.push('RIC N°04 7.9.7.1: el ducto subterráneo no puede ser menor a 25 mm.');
-    return { T: T, C: C, lista: lista, suma: suma, n: n, lim: lim, regla: regla, res: res, req: req, filas: filas, elegido: elegido, avisos: avisos, dmax: dmax };
+    return { T: T, C: C, lista: lista, suma: suma, n: n, lim: lim, regla: regla, res: res, req: req, filas: filas, elegido: elegido, avisos: avisos, dmax: dmax, minI: minI, cls: cls, nFuerza: nFuerza };
+  }
+  // ── Verificación de cumplimiento (RIC N°04): cada requisito con su estado, la cláusula y qué hacer si no cumple ──
+  //    sev: ok (cumple), warn (advertencia o dato faltante), err (no cumple). «s» es el tamaño que se está mirando.
+  function verificar(dc, r, s) {
+    var o = [], ric = dc.crit === 'RIC', nor = ric ? 'RIC N°04' : 'NEC', el = r.elegido, T = r.T;
+    function add(sev, txt, ref, sug, acc) { o.push({ sev: sev, txt: txt, ref: ref || '', sug: sug || '', acc: acc || '' }); }
+    if (!r.n) { add('warn', 'El ducto no tiene cables.', '', 'Agrega los cables a mano o tráelos del listado de circuitos.'); return o; }
+    var i = s ? T.s.indexOf(s) : -1, f = i >= 0 ? r.filas[i] : null, occ = f ? f.occ : 0, sigue = el ? 'Usa Ø ' + el.s[0] + ' (ocupación ' + n1(el.occ, 1) + ' %).' : 'Ningún tamaño de ' + T.c + ' alcanza: divide los cables en dos ductos o usa bandeja o escalerilla.';
+    var req = r.suma * (1 + r.res / 100) / (r.lim / 100);
+    // 1) Ocupación
+    if (f && f.Ai >= req - 1e-9) add('ok', 'Ocupación ' + n1(occ, 1) + ' % en Ø ' + s[0] + ', dentro del ' + r.lim + ' % permitido' + (r.res ? ' (con ' + r.res + ' % de reserva)' : '') + '.', ric ? (r.lim === 25 ? 'Tabla N°4.29' : 'Tabla N°4.21 · 7.16.1.14') : 'Cap. 9 Tabla 1');
+    else add('err', 'Ocupación ' + n1(occ, 1) + ' % en Ø ' + (s ? s[0] : '—') + ': supera el ' + r.lim + ' % permitido' + (r.res ? ' considerando ' + r.res + ' % de reserva' : '') + '.', ric ? (r.lim === 25 ? 'Tabla N°4.29' : 'Tabla N°4.21 · 7.16.1.14') : 'Cap. 9 Tabla 1', sigue, el && el.s !== s ? 'tam' : '');
+    // 2) Los cables caben
+    if (f && (s[2] <= r.dmax * 1.05 || f.noCabe)) add('err', 'Los cables no caben en Ø ' + s[0] + ' (Ø interior ' + n1(s[2], 1) + ' mm; el cable mayor mide ' + n1(r.dmax, 1) + ' mm).', 'Cabida física', sigue, el && el.s !== s ? 'tam' : '');
+    else if (f) add('ok', 'Los cables caben: el cable mayor mide ' + n1(r.dmax, 1) + ' mm y el Ø interior es ' + n1(s[2], 1) + ' mm.', 'Cabida física');
+    // 3) Diámetro mínimo
+    if (f && i < r.minI) add('err', 'Ø ' + s[0] + ' es menor que el mínimo ' + (dc.cond === 'subt' && ric && T.s[r.minI][0] !== dc.min ? 'para ducto subterráneo (25 mm)' : 'definido para el proyecto (' + dc.min + ')') + '.', dc.cond === 'subt' && ric ? '7.9.7.1' : 'Criterio del proyecto', sigue, el && el.s !== s ? 'tam' : '');
+    else if (f) add('ok', 'Cumple el diámetro mínimo' + (dc.cond === 'subt' && ric ? ' de ducto subterráneo (25 mm).' : ' (' + dc.min + ').'), dc.cond === 'subt' && ric ? '7.9.7.1' : 'Criterio del proyecto');
+    // 4) Largo del tramo y curvas
+    var L = parseFloat(String(dc.largo).replace(',', '.')), cv = parseFloat(String(dc.curvas).replace(',', '.'));
+    if (dc.cond === 'normal') {
+      if (!(L > 0)) add('warn', 'Falta el largo del tramo: no se puede verificar el límite de 20 m ni la distancia entre registros.', '7.16.1.13', 'Escribe el largo y la cantidad de curvas del tramo.');
+      else if (L > 20 || cv > 2) { var cajas = Math.max(L > 20 ? Math.ceil(L / 20) - 1 : 0, cv > 2 ? Math.ceil(cv / 2) - 1 : 0);
+        add('err', 'Tramo de ' + n1(L, 1) + ' m' + (cv > 0 ? ' con ' + cv + ' curva(s)' : '') + ': los porcentajes valen para tramos de hasta 20 m con no más de dos curvas (desviación total ≤ 180°).', '7.16.1.13', 'Intercala ' + cajas + ' caja' + (cajas === 1 ? '' : 's') + ' de paso para que cada tramo quede en ≤ 20 m y ≤ 2 curvas.'); }
+      else if (L > 15 && !(cv > 0)) add('warn', 'Tramo recto de ' + n1(L, 1) + ' m: los registros no pueden quedar a más de 15 m entre sí.', '7.16.1.7', 'Agrega una caja de paso o registro intermedio.');
+      else add('ok', 'Tramo de ' + n1(L, 1) + ' m' + (cv > 0 ? ' con ' + cv + ' curva(s)' : ' sin curvas') + ', dentro de 20 m y dos curvas.', '7.16.1.13');
+    } else if (dc.cond === 'subt') {
+      if (!(L > 0)) add('warn', 'Falta el largo entre cámaras.', '7.9.7.8', 'Escribe el largo del tramo subterráneo.');
+      else if (L > 120) add('err', 'Tramo subterráneo de ' + n1(L, 0) + ' m: supera la distancia máxima entre cámaras.', '7.9.7.8', 'Intercala ' + (Math.ceil(L / 90) - 1) + ' cámara(s): 90 m como máximo (120 m solo en tramos rectos con ductos de 50 mm o más).');
+      else if (L > 90) add(s && s[2] >= 50 ? 'warn' : 'err', 'Tramo subterráneo de ' + n1(L, 0) + ' m: sobre 90 m solo se acepta en tramos rectos con ductos de 50 mm o más (hasta 120 m).', '7.9.7.8', s && s[2] >= 50 ? 'Confirma que el tramo es recto.' : 'Intercala una cámara o usa ducto de 50 mm o más en tramo recto.');
+      else add('ok', 'Tramo subterráneo de ' + n1(L, 0) + ' m, dentro de 90 m entre cámaras.', '7.9.7.8');
+    } else if (dc.cond === 'niple') {
+      if (L > 1) add('err', 'El ducto está definido como unión entre gabinetes (hasta 1 m) y mide ' + n1(L, 1) + ' m: no puede usar el ' + r.lim + ' %.', 'Tabla N°4.21, nota', 'Cambia la condición a «Tramo normal».');
+      else add('ok', 'Tubería de unión entre gabinetes de hasta 1 m.', 'Tabla N°4.21, nota');
+    }
+    // 5) Separación de servicios y circuitos
+    if (r.cls.senal && (r.cls.fuerza || r.cls.control)) add('err', 'El ducto mezcla cables de señal con ' + (r.cls.fuerza ? 'fuerza' : 'control') + '.', '7.1.7', 'Lleva los cables de señal por un ducto aparte.', 'separar');
+    else add('ok', 'No mezcla cables de señal con fuerza o control.', '7.1.7');
+    if (r.nFuerza > 1 && dc.cond !== 'niple') add('warn', 'Hay ' + r.nFuerza + ' cables de fuerza: en una misma tubería solo van conductores de un mismo circuito.', '5.27', 'Si son circuitos distintos, sepáralos en ductos propios o usa bandeja o escalerilla.');
+    // 6) Atascamiento (referencial)
+    if (f && r.n === 3 && r.lista.every(function (x) { return x.d === r.lista[0].d; })) { var rz = s[2] / r.lista[0].d; if (rz >= 2.8 && rz <= 3.2) add('warn', 'Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con tres cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar.', 'NEC Cap. 9 (referencial)', 'Considera el tamaño siguiente.'); }
+    o.norma = nor; return o;
+  }
+  function estadoRic(dc) { var r = calcular(dc), s = r.elegido ? r.elegido.s : r.T.s[Math.min(r.T.s.length - 1, 3)], c = verificar(dc, r, s); return { mal: c.filter(function (x) { return x.sev === 'err'; }).length, av: c.filter(function (x) { return x.sev === 'warn'; }).length, n: r.n }; }
+  // Sugerencia aplicada: los cables de señal pasan a un ducto nuevo con las mismas condiciones
+  var CLASE_SENAL = { par: 1, mpar: 1, mtri: 1, pvicp: 1, pvict: 1, gfip: 1, gfit: 1 };
+  function separarSenal() { var b = datos(), dc = actual(), sen = dc.cables.filter(function (c) { var k = CATI[c.cat]; return k && CLASE_SENAL[k.f]; }); if (!sen.length || sen.length === dc.cables.length) return;
+    var d = nuevo(b.ductos.length + 1); d.tag = dc.tag + '-S'; d.ruta = dc.ruta; d.tubo = dc.tubo; d.crit = dc.crit; d.cond = dc.cond; d.min = dc.min; d.reserva = dc.reserva; d.largo = dc.largo; d.curvas = dc.curvas; d.cables = sen;
+    dc.cables = dc.cables.filter(function (c) { return sen.indexOf(c) < 0; }); b.ductos.splice(b.ductos.indexOf(dc) + 1, 0, d); }
+  function pintarRic(dc, r, s) {
+    var av = $('#kAvisos'); if (!av) return; var caja = $('#kRic');
+    if (!caja) { caja = document.createElement('div'); caja.id = 'kRic'; caja.className = 'kric'; av.parentNode.insertBefore(caja, av);
+      var st = document.createElement('style'); st.textContent = '.kric{grid-column:1/-1;margin:8px 0 0}.kric-al{border:1.5px solid #F85149;background:rgba(248,81,73,.1);border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12.5px;line-height:1.45}.kric-al b{color:#ff8a82}.kric-al ul{margin:5px 0 0;padding-left:18px}.kric-al li{margin-bottom:5px}.kric-al em{display:block;font-style:normal;color:var(--muted,#94A9BE)}.kric-al em::before{content:"Sugerencia: ";font-weight:600;color:#FFB070}' +
+        '.kric button{font:600 11.5px system-ui,sans-serif;color:#1b0d02;background:#FF8C32;border:1px solid #FF8C32;border-radius:6px;padding:3px 9px;margin-top:4px;cursor:pointer}.kric button:focus-visible{outline:2px solid #38C8E8;outline-offset:1px}' +
+        '.kric details{border:1.5px solid var(--line,#22364D);border-radius:8px}.kric summary{cursor:pointer;padding:7px 12px;font-weight:600;font-size:13px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.kric summary span{font-size:12px}' +
+        '.kric details ul{list-style:none;margin:0;padding:4px 12px 10px;display:grid;gap:4px;font-size:12px}.kric details li{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline}.kric details li small{color:var(--muted,#94A9BE);font-size:11px;white-space:nowrap}.kric details li em{grid-column:2/-1;font-style:normal;color:var(--muted,#94A9BE);font-size:11.5px}.kric details li em::before{content:"Sugerencia: ";font-weight:600;color:#FFB070}' +
+        '.kric .bien{color:#3FB950}.kric .av{color:#E6A23C}.kric .mal{color:#F85149}.kric li span{color:var(--fg,#EAF2F8)}.kok{color:#3FB950;font-weight:700}.kav{color:#E6A23C;font-weight:700}';
+      document.head.appendChild(st);
+      caja.addEventListener('click', function (ev) { var b = ev.target.closest('button[data-ric]'); if (!b) return; if (b.dataset.ric === 'tam') { verTam = null; pintar(); } else if (b.dataset.ric === 'separar') { separarSenal(); verTam = null; cambio(); } });
+    }
+    var c = verificar(dc, r, s), mal = c.filter(function (x) { return x.sev === 'err'; }), nav = c.filter(function (x) { return x.sev === 'warn'; }).length, ant = caja.querySelector('details'), abierto = ant ? ant.open : false;
+    var boton = function (x) { return x.acc === 'tam' ? '<button type="button" data-ric="tam">Usar el tamaño recomendado</button>' : x.acc === 'separar' ? '<button type="button" data-ric="separar">Separar los cables de señal en otro ducto</button>' : ''; };
+    caja.innerHTML = (mal.length ? '<div class="kric-al" role="alert"><b>✗ No cumple ' + esc(c.norma || 'RIC N°04') + ':</b> ' + mal.length + ' incumplimiento' + (mal.length === 1 ? '' : 's') + ' por corregir.<ul>' + mal.map(function (x) { return '<li>' + esc(x.txt) + (x.sug ? '<em>' + esc(x.sug) + '</em>' : '') + boton(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<details' + (abierto ? ' open' : '') + '><summary>Verificación ' + esc(c.norma || 'RIC N°04') + ' <span class="' + (mal.length ? 'mal' : nav ? 'av' : 'bien') + '">' + (mal.length ? mal.length + ' incumplimiento' + (mal.length === 1 ? '' : 's') : 'cumple ✓') + (nav ? ' · ' + nav + ' advertencia' + (nav === 1 ? '' : 's') : '') + '</span></summary><ul>' +
+      c.map(function (x) { return '<li class="' + (x.sev === 'ok' ? 'bien' : x.sev === 'warn' ? 'av' : 'mal') + '"><b>' + (x.sev === 'ok' ? '✓' : x.sev === 'warn' ? '!' : '✗') + '</b><span>' + esc(x.txt) + '</span><small>' + esc(x.ref) + '</small>' + (x.sug && x.sev !== 'ok' ? '<em>' + esc(x.sug) + '</em>' : '') + '</li>'; }).join('') + '</ul></details>';
   }
   function textoDucto(dc, r) { return r.elegido ? r.T.c + ' Ø ' + r.elegido.s[0] : ''; }
 
@@ -268,7 +333,8 @@
     // tabla de ductos
     $('#kDuctos tbody').innerHTML = b.ductos.map(function (d) {
       var q = calcular(d);
-      return '<tr data-d="' + d.id + '"' + (d.id === b.sel ? ' class="sel"' : '') + '><td><b>' + esc(d.tag) + '</b></td><td>' + esc(d.ruta || '—') + '</td><td>' + esc(q.T.c) + '</td><td class="num">' + q.n + '</td><td class="num">' + n1(q.suma, 0) + '</td><td class="num">' + q.lim + ' %</td><td>' + (q.elegido ? '<b>' + esc(q.elegido.s[0]) + '</b> · ' + n1(q.elegido.occ, 1) + ' %' : (q.n ? '<span class="kmal">no alcanza</span>' : '—')) + '</td></tr>';
+      var eR = estadoRic(d), mR = !eR.n ? '' : eR.mal ? ' <span class="kmal" title="' + eR.mal + ' incumplimiento(s): abre el ducto para ver cómo corregir">✗</span>' : eR.av ? ' <span class="kav" title="Cumple, con ' + eR.av + ' advertencia(s)">!</span>' : ' <span class="kok" title="Cumple">✓</span>';
+      return '<tr data-d="' + d.id + '"' + (d.id === b.sel ? ' class="sel"' : '') + '><td><b>' + esc(d.tag) + '</b>' + mR + '</td><td>' + esc(d.ruta || '—') + '</td><td>' + esc(q.T.c) + '</td><td class="num">' + q.n + '</td><td class="num">' + n1(q.suma, 0) + '</td><td class="num">' + q.lim + ' %</td><td>' + (q.elegido ? '<b>' + esc(q.elegido.s[0]) + '</b> · ' + n1(q.elegido.occ, 1) + ' %' : (q.n ? '<span class="kmal">no alcanza</span>' : '—')) + '</td></tr>';
     }).join('');
     // formulario
     var f = $('#kForm');
@@ -293,8 +359,8 @@
       ['Espacio disponible', el && r.n ? 'Queda ' + n1(el.Ai - r.suma, 0) + ' mm² libres; hasta el límite de la norma se pueden sumar ' + n1(Math.max(0, el.util - r.suma), 0) + ' mm² de cables (≈ ' + Math.floor(Math.max(0, el.util - r.suma) / area(r.dmax || 1)) + ' cables más del mayor Ø).' : '—']
     ];
     $('#kPasos').innerHTML = pasos.map(function (p, i) { return '<li><b>' + (i + 1) + '. ' + p[0] + '.</b> ' + p[1] + '</li>'; }).join('');
-    $('#kAvisos').innerHTML = r.avisos.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('');
-    $('#kAvisos').hidden = !r.avisos.length;
+    $('#kAvisos').innerHTML = ''; $('#kAvisos').hidden = true;   // los avisos sueltos pasan a la verificación, con su sugerencia
+    pintarRic(dc, r, s);
     // indicador de ocupación
     var occ = s ? r.suma / area(s[2]) * 100 : 0;
     $('#kMedidor').innerHTML = '<div class="kbar"><span style="width:' + Math.min(100, occ) + '%;background:' + (occ <= r.lim ? '#2e7d32' : '#c62828') + '"></span><i style="left:' + r.lim + '%" title="Límite ' + r.lim + ' %"></i></div><div class="peq">Ocupación en Ø ' + esc(s ? s[0] : '') + ': <b>' + n1(occ, 1) + ' %</b> · límite ' + r.lim + ' % · libre ' + n1(Math.max(0, 100 - occ), 1) + ' %</div>';
@@ -873,7 +939,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
-  window.LAZOS_COND = { FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
