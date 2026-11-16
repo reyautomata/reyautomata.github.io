@@ -43,7 +43,7 @@ td select { padding: 3px 5px; font-size: 12px; }
 .est { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
 .est.e2 { background: #E6A23C; } .est.e3 { background: #E35B65; } .est.e4 { background: #27B783; } .est.e5 { background: #38C8E8; } .est.e6 { background: #55657a; }
 .vacio { padding: 26px 16px; color: var(--muted); text-align: center; }
-.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: 64px; max-height: calc(100vh - 100px); overflow: auto; }
+.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: calc(64px + var(--rs-cinta, 0px)); max-height: calc(100vh - 100px - var(--rs-cinta, 0px)); overflow: auto; }
 @media (max-width: 1100px) { .prop { position: static; max-height: none; } }
 .prop h2 { margin: 0 0 8px; font-size: 14px; }
 .prop label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
@@ -92,9 +92,10 @@ dialog.dListas .pie { display: flex; gap: 8px; justify-content: flex-end; }
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
 <link rel="stylesheet" href="../fluent.css" id="rsFluent">
-<script>try{if(localStorage.getItem('reyengi-tema')==='claro')document.documentElement.setAttribute('data-tema','claro')}catch(e){}</script>
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?37:121))+'px')}}catch(e){}</script>
 <script src="../proyectos.js" defer></script>
 <script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
 <script src="../suite.js" defer></script>
 <script src="../gestion.js" defer></script>
 <script src="app.js" defer></script>

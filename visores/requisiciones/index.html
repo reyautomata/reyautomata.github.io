@@ -83,7 +83,7 @@ label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 @media print { .barra, .tabs, button { display: none !important; } body { background: #fff; color: #000; } .blk { border-color: #999; background: #fff; } }
 
 .lay { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 14px; align-items: start; }
-.lado { position: sticky; top: 104px; display: grid; gap: 10px; max-height: calc(100vh - 120px); overflow: auto; padding-bottom: 8px; }
+.lado { position: sticky; top: calc(104px + var(--rs-cinta, 0px)); display: grid; gap: 10px; max-height: calc(100vh - 120px - var(--rs-cinta, 0px)); overflow: auto; padding-bottom: 8px; }
 .lado .blk { margin: 0; }
 #lista { display: grid; gap: 6px; }
 .lado select, #editor select { max-width: 100%; } .lado > *, #editor { min-width: 0; }
@@ -97,7 +97,7 @@ label output { font: 600 12px var(--f-mono); color: var(--accent-ink); }
 .aviso span { color: var(--muted); font: 500 11px var(--f-mono); word-break: break-word; }
 b.ok { color: var(--ok); }
 .herr { margin-top: 8px; align-items: center; }
-.herr.top { margin: 0 0 12px; position: sticky; top: 100px; z-index: 5; background: var(--bg); padding: 6px 0; }
+.herr.top { margin: 0 0 12px; position: sticky; top: calc(100px + var(--rs-cinta, 0px)); z-index: 5; background: var(--bg); padding: 6px 0; }
 table.ed td { padding: 3px 4px; }
 table.ed input, table.ed select, table.ed textarea { min-height: 28px; padding: 3px 6px; font-size: 12px; }
 table.ed textarea { min-height: 28px; margin: 0; font-family: var(--f-body); resize: vertical; }
@@ -141,9 +141,10 @@ table.qa input[type=checkbox] { width: 18px; height: 18px; min-height: 0; accent
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
 <link rel="stylesheet" href="../fluent.css" id="rsFluent">
-<script>try{if(localStorage.getItem('reyengi-tema')==='claro')document.documentElement.setAttribute('data-tema','claro')}catch(e){}</script>
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?37:121))+'px')}}catch(e){}</script>
 <link rel="stylesheet" href="../mesa/dock.css">
 <script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
 <script src="../suite.js" defer></script>
 </head>
 <body>
