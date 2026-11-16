@@ -64,13 +64,14 @@
     // Las pestañas inactivas siguen en la página, ocultas: el módulo puede seguir usando sus elementos
     function grupo(n) {
       var g = el('section', 'dk-grupo' + (max === n ? ' max' : '')), cab = el('header', 'dk-cab'), tabs = el('div', 'dk-tabs'), cuerpo = el('div', 'dk-cuerpo'); g._n = n; tabs.setAttribute('role', 'tablist');
-      n.p.forEach(function (id) { var b = el('button', 'dk-tab' + (id === n.a ? ' on' : ''), P[id].titulo); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', id === n.a); b.dataset.id = id; b.title = 'Arrastra para mover el panel «' + P[id].titulo + '»';
+      n.p.forEach(function (id) { var b = el('button', 'dk-tab' + (id === n.a ? ' on' : ''), P[id].titulo); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', id === n.a); b.dataset.id = id; b.title = cfg.fijo ? 'Arrastra para ordenar esta pestaña dentro de su barra' : 'Arrastra para mover el panel «' + P[id].titulo + '»';
         b.addEventListener('click', function () { if (arr || n.a === id) return; n.a = id; var nu = grupo(n); g.replaceWith(nu); if (P[id].alMostrar) P[id].alMostrar(nodos[id]); guardar(); var f = nu.querySelector('.dk-tab.on'); if (f) f.focus(); }); arrastre(b, id); tabs.append(b); });
       var mas = el('button', 'dk-b', '⋮'), mx = el('button', 'dk-b', max === n ? '🗗' : '🗖'), cx = el('button', 'dk-b', '✕'); mas.type = mx.type = cx.type = 'button';
       mas.setAttribute('aria-label', 'Mover el panel ' + P[n.a].titulo); mas.title = 'Mover este panel'; mx.setAttribute('aria-label', max === n ? 'Restaurar el tamaño' : 'Maximizar el panel'); mx.title = mx.getAttribute('aria-label'); cx.setAttribute('aria-label', 'Cerrar el panel ' + P[n.a].titulo); cx.title = 'Cerrar el panel';
       mx.onclick = function () { max = max === n ? null : n; raiz.classList.toggle('dk-max', !!max); raiz.querySelectorAll('.dk-grupo.max').forEach(function (x) { x.classList.remove('max'); }); if (max) g.classList.add('max'); mx.textContent = max ? '🗗' : '🗖'; mx.setAttribute('aria-label', max ? 'Restaurar el tamaño' : 'Maximizar el panel'); mx.title = mx.getAttribute('aria-label'); window.dispatchEvent(new Event('resize')); }; // sin redibujar: no recarga la vista
       cx.onclick = function () { var id = n.a; sacar(id); cerrados.push(id); fin(); };
-      mas.onclick = function () { menu(mas, [['Acoplar a la izquierda', 'l'], ['Acoplar a la derecha', 'r'], ['Acoplar arriba', 't'], ['Acoplar abajo', 'b']].map(function (o) { return [o[0], function () { acoplar(n.a, null, o[1]); }]; })); };
+      if (cfg.fijo) { mas.setAttribute('aria-label', 'Ordenar la pestaña ' + P[n.a].titulo); mas.title = 'Ordenar esta pestaña'; }
+      mas.onclick = function () { if (cfg.fijo) return menu(mas, [['Mover la pestaña a la izquierda', function () { reordenar(n.a, n.p.indexOf(n.a) - 1); }], ['Mover la pestaña a la derecha', function () { reordenar(n.a, n.p.indexOf(n.a) + 1); }], ['Dejarla primera', function () { reordenar(n.a, 0); }]]); menu(mas, [['Acoplar a la izquierda', 'l'], ['Acoplar a la derecha', 'r'], ['Acoplar arriba', 't'], ['Acoplar abajo', 'b']].map(function (o) { return [o[0], function () { acoplar(n.a, null, o[1]); }]; })); };
       cab.append(tabs, mas, mx, cx); n.p.forEach(function (id) { nodos[id].hidden = id !== n.a; cuerpo.append(nodos[id]); }); cuerpo.setAttribute('role', 'tabpanel'); g.append(cab, cuerpo); return g;
     }
     function menu(ancla, items) { var v = document.querySelector('.dk-menu'); if (v) v.remove(); var m = el('div', 'dk-menu'), r = ancla.getBoundingClientRect(); m.setAttribute('role', 'menu');
@@ -80,7 +81,23 @@
       m.addEventListener('keydown', function (e) { if (e.key === 'Escape') { m.remove(); ancla.focus(); } }); }
     // ── Arrastre de pestañas ──
     var arr = false;
+    // Modo fijo (cfg.fijo): las pestañas no se despegan de su ventana; solo se reordenan dentro de su propia barra
+    function reordenar(id, hasta) { var r = grupoDe(id); if (!r) return; var p = r.g.p, de = p.indexOf(id); hasta = Math.max(0, Math.min(p.length - 1, hasta)); if (de < 0 || de === hasta) return; p.splice(de, 1); p.splice(hasta, 0, id); pintar(); guardar(); }
+    function arrastreFijo(b, id) {
+      b.addEventListener('pointerdown', function (e) { if (e.button) return; var x0 = e.clientX, marca = null, hasta = null, barra = b.parentNode;
+        function mv(ev) {
+          if (!arr) { if (Math.abs(ev.clientX - x0) < 8) return; arr = true; raiz.classList.add('dk-arr'); marca = el('div', 'dk-marca'); document.body.append(marca); }
+          var ts = [].slice.call(barra.querySelectorAll('.dk-tab')), de = ts.indexOf(b), i = ts.length - 1, rb = barra.getBoundingClientRect();
+          for (var k = 0; k < ts.length; k++) { var r = ts[k].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { i = k; break; } if (k === ts.length - 1) i = ts.length; }
+          hasta = i > de ? i - 1 : i; var ref = ts[Math.min(i, ts.length - 1)].getBoundingClientRect(), x = i >= ts.length ? ref.right : ref.left;
+          marca.style.cssText = 'display:block;left:' + (x - 2) + 'px;top:' + rb.top + 'px;width:4px;height:' + rb.height + 'px;border-radius:2px';
+        }
+        function up() { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); if (marca) marca.remove(); raiz.classList.remove('dk-arr');
+          if (arr && hasta != null) reordenar(id, hasta); setTimeout(function () { arr = false; }, 0); }
+        document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); });
+    }
     function arrastre(b, id) {
+      if (cfg.fijo) return arrastreFijo(b, id);
       b.addEventListener('pointerdown', function (e) { if (e.button) return; var x0 = e.clientX, y0 = e.clientY, fant = null, zona = null, dest = null, marca = null;
         function mv(ev) {
           if (!arr) { if (Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 8) return; arr = true; raiz.classList.add('dk-arr'); fant = el('div', 'dk-fant', P[id].titulo); document.body.append(fant); marca = el('div', 'dk-marca'); document.body.append(marca); }

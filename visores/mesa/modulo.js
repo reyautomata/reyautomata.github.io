@@ -260,7 +260,7 @@
     var prsPl = [].concat.apply([], prs); /* un principal puede ser una lista de paneles que comparten grupo de pestañas */ var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return prsPl.indexOf(id) < 0; }), ['prop', 'ctrl']);
     var inicial = { t: 'row', c: prs.map(function (id) { var l = [].concat(id); return { t: 'tabs', p: l, a: l[0] }; }).concat([{ t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }]), s: prs.length > 1 ? prs.map(function () { return 0.72 / prs.length; }).concat([0.28]) : [0.66, 0.34] };
     var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
-    var dock = window.REDock(host, { clave: 'reyengi-dkm3-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { avisar(); window.dispatchEvent(new Event('resize')); }, 30); } });
+    var dock = window.REDock(host, { fijo: true, clave: 'reyengi-dkm4-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { avisar(); window.dispatchEvent(new Event('resize')); }, 30); } });
     (cfg.ocultar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host')) e.classList.add('dkm-oculto'); }); });
     // Barra de recuperación: aparece solo si hay paneles cerrados o si las pestañas se separaron; permite volver a mostrarlos y reagruparlos
     var av = document.createElement('div'); av.className = 'dkm-aviso'; av.hidden = true; sec.insertBefore(av, host);
