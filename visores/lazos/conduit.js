@@ -48,6 +48,8 @@
     rz1m: 'EXZHELLENT XXI RZ1-K multiconductor · GC 2019', rz1: 'EXZHELLENT XXI RZ1-K monoconductor · GC 2019',
     thgc: 'THHN-PLUS (THHN/THWN-2) · GC 2019', evaf: 'EVAFLEX H07Z1-K · GC 2019', exz: 'EXZHELLENT XXI H07Z1-K · GC/Cocesa 2013',
     genl: 'GENLIS ECO H07V-U · GC 2019', gpt: 'GPT (TAC) · GC/Cocesa 2013',
+    fos: 'Fibra óptica sin armadura para conductos · GC fibra óptica', fod: 'Fibra óptica dieléctrica con armadura de fibra de vidrio · GC fibra óptica', foa: 'Fibra óptica con armadura de acero corrugado · GC fibra óptica',
+    fou: 'Fibra óptica monotubo sin armadura · GC fibra óptica', folt: 'Fibra óptica loose-tube sin armadura · GC fibra óptica', folta: 'Fibra óptica loose-tube con armadura de acero · GC fibra óptica',
     par: 'Par / tríada apantallado · formato original (Cocesa)', mpar: 'Multipar apantallado · formato original (Cocesa)', mtri: 'Multitríada apantallada · formato original (Cocesa)',
     xtcc: 'Control XTCC 600 V · formato original (Cocesa)', xtmu: 'Fuerza XTMU 1000 V · formato original (Cocesa)', thhn: 'THHN / THWN-2 · NEC Cap. 9 Tabla 5',
     otro: 'Otro cable (Ø manual)'
@@ -108,11 +110,21 @@
   mm('evaf', 'H07Z1-K', [['1.5', 3.1], ['2.5', 3.8], ['4', 4.3], ['6', 4.9], ['10', 6.4], ['16', 7.4], ['25', 9.2], ['35', 10.4], ['50', 12.7], ['70', 14.3], ['95', 16.5], ['120', 18.2], ['150', 20.5], ['185', 22.6], ['240', 25.6]]);
   mm('exz', 'H07Z1-K', [['1.5', 2.9], ['2.5', 3.5], ['4', 4.1], ['6', 4.6], ['10', 6.0], ['16', 7.0], ['25', 8.6], ['35', 9.7], ['50', 11.5], ['70', 13.4], ['95', 15.4], ['120', 17.2], ['150', 19.0], ['185', 20.9], ['240', 24.2]]);
   mm('genl', 'H07V-U', [['1.5', 2.9], ['2.5', 3.5], ['4', 4.0], ['6', 4.5], ['10', 5.8]]);
+  // Fibra óptica: diámetro exterior y radio mínimo de curvatura del catálogo «Cables de fibra óptica» de General Cable (tablas de especificaciones, 12 fibras por módulo).
+  //   filas: [fibras, Ø exterior mm, radio mínimo mm, módulos o tubos]
+  function fibra(f, cod, filas) { filas.forEach(function (x) { var desc = x[0] + ' fibras'; cat(f, cod, desc, x[1], x[3] || 1, false, '', f + ':' + desc); var c = CAT[CAT.length - 1]; c.fo = true; c.rc = x[2]; }); }
+  fibra('fos', 'FO', [['12', 5.5, 60, 1], ['24', 7, 70, 2], ['36', 7, 70, 3], ['48', 8, 80, 4], ['72', 10, 100, 6], ['96', 11.5, 115, 8], ['144', 11.5, 115, 12], ['192', 13, 130, 16], ['288', 16, 160, 24]]);
+  fibra('fod', 'FO-D', [['12', 9.2, 110, 1], ['24', 10.6, 140, 2], ['48', 11.6, 150, 4], ['72', 13.5, 170, 6], ['96', 15.5, 195, 8], ['144', 15.5, 195, 12], ['192', 17, 215, 16], ['288', 21.2, 260, 24]]);
+  fibra('foa', 'FO-A', [['12', 11, 140, 1], ['24', 12.5, 165, 2], ['36', 12.5, 165, 3], ['48', 13.5, 180, 4], ['72', 15.5, 200, 6], ['96', 17.5, 230, 8], ['144', 17.5, 230, 12], ['192', 18.5, 240, 16], ['288', 18.5, 240, 24]]);
+  fibra('fou', 'FO-U', [['1 a 12', 6.5, 70, 1]]);
+  fibra('folt', 'FO-LT', [['6 a 72', 11.5, 115, 6], ['72 a 144', 17, 170, 12]]);
+  fibra('folta', 'FO-LTA', [['6 a 72', 15.5, 200, 6], ['72 a 144', 20.5, 240, 12]]);
   var CATI = {}; CAT.forEach(function (c) { CATI[c.id] = c; });
   var COLF = { par: '#2f6db3', mpar: '#1d4f8a', mtri: '#5a3fa0', xtcc: '#3c4650', xtmu: '#202020', thhn: '#9a3b1d', otro: '#6b7480',
     pvicp: '#2f6db3', pvict: '#5a3fa0', gfip: '#1f7a6a', gfit: '#2b8c5a', cvtc: '#3c4650', gfc: '#4a6b3a', dlx: '#59606a',
     xtu: '#202020', xtm3: '#202020', xtm3n: '#202020', xtm3nt: '#202020', xtk3: '#202020', sfx3: '#262c33', sfx3nt: '#262c33', rz1m: '#2e6b3a', rz1: '#2e6b3a',
-    thgc: '#9a3b1d', evaf: '#8a5a1a', exz: '#6a8a2a', genl: '#8a2a2a', gpt: '#7a4a6a' };
+    thgc: '#9a3b1d', evaf: '#8a5a1a', exz: '#6a8a2a', genl: '#8a2a2a', gpt: '#7a4a6a',
+    fos: '#C9A227', fod: '#C9A227', foa: '#2b2f36', fou: '#C9A227', folt: '#2b2f36', folta: '#2b2f36' };
   // Familias preferidas al traer cables del listado de circuitos
   var PREF_INST = [['pvic', 'PVIC (GC/Cocesa)'], ['gfi', 'GenFree-Instrumentación (LSZH)'], ['orig', 'Formato original (UI)']];
   var PREF_CTRL = [['cvtc', 'CVTC (GC/Cocesa)'], ['gfc', 'GenFree-control (LSZH)'], ['dlx', 'Duralox-control armado'], ['orig', 'Formato original XTCC (HU)']];
@@ -179,7 +191,7 @@
     if (!n) avisos.push('Agrega los cables que van por este ducto.');
     if (n && !elegido) avisos.push('Ningún tamaño de ' + T.c + ' alcanza: divide los cables en dos ductos o usa bandeja / escalerilla (RIC N°04 7.10.19: ocupación ≤ 40 % en bandejas).');
     // Clase de cada cable: señal (instrumentación y comunicaciones), control o fuerza
-    var CLASE = { par: 'senal', mpar: 'senal', mtri: 'senal', pvicp: 'senal', pvict: 'senal', gfip: 'senal', gfit: 'senal', xtcc: 'control', cvtc: 'control', gfc: 'control', dlx: 'control', otro: '' };
+    var CLASE = { fos: 'senal', fod: 'senal', foa: 'senal', fou: 'senal', folt: 'senal', folta: 'senal', par: 'senal', mpar: 'senal', mtri: 'senal', pvicp: 'senal', pvict: 'senal', gfip: 'senal', gfit: 'senal', xtcc: 'control', cvtc: 'control', gfc: 'control', dlx: 'control', otro: '' };
     var cls = {}, nFuerza = 0; dc.cables.forEach(function (c) { var k = CATI[c.cat]; if (!k) return; var cl = CLASE[k.f] === undefined ? 'fuerza' : CLASE[k.f]; if (!cl) return; cls[cl] = 1; if (cl === 'fuerza') nFuerza += Math.max(1, Math.round(+c.n || 1)); });
     if (cls.senal && (cls.fuerza || cls.control)) avisos.push('RIC N°04 7.1.7: el ducto mezcla cables de señal con ' + (cls.fuerza ? 'fuerza' : 'control') + '; las canalizaciones de fuerza y de comunicación o control se separan para evitar influencias electromagnéticas. Usa ductos separados.');
     if (nFuerza > 1 && dc.cond !== 'niple') avisos.push('RIC N°04 5.27: en una misma tubería solo van conductores de un mismo circuito; hay ' + nFuerza + ' cables de fuerza. Si son circuitos distintos, sepáralos o usa bandeja / escalerilla.');
@@ -202,8 +214,8 @@
       else { var f = T422.filter(function (x) { return x[0] >= dn; })[0]; if (f) { o.ducto = f[1] * 10; o.refDucto = 'Tabla N°4.22: tubería de ' + f[0] + ' mm → ' + f[1] + ' cm al borde interior'; } else o.refDucto = 'Tabla N°4.22 no cubre este diámetro: usar el radio que indique el fabricante'; }
       if (!/C\.A\.G|EMT|SCH40|ACERO|RMC|IMC/i.test(r.T.c + ' ' + r.T.n) && dc.cond !== 'subt' && o.ducto) o.refDucto += ' (tabla de tuberías metálicas, usada como referencia: confirmar con el fabricante)'; }
     var vistos = {};
-    r.lista.forEach(function (x) { var k = x.k, fac = k.ap ? 12 : /FLEX/i.test(k.cod + ' ' + k.desc) ? 4 : 8, id = (x.c.tag || '') + '|' + k.id; if (vistos[id]) return; vistos[id] = 1;
-      o.cables.push({ tag: x.c.tag || '(sin tag)', desc: (k.cod !== '—' ? k.cod + ' ' : '') + k.desc, d: x.d, fac: fac, clase: k.ap ? 'apantallado' : fac === 4 ? 'cobre flexible' : 'alambre o cableado concéntrico', r: fac * x.d }); });
+    r.lista.forEach(function (x) { var k = x.k, fac = k.rc ? 0 : k.ap ? 12 : /FLEX/i.test(k.cod + ' ' + k.desc) ? 4 : 8, id = (x.c.tag || '') + '|' + k.id; if (vistos[id]) return; vistos[id] = 1;
+      o.cables.push({ tag: x.c.tag || '(sin tag)', desc: (k.cod !== '—' ? k.cod + ' ' : '') + k.desc, d: x.d, fac: fac, clase: k.rc ? 'fibra óptica' : k.ap ? 'apantallado' : fac === 4 ? 'cobre flexible' : 'alambre o cableado concéntrico', r: k.rc || fac * x.d, como: k.rc ? 'radio mínimo del fabricante' : fac + ' × Ø ' + n1(x.d, 1) + ' mm' }); });
     o.cables.sort(function (a, b) { return b.r - a.r; }); o.cable = o.cables[0] || null;
     o.r = Math.max(o.ducto || 0, o.cable ? o.cable.r : 0); o.manda = o.cable && o.cable.r > (o.ducto || 0) ? 'cable' : 'ducto';
     return o;
@@ -285,12 +297,12 @@
     // 6) Atascamiento (referencial)
     if (f && r.n === 3 && r.lista.every(function (x) { return x.d === r.lista[0].d; })) { var rz = s[2] / r.lista[0].d; if (rz >= 2.8 && rz <= 3.2) add('warn', 'Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con tres cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar.', 'NEC Cap. 9 (referencial)', 'Considera el tamaño siguiente.'); }
     // 7) Radio de curvatura recomendado para las curvas del tramo
-    if (f && ric && dc.cond !== 'niple') { var cu = curvatura(dc, r, s); if (cu.r) add(cv > 0 ? 'ok' : 'ok', 'Curvas con radio no menor a ' + cm(cu.r) + ': manda ' + (cu.manda === 'cable' ? 'el cable ' + cu.cable.tag + ' (' + cu.cable.clase + ', ' + cu.cable.fac + ' × Ø ' + n1(cu.cable.d, 1) + ' mm)' : 'la tubería') + '.', cu.manda === 'cable' ? '6.2.8' : (dc.cond === 'subt' ? '7.9.7.8' : 'Tabla N°4.22')); }
+    if (f && ric && dc.cond !== 'niple') { var cu = curvatura(dc, r, s); if (cu.r) add(cv > 0 ? 'ok' : 'ok', 'Curvas con radio no menor a ' + cm(cu.r) + ': manda ' + (cu.manda === 'cable' ? 'el cable ' + cu.cable.tag + ' (' + cu.cable.clase + ', ' + cu.cable.como + ')' : 'la tubería') + '.', cu.manda === 'cable' ? '6.2.8' : (dc.cond === 'subt' ? '7.9.7.8' : 'Tabla N°4.22')); }
     o.norma = nor; return o;
   }
   function estadoRic(dc) { var r = calcular(dc), s = r.elegido ? r.elegido.s : r.T.s[Math.min(r.T.s.length - 1, 3)], c = verificar(dc, r, s); return { mal: c.filter(function (x) { return x.sev === 'err'; }).length, av: c.filter(function (x) { return x.sev === 'warn'; }).length, n: r.n }; }
   // Sugerencia aplicada: los cables de señal pasan a un ducto nuevo con las mismas condiciones
-  var CLASE_SENAL = { par: 1, mpar: 1, mtri: 1, pvicp: 1, pvict: 1, gfip: 1, gfit: 1 };
+  var CLASE_SENAL = { fos: 1, fod: 1, foa: 1, fou: 1, folt: 1, folta: 1, par: 1, mpar: 1, mtri: 1, pvicp: 1, pvict: 1, gfip: 1, gfit: 1 };
   function separarSenal() { var b = datos(), dc = actual(), sen = dc.cables.filter(function (c) { var k = CATI[c.cat]; return k && CLASE_SENAL[k.f]; }); if (!sen.length || sen.length === dc.cables.length) return;
     var d = nuevo(b.ductos.length + 1); d.tag = dc.tag + '-S'; d.ruta = dc.ruta; d.tubo = dc.tubo; d.crit = dc.crit; d.cond = dc.cond; d.min = dc.min; d.reserva = dc.reserva; d.largo = dc.largo; d.curvas = dc.curvas; d.cables = sen;
     dc.cables = dc.cables.filter(function (c) { return sen.indexOf(c) < 0; }); b.ductos.splice(b.ductos.indexOf(dc) + 1, 0, d); }
@@ -384,7 +396,7 @@
     var di = d * 0.74, m = 0; while (1 + 3 * m * (m + 1) < k.nc) m++;
     var dc = Math.min(di / (2 * m + 1) * 0.92, di * 0.48), out = '', n = 0;
     if (k.ap) out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (di / 2 + d * 0.035) + '" fill="none" stroke="#c9ced4" stroke-width="' + (d * 0.03) + '" stroke-dasharray="' + (d * 0.05) + ' ' + (d * 0.03) + '"/>';
-    if (k.nc === 1) return out + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (d * 0.3) + '" fill="#d18b47" stroke="#7a4a1c" stroke-width="' + (d * 0.02) + '"/>';
+    if (k.nc === 1) return out + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (d * 0.3) + '" fill="' + (k.fo ? '#6cc5ee' : '#d18b47') + '" stroke="' + (k.fo ? '#2a6f93' : '#7a4a1c') + '" stroke-width="' + (d * 0.02) + '"/>';
     if (k.nc === 2 || k.nc === 3) { // par o tríada trenzada
       for (var j = 0; j < k.nc; j++) { var a = j / k.nc * 2 * PI + PI / 2, rr = di * (k.nc === 2 ? 0.25 : 0.28); out += core(cx + rr * Math.cos(a), cy + rr * Math.sin(a), di * (k.nc === 2 ? 0.24 : 0.21), COLCORE[j % 3]); }
       return out;
@@ -453,7 +465,7 @@
       ['Espacio disponible', el && r.n ? 'Queda ' + n1(el.Ai - r.suma, 0) + ' mm² libres; hasta el límite de la norma se pueden sumar ' + n1(Math.max(0, el.util - r.suma), 0) + ' mm² de cables (≈ ' + Math.floor(Math.max(0, el.util - r.suma) / area(r.dmax || 1)) + ' cables más del mayor Ø).' : '—']
     ];
     var cuP = s && r.n ? curvatura(dc, r, s) : null;
-    if (cuP && cuP.r) pasos.push(['Radio de curvatura', 'Tubería: ' + esc(cuP.refDucto) + '. Cables (RIC N°04 6.2.8): ' + cuP.cables.slice(0, 4).map(function (c) { return esc(c.tag) + ' ' + c.fac + ' × ' + n1(c.d, 1) + ' mm = ' + cm(c.r); }).join('; ') + (cuP.cables.length > 4 ? '…' : '') + '. Las curvas se hacen con radio no menor a <b>' + cm(cuP.r) + '</b> (manda ' + (cuP.manda === 'cable' ? 'el cable' : 'la tubería') + ').']);
+    if (cuP && cuP.r) pasos.push(['Radio de curvatura', 'Tubería: ' + esc(cuP.refDucto) + '. Cables (RIC N°04 6.2.8): ' + cuP.cables.slice(0, 4).map(function (c) { return esc(c.tag) + ' ' + c.como + ' = ' + cm(c.r); }).join('; ') + (cuP.cables.length > 4 ? '…' : '') + '. Las curvas se hacen con radio no menor a <b>' + cm(cuP.r) + '</b> (manda ' + (cuP.manda === 'cable' ? 'el cable' : 'la tubería') + ').']);
     var soP = s && r.n ? soportacion(dc, r, s) : null;
     if (soP && (soP.sep || soP.caja)) pasos.push(['Soportes y cajas', (soP.sep ? esc(soP.refSep) + (soP.nSop ? ': <b>' + soP.nSop + ' abrazaderas ' + esc(soP.abz.tipo) + ' ' + esc(soP.abz.med) + '</b> sobre riel' : ' (indica el largo para contar abrazaderas)') + '. ' : esc(soP.notaSop || '') + ' ') + (soP.caja ? (soP.cajas ? '<b>' + soP.cajas + ' × ' + esc(soP.caja.n) + '</b>' : 'Si se intercala una caja de paso: ' + esc(soP.caja.n)) + ' (' + esc(soP.caja.ref) + ').' : '') + ' Medidas de referencia: ' + MJM + '.']);
     $('#kPasos').innerHTML = pasos.map(function (p, i) { return '<li><b>' + (i + 1) + '. ' + p[0] + '.</b> ' + p[1] + '</li>'; }).join('');
@@ -705,9 +717,10 @@
   var SERV = { inst: { n: 'Instrumentación', c: '#2F6FB5', d: 'Señales analógicas y de campo: pares y tríadas apantallados, multipares y multitríadas.' },
     ctrl: { n: 'Control', c: '#B7791F', d: 'Señales discretas 24 VDC / 120 VAC, solenoides, interruptores y botoneras: multiconductores.' },
     fuerza: { n: 'Fuerza', c: '#C0392B', d: 'Alimentación 220/380 V de instrumentos, tableros y motores: mono y multiconductores.' },
+    fo: { n: 'Fibra óptica', c: '#7E57C2', d: 'Enlaces de comunicaciones y redes de control: cables de fibra óptica de 1 a 288 fibras.' },
     otro: { n: 'Otro', c: '#6b7480', d: 'Cable fuera del catálogo con diámetro manual.' } };
   var FSERV = { par: 'inst', mpar: 'inst', mtri: 'inst', pvicp: 'inst', pvict: 'inst', gfip: 'inst', gfit: 'inst',
-    xtcc: 'ctrl', cvtc: 'ctrl', gfc: 'ctrl', dlx: 'ctrl', gpt: 'ctrl', otro: 'otro' };
+    xtcc: 'ctrl', cvtc: 'ctrl', gfc: 'ctrl', dlx: 'ctrl', gpt: 'ctrl', otro: 'otro', fos: 'fo', fod: 'fo', foa: 'fo', fou: 'fo', folt: 'fo', folta: 'fo' };
   function servDe(f) { return FSERV[f] || 'fuerza'; }
   var USO = {
     par: 'Un instrumento: 4–20 mA / HART del transmisor a la caja de conexiones (par) o RTD de 3 hilos (tríada).',
@@ -730,9 +743,11 @@
     sfx3: 'Multiconductor flexible para equipos móviles o con vibración.', sfx3nt: 'Flexible 3F + N + T para equipos móviles.',
     rz1m: 'Multiconductor 0,6/1 kV libre de halógenos (LSZH).', rz1: 'Monoconductor 0,6/1 kV libre de halógenos (LSZH).',
     thgc: 'Conductores individuales THHN/THWN-2 en ducto.', evaf: 'Cableado interior 450/750 V libre de halógenos.',
-    exz: 'Cableado interior 450/750 V libre de halógenos.', genl: 'Cableado interior 450/750 V (PVC).', otro: 'Ingresa el diámetro del catálogo del fabricante.'
+    exz: 'Cableado interior 450/750 V libre de halógenos.',
+    fos: 'Fibra sin armadura para tender dentro de ductos: enlaces entre salas y gabinetes.', fod: 'Fibra totalmente dieléctrica con protección contra roedores: ductos o directamente enterrada.', foa: 'Fibra con armadura de acero corrugado: enterrada, en canales, zanjas o ductos.',
+    fou: 'Monotubo de 1 a 12 fibras para tramos cortos en ducto.', folt: 'Loose-tube sin armadura para ductos, de 6 a 144 fibras.', folta: 'Loose-tube con armadura de acero corrugado: enterrado o en ductos.', genl: 'Cableado interior 450/750 V (PVC).', otro: 'Ingresa el diámetro del catálogo del fabricante.'
   };
-  var ORDEN_FAM = Object.keys(FAM).sort(function (a, b) { var o = { inst: 0, ctrl: 1, fuerza: 2, otro: 3 }; return o[servDe(a)] - o[servDe(b)]; });
+  var ORDEN_FAM = Object.keys(FAM).sort(function (a, b) { var o = { inst: 0, ctrl: 1, fuerza: 2, fo: 2.5, otro: 3 }; return o[servDe(a)] - o[servDe(b)]; });
   var catFiltro = 'todos', catTexto = '', ultimo = null;
   function miniCable(k, px) {
     var d = 10;
@@ -850,11 +865,11 @@
     var p = document.createElement('aside'); p.id = 'kCat'; p.setAttribute('aria-label', 'Catálogo de cables');
     p.innerHTML = '<div class="kc-cab"><b>Catálogo de cables</b><button type="button" id="kCatCerrar" aria-label="Cerrar catálogo">✕</button></div>' +
       '<div class="kc-dest" id="kCatDest"></div>' +
-      '<div class="kc-chips" role="group" aria-label="Servicio">' + [['todos', 'Todos', '']].concat(['inst', 'ctrl', 'fuerza'].map(function (k) { return [k, SERV[k].n, SERV[k].c]; }))
+      '<div class="kc-chips" role="group" aria-label="Servicio">' + [['todos', 'Todos', '']].concat(['inst', 'ctrl', 'fuerza', 'fo'].map(function (k) { return [k, SERV[k].n, SERV[k].c]; }))
         .map(function (x) { return '<button type="button" data-s="' + x[0] + '" aria-pressed="' + (x[0] === catFiltro) + '">' + (x[2] ? '<i style="background:' + x[2] + '"></i>' : '') + x[1] + '</button>'; }).join('') + '</div>' +
       '<div class="kc-bus"><input type="search" id="kCatBus" placeholder="Buscar: código, AWG, mm², pares…" aria-label="Buscar cable"></div>' +
       '<div class="kc-lista" id="kCatLista"></div>' +
-      '<div class="kc-pie">Diámetros exteriores aproximados de los catálogos citados en cada familia. Verificar con el catálogo vigente del fabricante.</div>';
+      '<div class="kc-pie">Diámetros exteriores aproximados de los catálogos citados en cada familia; fibra óptica según el catálogo «Cables de fibra óptica» de General Cable. Verificar con el catálogo vigente del fabricante.</div>';
     document.body.appendChild(tab); document.body.appendChild(p);
     function abrir(v) { p.classList.toggle('abierto', v); document.body.classList.toggle('kcat-on', v); tab.setAttribute('aria-expanded', String(v)); tab.hidden = v; guardarPref('reyengi-kcat', v ? '1' : '0'); if (v) pintarCatalogo(); }
     tab.addEventListener('click', function () { abrir(true); $('#kCatBus').focus(); });
@@ -1015,7 +1030,7 @@
   }
   function corePos(d, k) { // misma disposición que el corte 2D
     var di = d * 0.74, m = 0, out = [], n = 0; while (1 + 3 * m * (m + 1) < k.nc) m++;
-    if (k.nc === 1) return [{ x: 0, y: 0, r: d * 0.3, c: '#d18b47', cu: true }];
+    if (k.nc === 1) return [{ x: 0, y: 0, r: d * 0.3, c: k.fo ? '#6cc5ee' : '#d18b47', cu: !k.fo }];
     if (k.nc === 2 || k.nc === 3) { for (var j = 0; j < k.nc; j++) { var a = j / k.nc * 2 * PI + PI / 2, rr = di * (k.nc === 2 ? 0.25 : 0.28); out.push({ x: rr * Math.cos(a), y: rr * Math.sin(a), r: di * (k.nc === 2 ? 0.24 : 0.21), c: COLCORE[j % 3] }); } return out; }
     var dc = Math.min(di / (2 * m + 1) * 0.92, di * 0.48);
     for (var ring = 0; ring <= m && n < k.nc; ring++) { var cnt = ring === 0 ? 1 : 6 * ring; for (var q = 0; q < cnt && n < k.nc; q++, n++) { var ang = q / cnt * 2 * PI + PI / 2; out.push({ x: ring * dc * Math.cos(ang), y: ring * dc * Math.sin(ang), r: dc / 2 * 0.92, c: COLCORE[n % (k.f === 'mpar' || k.f === 'mtri' ? 2 : COLCORE.length)] }); } }
@@ -1054,11 +1069,11 @@
         (ch ? '<p class="k3-' + (ch.sev === 'ok' ? 'ok' : ch.sev === 'warn' ? 'av' : 'mal') + '">' + (ch.sev === 'ok' ? '✓ ' : ch.sev === 'warn' ? '! ' : '✗ ') + esc(ch.txt) + (ch.sug && ch.sev !== 'ok' ? '<br><b>Sugerencia:</b> ' + esc(ch.sug) : '') + '</p>' : '') +
         '<h4 class="k3-h">Radio de curvatura</h4><p class="k3-r">Curvar con radio no menor a <b>' + (cu.r ? cm(cu.r) : '—') + '</b><br>manda ' + (cu.manda === 'cable' ? 'el cable ' + esc(cu.cable.tag) : 'la tubería') + '</p>' +
         '<dl class="k3-dl"><dt>Tubería</dt><dd>' + (cu.ducto ? cm(cu.ducto) : '—') + '<small>' + esc(cu.refDucto) + '</small></dd></dl>' +
-        '<h4 class="k3-h">Cables · RIC N°04 6.2.8</h4><ol class="k3-cab">' + cu.cables.map(function (c) { return '<li><b>' + esc(c.tag) + '</b> · ' + cm(c.r) + '<small>' + esc(c.clase) + ': ' + c.fac + ' × Ø ' + n1(c.d, 1) + ' mm</small></li>'; }).join('') + '</ol>' +
+        '<h4 class="k3-h">Cables · RIC N°04 6.2.8</h4><ol class="k3-cab">' + cu.cables.map(function (c) { return '<li><b>' + esc(c.tag) + '</b> · ' + cm(c.r) + '<small>' + esc(c.clase) + ': ' + c.como + '</small></li>'; }).join('') + '</ol>' +
         (function () { var so = soportacion(dc, r, s); return '<h4 class="k3-h">Materiales de referencia</h4>' + (so.items.length ? '<table class="k3-mat"><tbody>' + so.items.map(function (i) { return '<tr><td>' + i.cant + ' ' + i.un + '</td><td>' + esc(i.desc) + '</td></tr>'; }).join('') + '</tbody></table>' : '') +
           (so.sep ? '<p class="k3-ayuda">' + esc(so.refSep) + ', más una abrazadera a cada lado de cada caja.' + (so.nSop ? '' : ' Indica el largo del tramo para contar los soportes.') + '</p>' : '<p class="k3-ayuda">' + esc(so.notaSop || '') + '</p>') +
           (so.caja ? '<p class="k3-ayuda">' + (so.cajas ? '' : 'Este tramo no necesita caja de paso; si se intercala una: ' + esc(so.caja.n) + '. ') + esc(so.caja.ref) + '.</p>' : '') + '<p class="k3-ayuda">Medidas según ' + MJM + '. Cantidades referenciales: confirmar en terreno y con el fabricante.</p>'; })() +
-        '<p class="k3-ayuda">Flexible 4 ×, alambre o cableado concéntrico 8 ×, apantallado 12 × el diámetro exterior. Tubería metálica según Tabla N°4.22 si el fabricante no indica otro radio.</p>' +
+        '<p class="k3-ayuda">Flexible 4 ×, alambre o cableado concéntrico 8 ×, apantallado 12 × el diámetro exterior. La fibra óptica usa el radio mínimo que indica su fabricante. Tubería metálica según Tabla N°4.22 si el fabricante no indica otro radio.</p>' +
         '<p class="k3-ayuda">El diámetro del tubo se dibuja ampliado para poder verlo; los largos y las curvas mantienen su proporción. Arrastra para girar y usa la rueda para acercar.</p>';
     } else
     $('#k3dLey').innerHTML = '<ol>' + r.lista.map(function (x) { var sv = servDe(x.k.f); return '<li><span class="kserv" style="background:' + SERV[sv].c + '">' + SERV[sv].n.slice(0, 4).toUpperCase() + '</span><b>' + esc(x.c.tag || '(sin tag)') + '</b><br>' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + ' · Ø ' + n1(x.d, 1) + ' mm</li>'; }).join('') + '</ol>' +
@@ -1116,7 +1131,7 @@
       corePos(d, k).forEach(function (c, j) {
         var cy = y + c.y, cz = z + c.x, xe = xc + (j % 3) * d * 0.12;
         cables.add(cil(c.r, xf, xe, c.cu ? mat('#2b2b2b', 0.6, 0) : mat(c.c, 0.45, 0.02), cy, cz));
-        cables.add(cil(c.r * 0.55, xe, xe + Math.max(3, d * 0.25), mat('#d18b47', 0.25, 1), cy, cz));
+        cables.add(cil(c.r * (k.fo ? 0.3 : 0.55), xe, xe + Math.max(3, d * 0.25), k.fo ? mat('#cfeeff', 0.15, 0.1) : mat('#d18b47', 0.25, 1), cy, cz));
       });
       var div = document.createElement('div'); div.className = 'k3-lbl'; div.textContent = (i + 1) + (x.c.tag ? ' · ' + x.c.tag : '');
       var lb = new L.CSS2DObject(div); lb.position.set(xc + d * 0.6, y + d * 0.55, z); cables.add(lb); etqs.push(lb);
