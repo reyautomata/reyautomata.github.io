@@ -588,7 +588,7 @@
   function lstDatos() { var b = datos(); b.lst = b.lst || { num: '', proy: '', notas: '' }; return b.lst; }
   function lstFilas() {
     return datos().ductos.map(function (dc) { var r = calcular(dc), T = r.T;
-      return [dc.tag || '', T.n.replace(/ \(formato original\)/, '') + (dc.cond === 'subt' ? ' · subterráneo' : ''), r.elegido ? r.elegido.s[0] : (r.n ? 'NO ALCANZA' : dc.min || '—'), dc.serv || '', dc.largo === '' || dc.largo == null ? '' : String(dc.largo).replace('.', ','), up(dc.plano || ''), dc.obs || dc.ruta || '', up(dc.rev || '')]; });
+      return [dc.tag || '', T.n.replace(/ \(formato original\)/, '') + (dc.cond === 'subt' ? ' · subterráneo' : ''), r.elegido ? r.elegido.s[0] : (r.n ? 'NO ALCANZA' : dc.min || '—'), dc.serv || '', dc.largo === '' || dc.largo == null ? '' : String(dc.largo).replace('.', ','), up(dc.plano || ''), dc.obs || dc.ruta || '', up(dc.rev || docVig('listado'))]; });
   }
   function lstNotas() { return String(lstDatos().notas || '').split(/\n+/).map(function (t) { return t.trim(); }).filter(Boolean); }
   function lstHtml() {
@@ -608,21 +608,74 @@
     lstNotas().forEach(function (t, k) { h.combinar(f0 + 2 + f.length + k, 0, f0 + 2 + f.length + k, 7, t, { sz: 9, borde: 'none', wrap: true }); });
     A.descargar((l.num ? up(l.num).replace(/[\\/:*?"<>|]+/g, '-') : 'Listado_de_canalizaciones') + '.xlsx', X.generar(lb), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   }
-  function lstAbrir() {
-    var dlg = $('#kLst');
-    if (!dlg) {
-      dlg = document.createElement('dialog'); dlg.id = 'kLst';
-      dlg.innerHTML = '<div class="klst-cab"><b>Listado de canalizaciones</b><button type="button" class="pri" data-a="xls">Descargar Excel</button><button type="button" data-a="pdf">Imprimir / PDF</button><button type="button" data-a="x">Cerrar</button></div>' +
-        '<div class="klst-cuerpo"><div class="klst-ed"><label>N° de documento<input data-l="num" placeholder="Ej.: PRY-0400-EL-LEQ-00001"></label><label>Proyecto o área<input data-l="proy" placeholder="Opcional"></label><label>Notas al pie (una por línea)<textarea data-l="notas" rows="4" placeholder="Nota 1: …"></textarea></label>' +
-        '<p class="klst-ay">Cada fila sale de un ducto. Servicio, plano, observaciones y revisión se escriben en la ficha del ducto, en «Datos para el listado». Si no hay observación se usa la ruta del tramo.</p></div><div class="klst-prev" id="kLstPrev"></div></div>';
-      document.body.appendChild(dlg);
-      dlg.addEventListener('input', function (e) { var k = e.target.dataset.l; if (!k) return; lstDatos()[k] = e.target.value; A.guardar(); $('#kLstPrev').innerHTML = lstHtml(); });
-      dlg.addEventListener('click', function (e) { var b = e.target.closest('button[data-a]'); if (!b) return; var a = b.dataset.a;
-        if (a === 'x') dlg.close(); else if (a === 'xls') lstExcel(); else { dlg.close(); $('#imp').innerHTML = '<div class="pg h klst-imp">' + lstHtml() + '</div>'; setTimeout(function () { window.print(); }, 150); } });
-    }
-    var l = lstDatos(); [].forEach.call(dlg.querySelectorAll('[data-l]'), function (q) { q.value = l[q.dataset.l] || ''; });
-    $('#kLstPrev').innerHTML = lstHtml(); dlg.showModal();
+  // ── Documento a emitir: memoria de cortes de ductos o listado de canalizaciones con su anexo ──
+  //    Cada uno lleva su propio cuadro de revisiones. La vista previa se rehace al actualizar la revisión y es lo que se registra al emitir.
+  var DOCS = { memoria: 'Memoria de cortes de ductos', listado: 'Listado de canalizaciones y anexo' };
+  function docs() { var b = datos(); b.docs = b.docs || {}; if (!DOCS[b.docs.sel]) b.docs.sel = 'memoria'; b.docs.memoria = b.docs.memoria || {}; b.docs.listado = b.docs.listado || {}; return b.docs; }
+  function docRevs(id) { var d = docs()[id]; return d && d.revs ? d.revs : null; }
+  function docFilas(id) { var c = window.LAZOS_COND && window.LAZOS_COND.comunes; return docRevs(id) || (c ? c() : []) || []; }
+  function docVig(id) { var f = docFilas(id); return f.length ? String(f[f.length - 1].rev || '') : ''; }
+  function docNum(id) { return id === 'listado' ? lstDatos().num || '' : docs().memoria.num || ''; }
+  function docCab(id, tit) {
+    var f = docFilas(id), u = f[f.length - 1] || {}, l = lstDatos();
+    return '<div class="tit">' + tit + '</div><table class="datos"><tbody><tr><td>Documento N°</td><td>' + esc(up(docNum(id))) + '</td></tr>' + (l.proy ? '<tr><td>Proyecto</td><td>' + esc(l.proy) + '</td></tr>' : '') + '<tr><td>Revisión</td><td>' + esc(u.rev || '') + '</td></tr><tr><td>Fecha</td><td>' + esc(u.fecha || '') + '</td></tr></tbody></table>' +
+      '<h3>Control de revisiones</h3><table class="kdoc-rev"><thead><tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th></tr></thead><tbody>' +
+      (f.map(function (x) { return '<tr><td>' + esc(x.rev || '') + '</td><td>' + esc(x.fecha || '') + '</td><td class="izq">' + esc(x.desc || '') + '</td><td>' + esc(x.por || '') + '</td><td>' + esc(x.reviso || '') + '</td><td>' + esc(x.aprobo || '') + '</td></tr>'; }).join('') || '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>') + '</tbody></table>';
   }
+  function docHtml(id) {
+    var b = datos(), n = b.ductos.length, o = '<div class="kdoc">';
+    if (id === 'listado') {
+      var tot = 0, planos = []; b.ductos.forEach(function (d) { tot += parseFloat(String(d.largo).replace(',', '.')) || 0; var q = up(d.plano || '').trim(); if (q && planos.indexOf(q) < 0) planos.push(q); });
+      o += '<div class="pg v kdoc-pg">' + docCab(id, 'LISTADO DE CANALIZACIONES') +
+        '<h3>1. Objetivo</h3><p>Este documento entrega el listado de las canalizaciones del proyecto, con sus características, dimensiones, servicio, largo y plano donde se ubica cada una.</p>' +
+        '<h3>2. Alcance</h3><p>El listado incluye ' + n + ' canalización' + (n === 1 ? '' : 'es') + (tot ? ', con un largo total de ' + n1(tot, 1) + ' m' : '') + '. Los largos son referenciales y deben confirmarse en terreno.</p>' +
+        '<h3>3. Criterios</h3><p>El tamaño de cada ducto se determinó según el porcentaje de ocupación del Pliego Técnico Normativo RIC N°04 de la SEC (Tabla N°4.21), con los cables indicados en la memoria de cálculo de canalizaciones.</p>' +
+        '<h3>4. Documentos de referencia</h3>' + (planos.length ? '<p>' + planos.map(esc).join('<br>') + '</p>' : '<p>Planos de disposición y canalización del proyecto.</p>') +
+        '<h3>5. Anexos</h3><p>Anexo A: Listado de canalizaciones.</p></div>' +
+        '<div class="pg h kdoc-pg"><p class="kdoc-an">ANEXO A</p>' + lstHtml() + '</div>';
+    } else {
+      o += '<div class="pg v kdoc-pg">' + docCab(id, 'MEMORIA DE CÁLCULO DE CANALIZACIONES<br>CORTES DE DUCTOS') +
+        '<h3>1. Objetivo</h3><p>Determinar el tamaño de cada ducto según los cables que lleva y mostrar su corte con los cables acomodados.</p>' +
+        '<h3>2. Criterios</h3><p>Ocupación máxima según RIC N°04 de la SEC, Tabla N°4.21: 50 % con un conductor y 33 % con dos o más. Tramos de hasta 20 m con no más de dos curvas (7.16.1.13).</p>' +
+        '<h3>3. Resumen</h3><table><thead><tr><th>Ducto</th><th>Tubería</th><th>N° cables</th><th>Ocupación</th><th>Límite</th><th>Tamaño</th></tr></thead><tbody>' +
+        b.ductos.map(function (dc) { var r = calcular(dc); return '<tr><td>' + esc(dc.tag) + '</td><td class="izq">' + esc(r.T.c) + '</td><td>' + r.n + '</td><td>' + (r.elegido ? n1(r.elegido.occ, 1) + ' %' : '—') + '</td><td>' + r.lim + ' %</td><td>' + (r.elegido ? esc(r.elegido.s[0]) : r.n ? 'NO ALCANZA' : '—') + '</td></tr>'; }).join('') + '</tbody></table>' +
+        '<h3>4. Anexo</h3><p>Una lámina por ducto con su corte, tabla de cables y memoria.</p></div>' +
+        (b.ductos.filter(function (d) { return d.cables.length; }).map(function (d) { return '<div class="hojaImp kdoc-lam">' + lamina(d) + '</div>'; }).join('') || '<div class="hojaImp kdoc-lam">' + lamina(actual()) + '</div>');
+    }
+    return o + '</div>';
+  }
+  function docCaja() {
+    var box = $('#kDocBox'); if (box) return box; var sec = $('#v-cond'); if (!sec) return null;
+    box = document.createElement('div'); box.id = 'kDocBox';
+    box.innerHTML = '<div class="kdoc-barra"><span class="kdoc-seg" role="group" aria-label="Documento a emitir">' + Object.keys(DOCS).map(function (k) { return '<button type="button" data-doc="' + k + '">' + DOCS[k] + '</button>'; }).join('') + '</span><button type="button" class="pri" data-da="pdf">Imprimir / PDF</button><button type="button" data-da="xls">Descargar Excel</button></div>' +
+      '<div class="kdoc-id"><label>N° de documento<input data-dl="num" placeholder="Ej.: PRY-0400-EL-LEQ-00001"></label><label>Proyecto o área<input data-dl="proy" placeholder="Opcional"></label><label class="kdoc-notas">Notas al pie del anexo (una por línea)<textarea data-dl="notas" rows="2" placeholder="Nota 1: …"></textarea></label></div>' +
+      '<div class="kdoc-revs" id="kDocRevs"></div><p class="kdoc-ay" id="kDocAy"></p><div id="kDoc"></div>';
+    sec.appendChild(box);
+    box.addEventListener('click', function (e) { var t = e.target.closest('button'); if (!t) return;
+      if (t.dataset.doc) { docs().sel = t.dataset.doc; A.guardar(); pintarDoc(true); }
+      else if (t.dataset.da === 'pdf') { $('#imp').innerHTML = docHtml(docs().sel); setTimeout(function () { window.print(); }, 150); }
+      else if (t.dataset.da === 'xls') { if (docs().sel === 'listado') lstExcel(); else excel(); }
+      else if (t.dataset.rv) { var id = docs().sel, f = JSON.parse(JSON.stringify(docFilas(id))); if (t.dataset.rv === '+') { var d = new Date(); f.push({ rev: '', fecha: ('0' + d.getDate()).slice(-2) + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + d.getFullYear(), desc: '', por: '', reviso: '', aprobo: '' }); } else f.splice(+t.dataset.rv, 1); docs()[id].revs = f; A.guardar(); pintarDoc(true); } });
+    box.addEventListener('input', function (e) { var t = e.target, k = t.dataset.dl;
+      if (k) { if (k === 'num') { if (docs().sel === 'listado') lstDatos().num = t.value; else docs().memoria.num = t.value; } else lstDatos()[k] = t.value; A.guardar(); $('#kDoc').innerHTML = docHtml(docs().sel); return; }
+      if (t.dataset.rc) { var id = docs().sel, f = JSON.parse(JSON.stringify(docFilas(id))); f[+t.dataset.ri][t.dataset.rc] = t.dataset.rc === 'rev' ? t.value.toUpperCase() : t.value; docs()[id].revs = f; A.guardar(); $('#kDoc').innerHTML = docHtml(id); } });
+    if (window.IntersectionObserver) new IntersectionObserver(function (en) { if (en.some(function (x) { return x.isIntersecting; })) pintarDoc(true); }).observe(box);
+    return box;
+  }
+  function pintarDoc(forzar) {
+    var box = docCaja(); if (!box) return; if (!forzar && box.offsetParent === null) return;
+    var id = docs().sel, l = lstDatos(), mesa = !!(window.RE_EMISION && window.RE_EMISION.adaptadores && window.RE_EMISION.adaptadores['v-cond']);
+    [].forEach.call(box.querySelectorAll('[data-doc]'), function (q) { q.setAttribute('aria-pressed', String(q.dataset.doc === id)); });
+    [].forEach.call(box.querySelectorAll('[data-dl]'), function (q) { if (document.activeElement !== q) q.value = q.dataset.dl === 'num' ? docNum(id) : l[q.dataset.dl] || ''; });
+    box.querySelector('.kdoc-notas').hidden = id !== 'listado';
+    var rv = $('#kDocRevs');
+    if (mesa) { rv.innerHTML = ''; $('#kDocAy').textContent = 'Las revisiones se manejan en la pestaña «Control documental»: 1 · Actualizar revisiones (se refleja aquí para revisarla) y luego 2 · Emitir.'; }
+    else if (!(document.activeElement && document.activeElement.dataset.rc && rv.contains(document.activeElement))) { var f = docFilas(id);
+      rv.innerHTML = '<b>Revisiones del documento</b><table><thead><tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th><th></th></tr></thead><tbody>' + f.map(function (x, i) { return '<tr>' + ['rev', 'fecha', 'desc', 'por', 'reviso', 'aprobo'].map(function (k) { return '<td><input data-ri="' + i + '" data-rc="' + k + '" value="' + esc(x[k] || '') + '" aria-label="' + k + '"></td>'; }).join('') + '<td><button type="button" data-rv="' + i + '" title="Quitar esta revisión" aria-label="Quitar revisión">×</button></td></tr>'; }).join('') + '</tbody></table><button type="button" data-rv="+">+ Agregar revisión</button>';
+      $('#kDocAy').textContent = 'Agrega o corrige la revisión, revisa el documento abajo y luego imprime o descarga.'; }
+    $('#kDoc').innerHTML = docHtml(id);
+  }
+  function lstAbrir() { docs().sel = 'listado'; A.guardar(); var box = docCaja(); if (!box) return; var tab = document.querySelector('#v-cond .dk-tab[data-id=doc]'); if (tab) tab.click(); pintarDoc(true); setTimeout(function () { var q = $('#kDocBox'); if (q) q.scrollIntoView({ block: 'start' }); }, 60); }
   // ── Excel de memoria de cálculo ──
   function excel() {
     var X = window.XLSX_RE, lb = X.libro(), b = datos(), AZ = '022A55', h = lb.hoja('DUCTOS', { orientacion: 'landscape' });
@@ -755,10 +808,12 @@
       '#kNor blockquote{margin:0 10px 10px;padding:8px 10px;background:#071423;border-radius:6px;border-left:3px solid #3a5a80;color:#dfe7ef;font-size:12.5px;line-height:1.5}',
       '#kNor .kn-pie{margin:0;padding:10px 14px 14px;border-top:1px solid #24405f;font-size:11.5px;color:#9fb0c3}',
       '#k3dBtn{margin-top:8px}',
-      '#kLst{width:min(1320px,96vw);height:min(840px,92vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}#kLst[open]{display:flex;flex-direction:column}#kLst::backdrop{background:rgba(2,10,20,.7)}',
-      '#kLst .klst-cab{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#022A55;border-bottom:2px solid #E8A317}#kLst .klst-cab b{flex:1;font-size:15px}',
-      '#kLst .klst-cuerpo{flex:1;min-height:0;display:grid;grid-template-columns:290px 1fr}#kLst .klst-ed{padding:14px;border-right:1px solid #223a57;overflow:auto;display:grid;gap:10px;align-content:start}#kLst .klst-ed label{display:grid;gap:4px;font-size:12px;color:#9fb0c3}#kLst .klst-ed input,#kLst .klst-ed textarea{font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid #3a5a80;background:#0e2238;color:#e8eef5}#kLst .klst-ay{margin:0;font-size:12px;color:#9fb0c3;line-height:1.45}',
-      '#kLst .klst-prev{overflow:auto;padding:18px;background:#16273b}@media(max-width:820px){#kLst .klst-cuerpo{grid-template-columns:1fr}#kLst .klst-ed{border-right:0;border-bottom:1px solid #223a57}}',
+      '#kDocBox{margin-top:16px;display:grid;gap:10px}#kDocBox .kdoc-barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}#kDocBox .kdoc-seg{display:inline-flex;border:1.5px solid #E8A317;border-radius:9px;overflow:hidden;margin-right:auto}#kDocBox .kdoc-seg button{border:0;border-radius:0;padding:7px 13px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}#kDocBox .kdoc-seg button[aria-pressed=true]{background:#E8A317;color:#1b1203}',
+      '#kDocBox .kdoc-id{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}#kDocBox .kdoc-id label{display:grid;gap:3px;font-size:12px;color:#9fb0c3}#kDocBox .kdoc-id input,#kDocBox .kdoc-id textarea,#kDocBox .kdoc-revs input{font:inherit;font-size:13px;padding:5px 7px;border-radius:6px;border:1px solid #3a5a80;background:#0e2238;color:#e8eef5;width:100%;box-sizing:border-box}#kDocBox .kdoc-notas{grid-column:1/-1}',
+      '#kDocBox .kdoc-revs:empty{display:none}#kDocBox .kdoc-revs table{width:100%;border-collapse:collapse;margin:6px 0}#kDocBox .kdoc-revs th{font-size:11px;color:#9fb0c3;text-align:left;padding:2px 4px}#kDocBox .kdoc-revs td{padding:2px}#kDocBox .kdoc-ay{margin:0;font-size:12px;color:#9fb0c3}',
+      '#kDoc{background:#16273b;padding:14px;border-radius:8px;overflow:auto}.kdoc{display:grid;gap:14px;justify-items:start;width:max-content;min-width:100%}.kdoc .pg.h{width:297mm;max-width:none}.kdoc .kdoc-lam{width:297mm;background:#fff;box-shadow:0 6px 30px rgba(0,0,0,.45)}.kdoc .kdoc-lam svg{width:100%;height:auto;display:block}',
+      '.kdoc .pg td{text-align:center}.kdoc .pg td.izq,.kdoc .pg .datos td{text-align:left}.kdoc .kdoc-an{text-align:center;font-weight:700;color:#022A55;margin:0 0 4mm}.kdoc .klst-hoja{box-shadow:none;padding:0;min-width:0;font-size:9pt}',
+      '@media print{#imp .kdoc{display:block}#imp .kdoc .pg.h{width:auto}#imp .kdoc .kdoc-lam{width:420mm;box-shadow:none}#imp .kdoc .kdoc-lam svg{width:420mm;height:297mm}}',
       '.klst-hoja{background:#fff;color:#111;padding:14mm 12mm;min-width:900px;font:11px Arial,Helvetica,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.4)}.klst-tit{text-align:center;margin-bottom:10px;line-height:1.5}.klst-tit b{display:block;font-size:14px}.klst-tit span{display:block;font-weight:700;font-size:13px}.klst-tit small{display:block;font-size:11px;color:#333}',
       '.klst-t{width:100%;border-collapse:collapse}.klst-t th,.klst-t td{border:1px solid #111;padding:5px 7px;text-align:center;vertical-align:middle;color:#111;background:#fff}.klst-t th{background:#022A55;color:#fff;font-size:10.5px}.klst-t td.izq{text-align:left}.klst-n{margin:8px 0 0;font-size:10.5px;color:#111}',
       '@media print{#imp .klst-hoja{box-shadow:none;padding:0;min-width:0}#imp .klst-t thead{display:table-header-group}#imp .klst-t tr{break-inside:avoid}#imp .klst-t th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
@@ -1135,6 +1190,7 @@
   var listo = false;
   function enganchar() {
     if (listo) return; listo = true;
+    docCaja(); var _pintar = pintar; pintar = function () { _pintar.apply(this, arguments); try { pintarDoc(); } catch (e) { console.warn('Documento', e); } };
     cssExtra(); montarCatalogo();
     var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
     var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
@@ -1166,7 +1222,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
-  window.LAZOS_COND = { soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { docs: docs, docRevs: docRevs, docHtml: docHtml, docNum: docNum, DOCS: DOCS, docPoner: function (id, f) { docs()[id].revs = f; }, docSel: function () { return docs().sel; }, docDescargar: function (id, f) { if (/excel/i.test(f)) { if (id === 'listado') lstExcel(); else excel(); } else { $('#imp').innerHTML = docHtml(id); setTimeout(function () { window.print(); }, 150); } }, soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
