@@ -168,7 +168,8 @@
       '.cj-svg .cj-cab{fill:none;stroke-width:2.2;stroke-linecap:round;opacity:.85}.cj-svg .cj-cs{stroke:#0B6E99;stroke-width:4}.cj-svg .cj-riel{fill:#c7ced6;stroke:#1F2A36;stroke-width:1}.cj-svg .cj-bor{stroke:#1F2A36;stroke-width:.5}.cj-svg .cj-mas circle{fill:#FF8C32;stroke:#7a3a05}.cj-svg .cj-mas path{stroke:#1b0d02;stroke-width:2;fill:none}.cj-svg .cj-cota path{stroke:#B3261E;stroke-width:.8;fill:none}.cj-svg .cj-cota text{fill:#B3261E}',
       '#kCj .cj-res{margin:0;padding:9px 11px;border:1.5px solid #E8A317;border-radius:8px;background:rgba(232,163,23,.1);font-size:13px;line-height:1.5}#kCj .cj-res b{color:#ffd27a;font-size:15px}#kCj .cj-av{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12.5px}#kCj .cj-av li{padding:6px 9px;border-radius:6px;border-left:3px solid #3FB950;background:rgba(63,185,80,.1)}#kCj .cj-av li.warn{border-color:#E6A23C;background:rgba(230,162,60,.1)}#kCj .cj-av li.err{border-color:#F85149;background:rgba(248,81,73,.12)}#kCj .cj-av small{display:block;color:#9fb0c3}',
       '#kCj .cj-mat{width:100%;border-collapse:collapse;font-size:12px}#kCj .cj-mat td{padding:4px 6px;border-bottom:1px solid #223a57;vertical-align:top}#kCj .cj-mat td:first-child{white-space:nowrap;font-weight:700;color:#ffd27a}#kCj .cj-mat small{color:#9fb0c3}',
-      '#imp .cj-imp h2{font-size:13pt;color:#022A55;margin:0 0 3mm}#imp .cj-imp svg{width:170mm;height:auto;border:0.5pt solid #9FB0C3}#imp .cj-imp td.izq{text-align:left}'].join('\n');
+      '#kCj.cj-solo .cj-cuerpo{grid-template-columns:1fr}#kCjCfg{margin-top:0;border:0;background:transparent}#kCjCfg .cj-cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));align-items:start}#kCjCfg .cj-izq,#kCjCfg .cj-der{border:0;padding:6px 4px}',
+      '#imp .cj-imp h2{font-size:13pt;color:#022A55;margin:0 0 3mm}#imp .cj-imp svg{width:170mm;height:auto;border:0.5pt solid #9FB0C3}#imp .cj-imp td.izq{text-align:left}'].join('\n').replace(/#kCj(?=[ .{\[:])/g, ':is(#kCj,#kCjCfg)');
     document.head.appendChild(st);
   }
   // La caja vive en un bloque de la sección (#kCjBox): en la suite es la pestaña «Caja de paso / derivación»; en Conduit queda al final de la página
@@ -178,13 +179,17 @@
     r.innerHTML = '<div class="cj-cab"><b>Caja de paso / derivación</b><select id="cjSel" aria-label="Caja"></select><button type="button" data-a="nueva">+ Nueva caja</button><button type="button" data-a="borrar" class="pel">Eliminar</button><span class="esp"></span><button type="button" class="pri" data-a="ducto" title="Lleva al proyecto un ducto por cada entrada y el ducto de salida, con sus circuitos, rutas y tags">Crear ductos en el proyecto</button><button type="button" data-a="pdf">Imprimir / PDF</button></div>' +
       '<div class="cj-cuerpo"><div class="cj-izq" id="cjIzq"></div><div class="cj-cen"><span class="cj-vista" role="group" aria-label="Vista"><button type="button" data-v="2d" aria-pressed="true">Vista 2D</button><button type="button" data-v="3d" aria-pressed="false">Vista 3D</button></span><div id="cjDib"></div><div class="cj-3d" id="cj3d" hidden></div><p class="cj-ay" id="cjAy"></p></div><div class="cj-der" id="cjDer"></div></div>';
     cont.appendChild(r);
+    // En la suite, la configuración y el resultado van en su propia pestaña de la ventana derecha; a la izquierda queda solo el visor
+    var cfgBox = $('#kCjCfgBox'); if (cfgBox) { var cf = document.createElement('div'); cf.id = 'kCjCfg'; cf.innerHTML = '<div class="cj-cfg"></div>'; cf.firstChild.append($('#cjIzq', r), $('#cjDer', r)); cfgBox.appendChild(cf); r.classList.add('cj-solo');
+      cf.addEventListener('click', clic); cf.addEventListener('input', entrada); cf.addEventListener('change', entrada); }
     r.addEventListener('click', clic); r.addEventListener('input', entrada); r.addEventListener('change', entrada);
     r.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.cj-svg [tabindex]')) { e.preventDefault(); clic(e); } });
     r.addEventListener('pointerdown', arrastre);
-    if (window.ResizeObserver) new ResizeObserver(function () { var w = r.clientWidth; r.classList.toggle('cj-ang', w < 1080 && w >= 640); r.classList.toggle('cj-uno', w > 0 && w < 640); }).observe(r);
-    if (window.IntersectionObserver) new IntersectionObserver(function (en) { if (en.some(function (x) { return x.isIntersecting; })) pintar(true); }).observe(r);
+    if (window.ResizeObserver && !cfgBox) new ResizeObserver(function () { var w = r.clientWidth; r.classList.toggle('cj-ang', w < 1080 && w >= 640); r.classList.toggle('cj-uno', w > 0 && w < 640); }).observe(r);
+    if (window.IntersectionObserver) new IntersectionObserver(function (en) { if (en.some(function (x) { return x.isIntersecting; })) { pintar(true); verCfg(); } }).observe(r);
     return r;
   }
+  function verCfg() { var t = document.querySelector('#v-cond .dk-tab[data-id=cajacfg]'); if (t && !t.classList.contains('on')) t.click(); }
   function abrir() { var r = montar(); if (!r) return; selE = null; pintar(true); setTimeout(function () { r.scrollIntoView({ block: 'start' }); }, 60); }
   // ── Vista 3D ──
   var ver3 = false, e3 = null, t3 = null;
@@ -246,7 +251,7 @@
       else if (a === 'ducto') return crearDucto();
       else if (a === 'pdf') return imprimir();
       guardar(); return pintar(true); }
-    if (g) { if (g.dataset.add) { var ne = ent(g.dataset.add), ult = cj.ent[cj.ent.length - 1]; if (ult) { ne.cat = ult.cat; } cj.ent.push(ne); selE = ne.id; guardar(); } else if (g.dataset.e) selE = g.dataset.e; else selE = 'sal'; return pintar(true); }
+    if (g) { verCfg(); if (g.dataset.add) { var ne = ent(g.dataset.add), ult = cj.ent[cj.ent.length - 1]; if (ult) { ne.cat = ult.cat; } cj.ent.push(ne); selE = ne.id; guardar(); } else if (g.dataset.e) selE = g.dataset.e; else selE = 'sal'; return pintar(true); }
     if (it) { selE = it.dataset.it; pintar(true); }
   }
   function entrada(e) {
