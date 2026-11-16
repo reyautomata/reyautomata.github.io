@@ -328,7 +328,7 @@ body.rs-portada header.top .rs-tabsw { padding: 0 14px; max-width: none; }
   body.rs-d1:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) th { font-size: 10px !important; padding-top: 3px !important; padding-bottom: 3px !important; }
   body.rs-d1 .dk-tab, body.rs-d2 .dk-tab { font-size: 11px; padding: 0 10px; } body.rs-d1 .dk-cab, body.rs-d2 .dk-cab { min-height: 26px; }
   body.rs-d1 .dkm-p, body.rs-d2 .dkm-p { padding: 8px 10px; }
-  body.rs-d1 .dkm-em, body.rs-d2 .dkm-em { font-size: 11.5px; gap: 6px; } body.rs-d1 .dkm-p dl.pr, body.rs-d2 .dkm-p dl.pr { font-size: 11.5px; } body.rs-d1 .dkm-p .reg, body.rs-d2 .dkm-p .reg { font-size: 11.5px; padding: 4px 8px; }
+  body.rs-d1 .dkm-em, body.rs-d2 .dkm-em { font-size: 11.5px; gap: 6px; } body.rs-d1 .dkm-p dl.dkm-dl, body.rs-d2 .dkm-p dl.dkm-dl { font-size: 11.5px; } body.rs-d1 .dkm-p .reg, body.rs-d2 .dkm-p .reg { font-size: 11.5px; padding: 4px 8px; }
   body.rs-d1 .itlazo, body.rs-d2 .itlazo { padding: 5px 9px !important; gap: 0 !important; } body.rs-d1 .itlazo b, body.rs-d2 .itlazo b { font-size: 12px; } body.rs-d1 .itlazo span, body.rs-d2 .itlazo span { font-size: 11.5px; } body.rs-d1 .itlazo small, body.rs-d2 .itlazo small { font-size: 10.5px; }
   body.rs-d1 .zm-barra, body.rs-d2 .zm-barra { font-size: 11px; } body.rs-d1 .zm-barra button, body.rs-d2 .zm-barra button { font-size: 11.5px !important; padding: 1px 8px !important; min-height: 22px !important; }
   body.rs-d1:not(.rs-portada) .barra h1, body.rs-d2:not(.rs-portada) .barra h1 { font-size: 13px !important; }
@@ -344,6 +344,6 @@ body.rs-portada header.top .rs-tabsw { padding: 0 14px; max-width: none; }
   body.rs-d2:not(.rs-portada):not(.exp) main label { font-size: 10px !important; }
   body.rs-d2:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { font-size: 10.5px; }
   body.rs-d2:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) th { font-size: 9.5px !important; padding-top: 2px !important; padding-bottom: 2px !important; }
-  body.rs-d2 .dk-tab { font-size: 10.5px; } body.rs-d2 .dkm-em, body.rs-d2 .dkm-p dl.pr, body.rs-d2 .dkm-p .reg { font-size: 10.5px; }
+  body.rs-d2 .dk-tab { font-size: 10.5px; } body.rs-d2 .dkm-em, body.rs-d2 .dkm-p dl.dkm-dl, body.rs-d2 .dkm-p .reg { font-size: 10.5px; }
   body.rs-d2 .rs-arbol .nodo { min-height: 19px !important; font-size: 10.5px !important; }
 }

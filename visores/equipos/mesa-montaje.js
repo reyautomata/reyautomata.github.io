@@ -56,6 +56,17 @@
   // La revisión vigente del cuadro se escribe en la viñeta del plano (campo Revisión de la ventana de ajuste del visor)
   function vineta() { var d = detalle(); if (!d) return; var r = (datos().det[d.code] || {}).revs; if (!r) return; var u = r[r.length - 1] || {}; ponerCampo('Revisión', u.rev || ''); if (u.por) ponerCampo('Dibujó', u.por); if (u.reviso) ponerCampo('Revisó', u.reviso); if (u.aprobo) ponerCampo('Aprobó', u.aprobo); }
 
+  // Pestaña Propiedades: ficha del detalle en pantalla, su lista de materiales y sus notas (tal como las muestra el visor)
+  function bom() { var d = D(), f = []; if (!d) return f; [].some.call(d.querySelectorAll('aside table'), function (tb) { if (!/ÍTEM|ITEM/i.test(txt(tb.querySelector('thead') || tb.rows[0]))) return false; [].forEach.call(tb.querySelectorAll('tbody tr'), function (r) { var c = [].map.call(r.cells, txt); if (c.length >= 3) f.push(c.slice(0, 3)); }); return true; }); return f; }
+  if (window.RE_PROP_EXTRA) window.RE_PROP_EXTRA.viewer = function () {
+    var de = detalle(); if (!de) return '<p class="nota">Abriendo el visor…</p>'; var d = D(), b = bom(), r = (datos().det[de.code] || {}).revs || [], u = r[r.length - 1], notas = [];
+    [].forEach.call(d.querySelectorAll('aside .notas li, aside p, aside li'), function (li) { var t = txt(li); if (t && (li.closest('.notas') || /^Nota\s*\d+/i.test(t)) && notas.indexOf(t) < 0 && notas.length < 12) notas.push(t); });
+    var h = '<h3 class="dkm-t">Detalle de montaje</h3><dl class="dkm-dl"><dt>Código</dt><dd>' + esc(de.code) + '</dd><dt>Tipo</dt><dd>' + esc(de.name) + '</dd><dt>Visor</dt><dd>' + esc((viewer.dataset.title || '').replace(/^Visor 3D /, '')) + '</dd>' +
+      '<dt>N° de plano</dt><dd>' + esc((campo('N° de plano') || {}).value || '—') + '</dd><dt>Revisión</dt><dd>' + (u ? esc(u.rev) + ' · ' + esc(u.fecha) : 'sin revisión') + '</dd><dt>Materiales</dt><dd>' + b.length + ' ítem(s)</dd></dl>';
+    if (b.length) h += '<h3 class="dkm-t">Lista de materiales</h3><table class="dkm-bom"><tr><th>Ítem</th><th>Descripción</th><th>Cant.</th></tr>' + b.map(function (f) { return '<tr><td>' + esc(f[0]) + '</td><td>' + esc(f[1]) + '</td><td>' + esc(f[2]) + '</td></tr>'; }).join('') + '</table>';
+    if (notas.length) h += '<h3 class="dkm-t">Notas de montaje</h3><ul class="dkm-notas">' + notas.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>';
+    return h;
+  };
   // ── Plano 2D: se pide la lámina al visor y se muestra a la par ──
   function generar(luego) {
     var w = W(); if (!w || !w.__planoGen) return; if (generando) { if (luego) cola.push(luego); return; }   // si ya se está generando, la descarga espera a esa lámina
