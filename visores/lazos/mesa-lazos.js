@@ -26,7 +26,7 @@
     ,
     'v-blq': { paneles: [{ id: 'datos', titulo: 'Plano y consultas', mover: ['.uni > div:nth-child(1)'] }, { id: 'plano', titulo: 'Diagrama', mover: ['.uni > div:nth-child(2)'], zoom: '#bHojas' }, { id: 'equipos', titulo: 'Equipos', mover: [antes('#bNodos'), caja('#bNodos')] }, { id: 'enlaces', titulo: 'Enlaces', mover: [antes('#bEnlaces'), caja('#bEnlaces')] }],
       inicial: { t: 'row', c: [{ t: 'tabs', p: ['datos'], a: 'datos' }, { t: 'col', c: [{ t: 'tabs', p: ['plano'], a: 'plano' }, { t: 'tabs', p: ['equipos', 'enlaces'], a: 'equipos' }], s: [0.62, 0.38] }, COM], s: [0.22, 0.55, 0.23] }, limpiar: ['.uni', ':scope > h2.grupo'] },
-    'v-cond': { principal: 'corte', paneles: [{ id: 'ductos', titulo: 'Ductos', mover: [':scope > .herr', '#kEstado', caja('#kDuctos')] }, { id: 'datos', titulo: 'Datos del ducto', mover: ['.uni > div:nth-child(1)'] }, { id: 'corte', titulo: 'Corte y memoria', mover: ['.uni > div:nth-child(2)'] }, { id: 'cables', titulo: 'Cables', mover: [antes('#kCables'), caja('#kCables')] }],
+    'v-cond': { clave: 'v-cond-2', principal: 'corte', principales: [['corte', 'doc']], paneles: [{ id: 'doc', titulo: 'Documento', mover: ['#kDocBox'], zoom: '#kDoc' }, { id: 'ductos', titulo: 'Ductos', mover: [':scope > .herr', '#kEstado', caja('#kDuctos')] }, { id: 'datos', titulo: 'Datos del ducto', mover: ['.uni > div:nth-child(1)'] }, { id: 'corte', titulo: 'Corte y memoria', mover: ['.uni > div:nth-child(2)'] }, { id: 'cables', titulo: 'Cables', mover: [antes('#kCables'), caja('#kCables')] }],
       inicial: { t: 'row', c: [{ t: 'col', c: [{ t: 'tabs', p: ['ductos'], a: 'ductos' }, { t: 'tabs', p: ['datos'], a: 'datos' }], s: [0.4, 0.6] }, { t: 'col', c: [{ t: 'tabs', p: ['corte'], a: 'corte' }, { t: 'tabs', p: ['cables'], a: 'cables' }], s: [0.6, 0.4] }, COM], s: [0.27, 0.5, 0.23] }, limpiar: ['.uni', ':scope > h2.grupo'] }
   };
   // Emisión de diagramas de lazo desde el panel de Control documental: de a uno o por lote, con actualización de viñetas
@@ -60,6 +60,11 @@
       items: function () { var b = E().blq; return b ? [{ id: 'blq', codigo: b.plano || 'Diagrama de bloques', titulo: b.titulo || 'Diagrama de bloques de control', rev: b.revs ? ult(b.revs) : (b.rev || ult(comunes())) }] : []; },
       actual: function () { return E().blq ? 'blq' : null; }, leer: function () { var b = E().blq; return b && b.revs ? b.revs : null; }, comunes: comunes,
       escribir: function (id, f) { var b = E().blq; if (b) { b.revs = f; b.rev = ult(f); } }, repintar: function () { listo('blq'); } });
+    (function () { function C() { return window.LAZOS_COND; } if (C()) C().comunes = comunes;
+      EM.simple('v-cond', { gen: 'D01-CONDUIT', item: function (id) { return C().DOCS[id] || id; },
+        items: function () { var c = C(); return c ? Object.keys(c.DOCS).map(function (k) { return { id: k, codigo: c.docNum(k), titulo: c.DOCS[k], rev: ult(c.docRevs(k) || comunes()) }; }) : []; },
+        actual: function () { return C() ? C().docSel() : null; }, leer: function (id) { return C().docRevs(id); }, comunes: comunes, escribir: function (id, f) { C().docPoner(id, f); }, repintar: function () { listo('cond'); } });
+      var ad = EM.adaptadores['v-cond']; ad.vista = function (id) { return C().docHtml(id); }; ad.formatos = ['PDF', 'Excel']; ad.descargar = function (ids, f) { C().docDescargar(ids[0], f); }; })();
     [['v-doc', 'doc', 'D05-ES', 'Listado de entradas y salidas', 'doc'], ['v-inst', 'docInst', 'D05-INST', 'Listado de instrumentos', 'inst'], ['v-circ', 'docCirc', 'D05-CIRC', 'Listado de circuitos', 'circ'], ['v-mat', 'docMat', 'D05-MAT', 'Listado de materiales', 'mat']].forEach(function (c) {
       function d() { var e = E(); return e[c[1]] = e[c[1]] || {}; }
       EM.simple(c[0], { gen: c[2], item: function () { return c[3]; },
@@ -70,7 +75,7 @@
   // Descarga pedida desde la página de Control documental
   function pendiente() { var p = null; try { p = JSON.parse(sessionStorage.getItem('reyengi-descargar') || 'null'); sessionStorage.removeItem('reyengi-descargar'); } catch (e) {} if (p && p.gen === 'P02-LAZO' && window.__LAZOS) setTimeout(function () { window.__LAZOS.descargarLazos(p.ids || [], p.f || 'PDF'); }, 600); }
   if (document.readyState === 'complete') setTimeout(pendiente, 400); else window.addEventListener('load', function () { setTimeout(pendiente, 400); });
-  function montar(id) { var sec = document.getElementById(id), c = S[id]; if (!sec || !c || sec.hidden || sec.dataset.dkm) return; try { window.REMesaModulo(sec, { clave: c.clave || id, principal: c.principal, paneles: c.paneles, inicial: c.inicial, limpiar: c.limpiar }); } catch (e) { console.warn('Mesa de trabajo', id, e); } }
+  function montar(id) { var sec = document.getElementById(id), c = S[id]; if (!sec || !c || sec.hidden || sec.dataset.dkm) return; try { window.REMesaModulo(sec, { clave: c.clave || id, principal: c.principal, principales: c.principales, paneles: c.paneles, inicial: c.inicial, limpiar: c.limpiar }); } catch (e) { console.warn('Mesa de trabajo', id, e); } }
   function todas() { Object.keys(S).forEach(montar); }
   // Las secciones se muestran de a una: cada mesa se arma la primera vez que su sección queda visible
   Object.keys(S).forEach(function (id) { var sec = document.getElementById(id); if (sec) new MutationObserver(function () { setTimeout(function () { montar(id); }, 0); }).observe(sec, { attributes: true, attributeFilter: ['hidden'] }); });

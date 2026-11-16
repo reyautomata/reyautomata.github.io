@@ -257,8 +257,8 @@
         new MutationObserver(function () { [].forEach.call(nav.querySelectorAll('button, a'), function (b, i) { if (b.getAttribute('aria-selected') === 'true') sl.value = i; }); }).observe(nav, { attributes: true, subtree: true, attributeFilter: ['aria-selected'] }); }
       nAcc = n; } };
     var prs = cfg.principales || [principal];   // uno o más paneles principales a la izquierda (por ejemplo visor 3D y plano 2D, a la par)
-    var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return prs.indexOf(id) < 0; }), ['prop', 'ctrl']);
-    var inicial = { t: 'row', c: prs.map(function (id) { return { t: 'tabs', p: [id], a: id }; }).concat([{ t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }]), s: prs.length > 1 ? prs.map(function () { return 0.72 / prs.length; }).concat([0.28]) : [0.66, 0.34] };
+    var prsPl = [].concat.apply([], prs); /* un principal puede ser una lista de paneles que comparten grupo de pestañas */ var lado = (hayAcc ? ['acc'] : []).concat(cfg.paneles.map(function (p) { return p.id; }).filter(function (id) { return prsPl.indexOf(id) < 0; }), ['prop', 'ctrl']);
+    var inicial = { t: 'row', c: prs.map(function (id) { var l = [].concat(id); return { t: 'tabs', p: l, a: l[0] }; }).concat([{ t: 'tabs', p: lado, a: lado[hayAcc && lado.length > 3 ? 1 : 0] }]), s: prs.length > 1 ? prs.map(function () { return 0.72 / prs.length; }).concat([0.28]) : [0.66, 0.34] };
     var nProp, nCtrl, nReg, em; paneles.prop = { titulo: 'Propiedades', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nProp = n; } }; paneles.ctrl = { titulo: 'Control documental', montar: function (n) { n.classList.add('dkm-p', 'dkm-comun'); nCtrl = n; } };
     var dock = window.REDock(host, { clave: 'reyengi-dkm3-' + cfg.clave, paneles: paneles, inicial: inicial, alCambiar: function () { setTimeout(function () { avisar(); window.dispatchEvent(new Event('resize')); }, 30); } });
     (cfg.ocultar || []).forEach(function (q) { [].forEach.call(sec.querySelectorAll(q), function (e) { if (!e.closest('.dkm-host')) e.classList.add('dkm-oculto'); }); });
