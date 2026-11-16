@@ -1352,7 +1352,7 @@
   var listo = false;
   function enganchar() {
     if (listo) return; listo = true;
-    var secC = $('#v-cond'); if (secC && !$('#kCjBox')) { var cjb = document.createElement('div'); cjb.id = 'kCjBox'; secC.appendChild(cjb); setTimeout(function () { try { if (window.LAZOS_CAJA) window.LAZOS_CAJA.montar(); } catch (e) { console.warn('Caja', e); } }, 0); }
+    var secC = $('#v-cond'); if (secC && !$('#kCjBox')) { var cjb = document.createElement('div'); cjb.id = 'kCjBox'; secC.appendChild(cjb); if (window.REMesaModulo || document.querySelector('#v-lazos')) { var cjc = document.createElement('div'); cjc.id = 'kCjCfgBox'; secC.appendChild(cjc); } setTimeout(function () { try { if (window.LAZOS_CAJA) window.LAZOS_CAJA.montar(); } catch (e) { console.warn('Caja', e); } }, 0); }
     // Botones de la barra de ductos en grupos con nombre
     (function () { var h = $('#kNuevo') && $('#kNuevo').parentNode; if (!h || h.dataset.ord) return; h.dataset.ord = '1'; h.classList.add('kbot'); [].forEach.call(h.querySelectorAll('.esp'), function (x) { x.remove(); });
       [['Ductos', ['kNuevo', 'kDuplicar', 'kBorrar']], ['Entregables', ['kPdf', 'kDxf', 'kExcel', 'kLista']], ['Proyecto', ['kAsignar', 'kCaja']]].forEach(function (gr) { var d = document.createElement('div'); d.className = 'kgrp'; d.setAttribute('role', 'group'); d.setAttribute('aria-label', gr[0]); var t = document.createElement('span'); t.className = 'kgrp-t'; t.textContent = gr[0]; d.appendChild(t); gr[1].forEach(function (id) { var b = document.getElementById(id); if (b) d.appendChild(b); }); h.appendChild(d); });
