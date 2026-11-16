@@ -190,6 +190,25 @@
     if (dc.cond === 'subt' && dc.crit === 'RIC') avisos.push('RIC N°04 7.9.7.1: el ducto subterráneo no puede ser menor a 25 mm.');
     return { T: T, C: C, lista: lista, suma: suma, n: n, lim: lim, regla: regla, res: res, req: req, filas: filas, elegido: elegido, avisos: avisos, dmax: dmax, minI: minI, cls: cls, nFuerza: nFuerza };
   }
+  // ── Radios de curvatura (RIC N°04) ──
+  //    Tubería metálica: Tabla N°4.22 (radio al borde interior, cuando el fabricante no lo indica). Ducto subterráneo: 10 veces el diámetro (7.9.7.8).
+  //    Cables (6.2.8): cobre flexible 4 × Ø exterior, alambre o cableado concéntrico 8 ×, apantallados 12 ×.
+  var T422 = [[16, 10], [20, 10], [25, 18], [32, 20], [40, 25], [50, 30], [63, 40], [75, 45], [90, 55], [100, 60], [110, 75], [140, 90]];
+  var DN = { '1/2"': 16, '3/4"': 20, '1"': 25, '1 1/4"': 32, '1 1/2"': 40, '2"': 50, '2 1/2"': 63, '3"': 75, '3 1/2"': 90, '4"': 100, '5"': 140, '6"': 160 };
+  function curvatura(dc, r, s) {
+    var o = { ducto: null, refDucto: '', cables: [], cable: null, r: 0 };
+    if (s) { var dn = DN[s[0]] || parseFloat(s[0]) || Math.round(s[1]);
+      if (dc.cond === 'subt') { o.ducto = 10 * s[1]; o.refDucto = '7.9.7.8: 10 veces el diámetro del ducto (' + n1(s[1], 1) + ' mm)'; }
+      else { var f = T422.filter(function (x) { return x[0] >= dn; })[0]; if (f) { o.ducto = f[1] * 10; o.refDucto = 'Tabla N°4.22: tubería de ' + f[0] + ' mm → ' + f[1] + ' cm al borde interior'; } else o.refDucto = 'Tabla N°4.22 no cubre este diámetro: usar el radio que indique el fabricante'; }
+      if (!/C\.A\.G|EMT|SCH40|ACERO|RMC|IMC/i.test(r.T.c + ' ' + r.T.n) && dc.cond !== 'subt' && o.ducto) o.refDucto += ' (tabla de tuberías metálicas, usada como referencia: confirmar con el fabricante)'; }
+    var vistos = {};
+    r.lista.forEach(function (x) { var k = x.k, fac = k.ap ? 12 : /FLEX/i.test(k.cod + ' ' + k.desc) ? 4 : 8, id = (x.c.tag || '') + '|' + k.id; if (vistos[id]) return; vistos[id] = 1;
+      o.cables.push({ tag: x.c.tag || '(sin tag)', desc: (k.cod !== '—' ? k.cod + ' ' : '') + k.desc, d: x.d, fac: fac, clase: k.ap ? 'apantallado' : fac === 4 ? 'cobre flexible' : 'alambre o cableado concéntrico', r: fac * x.d }); });
+    o.cables.sort(function (a, b) { return b.r - a.r; }); o.cable = o.cables[0] || null;
+    o.r = Math.max(o.ducto || 0, o.cable ? o.cable.r : 0); o.manda = o.cable && o.cable.r > (o.ducto || 0) ? 'cable' : 'ducto';
+    return o;
+  }
+  function cm(mm) { return n1(mm / 10, mm / 10 >= 20 ? 0 : 1) + ' cm'; }
   // ── Verificación de cumplimiento (RIC N°04): cada requisito con su estado, la cláusula y qué hacer si no cumple ──
   //    sev: ok (cumple), warn (advertencia o dato faltante), err (no cumple). «s» es el tamaño que se está mirando.
   function verificar(dc, r, s) {
@@ -231,6 +250,8 @@
     if (r.nFuerza > 1 && dc.cond !== 'niple') add('warn', 'Hay ' + r.nFuerza + ' cables de fuerza: en una misma tubería solo van conductores de un mismo circuito.', '5.27', 'Si son circuitos distintos, sepáralos en ductos propios o usa bandeja o escalerilla.');
     // 6) Atascamiento (referencial)
     if (f && r.n === 3 && r.lista.every(function (x) { return x.d === r.lista[0].d; })) { var rz = s[2] / r.lista[0].d; if (rz >= 2.8 && rz <= 3.2) add('warn', 'Relación Ø interior / Ø cable = ' + n1(rz, 2) + ': con tres cables iguales entre 2,8 y 3,2 hay riesgo de atascamiento al tirar.', 'NEC Cap. 9 (referencial)', 'Considera el tamaño siguiente.'); }
+    // 7) Radio de curvatura recomendado para las curvas del tramo
+    if (f && ric && dc.cond !== 'niple') { var cu = curvatura(dc, r, s); if (cu.r) add(cv > 0 ? 'ok' : 'ok', 'Curvas con radio no menor a ' + cm(cu.r) + ': manda ' + (cu.manda === 'cable' ? 'el cable ' + cu.cable.tag + ' (' + cu.cable.clase + ', ' + cu.cable.fac + ' × Ø ' + n1(cu.cable.d, 1) + ' mm)' : 'la tubería') + '.', cu.manda === 'cable' ? '6.2.8' : (dc.cond === 'subt' ? '7.9.7.8' : 'Tabla N°4.22')); }
     o.norma = nor; return o;
   }
   function estadoRic(dc) { var r = calcular(dc), s = r.elegido ? r.elegido.s : r.T.s[Math.min(r.T.s.length - 1, 3)], c = verificar(dc, r, s); return { mal: c.filter(function (x) { return x.sev === 'err'; }).length, av: c.filter(function (x) { return x.sev === 'warn'; }).length, n: r.n }; }
@@ -397,6 +418,8 @@
       ['Tamaño comercial', el ? 'El menor ' + esc(r.T.c) + ' con área interior ≥ ' + n1(r.req, 0) + ' mm², no menor a ' + esc(dc.min) + ' y en que los cables caben: <b>Ø ' + esc(el.s[0]) + '</b> (Ø int. ' + n1(el.s[2], 1) + ' mm, área ' + n1(el.Ai, 0) + ' mm², ocupación ' + n1(el.occ, 1) + ' %).' : (r.n ? '<span class="kmal">Ningún tamaño alcanza.</span>' : '—')],
       ['Espacio disponible', el && r.n ? 'Queda ' + n1(el.Ai - r.suma, 0) + ' mm² libres; hasta el límite de la norma se pueden sumar ' + n1(Math.max(0, el.util - r.suma), 0) + ' mm² de cables (≈ ' + Math.floor(Math.max(0, el.util - r.suma) / area(r.dmax || 1)) + ' cables más del mayor Ø).' : '—']
     ];
+    var cuP = s && r.n ? curvatura(dc, r, s) : null;
+    if (cuP && cuP.r) pasos.push(['Radio de curvatura', 'Tubería: ' + esc(cuP.refDucto) + '. Cables (RIC N°04 6.2.8): ' + cuP.cables.slice(0, 4).map(function (c) { return esc(c.tag) + ' ' + c.fac + ' × ' + n1(c.d, 1) + ' mm = ' + cm(c.r); }).join('; ') + (cuP.cables.length > 4 ? '…' : '') + '. Las curvas se hacen con radio no menor a <b>' + cm(cuP.r) + '</b> (manda ' + (cuP.manda === 'cable' ? 'el cable' : 'la tubería') + ').']);
     $('#kPasos').innerHTML = pasos.map(function (p, i) { return '<li><b>' + (i + 1) + '. ' + p[0] + '.</b> ' + p[1] + '</li>'; }).join('');
     $('#kAvisos').innerHTML = ''; $('#kAvisos').hidden = true;   // los avisos sueltos pasan a la verificación, con su sugerencia
     pintarRic(dc, r, s);
@@ -664,6 +687,12 @@
       '#k3d .k3-ley{overflow:auto;padding:10px 12px;border-left:1px solid #24405f;font-size:12px}#k3d .k3-ley li{margin:0 0 6px}',
       '#k3d .k3-ley ol{margin:0;padding-left:20px}#k3d .k3-ayuda{color:#9fb0c3;font-size:11.5px;margin-top:10px}',
       '#k3d .k3-carga{position:absolute;inset:0;display:grid;place-items:center;color:#9fb0c3}',
+      '#k3d .k3-modo{display:inline-flex;border:1.5px solid #E8A317;border-radius:9px;overflow:hidden}#k3d .k3-modo button{border:0;border-radius:0;padding:7px 13px}#k3d .k3-cab button[hidden]{display:none}',
+      '#k3d .k3-h{margin:12px 0 5px;font:700 10.5px ui-monospace,Consolas,monospace;letter-spacing:.09em;text-transform:uppercase;color:#E8A317}#k3d .k3-h:first-child{margin-top:0}',
+      '#k3d .k3-dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}#k3d .k3-dl dt{color:#9fb0c3}#k3d .k3-dl dd{margin:0;font-weight:600}#k3d .k3-ley small{display:block;color:#9fb0c3;font-weight:400;font-size:11px}',
+      '#k3d .k3-r{margin:0 0 8px;padding:8px 10px;border:1.5px solid #E8A317;border-radius:8px;background:rgba(232,163,23,.1)}#k3d .k3-r b{font-size:17px;color:#ffd27a;white-space:nowrap}',
+      '#k3d .k3-ok,#k3d .k3-av,#k3d .k3-mal{margin:8px 0 0;padding:6px 9px;border-radius:6px;border-left:3px solid #3FB950;background:rgba(63,185,80,.1)}#k3d .k3-av{border-color:#E6A23C;background:rgba(230,162,60,.1)}#k3d .k3-mal{border-color:#F85149;background:rgba(248,81,73,.12)}',
+      '#k3d ol.k3-cab{display:block;padding:0 0 0 18px;margin:0;background:none;border:0}#k3d .k3-lbl.k3-cur{border-color:#38C8E8}#k3d .k3-lbl.k3-sug{border-color:#FF8C32;background:#FF8C32;color:#1b0d02}',
       '@media (max-width:760px){#k3d .k3-cuerpo{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 150px}#k3d .k3-ley{border-left:0;border-top:1px solid #24405f}}',
       '@media (max-width:700px){#kTutTab,#kNorTab,#kCatTab{top:auto;bottom:0;width:25%;height:54px;writing-mode:horizontal-tb;transform:none;border-radius:0;padding:4px 6px;font-size:11.5px;line-height:1.15;white-space:normal;text-align:center;box-shadow:0 -2px 10px rgba(0,0,0,.35);z-index:61}#kTutTab{left:0}#kNorTab{left:25%}#kCatTab{left:50%;right:auto}body{padding-bottom:58px}body:not(:has(#rsBtn)) #kTutTab,body:not(:has(#rsBtn)) #kNorTab,body:not(:has(#rsBtn)) #kCatTab{width:33.34%}body:not(:has(#rsBtn)) #kNorTab{left:33.33%}body:not(:has(#rsBtn)) #kCatTab{left:66.66%}}'
     ].join('\n');
@@ -855,12 +884,13 @@
     var dlg = $('#k3d');
     if (!dlg) {
       dlg = document.createElement('dialog'); dlg.id = 'k3d'; dlg.setAttribute('aria-labelledby', 'k3dTit');
-      dlg.innerHTML = '<div class="k3-cab"><b id="k3dTit"></b><button type="button" data-t="corte" aria-pressed="true">Corte</button><button type="button" data-t="etq" aria-pressed="true">Etiquetas</button><button type="button" data-t="giro" aria-pressed="false">Girar</button><button type="button" data-t="frente">Vista de frente</button><button type="button" data-t="png">PNG</button><button type="button" id="k3dCerrar">Cerrar</button></div>' +
+      dlg.innerHTML = '<div class="k3-cab"><b id="k3dTit"></b><span class="k3-modo" role="group" aria-label="Qué se muestra"><button type="button" data-m="sec" aria-pressed="true">Sección del ducto</button><button type="button" data-m="tra" aria-pressed="false">Trazado con curvas</button></span><button type="button" data-t="corte" aria-pressed="true">Corte</button><button type="button" data-t="etq" aria-pressed="true">Etiquetas</button><button type="button" data-t="giro" aria-pressed="false">Girar</button><button type="button" data-t="frente">Vista de frente</button><button type="button" data-t="png">PNG</button><button type="button" id="k3dCerrar">Cerrar</button></div>' +
         '<div class="k3-cuerpo"><div class="k3-esc" id="k3dEsc"><div class="k3-carga">Cargando visor 3D…</div></div><div class="k3-ley" id="k3dLey"></div></div>';
       document.body.appendChild(dlg);
       $('#k3dCerrar').addEventListener('click', function () { dlg.close(); });
       dlg.addEventListener('close', cerrar3d);
       dlg.querySelector('.k3-cab').addEventListener('click', function (e) {
+        var bm = e.target.closest('button[data-m]'); if (bm) { modo3 = bm.dataset.m; pintar3d(); return; }
         var b = e.target.closest('button[data-t]'); if (!b || !v3) return; var t = b.dataset.t;
         if (t === 'frente') { v3.frente(); return; }
         if (t === 'png') { v3.png(); return; }
@@ -868,19 +898,33 @@
         if (t === 'corte') v3.corte(on); else if (t === 'etq') v3.etiquetas(on); else v3.controls.autoRotate = on;
       });
     }
-    var r = ultimo.r, s = ultimo.s, dc = actual();
+    dlg.showModal(); pintar3d();
+  }
+  var modo3 = 'sec';   // 'sec': sección del ducto con sus cables · 'tra': trazado del tramo con su largo, curvas y radios de curvatura
+  function pintar3d() {
+    var dlg = $('#k3d'); if (!dlg || !ultimo) return; var r = ultimo.r, s = ultimo.s, dc = actual(), tra = modo3 === 'tra';
+    [].forEach.call(dlg.querySelectorAll('.k3-modo button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === modo3)); });
+    var bc = dlg.querySelector('[data-t=corte]'); bc.hidden = tra; [['corte', true], ['etq', true], ['giro', false]].forEach(function (x) { var q = dlg.querySelector('[data-t=' + x[0] + ']'); if (q) q.setAttribute('aria-pressed', String(x[1])); }); dlg.querySelector('[data-t=frente]').textContent = tra ? 'Encuadrar' : 'Vista de frente';
     $('#k3dTit').innerHTML = esc(dc.tag) + ' · ' + esc(r.T.c) + ' Ø ' + esc(s[0]) + '<small>' + r.n + ' cable' + (r.n === 1 ? '' : 's') + ' · ocupación ' + n1(r.suma / area(s[2]) * 100, 1) + ' % (límite ' + r.lim + ' %) · Ø int. ' + n1(s[2], 1) + ' mm</small>';
+    if (tra) { var cu = curvatura(dc, r, s), L = parseFloat(String(dc.largo).replace(',', '.')), N = Math.max(0, Math.round(parseFloat(dc.curvas) || 0)), ch = verificar(dc, r, s).filter(function (x) { return /^7\.16\.1\.(13|7)$|^7\.9\.7\.8$/.test(x.ref); })[0];
+      $('#k3dLey').innerHTML = '<h4 class="k3-h">Tramo</h4><dl class="k3-dl"><dt>Largo</dt><dd>' + (L > 0 ? n1(L, 1) + ' m' : 'sin dato (se dibuja referencial)') + '</dd><dt>Curvas</dt><dd>' + N + ' de 90°</dd></dl>' +
+        (ch ? '<p class="k3-' + (ch.sev === 'ok' ? 'ok' : ch.sev === 'warn' ? 'av' : 'mal') + '">' + (ch.sev === 'ok' ? '✓ ' : ch.sev === 'warn' ? '! ' : '✗ ') + esc(ch.txt) + (ch.sug && ch.sev !== 'ok' ? '<br><b>Sugerencia:</b> ' + esc(ch.sug) : '') + '</p>' : '') +
+        '<h4 class="k3-h">Radio de curvatura</h4><p class="k3-r">Curvar con radio no menor a <b>' + (cu.r ? cm(cu.r) : '—') + '</b><br>manda ' + (cu.manda === 'cable' ? 'el cable ' + esc(cu.cable.tag) : 'la tubería') + '</p>' +
+        '<dl class="k3-dl"><dt>Tubería</dt><dd>' + (cu.ducto ? cm(cu.ducto) : '—') + '<small>' + esc(cu.refDucto) + '</small></dd></dl>' +
+        '<h4 class="k3-h">Cables · RIC N°04 6.2.8</h4><ol class="k3-cab">' + cu.cables.map(function (c) { return '<li><b>' + esc(c.tag) + '</b> · ' + cm(c.r) + '<small>' + esc(c.clase) + ': ' + c.fac + ' × Ø ' + n1(c.d, 1) + ' mm</small></li>'; }).join('') + '</ol>' +
+        '<p class="k3-ayuda">Flexible 4 ×, alambre o cableado concéntrico 8 ×, apantallado 12 × el diámetro exterior. Tubería metálica según Tabla N°4.22 si el fabricante no indica otro radio.</p>' +
+        '<p class="k3-ayuda">El diámetro del tubo se dibuja ampliado para poder verlo; los largos y las curvas mantienen su proporción. Arrastra para girar y usa la rueda para acercar.</p>';
+    } else
     $('#k3dLey').innerHTML = '<ol>' + r.lista.map(function (x) { var sv = servDe(x.k.f); return '<li><span class="kserv" style="background:' + SERV[sv].c + '">' + SERV[sv].n.slice(0, 4).toUpperCase() + '</span><b>' + esc(x.c.tag || '(sin tag)') + '</b><br>' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + ' · Ø ' + n1(x.d, 1) + ' mm</li>'; }).join('') + '</ol>' +
       '<p class="k3-ayuda">Arrastra para girar, rueda o pellizco para acercar, clic derecho o dos dedos para desplazar. Los cables salen escalonados por el extremo para ver cubierta, pantalla y conductores.</p>';
-    dlg.showModal();
-    cargar3d(function (L) {
-      if (!L) { $('#k3dEsc').innerHTML = '<div class="k3-carga">No se pudo cargar el visor 3D.</div>'; return; }
+    cargar3d(function (L3) {
+      if (!L3) { $('#k3dEsc').innerHTML = '<div class="k3-carga">No se pudo cargar el visor 3D.</div>'; return; }
       if (!dlg.open) return;
-      montar3d(L, r, s, dc);
+      montar3d(L3, r, s, dc, modo3);
     });
   }
   function cerrar3d() { if (!v3) return; cancelAnimationFrame(v3.raf); v3.ro.disconnect(); v3.renderer.dispose(); v3.scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(function (m) { if (m.map) m.map.dispose(); m.dispose(); }); }); v3 = null; $('#k3dEsc').innerHTML = ''; }
-  function montar3d(L, r, s, dc) {
+  function montar3d(L, r, s, dc, modo) {
     cerrar3d();
     var THREE = L.THREE, esc3 = $('#k3dEsc'); esc3.innerHTML = '';
     var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -892,6 +936,7 @@
     var pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new L.RoomEnvironment(), 0.04).texture;
     scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 0.6));
     var sol = new THREE.DirectionalLight(0xffffff, 1.5); sol.position.set(200, 300, 260); scene.add(sol);
+    if (modo === 'tra') return trazado3d(L, r, s, dc, renderer, lr, scene, esc3);
     var Re = s[1] / 2, Ri = s[2] / 2, Lc = Math.max(160, Re * 9), x0 = -Lc / 2, x1 = Lc / 2;
     var metal = /PVC|HDPE|PEAD/i.test(r.T.c) ? new THREE.MeshStandardMaterial({ color: 0x8d969e, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
       : new THREE.MeshStandardMaterial({ color: 0xb9c1c8, roughness: 0.32, metalness: 0.85, side: THREE.DoubleSide });
@@ -945,6 +990,48 @@
     (function loop() { if (!v3 || v3.renderer !== renderer) return; v3.raf = requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); lr.render(scene, camera); })();
   }
 
+  // Trazado del tramo: el ducto con su largo y sus curvas de 90°, dibujadas con el radio de curvatura recomendado.
+  // Largos y curvas van en proporción; el diámetro del tubo se amplía para que se vea. Unidades de la escena: milímetros.
+  function trazado3d(L, r, s, dc, renderer, lr, scene, esc3) {
+    var THREE = L.THREE, V = function (x, y, z) { return new THREE.Vector3(x, y, z); };
+    var cu = curvatura(dc, r, s), Lm = parseFloat(String(dc.largo).replace(',', '.')), N = Math.min(12, Math.max(0, Math.round(parseFloat(dc.curvas) || 0)));
+    var Ltot = (Lm > 0 ? Lm : 3 * (N + 1)) * 1000, Re = s[1] / 2, Rv = Math.max(Re, Ltot / 260), Rb = Math.max(cu.r || Re * 6, Rv * 2.4);
+    var recto = Math.max(Rv * 3, (Ltot - N * PI / 2 * Rb) / (N + 1));
+    var pts = [V(0, 0, 0)], p = V(0, 0, 0), dX = V(1, 0, 0), dZ = V(0, 0, 1), d0 = dX, marcas = [];
+    for (var i = 0; i <= N; i++) {
+      var a = p.clone(); p = p.clone().addScaledVector(d0, recto); pts.push(p.clone()); marcas.push({ t: 'recto', p: a.clone().lerp(p, 0.5), txt: n1(recto / 1000, recto >= 10000 ? 1 : 2) + ' m' });
+      if (i === N) break;
+      var d1 = d0 === dX ? dZ : dX, c0 = p.clone();
+      for (var k = 1; k <= 14; k++) { var t = k / 14 * PI / 2; pts.push(c0.clone().addScaledVector(d0, Rb * Math.sin(t)).addScaledVector(d1, Rb * (1 - Math.cos(t)))); }
+      marcas.push({ t: 'curva', p: c0.clone().addScaledVector(d0, Rb * 0.7).addScaledVector(d1, Rb * 0.3), txt: 'Curva ' + (i + 1) + ' · R ≥ ' + (cu.r ? cm(cu.r) : '—') });
+      p = pts[pts.length - 1].clone(); d0 = d1;
+    }
+    var camino = new THREE.CurvePath(); for (var j = 1; j < pts.length; j++) camino.add(new THREE.LineCurve3(pts[j - 1], pts[j]));
+    var metal = /PVC|HDPE|PEAD/i.test(r.T.c) ? new THREE.MeshStandardMaterial({ color: 0x8d969e, roughness: 0.55, metalness: 0.05 }) : new THREE.MeshStandardMaterial({ color: 0xb9c1c8, roughness: 0.32, metalness: 0.85 });
+    var g = new THREE.Group(), etqs = [];
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(camino, Math.min(1200, pts.length * 6), Rv, 20, false), metal));
+    function etiqueta(pos, txt, cls) { var div = document.createElement('div'); div.className = 'k3-lbl' + (cls ? ' ' + cls : ''); div.textContent = txt; var lb = new L.CSS2DObject(div); lb.position.copy(pos); lb.position.y += Rv * 2.2; g.add(lb); etqs.push(lb); }
+    // extremos (cajas o gabinetes) y cajas de paso sugeridas por la verificación
+    var mCaja = new THREE.MeshStandardMaterial({ color: 0x4a5f78, roughness: 0.6, metalness: 0.3 }), mPaso = new THREE.MeshStandardMaterial({ color: 0xFF8C32, roughness: 0.5, metalness: 0.2 }), lado = Rv * 5;
+    [[pts[0], 'Inicio'], [pts[pts.length - 1], 'Fin · ' + (Lm > 0 ? n1(Lm, 1) + ' m' : 'largo sin dato')]].forEach(function (e) { var m = new THREE.Mesh(new THREE.BoxGeometry(lado, lado, lado), mCaja); m.position.copy(e[0]); g.add(m); etiqueta(e[0].clone().setY(lado * 0.4), e[1]); });
+    var cajas = dc.cond === 'normal' && Lm > 0 ? Math.max(Lm > 20 ? Math.ceil(Lm / 20) - 1 : 0, N > 2 ? Math.ceil(N / 2) - 1 : 0) : dc.cond === 'subt' && Lm > 90 ? Math.ceil(Lm / 90) - 1 : 0;
+    for (var q = 1; q <= cajas; q++) { var pc = camino.getPointAt(q / (cajas + 1)), mb = new THREE.Mesh(new THREE.BoxGeometry(lado * 0.8, lado * 0.8, lado * 0.8), mPaso); mb.position.copy(pc); g.add(mb); etiqueta(pc.clone().setY(lado * 1.6), (dc.cond === 'subt' ? 'Cámara' : 'Caja de paso') + ' sugerida', 'k3-sug'); }
+    marcas.forEach(function (m) { etiqueta(m.p, m.txt, m.t === 'curva' ? 'k3-cur' : ''); });
+    var caja = new THREE.Box3().setFromPoints(pts), cen = caja.getCenter(V(0, 0, 0)), tam = caja.getSize(V(0, 0, 0)), D = Math.max(tam.x, tam.z, Rv * 20);
+    var rej = new THREE.GridHelper(D * 1.6, 16, 0x2c4563, 0x1b2f47); rej.position.set(cen.x, -Rv * 3, cen.z); g.add(rej);
+    scene.add(g);
+    var camera = new THREE.PerspectiveCamera(32, 1, D / 200, D * 40);
+    var controls = new L.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.autoRotateSpeed = 1.2;
+    var Dg = Math.max(Math.hypot(tam.x, tam.z), Rv * 20); function frente() { camera.position.set(cen.x - Dg * 0.2, Dg * 1.3, cen.z + Dg * 1.35); controls.target.copy(cen); controls.update(); }
+    frente();
+    var ro = new ResizeObserver(function () { var w = esc3.clientWidth, h = esc3.clientHeight; if (!w || !h) return; renderer.setSize(w, h); lr.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); });
+    ro.observe(esc3);
+    v3 = { renderer: renderer, scene: scene, controls: controls, ro: ro, raf: 0, frente: frente, corte: function () {},
+      etiquetas: function (on) { etqs.forEach(function (e) { e.visible = on; e.element.style.display = on ? '' : 'none'; }); },
+      png: function () { renderer.render(scene, camera); var a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = 'Ducto_' + dc.tag.replace(/[\\/:*?"<>|]+/g, '-') + '_trazado.png'; document.body.appendChild(a); a.click(); a.remove(); } };
+    (function loop() { if (!v3 || v3.renderer !== renderer) return; v3.raf = requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); lr.render(scene, camera); })();
+  }
+
   // ── Eventos ──
   var listo = false;
   function enganchar() {
@@ -978,7 +1065,7 @@
     $('#kExcel').addEventListener('click', excel);
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
-  window.LAZOS_COND = { verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  window.LAZOS_COND = { curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
