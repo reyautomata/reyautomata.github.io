@@ -1,5 +1,5 @@
 /* ReyEngi Conduit instalable: guarda la app para usarla sin conexión. Cambia VERSION al publicar. */
-const VERSION = 'conduit-v12';
+const VERSION = 'conduit-v13';
 const FILES = ['./', './index.html', './estilo.css', './app.css', './shim.js', './inicio.js', './manifest.webmanifest',
   './icono-192.png', './icono-512.png', './icono-512-maskable.png', './vp-lazo.webp', './vp-unilineal.webp', './vp-montaje.webp', './vp-documento.webp',
   '../demo.js', '../../acceso.js', '../../lazos/conduit.js', '../../lazos/caja-paso.js', '../../hojas-datos/xlsx.js', '../../normas.js', '../../lib3d.js', '../../visor-plus.js', '../../../img/logo-reyengi.png'];

@@ -155,10 +155,12 @@
   var selE = null;
   function css() {
     if ($('#cjCss')) return; var st = document.createElement('style'); st.id = 'cjCss';
-    st.textContent = ['#kCj{width:min(1500px,98vw);height:min(920px,95vh);padding:0;border:1px solid #3a5a80;border-radius:12px;background:#0b1a2b;color:#e8eef5;overflow:hidden}#kCj[open]{display:flex;flex-direction:column}#kCj::backdrop{background:rgba(2,10,20,.72)}',
+    st.textContent = ['#kCj{background:#0b1a2b;color:#e8eef5;border:1px solid #223a57;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;margin-top:14px}',
       '#kCj .cj-cab{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:9px 14px;background:#022A55;border-bottom:2px solid #E8A317}#kCj .cj-cab b{font-size:15px;margin-right:6px}#kCj .cj-cab .esp{flex:1}#kCj button{font:inherit;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:7px;border:1px solid #5d7ea6;background:#12304f;color:#e8eef5;cursor:pointer}#kCj button.pri{background:#FF8C32;border-color:#FF8C32;color:#1b0d02}#kCj button.pel{border-color:#F85149;color:#ffb1ab}#kCj button:focus-visible,#kCj [tabindex]:focus-visible{outline:2px solid #38C8E8;outline-offset:2px}',
       '#kCj select,#kCj input{font:inherit;font-size:13px;padding:5px 7px;border-radius:6px;border:1px solid #3a5a80;background:#0e2238;color:#e8eef5;width:100%;box-sizing:border-box}#kCj .cj-cab select{width:auto;max-width:220px}',
-      '#kCj .cj-cuerpo{flex:1;min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr) 360px}#kCj .cj-izq,#kCj .cj-der{overflow:auto;padding:12px 14px;display:grid;gap:10px;align-content:start}#kCj .cj-izq{border-right:1px solid #223a57}#kCj .cj-der{border-left:1px solid #223a57}#kCj .cj-cen{min-width:0;overflow:auto;background:#16273b;padding:14px;display:grid;gap:8px;align-content:start}',
+      '#kCj .cj-cuerpo{display:grid;grid-template-columns:300px minmax(0,1fr) 330px}#kCj .cj-izq,#kCj .cj-der{padding:12px 14px;display:grid;gap:10px;align-content:start}#kCj .cj-izq{border-right:1px solid #223a57}#kCj .cj-der{border-left:1px solid #223a57}#kCj .cj-cen{min-width:0;background:#16273b;padding:14px;display:grid;gap:8px;align-content:start}',
+      '#kCj.cj-ang .cj-cuerpo{grid-template-columns:1fr 1fr}#kCj.cj-ang .cj-cen{grid-column:1/-1;order:-1}#kCj.cj-uno .cj-cuerpo{grid-template-columns:1fr}#kCj.cj-uno .cj-cen{order:-1}#kCj.cj-uno .cj-izq,#kCj.cj-uno .cj-der{border:0}',
+      '#kCj .cj-vista{display:inline-flex;border:1.5px solid #E8A317;border-radius:9px;overflow:hidden;justify-self:start}#kCj .cj-vista button{border:0;border-radius:0;background:transparent}#kCj .cj-vista button[aria-pressed=true]{background:#E8A317;color:#1b1203}#kCj .cj-3d{position:relative;height:min(560px,62vh);border-radius:8px;overflow:hidden;background:#0b1a2b}#kCj .cj-3d canvas{display:block;width:100%;height:100%;outline:none}#kCj .cj-3d .labels{position:absolute;inset:0;pointer-events:none}#kCj .cj-lbl{font:700 11px system-ui,sans-serif;background:rgba(11,26,43,.85);color:#fff;border:1px solid #E8A317;border-radius:10px;padding:1px 7px;white-space:nowrap}#kCj .cj-lbl.sal{border-color:#38C8E8}#kCj .cj-carga{position:absolute;inset:0;display:grid;place-items:center;color:#9fb0c3}',
       '#kCj label{display:grid;gap:3px;font-size:12px;color:#9fb0c3}#kCj h4{margin:6px 0 0;font:700 10.5px ui-monospace,Consolas,monospace;letter-spacing:.09em;text-transform:uppercase;color:#E8A317}#kCj .cj-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}#kCj .cj-ay{margin:0;font-size:12px;color:#9fb0c3;line-height:1.45}',
       '#kCj .cj-lista{display:grid;gap:5px}#kCj .cj-it{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;text-align:left;font-weight:500;background:#0e2238}#kCj .cj-it.sel{border-color:#E8A317;background:#1a3050}#kCj .cj-it small{display:block;color:#9fb0c3;font-weight:400}#kCj .cj-ed{border:1.5px solid #E8A317;border-radius:9px;padding:10px;display:grid;gap:8px}',
       '.cj-svg{display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4)}.cj-svg text{font:11px Arial,Helvetica,sans-serif;fill:#17212C}.cj-svg .cj-tit{font-weight:700;font-size:12px;fill:#022A55}.cj-svg .cj-t1{font-weight:700}.cj-svg .cj-t2{font-size:10px;fill:#5A6573}.cj-svg .cj-caja{fill:#F6D9B8;stroke:#1F2A36;stroke-width:2}.cj-svg .cj-tapa{fill:none;stroke:#1F2A36;stroke-width:.7;stroke-dasharray:4 3}',
@@ -166,28 +168,77 @@
       '.cj-svg .cj-cab{fill:none;stroke-width:2.2;stroke-linecap:round;opacity:.85}.cj-svg .cj-cs{stroke:#0B6E99;stroke-width:4}.cj-svg .cj-riel{fill:#c7ced6;stroke:#1F2A36;stroke-width:1}.cj-svg .cj-bor{stroke:#1F2A36;stroke-width:.5}.cj-svg .cj-mas circle{fill:#FF8C32;stroke:#7a3a05}.cj-svg .cj-mas path{stroke:#1b0d02;stroke-width:2;fill:none}.cj-svg .cj-cota path{stroke:#B3261E;stroke-width:.8;fill:none}.cj-svg .cj-cota text{fill:#B3261E}',
       '#kCj .cj-res{margin:0;padding:9px 11px;border:1.5px solid #E8A317;border-radius:8px;background:rgba(232,163,23,.1);font-size:13px;line-height:1.5}#kCj .cj-res b{color:#ffd27a;font-size:15px}#kCj .cj-av{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12.5px}#kCj .cj-av li{padding:6px 9px;border-radius:6px;border-left:3px solid #3FB950;background:rgba(63,185,80,.1)}#kCj .cj-av li.warn{border-color:#E6A23C;background:rgba(230,162,60,.1)}#kCj .cj-av li.err{border-color:#F85149;background:rgba(248,81,73,.12)}#kCj .cj-av small{display:block;color:#9fb0c3}',
       '#kCj .cj-mat{width:100%;border-collapse:collapse;font-size:12px}#kCj .cj-mat td{padding:4px 6px;border-bottom:1px solid #223a57;vertical-align:top}#kCj .cj-mat td:first-child{white-space:nowrap;font-weight:700;color:#ffd27a}#kCj .cj-mat small{color:#9fb0c3}',
-      '@media(max-width:1100px){#kCj .cj-cuerpo{grid-template-columns:1fr;overflow:auto}#kCj .cj-izq,#kCj .cj-der{border:0;overflow:visible}#kCj .cj-cen{overflow:visible}}',
       '#imp .cj-imp h2{font-size:13pt;color:#022A55;margin:0 0 3mm}#imp .cj-imp svg{width:170mm;height:auto;border:0.5pt solid #9FB0C3}#imp .cj-imp td.izq{text-align:left}'].join('\n');
     document.head.appendChild(st);
   }
-  function abrir() {
-    css(); var dlg = $('#kCj');
-    if (!dlg) {
-      dlg = document.createElement('dialog'); dlg.id = 'kCj';
-      dlg.innerHTML = '<div class="cj-cab"><b>Caja de paso / derivación</b><select id="cjSel" aria-label="Caja"></select><button type="button" data-a="nueva">+ Nueva caja</button><button type="button" data-a="borrar" class="pel">Eliminar</button><span class="esp"></span><button type="button" class="pri" data-a="ducto" title="Agrega al proyecto un ducto con los cables y el tamaño de la salida">Crear ducto de salida</button><button type="button" data-a="pdf">Imprimir / PDF</button><button type="button" data-a="x">Cerrar</button></div>' +
-        '<div class="cj-cuerpo"><div class="cj-izq" id="cjIzq"></div><div class="cj-cen"><div id="cjDib"></div><p class="cj-ay">Arma la caja a mano: toca un <b>+</b> naranjo para agregar una entrada por esa cara, toca un ducto para editarlo y arrástralo a otra cara para moverlo. El ducto celeste es la salida.</p></div><div class="cj-der" id="cjDer"></div></div>';
-      document.body.appendChild(dlg);
-      dlg.addEventListener('click', clic); dlg.addEventListener('input', entrada); dlg.addEventListener('change', entrada);
-      dlg.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.cj-svg [tabindex]')) { e.preventDefault(); clic(e); } });
-      dlg.addEventListener('pointerdown', arrastre);
-    }
-    selE = null; pintar(true); dlg.showModal();
+  // La caja vive en un bloque de la sección (#kCjBox): en la suite es la pestaña «Caja de paso / derivación»; en Conduit queda al final de la página
+  function montar() {
+    var cont = $('#kCjBox'); if (!cont) return null; var r = $('#kCj'); if (r) return r; css();
+    r = document.createElement('div'); r.id = 'kCj';
+    r.innerHTML = '<div class="cj-cab"><b>Caja de paso / derivación</b><select id="cjSel" aria-label="Caja"></select><button type="button" data-a="nueva">+ Nueva caja</button><button type="button" data-a="borrar" class="pel">Eliminar</button><span class="esp"></span><button type="button" class="pri" data-a="ducto" title="Agrega al proyecto un ducto con los cables y el tamaño de la salida">Crear ducto de salida</button><button type="button" data-a="pdf">Imprimir / PDF</button></div>' +
+      '<div class="cj-cuerpo"><div class="cj-izq" id="cjIzq"></div><div class="cj-cen"><span class="cj-vista" role="group" aria-label="Vista"><button type="button" data-v="2d" aria-pressed="true">Vista 2D</button><button type="button" data-v="3d" aria-pressed="false">Vista 3D</button></span><div id="cjDib"></div><div class="cj-3d" id="cj3d" hidden></div><p class="cj-ay" id="cjAy"></p></div><div class="cj-der" id="cjDer"></div></div>';
+    cont.appendChild(r);
+    r.addEventListener('click', clic); r.addEventListener('input', entrada); r.addEventListener('change', entrada);
+    r.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.cj-svg [tabindex]')) { e.preventDefault(); clic(e); } });
+    r.addEventListener('pointerdown', arrastre);
+    if (window.ResizeObserver) new ResizeObserver(function () { var w = r.clientWidth; r.classList.toggle('cj-ang', w < 1080 && w >= 640); r.classList.toggle('cj-uno', w > 0 && w < 640); }).observe(r);
+    if (window.IntersectionObserver) new IntersectionObserver(function (en) { if (en.some(function (x) { return x.isIntersecting; })) pintar(true); }).observe(r);
+    return r;
+  }
+  function abrir() { var r = montar(); if (!r) return; selE = null; pintar(true); setTimeout(function () { r.scrollIntoView({ block: 'start' }); }, 60); }
+  // ── Vista 3D ──
+  var ver3 = false, e3 = null, t3 = null;
+  function soltar3() { if (!e3) return; cancelAnimationFrame(e3.raf); if (e3.ro) e3.ro.disconnect(); e3.controls.dispose(); e3.scene.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material) [].concat(x.material).forEach(function (m) { m.dispose(); }); }); e3.renderer.dispose(); if (e3.renderer.forceContextLoss) e3.renderer.forceContextLoss(); e3 = null; }
+  function pintar3(cj, o) {
+    var cont = $('#cj3d'); if (!cont) return; if (!I.cargar3d) { cont.innerHTML = '<div class="cj-carga">La vista 3D no está disponible.</div>'; return; }
+    if (!e3) cont.innerHTML = '<div class="cj-carga">Cargando vista 3D…</div>';
+    clearTimeout(t3); t3 = setTimeout(function () { I.cargar3d(function (L3) { if (!L3) { cont.innerHTML = '<div class="cj-carga">No se pudo cargar la vista 3D.</div>'; return; } if (!ver3) return; try { escena3(L3, cj, o, cont); } catch (er) { console.warn('Caja 3D', er); cont.innerHTML = '<div class="cj-carga">No se pudo dibujar la vista 3D.</div>'; } }); }, e3 ? 180 : 0);
+  }
+  function escena3(L3, cj, o, cont) {
+    var T = L3.THREE, cam0 = e3 ? { p: e3.camera.position.clone(), t: e3.controls.target.clone() } : null; soltar3(); cont.innerHTML = '';
+    var V = function (x, y, z) { return new T.Vector3(x, y, z); }, d = o.caja.d, Lx = d[0], Ay = d[1], Pz = d[2], esp = 3;
+    var renderer = new T.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputColorSpace = T.SRGBColorSpace; renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.domElement.setAttribute('tabindex', '0'); renderer.domElement.setAttribute('aria-label', 'Modelo 3D de la caja ' + cj.tag + '. Arrastra para girar.'); cont.appendChild(renderer.domElement);
+    var lr = new L3.CSS2DRenderer(); lr.domElement.className = 'labels'; cont.appendChild(lr.domElement);
+    var scene = new T.Scene(); scene.background = new T.Color(0x0b1a2b); var pm = new T.PMREMGenerator(renderer); scene.environment = pm.fromScene(new L3.RoomEnvironment(), 0.04).texture;
+    scene.add(new T.HemisphereLight(0xffffff, 0x334455, 0.6)); var sol = new T.DirectionalLight(0xffffff, 1.4); sol.position.set(Lx, Ay * 1.5, Pz * 6); scene.add(sol);
+    function mat(c, r, m, op) { return new T.MeshStandardMaterial({ color: c, roughness: r, metalness: m, transparent: op != null, opacity: op == null ? 1 : op, side: T.DoubleSide }); }
+    var mCaja = mat(0xE8943A, 0.55, 0.25), g = new T.Group();
+    function caja(w, h, p, x, y, z, m) { var b = new T.Mesh(new T.BoxGeometry(w, h, p), m); b.position.set(x, y, z); g.add(b); return b; }
+    caja(Lx, Ay, esp, 0, 0, -Pz / 2, mCaja); caja(esp, Ay, Pz, -Lx / 2, 0, 0, mCaja); caja(esp, Ay, Pz, Lx / 2, 0, 0, mCaja); caja(Lx, esp, Pz, 0, Ay / 2, 0, mCaja); caja(Lx, esp, Pz, 0, -Ay / 2, 0, mCaja);
+    caja(Lx + 16, Ay + 16, 2, 0, 0, Pz / 2 + 1, mat(0x9fc4e8, 0.2, 0.1, 0.16));   // tapa, translúcida para ver el interior
+    var bordes = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(Lx + 16, Ay + 16, 2)), new T.LineBasicMaterial({ color: 0xffd27a })); bordes.position.set(0, 0, Pz / 2 + 1); g.add(bordes);
+    // ductos de cada cara (la salida va última en su cara, igual que en la vista 2D)
+    var porLado = { izq: [], der: [], arr: [], aba: [] }; o.ent.forEach(function (x, i) { porLado[x.e.lado].push({ x: x, i: i }); }); porLado[cj.salida.lado].push({ sal: true });
+    var mTubo = mat(0xb9c1c8, 0.32, 0.85), mSal = mat(0x4FB3E0, 0.35, 0.6), mCon = mat(0x2a3440, 0.5, 0.6), pts = [], salP = null, etq = [];
+    Object.keys(porLado).forEach(function (ld) { var v = porLado[ld], n = v.length; v.forEach(function (it, j) {
+      var f = (j + 1) / (n + 1), hz = ld === 'arr' || ld === 'aba', dx = ld === 'izq' ? -1 : ld === 'der' ? 1 : 0, dy = ld === 'arr' ? 1 : ld === 'aba' ? -1 : 0;
+      var px = hz ? -Lx / 2 + Lx * f : dx * Lx / 2, py = hz ? dy * Ay / 2 : Ay / 2 - Ay * f, de = it.sal ? o.sal.s[1] : it.x.t.s[1], largo = Math.max(120, de * 3.5);
+      var c = new T.Mesh(new T.CylinderGeometry(de / 2, de / 2, largo, 28), it.sal ? mSal : mTubo); if (dx) c.rotation.z = Math.PI / 2; c.position.set(px + dx * largo / 2, py + dy * largo / 2, 0); g.add(c);
+      var h = new T.Mesh(new T.CylinderGeometry(de / 2 + 6, de / 2 + 6, 16, 6), mCon); if (dx) h.rotation.z = Math.PI / 2; h.position.set(px, py, 0); g.add(h);
+      var div = document.createElement('div'); div.className = 'cj-lbl' + (it.sal ? ' sal' : ''); div.textContent = it.sal ? 'Salida · ' + o.sal.s[0] : (it.x.e.tag || 'Entrada ' + (it.i + 1)) + ' · ' + it.x.t.s[0]; var lb = new L3.CSS2DObject(div); lb.position.set(px + dx * (largo + 20), py + dy * (largo + 20), 0); g.add(lb); etq.push(lb);
+      var P = { p: V(px, py, 0), q: V(px - dx * Math.min(60, Lx / 4), py - dy * Math.min(60, Ay / 4), 0) };
+      if (it.sal) salP = P; else pts.push({ P: P, c: I.SERV[it.x.sv].c, r: Math.max(2, it.x.k.d / 2), n: it.x.n });
+    }); });
+    function cable(lista, color, r) { g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(lista, false, 'catmullrom', 0.4), 40, r, 10, false), mat(color, 0.6, 0.05))); }
+    var zf = -Pz / 2 + 22;
+    if (cj.modo === 'bornes') { var paso = Math.min(125, Ay / (o.filas + 1));
+      for (var f2 = 0; f2 < o.filas; f2++) { var yy = (f2 - (o.filas - 1) / 2) * paso, len = Math.min(Lx - 60, o.riel / o.filas); caja(len + 20, 35, 7, 0, yy, -Pz / 2 + 8, mat(0xc7ced6, 0.3, 0.9)); caja(len, 46, 40, 0, yy, -Pz / 2 + 30, mat(0xd9d2bf, 0.7, 0.05)); }
+      pts.forEach(function (p, i) { var bx = (i + 1) / (pts.length + 1) * Math.min(Lx - 80, o.riel / o.filas) - Math.min(Lx - 80, o.riel / o.filas) / 2, arriba = p.P.p.y >= 0; cable([p.P.p, p.P.q, V(bx, arriba ? 40 : -40, zf + 30), V(bx, arriba ? 22 : -22, zf + 24)], p.c, p.r); });
+      if (salP) o.cables.forEach(function (x, i) { var k = I.CATI[x.cat], ab = salP.p.y >= 0; cable([V((i - (o.cables.length - 1) / 2) * 30, ab ? 22 : -22, zf + 24), V((i - (o.cables.length - 1) / 2) * 30, ab ? 50 : -50, zf + 30), salP.q, salP.p], '#0B6E99', Math.max(3, (k ? k.d : 10) / 2)); });
+    } else if (salP) pts.forEach(function (p, i) { var m = p.P.q.clone().lerp(salP.q, 0.5); m.z = -Pz / 4 + (i % 3) * 8; cable([p.P.p, p.P.q, m, salP.q, salP.p], p.c, p.r); });
+    scene.add(g);
+    var D = Math.max(Lx, Ay) + 300, camera = new T.PerspectiveCamera(32, 1, D / 100, D * 30), controls = new L3.OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+    if (cam0) { camera.position.copy(cam0.p); controls.target.copy(cam0.t); } else { camera.position.set(D * 0.55, D * 0.45, D * 1.75); controls.target.set(0, 0, 0); } controls.update();
+    var ro = new ResizeObserver(function () { var w = cont.clientWidth, h = cont.clientHeight; if (!w || !h) return; renderer.setSize(w, h); lr.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }); ro.observe(cont);
+    e3 = { renderer: renderer, scene: scene, camera: camera, controls: controls, ro: ro, raf: 0 };
+    (function loop() { if (!e3 || e3.renderer !== renderer) return; e3.raf = requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); lr.render(scene, camera); })();
   }
   function guardar() { A.guardar(); }
   function clic(e) {
-    var b = base(), cj = actual(), t = e.target, bt = t.closest('button[data-a]'), g = t.closest('.cj-svg [data-add], .cj-svg [data-e], .cj-svg [data-sal]'), it = t.closest('[data-it]');
+    var b = base(), cj = actual(), t = e.target, bv = t.closest('button[data-v]'), bt = t.closest('button[data-a]'), g = t.closest('.cj-svg [data-add], .cj-svg [data-e], .cj-svg [data-sal]'), it = t.closest('[data-it]');
+    if (bv) { ver3 = bv.dataset.v === '3d'; return pintar(false); }
     if (bt) { var a = bt.dataset.a;
-      if (a === 'x') return $('#kCj').close();
       if (a === 'nueva') { var n = nueva(b.cajas.length + 1); b.cajas.push(n); b.cajaSel = n.id; selE = null; }
       else if (a === 'borrar') { if (b.cajas.length > 1) { b.cajas.splice(b.cajas.indexOf(cj), 1); b.cajaSel = b.cajas[0].id; } else { cj.ent = []; } selE = null; }
       else if (a === 'quitar') { cj.ent = cj.ent.filter(function (x) { return x.id !== selE; }); selE = null; }
@@ -222,7 +273,9 @@
   function pintar(todo) {
     var b = base(), cj = actual(), o = calcular(cj);
     $('#cjSel').innerHTML = b.cajas.map(function (c) { return '<option value="' + c.id + '"' + (c.id === cj.id ? ' selected' : '') + '>' + esc(c.tag || '(sin tag)') + '</option>'; }).join('');
-    $('#cjDib').innerHTML = dibujo(cj, o, selE);
+    var r0 = montar(); if (!r0) return; [].forEach.call(r0.querySelectorAll('.cj-vista button'), function (q) { q.setAttribute('aria-pressed', String((q.dataset.v === '3d') === ver3)); });
+    $('#cjDib').hidden = ver3; $('#cj3d').hidden = !ver3; $('#cjAy').innerHTML = ver3 ? 'Arrastra para girar la caja y usa la rueda para acercar. La tapa se dibuja translúcida para ver los cables' + (cj.modo === 'bornes' ? ' y la regleta' : '') + '. Para agregar o mover entradas vuelve a la vista 2D o usa la lista de la izquierda.' : 'Arma la caja a mano: toca un <b>+</b> naranjo para agregar una entrada por esa cara, toca un ducto para editarlo y arrástralo a otra cara para moverlo. El ducto celeste es la salida.';
+    if (ver3) pintar3(cj, o); else { soltar3(); $('#cjDib').innerHTML = dibujo(cj, o, selE); }
     if (todo) {
       var sel = o.ent.filter(function (x) { return x.e.id === selE; })[0], h = '<h4>Caja</h4><div class="cj-2"><label>Tag<input data-c="tag" value="' + esc(cj.tag) + '"></label><label>Reserva [%]<input data-c="reserva" type="number" min="0" max="100" step="5" value="' + esc(cj.reserva) + '"></label></div>' +
         '<label>Tipo de caja<select data-c="modo">' + opc(MODOS, cj.modo) + '</select></label><label>Criterio de medidas<select data-c="crit">' + opc(CRIT, cj.crit) + '</select></label>' +
@@ -245,7 +298,7 @@
     var cj = actual(), o = calcular(cj), b = I.datos(), tag = (cj.tag || 'JB') + '-S', d = b.ductos.filter(function (x) { return x.caja === cj.id; })[0];
     if (!d) { d = I.nuevo(b.ductos.length + 1); b.ductos.push(d); d.caja = cj.id; }
     d.tag = tag; d.ruta = 'SALIDA DE ' + up(cj.tag); d.tubo = cj.tubo; d.min = cj.salida.med || '3/4"'; d.cables = o.cables.map(function (x) { return { tag: x.tag || '', cat: x.cat, n: x.n }; }); b.sel = d.id;
-    I.cambio(); $('#kCj').close(); var est = $('#kEstado'); if (est) est.textContent = 'Se ' + 'creó o actualizó el ducto ' + tag + ' con los cables de salida de la caja ' + cj.tag + '.';
+    I.cambio(); var est = $('#kEstado'); if (est) est.textContent = 'Se ' + 'creó o actualizó el ducto ' + tag + ' con los cables de salida de la caja ' + cj.tag + '.';
   }
   function imprimir() {
     var cj = actual(), o = calcular(cj), m = o.min, imp = $('#imp'); if (!imp) return;
@@ -254,7 +307,8 @@
       '<h3>Entradas</h3><table><thead><tr><th>N°</th><th>Tag</th><th>Cable</th><th>Cant.</th><th>Cara</th><th>Ducto</th><th>Ocupación</th></tr></thead><tbody>' + o.ent.map(function (x, i) { return '<tr><td>' + (i + 1) + '</td><td>' + esc(x.e.tag) + '</td><td class="izq">' + esc((x.k.cod !== '—' ? x.k.cod + ' ' : '') + x.k.desc) + '</td><td>' + x.n + '</td><td>' + LADOS[x.e.lado] + '</td><td>' + esc(x.t.s[0]) + '</td><td>' + n1(x.t.occ, 1) + ' %</td></tr>'; }).join('') + '</tbody></table>' +
       '<h3>Verificación</h3><table><tbody>' + o.avisos.map(function (a) { return '<tr><td>' + (a.sev === 'ok' ? 'Cumple' : a.sev === 'warn' ? 'Revisar' : 'No cumple') + '</td><td class="izq">' + esc(a.txt) + (a.sug ? ' Sugerencia: ' + esc(a.sug) : '') + '</td><td>' + esc(a.ref) + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<h3>Materiales de referencia</h3><table><thead><tr><th>Cant.</th><th>Un.</th><th>Descripción</th><th>Fuente</th></tr></thead><tbody>' + o.mats.map(function (x) { return '<tr><td>' + x.c + '</td><td>' + x.u + '</td><td class="izq">' + esc(x.d) + '</td><td>' + esc(x.f) + '</td></tr>'; }).join('') + '</tbody></table></div>';
-    $('#kCj').close(); setTimeout(function () { window.print(); }, 150);
+    setTimeout(function () { window.print(); }, 150);
   }
-  window.LAZOS_CAJA = { abrir: abrir, calcular: calcular, base: base, nueva: nueva };
+  (function inicio(n) { try { if (montar()) return pintar(true); } catch (e) { console.warn('Caja', e); } if (n < 20) setTimeout(function () { inicio(n + 1); }, 500); })(0);
+  window.LAZOS_CAJA = { abrir: abrir, montar: function () { if (montar()) pintar(true); }, calcular: calcular, base: base, nueva: nueva };
 })();
