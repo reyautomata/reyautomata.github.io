@@ -292,5 +292,21 @@
       if (n) { n.focus(); if (n.select && n.tagName === 'INPUT') try { n.select(); } catch (er) {} n.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
     }, 40);
   }, true);
-})();
 
+  // ── Flujo de ingeniería: barra para seguir a la fase siguiente ──
+  // Si se llegó a un módulo desde el flujo, una barra pequeña recuerda la fase y permite volver o pasar a la siguiente.
+  (function () {
+    if (window.top !== window || /\/flujo\/(index\.html)?$/.test(location.pathname)) return;
+    var F = null; try { F = JSON.parse(sessionStorage.getItem('reyengi-flujo') || 'null'); } catch (e) {}
+    var BASE = window.RS_BASE || '../', esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    if (!F || F.fase == null) return;
+    var n = F.n || 7, ult = F.fase >= n - 1;
+    var bar = document.createElement('div'); bar.className = 'rs-flujo'; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Flujo de ingeniería');
+    bar.innerHTML = '<span>Flujo · <b>Fase ' + F.fase + ': ' + esc(F.t || '') + '</b></span>' +
+      '<a href="' + BASE + 'flujo/#fase=' + F.fase + '">Volver al flujo</a>' +
+      (ult ? '' : '<a class="sig" href="' + BASE + 'flujo/#fase=' + (F.fase + 1) + '">Siguiente fase →</a>') +
+      '<button type="button" aria-label="Cerrar la barra del flujo">✕</button>';
+    bar.querySelector('button').addEventListener('click', function () { try { sessionStorage.removeItem('reyengi-flujo'); } catch (e) {} bar.remove(); });
+    document.body.appendChild(bar);
+  })();
+})();
