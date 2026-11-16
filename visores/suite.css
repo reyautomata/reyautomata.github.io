@@ -123,10 +123,8 @@ body:not(.rs-portada) .fp .lect b { font-size: 10px !important; }
 .rs-pestana { display: none; position: fixed; left: 0; top: calc(52px + var(--rs-cinta, 0px)); z-index: 13; writing-mode: vertical-rl; transform: rotate(180deg); background: var(--brand); color: #fff; border: 1px solid var(--accent); border-left: 0; border-radius: 6px 0 0 6px; padding: 10px 4px; font: 700 11px/1 var(--f-body, system-ui, sans-serif); letter-spacing: .5px; cursor: pointer; }
 .rs-pestana:hover { background: #EF5A05; } .rs-pestana:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (min-width: 901px) {
-  body.rs-plegado .rs-pestana { display: block; }
+  /* Sin pestaña lateral: el explorador retraído se vuelve a mostrar desde la cinta (Inicio › Vista › Explorador) o con Ctrl+B */
   body.rs-plegado .rs-abrir { display: none; }
-  body.rs-marco.rs-plegado { padding-left: 22px; }
-  body.rs-plegado .rs-estado { left: 22px; }
   /* Con el explorador a la vista, las secciones se eligen en el árbol: la fila de pestañas sobra */
   body.rs-marco:not(.rs-plegado) .barra nav.tabs { display: none; }
 }
