@@ -61,6 +61,18 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
 .pen li { padding: 5px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
 .pen li:last-child { border-bottom: 0; }
 .vacio { color: var(--muted); font-size: 13px; }
+.aviso { grid-column: 1 / -1; font-size: 12.5px; color: var(--warn); }
+.caja.cam { border-color: var(--warn); }
+.cam .grp { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.cam .grp:last-of-type { border-bottom: 0; }
+.cam .cab2 { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.cam .cab2 b { font-family: var(--f-mono); }
+.cam ul { list-style: none; margin: 4px 0; padding: 0; font-size: 12.5px; color: var(--muted); }
+.cam ul b { color: var(--fg); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.chip { font-size: 11.5px; padding: 1px 7px; border-radius: 10px; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); }
+.cam button { min-height: 28px; padding: 3px 10px; font-size: 12px; }
+.cam .pie { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 10px; }
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
@@ -83,6 +95,12 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     <ol class="fases" id="fases"></ol>
   </section>
   <aside class="lado">
+    <div class="caja cam" id="cajaCam" hidden>
+      <h3>Propagación de cambios</h3>
+      <p class="nota">Cambios en la base que todavía no se revisan en los entregables que dependen de ellos.</p>
+      <div id="cam"></div>
+      <div class="pie"><small class="vacio" id="camN"></small><button type="button" id="camTodo">Marcar todo revisado</button></div>
+    </div>
     <div class="caja">
       <h3>Pendientes</h3>
       <p class="nota">Lo que falta en la base para cerrar las fases en curso.</p>
@@ -172,10 +190,16 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     });
     return F;
   }
+  var FASE_ENT = [['inst'], [], ['es'], ['lazo'], ['circ'], [], ['mat']];
+  var CAMPO = { tag: 'Tag', tipo: 'Tipo de señal', hilos: 'Hilos', sensor: 'Sensor', senal: 'Señal', rango: 'Rango', desc: 'Descripción', servicio: 'Servicio',
+    marca: 'Marca', modeloInst: 'Modelo', mod: 'Tarjeta', canal: 'Canal', lazo: 'Lazo', hmi: 'Funciones HMI', jb: 'Caja de conexiones', par: 'Par',
+    cable: 'Cable', cableSpec: 'Especificación del cable', cable2: 'Multipar', cable2Spec: 'Especificación del multipar', alimTab: 'Tablero de alimentación' };
   var NOMBRE = { ok: 'Con datos', act: 'En curso', pend: 'Por iniciar', bloq: 'Bloqueada' };
 
   function pintar() {
     var d = P.activo(), m = medir(), F = fases(m);
+    var CP = (P.cambios ? P.cambios() : []).filter(function (c) { return !c.rev; });
+    F.forEach(function (f, i) { f.cam = CP.filter(function (c) { return (c.afecta || []).some(function (k) { return FASE_ENT[i].indexOf(k) >= 0; }); }).length; });
     $('proy').textContent = (d.numero ? d.numero + ' · ' : '') + (d.nombre || 'Proyecto');
     $('fases').innerHTML = F.map(function (f, i) {
       var bloq = f.est === 'bloq';
@@ -184,6 +208,7 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
         '<div><span class="et">En la base</span><span class="dato">' + esc(f.datos) + '</span></div>' +
         '<div><span class="et">Generadores</span>' + f.links.map(function (l) { return esc(l[0]); }).join(' · ') + '</div>' +
         (bloq ? '<div class="motivo">' + esc(f.motivo) + '</div>' : '') +
+        (f.cam ? '<div class="aviso">' + f.cam + (f.cam === 1 ? ' cambio' : ' cambios') + ' en la base por revisar en estos entregables</div>' : '') +
         '<div class="acc">' + f.links.map(function (l) {
           return '<a class="btn' + (l[2] ? ' pri' : '') + '" href="' + esc(l[1]) + '"' + (bloq ? ' aria-disabled="true" tabindex="-1"' : '') + '>' + esc(l[0]) + '</a>';
         }).join('') + f.dev.map(function (x) { return '<span class="dev">' + esc(x) + ' · en desarrollo</span>'; }).join('') + '</div>' +
@@ -200,6 +225,7 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     $('pend').innerHTML = pen.length ? pen.map(function (p) { return '<li><span>' + esc(p[0]) + '</span><a href="' + esc(p[1]) + '">Ir</a></li>'; }).join('')
       : '<li class="vacio">Sin pendientes en la base.</li>';
 
+    pintarCambios(CP);
     var A = P.leer('flujo', {}) || {}, alc = A.alcance || {};
     $('comp').innerHTML = COMP.map(function (c) {
       return '<li><input type="checkbox" id="c_' + c[0] + '" data-k="' + c[0] + '"' + (alc[c[0]] ? ' checked' : '') + '>' +
@@ -208,6 +234,35 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     }).join('');
   }
 
+  function pintarCambios(CP) {
+    $('cajaCam').hidden = !CP.length;
+    if (!CP.length) return;
+    var g = {}, orden = [];
+    CP.slice().reverse().forEach(function (c) { var k = c.sid || c.tag; if (!g[k]) { g[k] = []; orden.push(k); } g[k].push(c); });
+    var MAX = 12;
+    $('cam').innerHTML = orden.slice(0, MAX).map(function (k) {
+      var cs = g[k], tag = cs[0].tag, ent = {};
+      cs.forEach(function (c) { (c.afecta || []).forEach(function (e) { ent[e] = 1; }); });
+      var lineas = cs.map(function (c) {
+        if (c.campo === '+') return '<li><b>Señal agregada</b></li>';
+        if (c.campo === '-') return '<li><b>Señal eliminada</b></li>';
+        return '<li><b>' + esc(CAMPO[c.campo] || c.campo) + ':</b> ' + esc(c.antes || '(vacío)') + ' → ' + esc(c.despues || '(vacío)') + '</li>';
+      }).join('');
+      var lz = lazoDe({ tag: tag });
+      return '<div class="grp"><div class="cab2"><b>' + esc(tag) + '</b><span>' +
+        (cs.some(function (c) { return c.campo === '-'; }) ? '' : '<a class="btn" href="../lazos/#lazo=' + encodeURIComponent(lz) + '">Ver lazo</a> ') +
+        '<button type="button" data-ids="' + esc(cs.map(function (c) { return c.id; }).join(',')) + '">Revisado</button></span></div>' +
+        '<ul>' + lineas + '</ul><div class="chips">' + Object.keys(ent).map(function (e) { return '<span class="chip">' + esc((P.ENTREGABLE || {})[e] || e) + '</span>'; }).join('') + '</div></div>';
+    }).join('');
+    $('camN').textContent = CP.length + (CP.length === 1 ? ' cambio pendiente' : ' cambios pendientes') + (orden.length > MAX ? ' · se muestran los ' + MAX + ' tags más recientes' : '');
+  }
+  $('cam').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-ids]'); if (!b) return;
+    P.revisarCambios(b.dataset.ids.split(',')); pintar();
+  });
+  $('camTodo').addEventListener('click', function () {
+    if (window.confirm('¿Marcar como revisados todos los cambios pendientes?')) { P.revisarCambios(); pintar(); }
+  });
   $('comp').addEventListener('change', function (e) {
     var k = e.target.dataset.k; if (!k) return;
     var A = P.leer('flujo', {}) || {}; A.alcance = A.alcance || {}; A.alcance[k] = e.target.checked;
