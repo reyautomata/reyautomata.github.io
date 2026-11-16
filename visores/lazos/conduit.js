@@ -194,7 +194,8 @@
   //    sev: ok (cumple), warn (advertencia o dato faltante), err (no cumple). «s» es el tamaño que se está mirando.
   function verificar(dc, r, s) {
     var o = [], ric = dc.crit === 'RIC', nor = ric ? 'RIC N°04' : 'NEC', el = r.elegido, T = r.T;
-    function add(sev, txt, ref, sug, acc) { o.push({ sev: sev, txt: txt, ref: ref || '', sug: sug || '', acc: acc || '' }); }
+    function add(sev, txt, ref, sug, acc) { var ir = /^(Tabla|Cap\. 9 Tabla|Cabida)/.test(ref || '') && !/nota/.test(ref) ? '#kTam' : /^7\.16\.1\.(13|7)$|^7\.9\.7\.8$/.test(ref || '') ? (/curva/.test(sug || '') && !/Escribe/.test(sug) && !(parseFloat(dc.largo) > 20) ? '#kForm [data-k=curvas]' : '#kForm [data-k=largo]') : /nota/.test(ref || '') ? '#kForm [data-k=cond]' : /^7\.9\.7\.1$|Criterio/.test(ref || '') ? '#kForm [data-k=min]' : '#kCables';
+      o.push({ sev: sev, txt: txt, ref: ref || '', sug: sug || '', acc: acc || '', ir: ir }); }   // «ir»: dónde se corrige
     if (!r.n) { add('warn', 'El ducto no tiene cables.', '', 'Agrega los cables a mano o tráelos del listado de circuitos.'); return o; }
     var i = s ? T.s.indexOf(s) : -1, f = i >= 0 ? r.filas[i] : null, occ = f ? f.occ : 0, sigue = el ? 'Usa Ø ' + el.s[0] + ' (ocupación ' + n1(el.occ, 1) + ' %).' : 'Ningún tamaño de ' + T.c + ' alcanza: divide los cables en dos ductos o usa bandeja o escalerilla.';
     var req = r.suma * (1 + r.res / 100) / (r.lim / 100);
@@ -238,6 +239,43 @@
   function separarSenal() { var b = datos(), dc = actual(), sen = dc.cables.filter(function (c) { var k = CATI[c.cat]; return k && CLASE_SENAL[k.f]; }); if (!sen.length || sen.length === dc.cables.length) return;
     var d = nuevo(b.ductos.length + 1); d.tag = dc.tag + '-S'; d.ruta = dc.ruta; d.tubo = dc.tubo; d.crit = dc.crit; d.cond = dc.cond; d.min = dc.min; d.reserva = dc.reserva; d.largo = dc.largo; d.curvas = dc.curvas; d.cables = sen;
     dc.cables = dc.cables.filter(function (c) { return sen.indexOf(c) < 0; }); b.ductos.splice(b.ductos.indexOf(dc) + 1, 0, d); }
+  // Lleva al lugar donde se corrige: abre su pestaña si está en otra, lo deja a la vista, con el foco y destacado
+  function irA(sel) {
+    var el = $(sel); if (!el) return;
+    function listo() { el.scrollIntoView({ block: 'center', inline: 'nearest' }); var f = /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName) ? el : null; if (f) { try { f.focus({ preventScroll: true }); if (f.select && f.tagName === 'INPUT') f.select(); } catch (e) {} }
+      var m = f ? (f.closest('label') || f) : el; m.classList.add('kric-dest'); setTimeout(function () { m.classList.remove('kric-dest'); }, 3500); }
+    if (el.offsetParent !== null) return listo();
+    var g0 = el.closest('.dk-grupo'); if (!g0) return listo();
+    var ids = [].map.call(g0.querySelectorAll('.dk-tab:not(.on)'), function (t) { return t.dataset.id; }), i = 0;   // el grupo se redibuja en cada cambio de pestaña: se vuelve a buscar cada vez
+    (function sig() { if (el.offsetParent !== null || i >= ids.length) return listo(); var g = el.closest('.dk-grupo'), b = g && g.querySelector('.dk-tab[data-id="' + ids[i++] + '"]'); if (b) b.click(); setTimeout(sig, 70); })();
+  }
+  // Alerta flotante y descartable: aparece cuando el ducto no cumple; cada incumplimiento trae su sugerencia y el botón que lleva a corregirlo.
+  // Si se descarta, no vuelve a salir mientras los incumplimientos de ese ducto sean los mismos.
+  var flDesc = {}, flCaja = null;
+  function flotante(dc, mal, norma) {
+    if (!flCaja) { flCaja = document.createElement('div'); flCaja.id = 'kRicFl'; flCaja.className = 'kric-fl'; flCaja.setAttribute('role', 'alert'); flCaja.hidden = true; document.body.appendChild(flCaja);
+      var st = document.createElement('style'); st.textContent = '.kric-fl{position:fixed;z-index:75;top:64px;right:16px;width:min(390px,calc(100vw - 24px));max-height:calc(100vh - 150px);overflow:auto;background:#1b1418;color:#EAF2F8;border:1.5px solid #F85149;border-radius:10px;padding:10px 12px 12px;box-shadow:0 14px 34px rgba(0,0,0,.6);font:12.5px/1.45 system-ui,"Segoe UI",sans-serif;color-scheme:dark}' +
+        '.kric-fl[hidden]{display:none}.kric-fl header{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}.kric-fl header b{flex:1;color:#ff8a82;font-size:13.5px}.kric-fl header small{display:block;color:#94A9BE;font-weight:400;font-size:11.5px}' +
+        '.kric-fl ol{margin:0;padding:0;list-style:none;display:grid;gap:8px}.kric-fl li{border-top:1px solid #4a2a2c;padding-top:8px}.kric-fl li p{margin:0 0 3px}.kric-fl li em{display:block;font-style:normal;color:#c9d6e2;margin-bottom:5px}.kric-fl li em::before{content:"Sugerencia: ";font-weight:600;color:#FFB070}' +
+        '.kric-fl button{font:600 11.5px system-ui,sans-serif!important;border-radius:6px!important;padding:4px 10px!important;min-height:24px!important;cursor:pointer;margin-right:5px;color:#EAF2F8!important;background:#18283C!important;border:1px solid #2C4563!important}' +
+        '.kric-fl button.pri{background:#FF8C32!important;border-color:#FF8C32!important;color:#1b0d02!important}.kric-fl button:focus-visible{outline:2px solid #38C8E8;outline-offset:1px}.kric-fl header button{margin:0;padding:0 8px!important}' +
+        '.kric-dest{outline:3px solid #FF8C32!important;outline-offset:2px!important;box-shadow:0 0 0 7px rgba(255,140,50,.22)!important;border-radius:6px}@media print{.kric-fl{display:none!important}}';
+      document.head.appendChild(st);
+      flCaja.addEventListener('click', function (ev) { var b = ev.target.closest('button'); if (!b) return;
+        if (b.dataset.x) { flDesc[flCaja.dataset.d] = flCaja.dataset.k; flCaja.hidden = true; }
+        else if (b.dataset.ir) irA(b.dataset.ir);
+        else if (b.dataset.ric === 'tam') { verTam = null; pintar(); } else if (b.dataset.ric === 'separar') { separarSenal(); verTam = null; cambio(); } });
+      document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && flCaja && !flCaja.hidden) { flDesc[flCaja.dataset.d] = flCaja.dataset.k; flCaja.hidden = true; } });
+      setInterval(function () { if (!flCaja || flCaja.hidden) return; var f = $('#kForm'), sec = f && f.closest('section[id]'); if (!f || (sec && sec.hidden)) flCaja.hidden = true; }, 600);   // al salir de canalizaciones, la alerta se retira
+    }
+    var k = mal.map(function (x) { return x.txt; }).join('|'), f = $('#kForm'), sec = f && f.closest('section[id]');
+    if (!mal.length || (sec && sec.hidden)) { flCaja.hidden = true; if (!mal.length) delete flDesc[dc.id]; return; }
+    if (flDesc[dc.id] === k) { flCaja.hidden = true; return; }
+    flCaja.dataset.d = dc.id; flCaja.dataset.k = k;
+    flCaja.innerHTML = '<header><b>✗ ' + esc(dc.tag) + ' no cumple ' + esc(norma) + '<small>' + mal.length + ' punto' + (mal.length === 1 ? '' : 's') + ' por corregir</small></b><button type="button" data-x="1" aria-label="Descartar la alerta">✕</button></header><ol>' +
+      mal.map(function (x) { return '<li><p>' + esc(x.txt) + '</p>' + (x.sug ? '<em>' + esc(x.sug) + '</em>' : '') + '<button type="button" class="pri" data-ir="' + esc(x.ir) + '">Ir a corregir</button>' + (x.acc === 'tam' ? '<button type="button" data-ric="tam">Usar el tamaño recomendado</button>' : x.acc === 'separar' ? '<button type="button" data-ric="separar">Separar la señal en otro ducto</button>' : '') + '</li>'; }).join('') + '</ol>';
+    flCaja.hidden = false;
+  }
   function pintarRic(dc, r, s) {
     var av = $('#kAvisos'); if (!av) return; var caja = $('#kRic');
     if (!caja) { caja = document.createElement('div'); caja.id = 'kRic'; caja.className = 'kric'; av.parentNode.insertBefore(caja, av);
@@ -249,9 +287,10 @@
       document.head.appendChild(st);
       caja.addEventListener('click', function (ev) { var b = ev.target.closest('button[data-ric]'); if (!b) return; if (b.dataset.ric === 'tam') { verTam = null; pintar(); } else if (b.dataset.ric === 'separar') { separarSenal(); verTam = null; cambio(); } });
     }
-    var c = verificar(dc, r, s), mal = c.filter(function (x) { return x.sev === 'err'; }), nav = c.filter(function (x) { return x.sev === 'warn'; }).length, ant = caja.querySelector('details'), abierto = ant ? ant.open : false;
+    var cF = verificar(dc, r, s); flotante(dc, cF.filter(function (x) { return x.sev === 'err'; }), cF.norma || 'RIC N°04');
+    var c = cF, mal = c.filter(function (x) { return x.sev === 'err'; }), nav = c.filter(function (x) { return x.sev === 'warn'; }).length, ant = caja.querySelector('details'), abierto = ant ? ant.open : false;
     var boton = function (x) { return x.acc === 'tam' ? '<button type="button" data-ric="tam">Usar el tamaño recomendado</button>' : x.acc === 'separar' ? '<button type="button" data-ric="separar">Separar los cables de señal en otro ducto</button>' : ''; };
-    caja.innerHTML = (mal.length ? '<div class="kric-al" role="alert"><b>✗ No cumple ' + esc(c.norma || 'RIC N°04') + ':</b> ' + mal.length + ' incumplimiento' + (mal.length === 1 ? '' : 's') + ' por corregir.<ul>' + mal.map(function (x) { return '<li>' + esc(x.txt) + (x.sug ? '<em>' + esc(x.sug) + '</em>' : '') + boton(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+    caja.innerHTML =
       '<details' + (abierto ? ' open' : '') + '><summary>Verificación ' + esc(c.norma || 'RIC N°04') + ' <span class="' + (mal.length ? 'mal' : nav ? 'av' : 'bien') + '">' + (mal.length ? mal.length + ' incumplimiento' + (mal.length === 1 ? '' : 's') : 'cumple ✓') + (nav ? ' · ' + nav + ' advertencia' + (nav === 1 ? '' : 's') : '') + '</span></summary><ul>' +
       c.map(function (x) { return '<li class="' + (x.sev === 'ok' ? 'bien' : x.sev === 'warn' ? 'av' : 'mal') + '"><b>' + (x.sev === 'ok' ? '✓' : x.sev === 'warn' ? '!' : '✗') + '</b><span>' + esc(x.txt) + '</span><small>' + esc(x.ref) + '</small>' + (x.sug && x.sev !== 'ok' ? '<em>' + esc(x.sug) + '</em>' : '') + '</li>'; }).join('') + '</ul></details>';
   }
