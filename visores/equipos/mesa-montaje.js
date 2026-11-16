@@ -54,7 +54,11 @@
     descargar: function (ids, f) { bajar(f === 'PDF' ? 'pdf' : f === 'DXF' ? 'dxf' : 'png'); }
   });
   // La revisión vigente del cuadro se escribe en la viñeta del plano (campo Revisión de la ventana de ajuste del visor)
-  function vineta() { var d = detalle(); if (!d) return; var r = (datos().det[d.code] || {}).revs; if (!r) return; var u = r[r.length - 1] || {}; ponerCampo('Revisión', u.rev || ''); if (u.por) ponerCampo('Dibujó', u.por); if (u.reviso) ponerCampo('Revisó', u.reviso); if (u.aprobo) ponerCampo('Aprobó', u.aprobo); }
+  function vineta() { var d = detalle(), w = W(); if (!d) return; var r = (datos().det[d.code] || {}).revs, pr = {}; try { pr = window.REProyectos.activo() || {}; } catch (e) {}
+    // Datos del proyecto en la viñeta (solo si la casilla está vacía) y cuadro de revisiones del detalle
+    [['Cliente', pr.cliente], ['Proyecto', pr.proyecto || pr.nombre], ['N° de proyecto', pr.numero], ['Dibujó', pr.por], ['Revisó', pr.reviso], ['Aprobó', pr.aprobo]].forEach(function (c) { var i = campo(c[0]); if (i && !i.value && c[1]) ponerCampo(c[0], c[1]); });
+    try { if (w && w.__planoRevs) w.__planoRevs(r && r.length ? r : null); } catch (e) {}
+    if (r) { var u = r[r.length - 1] || {}; ponerCampo('Revisión', u.rev || ''); if (u.por) ponerCampo('Dibujó', u.por); if (u.reviso) ponerCampo('Revisó', u.reviso); if (u.aprobo) ponerCampo('Aprobó', u.aprobo); } }
 
   // Pestaña Propiedades: ficha del detalle en pantalla, su lista de materiales y sus notas (tal como las muestra el visor)
   function bom() { var d = D(), f = []; if (!d) return f; [].some.call(d.querySelectorAll('aside table'), function (tb) { if (!/ÍTEM|ITEM/i.test(txt(tb.querySelector('thead') || tb.rows[0]))) return false; [].forEach.call(tb.querySelectorAll('tbody tr'), function (r) { var c = [].map.call(r.cells, txt); if (c.length >= 3) f.push(c.slice(0, 3)); }); return true; }); return f; }
@@ -93,6 +97,8 @@
 
   // ── Montaje de la mesa (la primera vez que se abre un visor) y seguimiento del visor ──
   function encajar() { if (!dock) return; var visible = hueco.offsetParent !== null && !viewer.hidden;
+    var d = null, amplio = false; try { d = D(); amplio = !!(d && d.querySelector('.plano-ov:not([hidden])')); } catch (e) {}
+    if (amplio && !viewer.hidden) { var vb = viewer.querySelector('.vbar').getBoundingClientRect(); frame.style.visibility = ''; frame.style.left = '0px'; frame.style.top = vb.bottom + 'px'; frame.style.width = innerWidth + 'px'; frame.style.height = (innerHeight - vb.bottom) + 'px'; return; } /* la ventana de ajuste y la lámina ampliada usan toda la pantalla */
     if (!visible) { frame.style.visibility = 'hidden'; return; } var r = hueco.getBoundingClientRect();
     frame.style.visibility = ''; frame.style.left = r.left + 'px'; frame.style.top = r.top + 'px'; frame.style.width = r.width + 'px'; frame.style.height = r.height + 'px'; }
   function modos() { if (!dock) return; var ce = dock.cerrados(); [].forEach.call(conm.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(ce.indexOf(b.dataset.p) < 0)); }); }
