@@ -9,7 +9,7 @@
  */
 (function () {
   'use strict';
-  var A = window.__LAZOS;
+  var A = window.__LAZOS, BASE = ((document.currentScript || {}).src || '').replace(/[^\/]*$/, '');
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = A.esc;
   function E() { return A.E(); }
@@ -657,6 +657,26 @@
   // ── Listado de canalizaciones (entregable): una fila por ducto con la estructura habitual de los listados de proyecto ──
   //    TAG · CARACTERÍSTICAS · DIMENSIONES · SERVICIO [V] · LARGO [m] · PLANO DISP. / CAN. · OBSERVACIONES · REV.
   var LCOL = ['TAG', 'CARACTERÍSTICAS', 'DIMENSIONES', 'SERVICIO [V]', 'LARGO [m]', 'PLANO DISP. / CAN.', 'OBSERVACIONES', 'REV.'];
+  // Valores sugeridos para el listado (se puede escribir cualquier otro) y notas recomendadas para el pie del anexo
+  var SUG_SERV = ['24 VDC', '4-20 mA', '120', '220', '380', '400', '480', '4160', 'Instrumentación', 'Control', 'Comunicaciones', 'Fibra óptica', 'Reserva'];
+  var SUG_REV = ['A', 'B', 'C', 'D', 'P', '0', '1', '2', '3'];
+  var SUG_OBS = ['Proyectado', 'Existente', 'Existente (Nota 1)', 'Reserva', 'A la vista', 'Enterrado', 'Embebido en hormigón', 'Tramo vertical', 'Sector ', 'Área ', 'Sala eléctrica', 'Sala de control', 'Lleva caja de paso', 'Ver plano de disposición'];
+  var SUG_NOTAS = ['Canalización existente por la que se tienden los cables de este proyecto.',
+    'Los largos son referenciales; el contratista los verificará en terreno antes de fabricar o comprar.',
+    'El tamaño de los ductos se determinó según RIC N°04 de la SEC, Tabla N°4.21 (ocupación máxima de 50 % con un conductor y 33 % con dos o más).',
+    'Los tramos de más de 20 m o con más de dos curvas llevan cajas de paso intermedias (RIC N°04 7.16.1.13).',
+    'Las curvas respetan el radio mínimo de la tubería y de los cables (RIC N°04 Tabla N°4.22 y 6.2.8).',
+    'La tubería metálica a la vista se soporta a no más de 1,50 m, con abrazaderas sobre riel (RIC N°04 7.16.4.4).',
+    'Los cables de señal y los de fuerza van en canalizaciones separadas (RIC N°04 7.1.7).',
+    'Las canalizaciones metálicas quedan conectadas al sistema de puesta a tierra.',
+    'Los ductos se sellan en su ingreso a salas, gabinetes y cajas.',
+    'En ambientes corrosivos o enterrados, la tubería metálica lleva protección contra la corrosión (RIC N°04 5.41).',
+    'El tipo de tubería y sus accesorios cumplen la especificación técnica del proyecto.',
+    'El recorrido definitivo se ajusta en terreno según interferencias, sin superar las curvas indicadas.'];
+  function notaTiene(t) { return String(lstDatos().notas || '').indexOf(t) >= 0; }
+  function notaAlternar(t) { var l = lstDatos(), ls = String(l.notas || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (notaTiene(t)) ls = ls.filter(function (x) { return x.indexOf(t) < 0; }); else ls.push('Nota X: ' + t);
+    var n = 0; l.notas = ls.map(function (x) { return /^Nota\s+\S+:/i.test(x) ? x.replace(/^Nota\s+\S+:/i, 'Nota ' + (++n) + ':') : x; }).join('\n'); }
   function lstDatos() { var b = datos(); b.lst = b.lst || { num: '', proy: '', notas: '' }; return b.lst; }
   function lstFilas() {
     return datos().ductos.map(function (dc) { var r = calcular(dc), T = r.T;
@@ -721,9 +741,10 @@
     box = document.createElement('div'); box.id = 'kDocBox';
     box.innerHTML = '<div class="kdoc-barra"><span class="kdoc-seg" role="group" aria-label="Documento a emitir">' + Object.keys(DOCS).map(function (k) { return '<button type="button" data-doc="' + k + '">' + DOCS[k] + '</button>'; }).join('') + '</span><button type="button" class="pri" data-da="pdf">Imprimir / PDF</button><button type="button" data-da="xls">Descargar Excel</button></div>' +
       '<div class="kdoc-id"><label>N° de documento<input data-dl="num" placeholder="Ej.: PRY-0400-EL-LEQ-00001"></label><label>Proyecto o área<input data-dl="proy" placeholder="Opcional"></label><label class="kdoc-notas">Notas al pie del anexo (una por línea)<textarea data-dl="notas" rows="2" placeholder="Nota 1: …"></textarea></label></div>' +
-      '<div class="kdoc-revs" id="kDocRevs"></div><p class="kdoc-ay" id="kDocAy"></p><div id="kDoc"></div>';
+      '<details class="kdoc-sug" id="kDocSug"><summary>Notas recomendadas para el anexo (toca para agregar o quitar)</summary><div class="kdoc-chips"></div></details><div class="kdoc-revs" id="kDocRevs"></div><p class="kdoc-ay" id="kDocAy"></p><div id="kDoc"></div>';
     sec.appendChild(box);
     box.addEventListener('click', function (e) { var t = e.target.closest('button'); if (!t) return;
+      if (t.dataset.nota) { notaAlternar(SUG_NOTAS[+t.dataset.nota]); A.guardar(); return pintarDoc(true); }
       if (t.dataset.doc) { docs().sel = t.dataset.doc; A.guardar(); pintarDoc(true); }
       else if (t.dataset.da === 'pdf') { $('#imp').innerHTML = docHtml(docs().sel); setTimeout(function () { window.print(); }, 150); }
       else if (t.dataset.da === 'xls') { if (docs().sel === 'listado') lstExcel(); else excel(); }
@@ -747,11 +768,11 @@
     var id = docs().sel, l = lstDatos(), mesa = !!(window.RE_EMISION && window.RE_EMISION.adaptadores && window.RE_EMISION.adaptadores['v-cond']);
     [].forEach.call(box.querySelectorAll('[data-doc]'), function (q) { q.setAttribute('aria-pressed', String(q.dataset.doc === id)); });
     [].forEach.call(box.querySelectorAll('[data-dl]'), function (q) { if (document.activeElement !== q) q.value = q.dataset.dl === 'num' ? docNum(id) : l[q.dataset.dl] || ''; });
-    box.querySelector('.kdoc-notas').hidden = id !== 'listado';
+    box.querySelector('.kdoc-notas').hidden = id !== 'listado'; var sg = $('#kDocSug'); sg.hidden = id !== 'listado'; sg.querySelector('.kdoc-chips').innerHTML = SUG_NOTAS.map(function (t, i) { var on = notaTiene(t); return '<button type="button" data-nota="' + i + '" aria-pressed="' + on + '">' + (on ? '✓ ' : '+ ') + esc(t) + '</button>'; }).join('');
     var rv = $('#kDocRevs');
     if (mesa) { rv.innerHTML = ''; $('#kDocAy').textContent = 'Las revisiones se manejan en la pestaña «Control documental»: 1 · Actualizar revisiones (se refleja aquí para revisarla) y luego 2 · Emitir.'; }
     else if (!(document.activeElement && document.activeElement.dataset.rc && rv.contains(document.activeElement))) { var f = docFilas(id);
-      rv.innerHTML = '<b>Revisiones del documento</b><table><thead><tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th><th></th></tr></thead><tbody>' + f.map(function (x, i) { return '<tr>' + ['rev', 'fecha', 'desc', 'por', 'reviso', 'aprobo'].map(function (k) { return '<td><input data-ri="' + i + '" data-rc="' + k + '" value="' + esc(x[k] || '') + '" aria-label="' + k + '"></td>'; }).join('') + '<td><button type="button" data-rv="' + i + '" title="Quitar esta revisión" aria-label="Quitar revisión">×</button></td></tr>'; }).join('') + '</tbody></table><button type="button" data-rv="+">+ Agregar revisión</button>';
+      rv.innerHTML = '<b>Revisiones del documento</b><table><thead><tr><th>Rev.</th><th>Fecha</th><th>Descripción</th><th>Por</th><th>Revisó</th><th>Aprobó</th><th></th></tr></thead><tbody>' + f.map(function (x, i) { return '<tr>' + ['rev', 'fecha', 'desc', 'por', 'reviso', 'aprobo'].map(function (k) { return '<td><input data-ri="' + i + '" data-rc="' + k + '"' + (k === 'rev' ? ' list="kDlRev"' : '') + ' value="' + esc(x[k] || '') + '" aria-label="' + k + '"></td>'; }).join('') + '<td><button type="button" data-rv="' + i + '" title="Quitar esta revisión" aria-label="Quitar revisión">×</button></td></tr>'; }).join('') + '</tbody></table><button type="button" data-rv="+">+ Agregar revisión</button>';
       $('#kDocAy').textContent = 'Agrega o corrige la revisión, revisa el documento abajo y luego imprime o descarga.'; }
     $('#kDoc').innerHTML = docHtml(id); ajustarDoc();
   }
@@ -893,6 +914,7 @@
       '#k3dBtn{margin-top:8px}',
       '#kDocBox{margin-top:16px;display:grid;gap:10px}#kDocBox .kdoc-barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}#kDocBox .kdoc-seg{display:inline-flex;border:1.5px solid #E8A317;border-radius:9px;overflow:hidden;margin-right:auto}#kDocBox .kdoc-seg button{border:0;border-radius:0;padding:7px 13px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}#kDocBox .kdoc-seg button[aria-pressed=true]{background:#E8A317;color:#1b1203}',
       '#kDocBox .kdoc-id{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}#kDocBox .kdoc-id label{display:grid;gap:3px;font-size:12px;color:#9fb0c3}#kDocBox .kdoc-id input,#kDocBox .kdoc-id textarea,#kDocBox .kdoc-revs input{font:inherit;font-size:13px;padding:5px 7px;border-radius:6px;border:1px solid #3a5a80;background:#0e2238;color:#e8eef5;width:100%;box-sizing:border-box}#kDocBox .kdoc-notas{grid-column:1/-1}',
+      '#kDocBox .kdoc-sug summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#ffd27a}#kDocBox .kdoc-chips{display:grid;gap:5px;margin-top:8px}#kDocBox .kdoc-chips button{text-align:left;font:inherit;font-size:12px;padding:5px 9px;border-radius:7px;border:1px solid #3a5a80;background:#0e2238;color:#e8eef5;cursor:pointer}#kDocBox .kdoc-chips button[aria-pressed=true]{border-color:#E8A317;background:rgba(232,163,23,.16)}',
       '#kDocBox .kdoc-revs:empty{display:none}#kDocBox .kdoc-revs table{width:100%;border-collapse:collapse;margin:6px 0}#kDocBox .kdoc-revs th{font-size:11px;color:#9fb0c3;text-align:left;padding:2px 4px}#kDocBox .kdoc-revs td{padding:2px}#kDocBox .kdoc-ay{margin:0;font-size:12px;color:#9fb0c3}',
       '#kDoc{background:#16273b;padding:14px;border-radius:8px;overflow:auto}.kdoc{display:grid;gap:14px;justify-items:start;width:max-content}.kdoc .pg.h{width:297mm;max-width:none}.kdoc .kdoc-lam{width:297mm;background:#fff;box-shadow:0 6px 30px rgba(0,0,0,.45)}.kdoc .kdoc-lam svg{width:100%;height:auto;display:block}',
       '.kdoc .pg td{text-align:center}.kdoc .pg td.izq,.kdoc .pg .datos td{text-align:left}.kdoc .kdoc-an{text-align:center;font-weight:700;color:#022A55;margin:0 0 4mm}.kdoc .klst-hoja{box-shadow:none;padding:0;min-width:0;font-size:9pt}',
@@ -1291,9 +1313,10 @@
     var b3 = document.createElement('button'); b3.type = 'button'; b3.id = 'k3dBtn'; b3.className = 'pri'; b3.textContent = 'Ver ducto en 3D'; b3.addEventListener('click', abrir3d);
     var kd = $('#kMedidor'); if (kd) kd.parentNode.appendChild(b3);
     var kx = $('#kExcel'); if (kx && !$('#kLista')) { var bl = document.createElement('button'); bl.type = 'button'; bl.id = 'kLista'; bl.className = 'pri'; bl.textContent = 'Listado de canalizaciones'; bl.addEventListener('click', lstAbrir); kx.parentNode.insertBefore(bl, kx.nextSibling); }
+    var kl0 = $('#kLista'); if (kl0 && !$('#kCaja')) { var bj = document.createElement('button'); bj.type = 'button'; bj.id = 'kCaja'; bj.className = 'pri'; bj.textContent = 'Caja de paso / derivación'; bj.title = 'Reúne varios ductos en una caja y sale con uno solo: dimensiona la caja y el ducto de salida'; bj.addEventListener('click', function () { if (window.LAZOS_CAJA) window.LAZOS_CAJA.abrir(); }); kl0.parentNode.insertBefore(bj, kl0.nextSibling); }
     var kf0 = $('#kForm'), f0 = kf0 && kf0.querySelector('fieldset'); if (f0 && !kf0.querySelector('[data-k=amb]')) { var fa = document.createElement('fieldset'); fa.innerHTML = '<legend>Ambiente de instalación</legend><label class="ancho">Dónde va el ducto<select data-k="amb">' + ORDEN_AMB.map(function (k) { return '<option value="' + k + '">' + esc(AMB[k].n) + '</option>'; }).join('') + '</select></label><div class="kamb" id="kAmb" aria-live="polite"></div>'; f0.parentNode.insertBefore(fa, f0.nextSibling);
       fa.addEventListener('click', function (e) { var b = e.target.closest('button[data-usa]'); if (!b) return; var dc = actual(); dc.tubo = b.dataset.usa; var T = TUBOS[dc.tubo]; if (T.s.map(function (x) { return x[0]; }).indexOf(dc.min) < 0) dc.min = T.s[0][0]; verTam = null; cambio(); }); }
-    var kf = $('#kForm'), f1 = kf && kf.querySelector('fieldset'); if (f1 && !kf.querySelector('[data-k=serv]')) { var fs = document.createElement('fieldset'); fs.innerHTML = '<legend>Datos para el listado</legend><label>Servicio [V]<input data-k="serv" placeholder="Ej.: 480, 120, 24 VDC"></label><label>Revisión<input data-k="rev" placeholder="Ej.: A, 0"></label><label class="ancho">Plano de disposición / canalización<input data-k="plano" placeholder="N° del plano donde aparece el ducto"></label><label class="ancho">Observaciones<input data-k="obs" placeholder="Sector, existente, nota…"></label>'; f1.parentNode.insertBefore(fs, f1.nextSibling); }
+    var kf = $('#kForm'), f1 = kf && kf.querySelector('fieldset'); if (f1 && !kf.querySelector('[data-k=serv]')) { var fs = document.createElement('fieldset'); fs.innerHTML = '<legend>Datos para el listado</legend><label>Servicio [V]<input data-k="serv" list="kDlServ" placeholder="Elige o escribe: 480, 120, 24 VDC…"></label><label>Revisión<input data-k="rev" list="kDlRev" placeholder="Elige o escribe: A, B, 0…"></label><label class="ancho">Plano de disposición / canalización<input data-k="plano" placeholder="N° del plano donde aparece el ducto"></label><label class="ancho">Observaciones<input data-k="obs" list="kDlObs" placeholder="Elige o escribe: sector, existente, nota…"></label>' + [['kDlServ', SUG_SERV], ['kDlRev', SUG_REV], ['kDlObs', SUG_OBS]].map(function (x) { return '<datalist id="' + x[0] + '">' + x[1].map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>'; }).join(''); f1.parentNode.insertBefore(fs, f1.nextSibling); }
     setTimeout(function () { montarNorma(); montarTutorial(); }, 0); // después de que la app agregue sus botones
     $('#kForm').addEventListener('input', leerForm); $('#kForm').addEventListener('change', leerForm);
     $('#kDuctos').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-d]'); if (!tr) return; datos().sel = tr.dataset.d; verTam = null; cambio(); });
@@ -1321,6 +1344,9 @@
   }
   function vista() { enganchar(); pintar(); pintarCatalogo(); }
   window.LAZOS_COND = { AMB: AMB, ambiente: ambiente, docs: docs, docRevs: docRevs, docHtml: docHtml, docNum: docNum, DOCS: DOCS, docPoner: function (id, f) { docs()[id].revs = f; }, docSel: function () { return docs().sel; }, docDescargar: function (id, f) { if (/excel/i.test(f)) { if (id === 'listado') lstExcel(); else excel(); } else { $('#imp').innerHTML = docHtml(id); setTimeout(function () { window.print(); }, 150); } }, soportacion: soportacion, curvatura: curvatura, verificar: verificar, estadoRic: estadoRic, FAM: FAM, calcular: calcular, empacar: empacar, sugerir: sugerir, TUBOS: TUBOS, CAT: CAT, lamina: lamina, dxf: dxf };
+  // Piezas internas que usa el módulo de cajas de paso y derivación (caja-paso.js, cargado desde la misma carpeta)
+  window.LAZOS_COND._ = { A: A, datos: datos, nuevo: nuevo, cambio: cambio, esc: esc, n1: n1, up: up, area: area, CATI: CATI, ORDEN_TUBOS: ORDEN_TUBOS, ORDEN_FAM: ORDEN_FAM, SERV: SERV, servDe: servDe, opcionesCat: opcionesCat, opciones: opciones, MJM: MJM, CAJ_N4: CAJ_N4, CAJ_ESP: CAJ_ESP, COLF: COLF };
+  (function () { var sc = document.createElement('script'); sc.src = BASE + 'caja-paso.js'; document.head.appendChild(sc); })();
   window.LAZOS_VISTAS = Object.assign(window.LAZOS_VISTAS || {}, { cond: vista });
   var sec = document.getElementById('v-cond'); if (sec && !sec.hidden) vista();
 })();
