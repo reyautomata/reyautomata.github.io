@@ -105,7 +105,7 @@
   var TAMS = ['estándar', 'compacto', 'mínimo'], tam = 0; try { var tg = localStorage.getItem('reyengi-tam2'); if (tg !== null && TAMS[+tg]) tam = +tg; } catch (e) {}
   function ponerTam() { var b = document.body; if (!b) return; b.classList.toggle('rs-d1', tam === 1); b.classList.toggle('rs-d2', tam === 2); window.dispatchEvent(new Event('resize')); }
   if (document.body) ponerTam(); else document.addEventListener('DOMContentLoaded', ponerTam);
-  var aside, filtro = '', actual = null;
+  var aside, filtro = '', actual = null, cinta = null;
   function nodoHijo(x) {
     return '<li role="none"><a class="nodo hij" role="treeitem" href="' + esc(x.href) + '"' + (x.act ? ' aria-current="true"' : '') + (x.tab ? ' data-mtab="' + esc(x.tab) + '"' : '') + ' title="' + esc((x.t ? x.t + ' · ' : '') + x.s) + '"><span class="tw"></span><span class="ic fic"></span><span class="tx">' + (x.t ? '<b>' + esc(x.t) + '</b> ' : '') + (x.s ? '<i>' + esc(x.s) + '</i>' : '') + '</span>' + (x.n ? '<span class="ct">' + esc(x.n) + '</span>' : '') + '</a></li>';
   }
@@ -147,6 +147,7 @@
     var hueco = document.getElementById('rsHueco');
     if (local && hueco) hueco.replaceWith(local); else if (local) aside.querySelector('.rs-lista').appendChild(local);
     pintarRuta();
+    if (cinta) cinta.actualizar();
   }
   function pintarRuta() {
     var a = actual, pr = proyecto();
@@ -178,10 +179,17 @@
       '<div class="rs-herr"><input type="search" id="rsBuscar" placeholder="Buscar módulo o entregable" aria-label="Buscar en el explorador" autocomplete="off"><button type="button" id="rsTam" title="Tamaño del texto de la interfaz" aria-label="Cambiar el tamaño del texto de la interfaz">Aa</button><button type="button" id="rsAbrirTodo" title="Expandir todo" aria-label="Expandir todo">＋</button><button type="button" id="rsCerrarTodo" title="Contraer todo" aria-label="Contraer todo">－</button></div>' +
       '<nav class="rs-cuerpo"><h2>Explorador</h2><div class="rs-lista"></div></nav><div class="rs-pie"><button type="button" id="rsConf" aria-haspopup="dialog" aria-expanded="false">' + ICO.conf + '<span>Configuración</span></button></div>';
     b.insertBefore(aside, b.firstChild);
+    // Cinta de opciones (cinta.js): las tareas de la suite por pestañas y paneles, sobre el área de trabajo
+    if (window.RS_CINTA) { try { cinta = window.RS_CINTA.montar({ grupos: GRUPOS, base: BASE, esc: esc, norm: norm, esActual: esActual,
+      hijos: function (c) { return c === 'MC' ? [] : hijosDe(c); },
+      recientes: function () { return U.rec.filter(function (r) { return r && r.href; }).slice(0, 6); },
+      tema: function () { tema = tema === 'claro' ? 'oscuro' : 'claro'; try { localStorage.setItem('reyengi-tema', tema); } catch (e) {} ponerTema(); },
+      tam: function () { var x = document.getElementById('rsTam'); if (x) x.click(); } }); } catch (e) { cinta = null; } }
+    if (!cinta) { document.documentElement.classList.remove('rs-pre'); document.documentElement.style.setProperty('--rs-cinta', '0px'); }
     var div = document.createElement('div'); div.className = 'rs-div'; div.setAttribute('role', 'separator'); div.setAttribute('aria-orientation', 'vertical'); div.setAttribute('aria-label', 'Ancho del explorador'); b.appendChild(div);
     var cab = document.querySelector('.barra') || document.querySelector('header.top'), fila = document.querySelector('.barra .fila') || document.querySelector('header .topin') || cab;
     var ab = document.createElement('button'); ab.type = 'button'; ab.className = 'rs-abrir'; ab.id = 'rsAbrir'; ab.setAttribute('aria-label', 'Mostrar el explorador'); ab.title = 'Mostrar el explorador'; ab.textContent = '☰';
-    if (fila) fila.insertBefore(ab, fila.firstChild); else { ab.style.cssText = 'position:fixed;left:8px;top:8px;z-index:14;background:#0B2545'; b.appendChild(ab); }
+    if (fila) fila.insertBefore(ab, fila.firstChild); else { ab.style.cssText = 'position:fixed;left:8px;top:calc(8px + var(--rs-cinta, 0px));z-index:14;background:#0B2545'; b.appendChild(ab); }
     // Ruta de navegación, igual en todas las páginas
     var rt = document.createElement('nav'); rt.className = 'rs-ruta'; rt.id = 'rsRuta'; rt.setAttribute('aria-label', 'Ruta'); if (cab) cab.insertBefore(rt, cab.firstChild);
     if (!document.querySelector('footer.estado')) { var f = document.createElement('footer'); f.className = 'rs-estado'; f.id = 'rsEstado'; b.appendChild(f); b.classList.add('rs-conestado'); }
@@ -252,11 +260,11 @@
     window.addEventListener('storage', function (ev) { if (ev.key && /reyengi/.test(ev.key) && ev.key !== CLAVE) pintar(); });
     var sp = document.getElementById('proy'); if (sp) sp.addEventListener('change', function () { setTimeout(pintar, 50); });
   }
-  // Atajos: Ctrl+B explorador · Ctrl+K buscar · Ctrl+J asistente (asistente.js)
+  // Atajos: Ctrl+B explorador · Ctrl+K buscar una tarea (cinta) · Ctrl+Mayús+E filtrar el explorador · Ctrl+F1 minimizar la cinta · Ctrl+J asistente (asistente.js)
   document.addEventListener('keydown', function (e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return; var k = e.key.toLowerCase();
     if (k === 'b') { var pl = document.getElementById(document.body.classList.contains('rs-plegado') ? 'rsPestana' : 'rsPlegar'); if (pl) { e.preventDefault(); pl.click(); } }
-    else if (k === 'k') { var bq = document.getElementById('rsBuscar'); if (bq) { e.preventDefault(); if (document.body.classList.contains('rs-plegado')) { var ps = document.getElementById('rsPestana'); if (ps) ps.click(); } bq.focus(); bq.select(); } }
+    else if (k === 'k') { if (cinta) { e.preventDefault(); cinta.buscar(); return; } var bq = document.getElementById('rsBuscar'); if (bq) { e.preventDefault(); if (document.body.classList.contains('rs-plegado')) { var ps = document.getElementById('rsPestana'); if (ps) ps.click(); } bq.focus(); bq.select(); } }
   });
   function trabajo() { if (window.top !== window) return; var st = document.createElement('script'); st.src = BASE + 'trabajo.js'; document.head.appendChild(st);
     var lf = document.createElement('link'); lf.rel = 'stylesheet'; lf.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'; document.head.appendChild(lf); } // sin conexión se usa Segoe UI

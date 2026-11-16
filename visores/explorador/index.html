@@ -44,7 +44,7 @@ main.ex { padding: 14px 16px 60px; }
 .nd .reg { font-size: 10px; border: 1px solid var(--sel); color: var(--sel); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
 .nd.falta { opacity: .55; } .nd.falta .ic { background: none; border: 1px dashed var(--muted); }
 .vacio { color: var(--muted); padding: 4px 6px 4px 34px; font-size: 12px; }
-.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: 64px; }
+.prop { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--sel); border-radius: 8px; padding: 12px 14px; position: sticky; top: calc(64px + var(--rs-cinta, 0px)); }
 @media (max-width: 1050px) { .prop { position: static; } }
 .prop h2 { margin: 0 0 8px; font-size: 14px; overflow-wrap: anywhere; }
 .prop dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0 0 10px; font-size: 12px; } .prop dt { color: var(--muted); } .prop dd { margin: 0; overflow-wrap: anywhere; }
@@ -57,9 +57,10 @@ main.ex { padding: 14px 16px 60px; }
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
 <link rel="stylesheet" href="../fluent.css" id="rsFluent">
-<script>try{if(localStorage.getItem('reyengi-tema')==='claro')document.documentElement.setAttribute('data-tema','claro')}catch(e){}</script>
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?37:121))+'px')}}catch(e){}</script>
 <script src="../proyectos.js" defer></script>
 <script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
 <script src="../suite.js" defer></script>
 <script src="../gestion.js" defer></script>
 <script src="../archivos.js" defer></script>
