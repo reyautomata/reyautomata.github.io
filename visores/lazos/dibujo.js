@@ -341,11 +341,13 @@
   }
   function dxf(lista) {
     var o = [], n = function (c, v) { o.push(c, v); };
-    var ox = 0;
+    var ox = 0, BD = window.RE_DIBUJO && window.RE_DIBUJO.activo() ? window.RE_DIBUJO : null;   /* bases de dibujo del proyecto: capas, tipos de línea y estilo de texto */
+    function capa(c, p) { return BD ? BD.capa(c, p) : c; }
     n(0, 'SECTION'); n(2, 'HEADER'); n(9, '$ACADVER'); n(1, 'AC1009'); n(9, '$INSUNITS'); n(70, 4); n(9, '$DWGCODEPAGE'); n(3, 'ANSI_1252');
     n(9, '$EXTMIN'); n(10, 0); n(20, 0); n(30, 0); n(9, '$EXTMAX'); n(10, W * lista.length + 20 * (lista.length - 1)); n(20, H); n(30, 0);
-    n(9, '$LTSCALE'); n(40, 1); n(0, 'ENDSEC');
+    n(9, '$LTSCALE'); n(40, BD ? BD.perfil().ltscale : 1); n(0, 'ENDSEC');
     n(0, 'SECTION'); n(2, 'TABLES');
+    if (BD) BD.tablasDxf(n); else {
     n(0, 'TABLE'); n(2, 'LTYPE'); n(70, 2);
     n(0, 'LTYPE'); n(2, 'CONTINUOUS'); n(70, 0); n(3, 'Solid line'); n(72, 65); n(73, 0); n(40, 0);
     n(0, 'LTYPE'); n(2, 'DASHED'); n(70, 0); n(3, '__ __ __'); n(72, 65); n(73, 2); n(40, 2.4); n(49, 1.6); n(49, -0.8);
@@ -354,28 +356,29 @@
     Object.keys(CAPAS).forEach(function (k) { n(0, 'LAYER'); n(2, k); n(70, 0); n(62, CAPAS[k]); n(6, k === 'PANTALLA' ? 'DASHED' : 'CONTINUOUS'); });
     n(0, 'ENDTAB');
     n(0, 'TABLE'); n(2, 'STYLE'); n(70, 1); n(0, 'STYLE'); n(2, 'STANDARD'); n(70, 0); n(40, 0); n(41, 0.85); n(50, 0); n(71, 0); n(42, 2.5); n(3, 'romans.shx'); n(4, ''); n(0, 'ENDTAB');
+    }
     n(0, 'ENDSEC');
     n(0, 'SECTION'); n(2, 'ENTITIES');
     lista.forEach(function (h) {
       function X(x) { return +(x + ox).toFixed(3); } function Y(y) { return +(H - y).toFixed(3); }
-      function linea(x1, y1, x2, y2, c, d) { n(0, 'LINE'); n(8, c); if (d) n(6, 'DASHED'); n(10, X(x1)); n(20, Y(y1)); n(30, 0); n(11, X(x2)); n(21, Y(y2)); n(31, 0); }
+      function linea(x1, y1, x2, y2, c, d) { n(0, 'LINE'); n(8, capa(c)); if (d) n(6, BD ? 'HIDDEN2' : 'DASHED'); n(10, X(x1)); n(20, Y(y1)); n(30, 0); n(11, X(x2)); n(21, Y(y2)); n(31, 0); }
       h.prims.forEach(function (p) {
         if (p.t === 'l') linea(p.x1, p.y1, p.x2, p.y2, p.c, p.d);
         else if (p.t === 'r') { linea(p.x, p.y, p.x + p.w, p.y, p.c, p.d); linea(p.x + p.w, p.y, p.x + p.w, p.y + p.h, p.c, p.d); linea(p.x + p.w, p.y + p.h, p.x, p.y + p.h, p.c, p.d); linea(p.x, p.y + p.h, p.x, p.y, p.c, p.d); }
         else if (p.t === 'pill') { var rr = p.h / 2; linea(p.x + rr, p.y, p.x + p.w - rr, p.y, p.c); linea(p.x + rr, p.y + p.h, p.x + p.w - rr, p.y + p.h, p.c);
-          [[p.x + rr, 90, 270], [p.x + p.w - rr, 270, 90]].forEach(function (q) { n(0, 'ARC'); n(8, p.c); n(10, X(q[0])); n(20, Y(p.y + rr)); n(30, 0); n(40, rr); n(50, q[1]); n(51, q[2]); }); }
-        else if (p.t === 'c') { n(0, 'CIRCLE'); n(8, p.c); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); }
-        else if (p.t === 'a') { n(0, 'ARC'); n(8, p.c); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); n(50, ((-p.a2 % 360) + 360) % 360); n(51, ((-p.a1 % 360) + 360) % 360); }
+          [[p.x + rr, 90, 270], [p.x + p.w - rr, 270, 90]].forEach(function (q) { n(0, 'ARC'); n(8, capa(p.c)); n(10, X(q[0])); n(20, Y(p.y + rr)); n(30, 0); n(40, rr); n(50, q[1]); n(51, q[2]); }); }
+        else if (p.t === 'c') { n(0, 'CIRCLE'); n(8, capa(p.c)); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); }
+        else if (p.t === 'a') { n(0, 'ARC'); n(8, capa(p.c)); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.r); n(50, ((-p.a2 % 360) + 360) % 360); n(51, ((-p.a1 % 360) + 360) % 360); }
         else if (p.t === 'pl') {
-          if (p.f && p.pts.length === 3) { n(0, 'SOLID'); n(8, p.c); [0, 1, 2, 2].forEach(function (k, i) { n(10 + i, X(p.pts[k][0])); n(20 + i, Y(p.pts[k][1])); n(30 + i, 0); }); }
+          if (p.f && p.pts.length === 3) { n(0, 'SOLID'); n(8, capa(p.c)); [0, 1, 2, 2].forEach(function (k, i) { n(10 + i, X(p.pts[k][0])); n(20 + i, Y(p.pts[k][1])); n(30 + i, 0); }); }
           else { for (var i = 0; i < p.pts.length - 1; i++) linea(p.pts[i][0], p.pts[i][1], p.pts[i + 1][0], p.pts[i + 1][1], p.c); if (p.cerrada) linea(p.pts[p.pts.length - 1][0], p.pts[p.pts.length - 1][1], p.pts[0][0], p.pts[0][1], p.c); }
         }
-        else if (p.t === 'img') { n(0, 'TEXT'); n(8, 'ROTULO'); n(10, X(p.x + 2)); n(20, Y(p.y + p.h * 0.75)); n(30, 0); n(40, 5); n(1, 'ReyEngi'); }
+        else if (p.t === 'img') { n(0, 'TEXT'); n(8, capa('ROTULO', { t: 'tx', h: 5, b: 1 })); n(10, X(p.x + 2)); n(20, Y(p.y + p.h * 0.75)); n(30, 0); n(40, 5); n(1, 'ReyEngi'); }
         else if (p.t === 'tx') {
           var ha = p.al === 'c' ? 1 : p.al === 'r' ? 2 : 0;
-          n(0, 'TEXT'); n(8, p.c); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.h); n(1, dxfTexto(p.s));
+          n(0, 'TEXT'); n(8, capa(p.c, p)); n(10, X(p.x)); n(20, Y(p.y)); n(30, 0); n(40, p.h); n(1, dxfTexto(BD ? BD.texto(p.s) : p.s));
           if (p.rot) n(50, p.rot);
-          n(41, 0.85); n(7, 'STANDARD');
+          n(41, BD ? BD.perfil().texto.ancho[0] : 0.85); n(7, BD ? BD.perfil().texto.estilo : 'STANDARD');
           if (ha) { n(72, ha); n(11, X(p.x)); n(21, Y(p.y)); n(31, 0); }
         }
       });
