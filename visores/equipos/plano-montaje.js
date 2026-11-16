@@ -435,6 +435,8 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
 
   /* --- Composición de la lámina --- */
   const W = 2970, H = 2100, NAVY = '#034488', AMBER = '#EF5A05', INK = '#111';
+  // Logo a color para la viñeta sobre fondo blanco (el mismo de los diagramas de lazo); si no carga, se escribe la marca
+  const LOGOC = new Image(); try { LOGOC.src = new URL('../img/logo-reyengi.png', document.baseURI).href; } catch (e) {}
   const LOGO = new Image(); LOGO.src = 'data:image/png;base64,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';
   const F = { s: '"IBM Plex Sans", "Segoe UI", Arial, sans-serif', d: '"Barlow Condensed", "Arial Narrow", Arial, sans-serif', m: '"IBM Plex Mono", Consolas, monospace' };
   function wrapLines(g, text, maxW) {
@@ -460,7 +462,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     for (let i = 0; i < 10; i++) { const x = 62 + (W - 124) * (i + 0.5) / 10; g.fillText(String(i + 1), x, 46); g.fillText(String(i + 1), x, H - 46); if (i) { g.lineWidth = 1.5; g.beginPath(); g.moveTo(62 + (W - 124) * i / 10, 30); g.lineTo(62 + (W - 124) * i / 10, 62); g.moveTo(62 + (W - 124) * i / 10, H - 62); g.lineTo(62 + (W - 124) * i / 10, H - 30); g.stroke(); } }
     for (let i = 0; i < 6; i++) { const y = 62 + (H - 124) * (i + 0.5) / 6, L = 'ABCDEF'[i]; g.fillText(L, 46, y); g.fillText(L, W - 46, y); if (i) { const yy = 62 + (H - 124) * i / 6; g.beginPath(); g.moveTo(30, yy); g.lineTo(62, yy); g.moveTo(W - 62, yy); g.lineTo(W - 30, yy); g.stroke(); } }
     // Vistas
-    const ISO = { x: 90, y: 90, w: 1210, h: 1800 }, FR = { x: 1320, y: 90, w: 720, h: 860 }, LA = { x: 1320, y: 1050, w: 720, h: 840 };
+    const ISO = { x: 90, y: 90, w: 1120, h: 1380 }, FR = { x: 1240, y: 90, w: 780, h: 650 }, LA = { x: 1240, y: 830, w: 780, h: 640 };   // la franja inferior queda para notas, revisiones y viñeta
     const tb = tightBox(b, set.meshes); set.size = tb.getSize(V3(0, 0, 0)).length();
     const REG = { x0: 0.27, x1: 0.73, y0: 0.05, y1: 0.95 };
     const FX = 0.58, FY = 0.9, REG2 = { x0: (1 - FX) / 2, x1: (1 + FX) / 2, y0: (1 - FY) / 2, y1: (1 + FY) / 2 };
@@ -512,7 +514,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     });
     if (opt.isoOnly) return cv;
     // Columna derecha: lista de materiales, notas y rótulo
-    const RX = 2090, RW = W - 90 - RX; g.__layer = 'TABLA';
+    const RX = 2070, RW = W - 90 - RX; g.__layer = 'TABLA';
     let y = 100;
     g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = INK;
     const bomTitle = d.bom.length ? 'LISTA DE MATERIALES - TIPO "' + d.code + '"' : 'COMPONENTES PRINCIPALES';
@@ -527,7 +529,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     let x = RX; head.forEach((t, i) => { g.textAlign = 'center'; g.fillText(t, x + cw[i] / 2, y + 28); if (i) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 40); g.stroke(); } x += cw[i]; });
     y += 40;
     rows.sort((a, b2) => (parseInt(a[0], 10) || 0) - (parseInt(b2[0], 10) || 0));
-    const cmp = rows.length > 14, LH = cmp ? 20 : 26, LIM = cmp ? 1400 : 1120; let cut = false;
+    const cmp = rows.length > 16, LH = cmp ? 20 : 26, LIM = 1500; let cut = false;
     g.font = (cmp ? 17 : 21) + 'px ' + F.s;
     for (const r of rows) {
       const lines = wrapLines(g, String(r[1]).toUpperCase(), cw[1] - 16);
@@ -542,54 +544,50 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     }
     if (cut) { g.textAlign = 'left'; g.font = '20px ' + F.s; g.fillText('(LISTA COMPLETA EN EL VISOR)', RX, y + 28); y += 36; }
     if (d.bom.length && /L\.R\./.test(d.bom.map((r) => r[2]).join(' '))) { g.textAlign = 'left'; g.font = '20px ' + F.s; g.fillText('L.R. = LO QUE SE REQUIERA', RX, y + 28); y += 36; }
+    // ── Franja inferior, igual a la de los diagramas de lazo: notas, referencias, cuadro de revisiones y viñeta ──
+    const BY = 1590, X0 = 62, X1 = W - 62, YB = H - 62, VX = 1760, CA = PL.c || {}, up = (t) => String(t || '').toUpperCase();
+    g.__layer = 'ROTULO'; g.strokeStyle = INK; g.fillStyle = INK; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(X0, BY); g.lineTo(X1, BY); g.moveTo(VX, BY); g.lineTo(VX, YB); g.stroke();
     // Notas
-    y += 30;
-    if (d.notes.length) {
-      g.textAlign = 'left'; g.font = '600 24px ' + F.s; g.fillText('NOTAS:', RX, y + 24); y += 40;
-      g.font = '20px ' + F.s;
-      d.notes.forEach((n) => {
-        const t = n.replace(/^Nota\s*(\d+)\.?\s*/i, '$1. ').toUpperCase();
-        wrapLines(g, t, RW - 10).forEach((l) => { if (y < 1500) { g.fillText(l, RX + 4, y + 20); y += 26; } });
-        y += 8;
-      });
-    }
-    // Rótulo (viñeta): el diseño se elige en la ventana de ajuste
-    const TY = 1540, TH = H - 90 - TY; g.__layer = 'ROTULO';
-    const CA = PL.c || {}, up = (t) => String(t || '').toUpperCase();
-    if (PL.vin === 'neutra') { rotuloNeutro(g, d, RX, TY, RW, TH, CA); return cv; }
-    g.lineWidth = 3; g.strokeRect(RX, TY, RW, TH);
-    g.fillStyle = NAVY; g.fillRect(RX, TY, RW, 86);
-    g.fillStyle = AMBER; g.fillRect(RX, TY + 86, RW, 6);
-    g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'middle';
-    if (LOGO.complete && LOGO.naturalWidth) { const lh = 72, lw = LOGO.naturalWidth * lh / LOGO.naturalHeight; g.drawImage(LOGO, RX + 16, TY + 7, lw, lh); }
-    else { g.font = '700 46px ' + F.d; g.fillText('REYENGI', RX + 24, TY + 45); }
-    g.font = '500 20px ' + F.s; g.textAlign = 'right'; g.fillStyle = '#C9D6E3'; g.fillText('reyengi.cl', RX + RW - 20, TY + 45);
-    g.strokeStyle = INK; g.fillStyle = INK; g.lineWidth = 3;
-    const cy = TY + 92 + 95;
-    g.beginPath(); g.arc(RX + 90, cy, 66, 0, Math.PI * 2); g.stroke();
-    g.textAlign = 'center';
-    if (d.code && d.code.length > 11 && d.code.indexOf('-') > 0) { const k = d.code.indexOf('-'); g.font = '700 20px ' + F.s; g.fillText(d.code.slice(0, k), RX + 90, cy - 12); g.fillText(d.code.slice(k + 1), RX + 90, cy + 14); }
-    else { g.font = '700 ' + (d.code.length > 6 ? 21 : d.code.length > 4 ? 34 : 42) + 'px ' + F.s; g.fillText(d.code || 'REF', RX + 90, cy + 2); }
-    g.textAlign = 'left'; g.font = '600 30px ' + F.s; g.fillText('DETALLE DE MONTAJE', RX + 180, cy - 44);
-    g.font = '600 27px ' + F.s;
-    wrapLines(g, (d.name && d.name.toUpperCase().includes(d.main.toUpperCase()) ? d.name : d.main + (d.name ? ' · ' + d.name : '')).toUpperCase(), RW - 200).slice(0, 3).forEach((l, i) => g.fillText(l, RX + 180, cy - 4 + i * 34));
-    const ry = TY + 92 + 196;
-    g.lineWidth = 2; g.beginPath(); g.moveTo(RX, ry); g.lineTo(RX + RW, ry); g.stroke();
-    const today = new Date(), dd = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
-    const cells = [['ESCALA', 'S/E'], ['FECHA', dd], ['HOJA', '1 DE 1']];
-    cells.forEach((c, i) => {
-      const cx2 = RX + RW * i / 3;
-      if (i) { g.beginPath(); g.moveTo(cx2, ry); g.lineTo(cx2, ry + 64); g.stroke(); }
-      g.textAlign = 'left'; g.font = '18px ' + F.s; g.fillText(c[0], cx2 + 12, ry + 18);
-      g.font = '600 26px ' + F.s; g.fillText(c[1], cx2 + 12, ry + 46);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '600 22px ' + F.s; g.fillText('NOTAS:', X0 + 16, BY + 34);
+    let yn = BY + 62; g.font = '18px ' + F.s;
+    const notas = d.notes.length ? d.notes : ['Nota 1. Dibujo generado desde el modelo 3D; proporciones referenciales.'];
+    notas.forEach((n, i) => { const t = n.replace(/^Nota\s*(\d+)\.?\s*/i, '$1.- ').toUpperCase(); wrapLines(g, /^\d+\.-/.test(t) ? t : (i + 1) + '.- ' + t, VX - X0 - 40).forEach((l) => { if (yn < 1796) { g.fillText(l, X0 + 16, yn); yn += 23; } }); });
+    // Referencias
+    const RYL = 1812, TYR = 1848, hr = 38;
+    g.lineWidth = 2; g.beginPath(); g.moveTo(X0, RYL); g.lineTo(VX, RYL); g.stroke();
+    g.font = '16px ' + F.s; g.fillText(wrapLines(g, 'REFERENCIAS: ' + (d.ref ? 'PLANO ' + up(d.ref) + (d.hoja ? ' · HOJA ' + d.hoja : '') : 'MODELO 3D REFERENCIAL REYENGI') + ' · DIBUJO GENERADO DESDE EL MODELO 3D', VX - X0 - 30)[0] || '', X0 + 16, RYL + 24);
+    // Cuadro de revisiones: encabezado abajo y las últimas cuatro revisiones hacia arriba
+    const cols = [X0, X0 + 90, X0 + 260, X0 + 1040, X0 + 1200, X0 + 1360, X0 + 1520, VX];
+    g.beginPath(); g.moveTo(X0, TYR); g.lineTo(VX, TYR); for (let r = 1; r < 5; r++) { g.moveTo(X0, TYR + hr * r); g.lineTo(VX, TYR + hr * r); } cols.slice(1, -1).forEach((cx) => { g.moveTo(cx, TYR); g.lineTo(cx, YB); }); g.stroke();
+    g.textAlign = 'center'; g.font = '600 16px ' + F.s;
+    ['REV', 'FECHA', 'DESCRIPCIÓN', 'POR', 'REVISÓ', 'APROBÓ', 'CLIENTE'].forEach((t, i) => g.fillText(t, (cols[i] + cols[i + 1]) / 2, YB - 12));
+    g.font = '17px ' + F.s;
+    (PL.revs && PL.revs.length ? PL.revs : (CA.rev ? [{ rev: CA.rev, fecha: '', desc: '', por: CA.dibujo, reviso: CA.reviso, aprobo: CA.aprobo }] : [])).slice(-4).forEach((rv, k) => {
+      const yy = YB - hr * (k + 1) - 12;
+      [rv.rev, rv.fecha, rv.desc, rv.por, rv.reviso, rv.aprobo, rv.cliente].forEach((t, i) => { if (i === 2) { g.textAlign = 'left'; g.fillText(wrapLines(g, up(t), cols[3] - cols[2] - 20)[0] || '', cols[2] + 10, yy); } else { g.textAlign = 'center'; g.fillText(up(t), (cols[i] + cols[i + 1]) / 2, yy); } });
     });
-    g.beginPath(); g.moveTo(RX, ry + 64); g.lineTo(RX + RW, ry + 64); g.stroke();
-    g.font = '18px ' + F.s; g.textAlign = 'left';
-    const src = d.ref ? 'BASADO EN PLANO ' + d.ref + (d.hoja ? ' · HOJA ' + d.hoja : '') : 'MODELO REFERENCIAL REYENGI';
-    wrapLines(g, src, RW - 24).slice(0, 2).forEach((l, i) => g.fillText(l, RX + 12, ry + 88 + i * 24));
-    g.fillText('DIBUJO GENERADO DESDE MODELO 3D · PROPORCIONES REFERENCIALES', RX + 12, ry + 88 + (src.length > 60 ? 2 : 1) * 24);
-    const extra = [CA.proyecto && 'PROYECTO: ' + up(CA.proyecto), CA.plano && 'PLANO N° ' + up(CA.plano), CA.rev && 'REV. ' + up(CA.rev), CA.dibujo && 'DIB. ' + up(CA.dibujo)].filter(Boolean).join(' · ');
-    if (extra) { g.font = '600 18px ' + F.s; g.fillText(wrapLines(g, extra, RW - 24)[0], RX + 12, ry + 88 + (src.length > 60 ? 3 : 2) * 24); }
+    // Viñeta (a la derecha de la franja)
+    const VW = X1 - VX, VH = YB - BY;
+    if (PL.vin === 'neutra') { rotuloNeutro(g, d, VX, BY, VW, VH, CA); return cv; }
+    const yA = BY + 104, yB = yA + 150, yC = yB + 108, lw = 330, mid = VX + VW / 2;
+    g.lineWidth = 2; g.beginPath(); g.moveTo(VX, yA); g.lineTo(X1, yA); g.moveTo(VX, yB); g.lineTo(X1, yB); g.moveTo(VX, yC); g.lineTo(X1, yC); g.moveTo(VX + lw, BY); g.lineTo(VX + lw, yA); g.moveTo(mid, yB); g.lineTo(mid, yC);
+    for (let r = 1; r < 3; r++) { g.moveTo(VX, yB + 36 * r); g.lineTo(X1, yB + 36 * r); } g.moveTo(X1 - 170, yC); g.lineTo(X1 - 170, YB); g.stroke();
+    if (LOGOC.complete && LOGOC.naturalWidth) { const lh = 80, lw2 = Math.min(lw - 30, LOGOC.naturalWidth * lh / LOGOC.naturalHeight), lh2 = lw2 * LOGOC.naturalHeight / LOGOC.naturalWidth; g.drawImage(LOGOC, VX + (lw - lw2) / 2, BY + (104 - lh2) / 2, lw2, lh2); }
+    else { g.textAlign = 'left'; g.font = '700 46px ' + F.d; const wr = g.measureText('Rey').width, we = g.measureText('Engi').width, x0 = VX + (lw - wr - we) / 2; g.fillStyle = NAVY; g.fillText('Rey', x0, BY + 68); g.fillStyle = AMBER; g.fillText('Engi', x0 + wr, BY + 68); g.fillStyle = INK; }
+    g.textAlign = 'center'; g.font = '700 21px ' + F.s; g.fillText('REYENGI · AUTOMATIZACIÓN Y CONTROL INDUSTRIAL', VX + lw + (VW - lw) / 2, BY + 44);
+    g.font = '17px ' + F.s; g.fillText(wrapLines(g, up([CA.proyecto, CA.cliente].filter(Boolean).join(' · ')) || 'DETALLES TÍPICOS DE MONTAJE', VW - lw - 30)[0] || '', VX + lw + (VW - lw) / 2, BY + 76);
+    g.font = '700 30px ' + F.s; g.fillText('DETALLE DE MONTAJE', mid, yA + 44);
+    g.font = '20px ' + F.s;
+    wrapLines(g, (d.name && d.name.toUpperCase().includes(d.main.toUpperCase()) ? d.name : d.main + (d.name ? ' · ' + d.name : '')).toUpperCase(), VW - 60).slice(0, 2).forEach((l, i) => g.fillText(l, mid, yA + 78 + i * 26));
+    g.font = '16px ' + F.s; g.fillText('TIPO ' + up(d.code || 'REF'), mid, yA + 138);
+    const today = new Date(), dd = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
+    const par = (x, y2, lab, val) => { g.textAlign = 'left'; g.font = '600 14px ' + F.s; g.fillText(lab, x + 12, y2 + 24); g.font = '17px ' + F.s; g.fillText(wrapLines(g, up(val), VW / 2 - 190)[0] || '', x + 150, y2 + 24); };
+    par(VX, yB, 'ELABORÓ', CA.dibujo); par(VX, yB + 36, 'REVISÓ', CA.reviso); par(VX, yB + 72, 'APROBÓ', CA.aprobo);
+    par(mid, yB, 'N° PROYECTO', CA.numero); par(mid, yB + 36, 'ESCALA', 'S/E'); par(mid, yB + 72, 'FECHA · HOJA', dd + ' · 1 DE 1');
+    g.textAlign = 'left'; g.font = '600 14px ' + F.s; g.fillText('PLANO N°', VX + 12, yC + 24); g.fillText('REV.', X1 - 158, yC + 24);
+    g.textAlign = 'center'; g.font = '700 30px ' + F.s; g.fillText(up(CA.plano) || up(d.code || ''), VX + (VW - 170) / 2, YB - 26);
+    g.font = '700 34px ' + F.s; g.fillText(up((PL.revs && PL.revs.length ? PL.revs[PL.revs.length - 1].rev : CA.rev) || ''), X1 - 85, YB - 24);
     return cv;
   }
   // Viñeta neutra: sin marca, con los datos del proyecto y las firmas, para emitir con el formato del mandante
@@ -672,6 +670,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
   bGenPdf.addEventListener('click', () => generate(savePdfDxf));
   bGenDxf.addEventListener('click', () => generate((g) => save(g.dxf, g.name + '.dxf')));
   window.__planoGen = (cb) => generate(cb);
+  window.__planoRevs = (lista) => { PL.revs = Array.isArray(lista) ? lista : null; };   // cuadro de revisiones del detalle (lo entrega el control documental)
   bGenPng.addEventListener('click', () => generate((g) => fetch(g.png).then((r) => r.blob()).then((b) => save(b, g.name + '.png'))));
   /* --- Ventana de ajuste: la lámina completa antes de imprimir o exportar ---
      Se elige la vista de cada recuadro, se gira y acerca la isométrica, se arrastran los globos y se elige la viñeta. */
@@ -716,9 +715,9 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
   // 4) Viñeta
   sub('Viñeta (rótulo)');
   const wv = mk('div', 'pv-vista'), selVin = document.createElement('select'); selVin.setAttribute('aria-label', 'Tipo de viñeta');
-  [['reyengi', 'ReyEngi (estándar)'], ['neutra', 'Neutra, con datos del proyecto y firmas']].forEach(([k, t]) => { const op = document.createElement('option'); op.value = k; op.textContent = t; selVin.appendChild(op); });
+  [['reyengi', 'ReyEngi (igual a los diagramas de lazo)'], ['neutra', 'Neutra, sin marca']].forEach(([k, t]) => { const op = document.createElement('option'); op.value = k; op.textContent = t; selVin.appendChild(op); });
   wv.append(selVin); panel.appendChild(wv);
-  const CAMPOS = [['cliente', 'Cliente'], ['proyecto', 'Proyecto'], ['plano', 'N° de plano'], ['rev', 'Revisión'], ['dibujo', 'Dibujó'], ['reviso', 'Revisó'], ['aprobo', 'Aprobó']], inC = {};
+  const CAMPOS = [['cliente', 'Cliente'], ['proyecto', 'Proyecto'], ['numero', 'N° de proyecto'], ['plano', 'N° de plano'], ['rev', 'Revisión'], ['dibujo', 'Dibujó'], ['reviso', 'Revisó'], ['aprobo', 'Aprobó']], inC = {};
   const gc = mk('div', 'pv-campos');
   CAMPOS.forEach(([k, lab]) => { const l = mk('label', '', lab), x = document.createElement('input'); x.type = 'text'; x.autocomplete = 'off'; l.appendChild(x); gc.appendChild(l); inC[k] = x; x.addEventListener('input', () => { PL.c[k] = x.value; guardarAj(); pvSchedule(); }); });
   panel.appendChild(gc);

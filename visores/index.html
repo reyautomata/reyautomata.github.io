@@ -515,6 +515,15 @@ window.__VCOMPACTO = 'body{font-size:13.5px}header{padding-block:9px!important;g
 <script>
 /* Registro de escenas para la exportación 3D (OBJ, STL, DXF): cada visor anota la escena que dibuja */
 window.__RE_HOOK = '\n;(function () { try { var SP = window.__LIB.THREE.Scene.prototype, o = SP.onBeforeRender; SP.onBeforeRender = function (r, s, c, rt) { if (!rt) (window.__RE_ESCENAS = window.__RE_ESCENAS || new Set()).add(this); return o.apply(this, arguments); }; } catch (e) {} })();\n';
+/* Un solo generador de plano de montaje para todos los visores: los que traían su copia propia pasan a usar el compartido
+   (equipos/plano-montaje.js), de modo que la lámina, la viñeta y el cuadro de revisiones sean iguales en todos los detalles. */
+if (window.__PLANO) window.__VIEWERS.forEach(function (v) {
+  if (v.html.indexOf('window.__PLANO = ') >= 0) return;
+  var i = v.html.indexOf('/* ---------- Plano de montaje'), f = v.html.lastIndexOf('\n})();\n<\/script>');
+  if (i < 0 || f < i) return;
+  v.html = v.html.slice(0, i) + 'try { window.__PLANO(scene, renderer, camera, controls, function () { return typeof labels !== "undefined" ? labels : []; }, THREE); } catch (e) { console.warn("Plano de montaje", e); }\n' + v.html.slice(f);
+  v.html = v.html.replace('<script>/*__LIB__*/', function () { return '<script>window.__PLANO = ' + window.__PLANO.toString() + ';<\/script>\n<script>/*__LIB__*/'; });
+});
 window.__VIEWERS.forEach(function (v) { v.html = v.html.replace('/*__LIB__*/', function () { return window.__LIBSRC + window.__RE_HOOK + (window.__VPLUS ? '\n;(' + window.__VPLUS.toString() + ')();\n' : ''); }); });
 document.head.insertAdjacentHTML('beforeend', '<style>' + window.__FONTS + '</style>');
 </script>
