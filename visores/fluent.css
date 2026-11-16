@@ -1,0 +1,113 @@
+/* Suite ReyEngi · capa de diseño «Windows 11 / Fluent»
+ * Se carga después de las hojas de cada página y redefine la paleta, la tipografía, los radios y los controles.
+ * Escala tipográfica: título de página 28/600 · subtítulo 20/600 · cuerpo y controles 14/400 · etiquetas y barra de estado 12/400.
+ * Espaciado en múltiplos de 4 px · tarjetas con radio 8 px y relleno 16 px · controles con radio 4 px y 32 px de alto.
+ * Temas: oscuro (lienzo #202020, tarjetas #2B2B2B) y claro (lienzo #F3F3F3, tarjetas #FFFFFF). El acento de acción es el naranjo de la marca. */
+html:root {
+  --f-body: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-tit: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --bg: #202020; --panel: #2B2B2B; --panel2: #323232; --fg: #FFFFFF; --muted: #C8C8C8; --line: #3F3F3F;
+  --brand: #1C1C1C; --brand-fg: #FFFFFF; --brand-muted: #C8C8C8; --rs-barra: #1C1C1C; --chip: #383838;
+  --accent: #FF8C32; --accent-ink: #FFB070; --sobre-acento: #1B0D02;
+  --sel: #60CDFF; --sel-bg: rgba(96, 205, 255, .14); --ok: #6CCB5F; --warn: #F2C661; --bad: #FF99A4; --tec: #60CDFF;
+  --acento-txt: #E8A317;
+  --ctl: #343434; --ctl-b: #9A9A9A; --hover: rgba(255, 255, 255, .06); --r-tarjeta: 8px; --r-control: 4px;
+  color-scheme: dark;
+}
+html:root[data-tema="claro"] {
+  --bg: #F3F3F3; --panel: #FFFFFF; --panel2: #F9F9F9; --fg: #1A1A1A; --muted: #5C5C5C; --line: #DCDCDC;
+  --brand: #EEEEEE; --brand-fg: #1A1A1A; --brand-muted: #5C5C5C; --rs-barra: #EEEEEE; --chip: #EDEDED;
+  --accent: #C2540A; --accent-ink: #9A4208; --sobre-acento: #FFFFFF;
+  --sel: #005FB8; --sel-bg: rgba(0, 95, 184, .10); --ok: #0F7B0F; --warn: #8A5300; --bad: #C42B1C; --tec: #005FB8;
+  --acento-txt: #9A4208;
+  --ctl: #FFFFFF; --ctl-b: #868686; --hover: rgba(0, 0, 0, .05);
+  color-scheme: light;
+}
+html body { font-family: var(--f-body); background: var(--bg); color: var(--fg); }
+html body button, html body input, html body select, html body textarea { font-family: var(--f-body); }
+
+/* ── Escala tipográfica estándar (tamaño de texto «Estándar Windows 11»; los modos compactos conservan su escala) ── */
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) { font-size: 14px; line-height: 20px; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) .barra h1 { font: 600 20px/28px var(--f-tit) !important; letter-spacing: 0; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) .barra h1 small { font: 400 12px/16px var(--f-body) !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) main h2 { font: 600 20px/28px var(--f-tit); }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) main h3 { font: 600 14px/20px var(--f-body); }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main button, html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main .btn,
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) .barra .btn, html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) .barra button:not([role="tab"]), html body:not(.rs-d1):not(.rs-d2):not(.rs-portada) .barra select { font-size: 14px !important; line-height: 20px; min-height: 32px !important; padding: 5px 12px !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main button.mini { font-size: 12px !important; min-height: 24px !important; padding: 2px 8px !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main select, html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main textarea { font-size: 14px !important; min-height: 32px !important; padding: 4px 10px !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main td input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main td select { font-size: 12px !important; min-height: 24px !important; padding: 2px 6px !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main label { font-size: 12px !important; line-height: 16px; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main legend { font: 600 14px/20px var(--f-body) !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { font-size: 12px; line-height: 16px; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) th { font-size: 12px !important; font-weight: 600; padding-top: 6px !important; padding-bottom: 6px !important; }
+html body:not(.rs-d1):not(.rs-d2) .dk-tab { font: 400 12px/16px var(--f-body); padding: 0 10px; } html body:not(.rs-d1):not(.rs-d2) .dk-cab { min-height: 32px; }
+html body:not(.rs-d1):not(.rs-d2) .rs-arbol { font-size: 12px; } html body:not(.rs-d1):not(.rs-d2) .rs-arbol .nodo { font-size: 12px !important; min-height: 28px !important; padding: 2px 8px !important; }
+html body:not(.rs-d1):not(.rs-d2) .rs-cab a { font: 600 14px/20px var(--f-body); } html body:not(.rs-d1):not(.rs-d2) .rs-cab a small { font: 400 12px/16px var(--f-body); }
+html body:not(.rs-d1):not(.rs-d2) .dkm-p { padding: 16px; } html body:not(.rs-d1):not(.rs-d2) .dkm-em, html body:not(.rs-d1):not(.rs-d2) .dkm-p dl.dkm-dl { font-size: 14px; }
+
+/* ── Marco: barra de título, navegación y barra de estado ── */
+html body .rs-arbol { background: var(--rs-barra); border-right: 1px solid var(--line); font-family: var(--f-body); color-scheme: inherit; }
+html body .rs-cab { background: var(--rs-barra); border-bottom: 1px solid var(--line); min-height: 48px; padding: 8px 8px 8px 12px; gap: 8px; }
+html body .rs-cab a { color: var(--fg); } html body .rs-cab a small { color: var(--muted); font-family: var(--f-body); }
+html body .rs-cab button, html body .rs-abrir { border: 0; border-radius: var(--r-control); min-width: 36px; min-height: 36px; color: var(--fg); background: transparent; }
+html body .rs-cab button:hover, html body .rs-abrir:hover { background: var(--hover); }
+html body .rs-cab button svg, html body .rs-pie svg, html body .rs-abrir svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+html body .rs-arbol h2 { font: 600 12px/16px var(--f-body) !important; letter-spacing: 0; text-transform: none; color: var(--muted); margin: 8px 12px 4px; }
+html body .rs-arbol .nodo { border-radius: var(--r-control); color: var(--fg); position: relative; }
+html body .rs-arbol .nodo:hover { background: var(--hover) !important; }
+html body .rs-arbol .nodo.actual, html body .rs-arbol .nodo[aria-current] { background: var(--hover) !important; box-shadow: none; }
+html body .rs-arbol .nodo.actual::before, html body .rs-arbol .nodo[aria-current]::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px; background: var(--accent); }
+html body .rs-herr input { border-radius: var(--r-control); background: var(--ctl); border: 1px solid var(--line); border-bottom-color: var(--ctl-b); min-height: 32px; font-size: 14px; padding: 4px 10px; }
+html body .rs-herr button { border-radius: var(--r-control); }
+html body .rs-pie { flex: none; border-top: 1px solid var(--line); padding: 4px; }
+html body .rs-pie button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 36px; padding: 0 12px; border-radius: var(--r-control); font: 400 14px/20px var(--f-body); color: var(--fg); cursor: pointer; }
+html body .rs-pie button:hover { background: var(--hover); } html body .rs-pie button:focus-visible { outline: 2px solid var(--sel); outline-offset: -2px; }
+html body .rs-conf { position: fixed; left: 8px; bottom: 52px; z-index: 60; width: 288px; padding: 16px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: var(--r-tarjeta); box-shadow: 0 8px 32px rgba(0, 0, 0, .36); font: 400 14px/20px var(--f-body); display: grid; gap: 12px; }
+html body .rs-conf h3 { margin: 0; font: 600 14px/20px var(--f-body); } html body .rs-conf p { margin: 0; font-size: 12px; line-height: 16px; color: var(--muted); }
+html body .rs-conf .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; background: var(--bg); border-radius: var(--r-control); }
+html body .rs-conf .seg button { all: unset; box-sizing: border-box; text-align: center; min-height: 28px; padding: 4px 8px; border-radius: 3px; font: 400 12px/16px var(--f-body); cursor: pointer; color: var(--fg); }
+html body .rs-conf .seg button[aria-pressed="true"] { background: var(--panel2); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 600; } html body .rs-conf .seg button:focus-visible { outline: 2px solid var(--sel); }
+html body:not(.rs-portada) .barra { background: var(--rs-barra) !important; border-bottom: 1px solid var(--line) !important; }
+html body .rs-estado { height: 26px; font: 400 12px/16px var(--f-body); color: var(--muted); background: var(--rs-barra); gap: 16px; }
+html body .rs-estado b { color: var(--fg); } html body.rs-marco.rs-conestado { padding-bottom: 26px; }
+@media (max-width: 900px) { html body.rs-marco.rs-conestado { padding-bottom: 0; } }
+
+/* ── Controles ── */
+html body main button, html body main .btn, html body .barra .btn, html body .barra button:not([role="tab"]) { border-radius: var(--r-control) !important; }
+html body main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), html body main select, html body main textarea { border-radius: var(--r-control) !important; border-bottom-color: var(--ctl-b) !important; }
+html body main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible, html body main select:focus-visible, html body main textarea:focus-visible { outline: none; border-bottom: 2px solid var(--sel) !important; }
+html body main button.pri, html body main .btn.pri, html body .barra .btn.pri { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--sobre-acento) !important; font-weight: 600; }
+html body button:focus-visible, html body a:focus-visible, html body [tabindex]:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+html body main fieldset, html body .tb, html body .tb-col, html body .tb-f, html body .dk-grupo, html body main .tarjeta, html body main .card { border-radius: var(--r-tarjeta); }
+html body main fieldset { background: var(--panel); border: 1px solid var(--line); padding: 16px; }
+html body dialog { border-radius: var(--r-tarjeta); }
+
+/* ── Mesa de trabajo: pestañas tipo pivote y tarjetas ── */
+html body .dk-grupo { background: var(--panel); border: 1px solid var(--line); }
+html body .dk-cab { background: var(--panel); border-bottom: 1px solid var(--line); }
+html body .dk-tab { border-right: 0; color: var(--muted); border-radius: var(--r-control); margin: 4px 0 4px 4px; }
+html body .dk-tab:hover { background: var(--hover); color: var(--fg); }
+html body .dk-tab.on { background: transparent; color: var(--fg); font-weight: 600; }
+html body .dk-tab.on::before { top: auto; bottom: -1px; left: 12px; right: 12px; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: none; }
+html body .dk-b { border-radius: var(--r-control); }
+html body * { scrollbar-width: thin; scrollbar-color: var(--ctl-b) transparent; }
+@media (prefers-reduced-motion: reduce) { html body * { transition: none !important; animation: none !important; } }
+
+/* ── Ajustes para que ambos temas se lean bien sobre las hojas propias de cada módulo ── */
+html body main legend { font-family: var(--f-body) !important; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--fg); }
+html body main h2.grupo { font-family: var(--f-body); letter-spacing: 0; text-transform: none; color: var(--fg); }
+html body main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *):not(.klst-hoja *):not(.kdoc *):not(.k3-dt) th { background-color: var(--panel2); color: var(--fg) !important; font-family: var(--f-body); }
+html body .rs-arbol .nodo[aria-current="true"], html body .rs-arbol .nodo[aria-current="page"] { color: var(--fg) !important; box-shadow: none; background: var(--hover) !important; font-weight: 600; }
+html body .rs-estado, html body .rs-estado * { font-family: var(--f-body); }
+html:root[data-tema="claro"] body .barra, html:root[data-tema="claro"] body .barra h1, html:root[data-tema="claro"] body .barra a { color: var(--fg); }
+html:root[data-tema="claro"] body .barra h1 small, html:root[data-tema="claro"] body .barra .volver { color: var(--muted) !important; }
+/* Las pestañas y los botones de las ventanas de la mesa conservan su tamaño de etiqueta para que quepan más en la barra */
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main button.dk-tab { font-size: 12px !important; line-height: 16px; min-height: 0 !important; padding: 0 10px !important; }
+html body:not(.rs-d1):not(.rs-d2):not(.rs-portada):not(.exp) main button.dk-b { font-size: 12px !important; min-height: 0 !important; padding: 0 8px !important; }
+html:root[data-tema="claro"] body.rs-portada .barra { background: #1C1C1C !important; color: #FFFFFF; }
+html body .rs-cruce { background: var(--rs-barra); color: var(--muted); font-family: var(--f-body); }
+html body .rs-cruce a:not(.rs-volver) { color: var(--fg); background: var(--chip); border-color: var(--line); border-radius: var(--r-control); }
+html body .itlazo b { color: var(--fg); font-family: var(--f-body); }
+html body .rs-prop, html body .rs-aviso { border-radius: var(--r-tarjeta); }

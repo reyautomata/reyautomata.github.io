@@ -91,7 +91,15 @@
     return c;
   }
   // Tamaño del texto de la interfaz: normal, compacto (por defecto) o mínimo. Se recuerda en este navegador.
-  var TAMS = ['normal', 'compacto', 'mínimo'], tam = 1; try { var tg = localStorage.getItem('reyengi-tam'); if (tg !== null && TAMS[+tg]) tam = +tg; } catch (e) {}
+  // Capa de diseño Windows 11 / Fluent: se carga al final para que mande sobre las hojas de cada página. Tema oscuro o claro, recordado en este navegador.
+  (function () { var lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = BASE + 'fluent.css'; lk.id = 'rsFluent'; (document.head || document.documentElement).appendChild(lk); })();
+  var tema = 'oscuro'; try { if (localStorage.getItem('reyengi-tema') === 'claro') tema = 'claro'; } catch (e) {}
+  function ponerTema() { document.documentElement.setAttribute('data-tema', tema); }
+  ponerTema();
+  var ICO = { menu: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>',
+    conf: '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.6l1.2 2 2.3-.5 1 2.1 2.1 1-.5 2.3 2 1.2-2 1.2.5 2.3-2.1 1-1 2.1-2.3-.5-1.2 2-1.2-2-2.3.5-1-2.1-2.1-1 .5-2.3-2-1.2 2-1.2-.5-2.3 2.1-1 1-2.1 2.3.5z" transform="translate(1.5 1.5) scale(.85)"/></svg>' };
+  // Tamaño del texto de la interfaz: estándar Windows 11 (por defecto), compacto o mínimo. Se recuerda en este navegador.
+  var TAMS = ['estándar', 'compacto', 'mínimo'], tam = 0; try { var tg = localStorage.getItem('reyengi-tam2'); if (tg !== null && TAMS[+tg]) tam = +tg; } catch (e) {}
   function ponerTam() { var b = document.body; if (!b) return; b.classList.toggle('rs-d1', tam === 1); b.classList.toggle('rs-d2', tam === 2); window.dispatchEvent(new Event('resize')); }
   if (document.body) ponerTam(); else document.addEventListener('DOMContentLoaded', ponerTam);
   var aside, filtro = '', actual = null;
@@ -163,9 +171,9 @@
     if (document.getElementById('rsMarco') || window.self !== window.top) return; // no dentro de marcos incrustados
     var b = document.body; b.classList.add('rs-marco');
     aside = document.createElement('aside'); aside.id = 'rsMarco'; aside.className = 'rs-arbol'; aside.setAttribute('aria-label', 'Explorador de la suite');
-    aside.innerHTML = '<div class="rs-cab"><a href="' + BASE + '">Suite ReyEngi<small>Ingeniería de instrumentación y control</small></a><button type="button" id="rsPlegar" aria-label="Ocultar el explorador" title="Ocultar el explorador">«</button></div>' +
+    aside.innerHTML = '<div class="rs-cab"><a href="' + BASE + '">Suite ReyEngi<small>Ingeniería de instrumentación y control</small></a><button type="button" id="rsPlegar" aria-label="Ocultar el explorador" title="Ocultar el explorador">' + ICO.menu + '</button></div>' +
       '<div class="rs-herr"><input type="search" id="rsBuscar" placeholder="Buscar módulo o entregable" aria-label="Buscar en el explorador" autocomplete="off"><button type="button" id="rsTam" title="Tamaño del texto de la interfaz" aria-label="Cambiar el tamaño del texto de la interfaz">Aa</button><button type="button" id="rsAbrirTodo" title="Expandir todo" aria-label="Expandir todo">＋</button><button type="button" id="rsCerrarTodo" title="Contraer todo" aria-label="Contraer todo">－</button></div>' +
-      '<nav class="rs-cuerpo"><h2>Explorador</h2><div class="rs-lista"></div></nav>';
+      '<nav class="rs-cuerpo"><h2>Explorador</h2><div class="rs-lista"></div></nav><div class="rs-pie"><button type="button" id="rsConf" aria-haspopup="dialog" aria-expanded="false">' + ICO.conf + '<span>Configuración</span></button></div>';
     b.insertBefore(aside, b.firstChild);
     var div = document.createElement('div'); div.className = 'rs-div'; div.setAttribute('role', 'separator'); div.setAttribute('aria-orientation', 'vertical'); div.setAttribute('aria-label', 'Ancho del explorador'); b.appendChild(div);
     var cab = document.querySelector('.barra') || document.querySelector('header.top'), fila = document.querySelector('.barra .fila') || document.querySelector('header .topin') || cab;
@@ -195,7 +203,16 @@
     var bq = document.getElementById('rsBuscar');
     bq.addEventListener('input', function () { filtro = bq.value.trim(); pintar(); });
     bq.addEventListener('keydown', function (e) { if (e.key === 'ArrowDown') { var n = aside.querySelector('.rs-lista .nodo'); if (n) { e.preventDefault(); n.focus(); } } if (e.key === 'Escape' && bq.value) { e.stopPropagation(); bq.value = ''; filtro = ''; pintar(); } });
-    document.getElementById('rsTam').addEventListener('click', function () { tam = (tam + 1) % 3; try { localStorage.setItem('reyengi-tam', String(tam)); } catch (e) {} ponerTam(); this.title = 'Tamaño del texto: ' + TAMS[tam] + ' (pulsa para cambiar)'; var es = document.getElementById('rsEstado'); if (es) { var av = document.createElement('span'); av.textContent = 'Tamaño del texto: ' + TAMS[tam]; av.style.color = '#FFB070'; es.appendChild(av); setTimeout(function () { av.remove(); }, 2500); } });
+    // Configuración, anclada al pie de la navegación: tema y tamaño del texto
+    (function () { var bt = document.getElementById('rsConf'), pop = null;
+      function cerrar() { if (pop) { pop.remove(); pop = null; bt.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', fuera, true); document.removeEventListener('keydown', tecla, true); } }
+      function fuera(e) { if (pop && !pop.contains(e.target) && !bt.contains(e.target)) cerrar(); } function tecla(e) { if (e.key === 'Escape') { cerrar(); bt.focus(); } }
+      function pinta() { pop.innerHTML = '<h3>Tema</h3><div class="seg" role="group" aria-label="Tema">' + [['oscuro', 'Oscuro'], ['claro', 'Claro (beta)']].map(function (x) { return '<button type="button" data-tema="' + x[0] + '" aria-pressed="' + (tema === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+        '<h3>Tamaño del texto</h3><div class="seg" role="group" aria-label="Tamaño del texto">' + TAMS.map(function (t, i) { return '<button type="button" data-tam="' + i + '" aria-pressed="' + (tam === i) + '">' + t.charAt(0).toUpperCase() + t.slice(1) + '</button>'; }).join('') + '</div><p>Estándar sigue la escala de Windows 11 (14 px en texto y controles, 12 px en etiquetas). Compacto y mínimo muestran más filas en los listados.</p>'; }
+      bt.addEventListener('click', function () { if (pop) return cerrar(); pop = document.createElement('div'); pop.className = 'rs-conf'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Configuración'); pinta(); document.body.appendChild(pop); bt.setAttribute('aria-expanded', 'true');
+        pop.addEventListener('click', function (e) { var q = e.target.closest('button'); if (!q) return; if (q.dataset.tema) { tema = q.dataset.tema; try { localStorage.setItem('reyengi-tema', tema); } catch (er) {} ponerTema(); } else if (q.dataset.tam) { tam = +q.dataset.tam; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (er) {} ponerTam(); } pinta(); });
+        document.addEventListener('pointerdown', fuera, true); document.addEventListener('keydown', tecla, true); var f = pop.querySelector('button'); if (f) f.focus(); }); })();
+    document.getElementById('rsTam').addEventListener('click', function () { tam = (tam + 1) % 3; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (e) {} ponerTam(); this.title = 'Tamaño del texto: ' + TAMS[tam] + ' (pulsa para cambiar)'; var es = document.getElementById('rsEstado'); if (es) { var av = document.createElement('span'); av.textContent = 'Tamaño del texto: ' + TAMS[tam]; av.style.color = '#FFB070'; es.appendChild(av); setTimeout(function () { av.remove(); }, 2500); } });
     document.getElementById('rsAbrirTodo').addEventListener('click', function () { U.cerrados = {}; GRUPOS.forEach(function (g) { g[2].forEach(function (e) { U.hijos[e[0]] = true; }); }); recordar(); pintar(); });
     document.getElementById('rsCerrarTodo').addEventListener('click', function () { GRUPOS.forEach(function (g) { U.cerrados[g[0]] = true; g[2].forEach(function (e) { U.hijos[e[0]] = false; }); }); U.cerrados.rec = true; recordar(); pintar(); });
     aside.addEventListener('click', function (e) {
