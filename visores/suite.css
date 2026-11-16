@@ -303,3 +303,47 @@ body.rs-portada header.top .rs-tabsw { padding: 0 14px; max-width: none; }
 .rs-aviso { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 95; background: var(--panel); color: var(--fg); border: 1px solid var(--sel); border-radius: 8px; padding: 8px 14px; font: 12.5px var(--f-body); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); max-width: 90vw; }
 @media print { .rs-tabsw, .rs-prop, .rs-aviso { display: none !important; } }
 @media (min-width: 1300px) { body.rs-conprop { padding-right: 300px; } body.rs-conprop .rs-estado { right: 300px; } body.rs-conprop.ra-abierto { padding-right: 700px; } body.rs-conprop.ra-abierto .rs-estado { right: 700px; } }
+
+
+/* ── Densidad de la interfaz (botón «Aa» del explorador) ──
+   Referencias de aplicaciones densas en datos: una sola línea sutil entre filas, encabezados discretos, cifras alineadas (tabulares),
+   fila bajo el cursor y fila en edición resaltadas, foco fino y visible, interlineado no menor de 1,35. */
+@media screen {
+  body:not(.rs-portada) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { font-variant-numeric: tabular-nums; }
+  body:not(.rs-portada) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) tbody tr:hover > td { background-color: rgba(56, 200, 232, .045); }
+  body:not(.rs-portada) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) tbody tr:focus-within > td { background-color: rgba(56, 200, 232, .09); }
+  body:not(.rs-portada) main td input:focus-visible, body:not(.rs-portada) main td select:focus-visible { outline: 2px solid var(--sel) !important; outline-offset: -1px !important; background: var(--panel2) !important; }
+  body:not(.rs-portada) main table.io th, body:not(.rs-portada) main table.det th { letter-spacing: .02em; }
+
+  /* Compacto (por defecto) */
+  body.rs-d1:not(.rs-portada), body.rs-d2:not(.rs-portada) { font-size: 11.5px; line-height: 1.38; }
+  body.rs-d1:not(.rs-portada):not(.exp) main button, body.rs-d1:not(.rs-portada):not(.exp) main .btn { font-size: 11px !important; min-height: 24px !important; padding: 2px 8px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main button.mini { font-size: 10.5px !important; min-height: 20px !important; padding: 0 6px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), body.rs-d1:not(.rs-portada):not(.exp) main select, body.rs-d1:not(.rs-portada):not(.exp) main textarea { font-size: 11.5px !important; min-height: 24px !important; padding: 2px 6px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main td input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), body.rs-d1:not(.rs-portada):not(.exp) main td select { font-size: 11px !important; min-height: 21px !important; padding: 0 4px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main td:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { padding-top: 1px !important; padding-bottom: 1px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main input[type="checkbox"], body.rs-d1:not(.rs-portada):not(.exp) main input[type="radio"] { width: 13px !important; height: 13px !important; min-height: 13px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main label { font-size: 10.5px !important; }
+  body.rs-d1:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { font-size: 11px; }
+  body.rs-d1:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) th { font-size: 10px !important; padding-top: 3px !important; padding-bottom: 3px !important; }
+  body.rs-d1 .dk-tab, body.rs-d2 .dk-tab { font-size: 11px; padding: 0 10px; } body.rs-d1 .dk-cab, body.rs-d2 .dk-cab { min-height: 26px; }
+  body.rs-d1 .dkm-p, body.rs-d2 .dkm-p { padding: 8px 10px; }
+  body.rs-d1 .dkm-em, body.rs-d2 .dkm-em { font-size: 11.5px; gap: 6px; } body.rs-d1 .dkm-p dl.pr, body.rs-d2 .dkm-p dl.pr { font-size: 11.5px; } body.rs-d1 .dkm-p .reg, body.rs-d2 .dkm-p .reg { font-size: 11.5px; padding: 4px 8px; }
+  body.rs-d1 .itlazo, body.rs-d2 .itlazo { padding: 5px 9px !important; gap: 0 !important; } body.rs-d1 .itlazo b, body.rs-d2 .itlazo b { font-size: 12px; } body.rs-d1 .itlazo span, body.rs-d2 .itlazo span { font-size: 11.5px; } body.rs-d1 .itlazo small, body.rs-d2 .itlazo small { font-size: 10.5px; }
+  body.rs-d1 .zm-barra, body.rs-d2 .zm-barra { font-size: 11px; } body.rs-d1 .zm-barra button, body.rs-d2 .zm-barra button { font-size: 11.5px !important; padding: 1px 8px !important; min-height: 22px !important; }
+  body.rs-d1:not(.rs-portada) .barra h1, body.rs-d2:not(.rs-portada) .barra h1 { font-size: 13px !important; }
+
+  /* Mínimo: para pantallas grandes o escalado alto del sistema */
+  body.rs-d2:not(.rs-portada) { font-size: 10.5px; }
+  body.rs-d2:not(.rs-portada):not(.exp) main button, body.rs-d2:not(.rs-portada):not(.exp) main .btn { font-size: 10.5px !important; min-height: 22px !important; padding: 1px 7px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main button.mini { font-size: 10px !important; min-height: 18px !important; padding: 0 5px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), body.rs-d2:not(.rs-portada):not(.exp) main select, body.rs-d2:not(.rs-portada):not(.exp) main textarea { font-size: 10.5px !important; min-height: 22px !important; padding: 1px 5px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main td input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), body.rs-d2:not(.rs-portada):not(.exp) main td select { font-size: 10.5px !important; min-height: 19px !important; padding: 0 3px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main td:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { padding-top: 0 !important; padding-bottom: 0 !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main input[type="checkbox"], body.rs-d2:not(.rs-portada):not(.exp) main input[type="radio"] { width: 12px !important; height: 12px !important; min-height: 12px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main label { font-size: 10px !important; }
+  body.rs-d2:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) { font-size: 10.5px; }
+  body.rs-d2:not(.rs-portada):not(.exp) main table:not(.pg *):not(#lienzo *):not(#documento *):not(.hoja *) th { font-size: 9.5px !important; padding-top: 2px !important; padding-bottom: 2px !important; }
+  body.rs-d2 .dk-tab { font-size: 10.5px; } body.rs-d2 .dkm-em, body.rs-d2 .dkm-p dl.pr, body.rs-d2 .dkm-p .reg { font-size: 10.5px; }
+  body.rs-d2 .rs-arbol .nodo { min-height: 19px !important; font-size: 10.5px !important; }
+}

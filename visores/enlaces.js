@@ -30,7 +30,7 @@
   }
   function todo() { registrar(); pintar(); }
   var st = document.createElement('style');
-  st.textContent = '.rs-cruce{position:absolute;right:150px;top:3px;z-index:3;display:flex;align-items:center;gap:6px;max-width:58%;overflow:hidden;white-space:nowrap;font:600 11.5px system-ui,"Segoe UI",sans-serif}' +
+  st.textContent = '.rs-cruce{position:absolute;right:150px;top:3px;z-index:3;display:flex;align-items:center;gap:6px;max-width:58%;overflow:hidden;white-space:nowrap;font:600 11px system-ui,"Segoe UI",sans-serif;background:var(--rs-barra,#0D1626);padding:1px 0 1px 12px;box-shadow:-14px 0 12px var(--rs-barra,#0D1626)}' +
     '.rs-cruce[hidden]{display:none}.rs-cruce a{color:#EAF2F8;text-decoration:none;border:1px solid #2C4563;border-radius:12px;padding:3px 10px;background:#18283C;flex:none}' +
     '.rs-cruce a:hover,.rs-cruce a:focus-visible{border-color:#38C8E8;outline:none}.rs-cruce a:focus-visible{box-shadow:0 0 0 2px #38C8E8}' +
     '.rs-cruce a.rs-volver{background:#FF8C32;border-color:#FF8C32;color:#1b0d02}.rs-cruce a.rs-volver:hover{background:#ffa25a}' +

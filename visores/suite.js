@@ -90,6 +90,10 @@
     try { var D = P.leer('pid', null); if (D && D.cand && D.cand.length) c['01'] = D.cand.length; } catch (e) {}
     return c;
   }
+  // Tamaño del texto de la interfaz: normal, compacto (por defecto) o mínimo. Se recuerda en este navegador.
+  var TAMS = ['normal', 'compacto', 'mínimo'], tam = 1; try { var tg = localStorage.getItem('reyengi-tam'); if (tg !== null && TAMS[+tg]) tam = +tg; } catch (e) {}
+  function ponerTam() { var b = document.body; if (!b) return; b.classList.toggle('rs-d1', tam === 1); b.classList.toggle('rs-d2', tam === 2); window.dispatchEvent(new Event('resize')); }
+  if (document.body) ponerTam(); else document.addEventListener('DOMContentLoaded', ponerTam);
   var aside, filtro = '', actual = null;
   function nodoHijo(x) {
     return '<li role="none"><a class="nodo hij" role="treeitem" href="' + esc(x.href) + '"' + (x.act ? ' aria-current="true"' : '') + (x.tab ? ' data-mtab="' + esc(x.tab) + '"' : '') + ' title="' + esc((x.t ? x.t + ' · ' : '') + x.s) + '"><span class="tw"></span><span class="ic fic"></span><span class="tx">' + (x.t ? '<b>' + esc(x.t) + '</b> ' : '') + (x.s ? '<i>' + esc(x.s) + '</i>' : '') + '</span>' + (x.n ? '<span class="ct">' + esc(x.n) + '</span>' : '') + '</a></li>';
@@ -160,7 +164,7 @@
     var b = document.body; b.classList.add('rs-marco');
     aside = document.createElement('aside'); aside.id = 'rsMarco'; aside.className = 'rs-arbol'; aside.setAttribute('aria-label', 'Explorador de la suite');
     aside.innerHTML = '<div class="rs-cab"><a href="' + BASE + '">Suite ReyEngi<small>Ingeniería de instrumentación y control</small></a><button type="button" id="rsPlegar" aria-label="Ocultar el explorador" title="Ocultar el explorador">«</button></div>' +
-      '<div class="rs-herr"><input type="search" id="rsBuscar" placeholder="Buscar módulo o entregable" aria-label="Buscar en el explorador" autocomplete="off"><button type="button" id="rsAbrirTodo" title="Expandir todo" aria-label="Expandir todo">＋</button><button type="button" id="rsCerrarTodo" title="Contraer todo" aria-label="Contraer todo">－</button></div>' +
+      '<div class="rs-herr"><input type="search" id="rsBuscar" placeholder="Buscar módulo o entregable" aria-label="Buscar en el explorador" autocomplete="off"><button type="button" id="rsTam" title="Tamaño del texto de la interfaz" aria-label="Cambiar el tamaño del texto de la interfaz">Aa</button><button type="button" id="rsAbrirTodo" title="Expandir todo" aria-label="Expandir todo">＋</button><button type="button" id="rsCerrarTodo" title="Contraer todo" aria-label="Contraer todo">－</button></div>' +
       '<nav class="rs-cuerpo"><h2>Explorador</h2><div class="rs-lista"></div></nav>';
     b.insertBefore(aside, b.firstChild);
     var div = document.createElement('div'); div.className = 'rs-div'; div.setAttribute('role', 'separator'); div.setAttribute('aria-orientation', 'vertical'); div.setAttribute('aria-label', 'Ancho del explorador'); b.appendChild(div);
@@ -191,6 +195,7 @@
     var bq = document.getElementById('rsBuscar');
     bq.addEventListener('input', function () { filtro = bq.value.trim(); pintar(); });
     bq.addEventListener('keydown', function (e) { if (e.key === 'ArrowDown') { var n = aside.querySelector('.rs-lista .nodo'); if (n) { e.preventDefault(); n.focus(); } } if (e.key === 'Escape' && bq.value) { e.stopPropagation(); bq.value = ''; filtro = ''; pintar(); } });
+    document.getElementById('rsTam').addEventListener('click', function () { tam = (tam + 1) % 3; try { localStorage.setItem('reyengi-tam', String(tam)); } catch (e) {} ponerTam(); this.title = 'Tamaño del texto: ' + TAMS[tam] + ' (pulsa para cambiar)'; var es = document.getElementById('rsEstado'); if (es) { var av = document.createElement('span'); av.textContent = 'Tamaño del texto: ' + TAMS[tam]; av.style.color = '#FFB070'; es.appendChild(av); setTimeout(function () { av.remove(); }, 2500); } });
     document.getElementById('rsAbrirTodo').addEventListener('click', function () { U.cerrados = {}; GRUPOS.forEach(function (g) { g[2].forEach(function (e) { U.hijos[e[0]] = true; }); }); recordar(); pintar(); });
     document.getElementById('rsCerrarTodo').addEventListener('click', function () { GRUPOS.forEach(function (g) { U.cerrados[g[0]] = true; g[2].forEach(function (e) { U.hijos[e[0]] = false; }); }); U.cerrados.rec = true; recordar(); pintar(); });
     aside.addEventListener('click', function (e) {
@@ -237,3 +242,27 @@
     var lf = document.createElement('link'); lf.rel = 'stylesheet'; lf.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'; document.head.appendChild(lf); } // sin conexión se usa Segoe UI
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { iniciar(); trabajo(); }); else { iniciar(); trabajo(); }
 })();
+
+/* Enter en una tabla editable pasa a la casilla de la derecha (y al final de la fila, a la primera de la siguiente), como en una planilla.
+ * Mayús+Enter vuelve a la anterior. El valor se confirma al salir de la casilla. Vale para todos los listados de la suite. */
+(function () {
+  'use strict';
+  var SEL = 'input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not([type=button]):not([disabled]):not([readonly]), select:not([disabled])';
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+    var t = e.target; if (!t || !t.matches || !t.matches('td input, td select') || !t.matches(SEL)) return;
+    var tabla = t.closest('table'), tr = t.closest('tr'); if (!tabla || !tr) return;
+    e.preventDefault(); e.stopPropagation();
+    function filas(tb) { return [].filter.call(tb.rows, function (r) { return r.querySelector(SEL); }); }
+    var fi = filas(tabla).indexOf(tr), cs = [].slice.call(tr.querySelectorAll(SEL)), ci = cs.indexOf(t) + (e.shiftKey ? -1 : 1), id = tabla.id;
+    if (ci >= cs.length) { fi++; ci = 0; } else if (ci < 0) { fi--; ci = -1; }
+    t.blur();                                             // confirma el cambio; la tabla puede redibujarse
+    setTimeout(function () {
+      var tb = tabla.isConnected ? tabla : (id && document.getElementById(id)); if (!tb) return;
+      var fs = filas(tb), r = fs[Math.max(0, Math.min(fs.length - 1, fi))]; if (!r) return;
+      var c = r.querySelectorAll(SEL), n = c[ci < 0 ? c.length - 1 : Math.min(ci, c.length - 1)];
+      if (n) { n.focus(); if (n.select && n.tagName === 'INPUT') try { n.select(); } catch (er) {} n.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    }, 40);
+  }, true);
+})();
+
