@@ -9,7 +9,7 @@
   var COM = { t: 'tabs', p: ['prop', 'ctrl'], a: 'prop' };
   var S = {
     // Datos base: la tabla ocupa la izquierda y las acciones, propiedades y control documental quedan en pestañas a la derecha, igual que en los entregables
-    'v-io': { principal: 'tabla', paneles: [{ id: 'tabla', titulo: 'Señales de E/S', mover: ['#buscarIO', '#cuentaIO', caja('#tablaIO')] }] },
+    'v-io': { clave: 'v-io-2', principal: 'tabla', principales: [['tabla', 'indice']], paneles: [{ id: 'tabla', titulo: 'Señales de E/S', mover: ['#buscarIO', '#cuentaIO', caja('#tablaIO')] }, { id: 'indice', titulo: 'Índice de tags', mover: ['#idxTags'] }] },
     'v-mod': { principal: 'tar', paneles: [{ id: 'tar', titulo: 'Tarjetas y canales', mover: ['#modulos'] }] },
     'v-cfg': { principal: 'cfg', paneles: [{ id: 'cfg', titulo: 'Configuración', mover: [function (s) { return [].filter.call(s.children, function (c) { return !c.matches('p.intro, h2:first-child'); }); }] }] },
     'v-lazos': { paneles: [{ id: 'lista', titulo: 'Lazos', mover: ['.lazos > div:nth-child(1)'] }, { id: 'datos', titulo: 'Datos del lazo', mover: ['#hojaVacia', '#hojaLazo'] }, { id: 'plano', titulo: 'Plano', mover: ['#hojas'], zoom: '#hojas' }, { id: 'sen', titulo: 'Señales y conexiones', mover: ['#lzSen'] }],
