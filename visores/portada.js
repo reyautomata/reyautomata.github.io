@@ -44,4 +44,6 @@
   document.addEventListener('click', function () { setTimeout(function () { if (location.hash.length > 1) { var v = deHash(); if (v !== vista) mostrar(v, true); } }, 0); });
   mostrar(deHash(), false);
   setTimeout(function () { mostrar(vista, false); }, 400); // el observador de la portada marca la navegación al cargar
+  // La portada ya está armada con el diseño nuevo: se quita la cubierta de carga (un instante después, para que el explorador alcance a dibujarse)
+  setTimeout(function () { document.body.classList.add('pt-lista'); }, 60);
 })();
