@@ -111,3 +111,4 @@ html body .rs-cruce { background: var(--rs-barra); color: var(--muted); font-fam
 html body .rs-cruce a:not(.rs-volver) { color: var(--fg); background: var(--chip); border-color: var(--line); border-radius: var(--r-control); }
 html body .itlazo b { color: var(--fg); font-family: var(--f-body); }
 html body .rs-prop, html body .rs-aviso { border-radius: var(--r-tarjeta); }
+html body .rs-conf .enl { display: grid; gap: 4px; } html body .rs-conf .enl a { display: block; padding: 6px 8px; border-radius: var(--r-control); color: var(--fg); text-decoration: none; font-size: 14px; } html body .rs-conf .enl a:hover { background: var(--hover); } html body .rs-conf .enl a:focus-visible { outline: 2px solid var(--sel); }

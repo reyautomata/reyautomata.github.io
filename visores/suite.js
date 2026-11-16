@@ -10,15 +10,17 @@
   // Fila de módulo: [código, nombre, enlace]. Fila de subcategoría: [código, nombre, null, 'sub' | 'dev'].
   var REG = window.RE_ENTREGABLES;
   function ramas(cat) { var o = []; if (!REG) return o; REG.de(cat).forEach(function (x) { o.push([x.sub.id, x.sub.name, null, x.sub.status === 'AVAILABLE' ? 'sub' : 'dev']); x.gens.forEach(function (g) { if (g.status === 'AVAILABLE') o.push([g.cod, g.name, g.module]); }); }); return o; }
+  // Estructura de trabajo, en el orden en que avanza un entregable:
+  //   proyecto y datos base → área de trabajo (documentos y planos) → control documental (bandejas por etapa y emisión) → apoyo.
+  // Cada módulo aparece una sola vez; la configuración está en el botón «Configuración» al pie del explorador.
   var GRUPOS = [
-    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio'], ['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield']]],
-    ['ges', 'Proyecto', [['00', 'Proyectos', 'proyectos/'], ['MT', 'Mesa de trabajo', 'mesa/'], ['GU', 'Generador de entregables', 'generador/'], ['GD', 'Control documental', 'documentos/'], ['EX', 'Explorador de archivos', 'explorador/'], ['CF', 'Configuración de entregables', 'lazos/#cfg'], ['E1', 'Señales de E/S (datos base)', 'lazos/#io'], ['E2', 'Tarjetas y canales (datos base)', 'lazos/#mod']]],
-    ['doc', 'Documentos de ingeniería', ramas('DOCUMENTO')],
-    ['pla', 'Planos de ingeniería', ramas('PLANO')],
-    ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/']]],
-    ['nor', 'Normativa', [['H4', 'Normativa SEC y reglas', 'normativa/']]],
-    ['cfg', 'Configuración', [['CG', 'Configuración general', 'configuracion/']]],
-    ['bib', 'Biblioteca técnica', [['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
+    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio']]],
+    ['ges', 'Proyecto y datos base', [['00', 'Proyectos', 'proyectos/'], ['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']]],
+    ['doc', 'En trabajo · Documentos', ramas('DOCUMENTO')],
+    ['pla', 'En trabajo · Planos', ramas('PLANO')],
+    ['ctl', 'Control documental', [['GD', 'Todos los entregables', 'documentos/'], ['B1', 'En trabajo', 'documentos/#trabajo'], ['B2', 'Revisión de la especialidad', 'documentos/#esp'], ['B3', 'Coordinación interna', 'documentos/#coord'], ['B4', 'Firmas', 'documentos/#firmas'], ['B5', 'Para emitir', 'documentos/#emitir'], ['B6', 'Emitidos', 'documentos/#emitido'], ['EX', 'Archivos del proyecto', 'explorador/']]],
+    ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/'], ['MT', 'Mesa de trabajo libre', 'mesa/']]],
+    ['gui', 'Guía y normativa', [['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield'], ['H4', 'Normativa SEC y reglas', 'normativa/'], ['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
   ];
   // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
   window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE; window.RS_HIJOS = function (c) { return hijosDe(c); };
@@ -46,7 +48,7 @@
     if (EN_LAZOS) return u.hash === seccion();
     if (EN_INICIO) { var h = location.hash || '#inicio'; if (u.hash === '#montajes') return h === '#montajes' || !!MONT[h]; return u.hash === h; }
     if (u.hash) return location.hash === u.hash || (!location.hash && /#aprender$/.test(u.hash));
-    return true;
+    return !(/documentos\/$/.test(p) && /^#(trabajo|esp|coord|firmas|emitir|emitido)$/.test(location.hash));   /* las bandejas del control documental tienen su propia fila */
   }
   // ── Entregables generados que cuelgan de cada nodo ──
   function lazoDe(s) {
@@ -208,7 +210,7 @@
       function cerrar() { if (pop) { pop.remove(); pop = null; bt.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', fuera, true); document.removeEventListener('keydown', tecla, true); } }
       function fuera(e) { if (pop && !pop.contains(e.target) && !bt.contains(e.target)) cerrar(); } function tecla(e) { if (e.key === 'Escape') { cerrar(); bt.focus(); } }
       function pinta() { pop.innerHTML = '<h3>Tema</h3><div class="seg" role="group" aria-label="Tema">' + [['oscuro', 'Oscuro'], ['claro', 'Claro (beta)']].map(function (x) { return '<button type="button" data-tema="' + x[0] + '" aria-pressed="' + (tema === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
-        '<h3>Tamaño del texto</h3><div class="seg" role="group" aria-label="Tamaño del texto">' + TAMS.map(function (t, i) { return '<button type="button" data-tam="' + i + '" aria-pressed="' + (tam === i) + '">' + t.charAt(0).toUpperCase() + t.slice(1) + '</button>'; }).join('') + '</div><p>Estándar sigue la escala de Windows 11 (14 px en texto y controles, 12 px en etiquetas). Compacto y mínimo muestran más filas en los listados.</p>'; }
+        '<h3>Tamaño del texto</h3><div class="seg" role="group" aria-label="Tamaño del texto">' + TAMS.map(function (t, i) { return '<button type="button" data-tam="' + i + '" aria-pressed="' + (tam === i) + '">' + t.charAt(0).toUpperCase() + t.slice(1) + '</button>'; }).join('') + '</div><p>Estándar sigue la escala de Windows 11 (14 px en texto y controles, 12 px en etiquetas). Compacto y mínimo muestran más filas en los listados.</p><h3>Proyecto</h3><div class="enl"><a href="' + BASE + 'configuracion/">Configuración general</a><a href="' + BASE + 'lazos/#cfg">Configuración de entregables</a><a href="' + BASE + 'generador/">Generador de entregables</a></div>'; }
       bt.addEventListener('click', function () { if (pop) return cerrar(); pop = document.createElement('div'); pop.className = 'rs-conf'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Configuración'); pinta(); document.body.appendChild(pop); bt.setAttribute('aria-expanded', 'true');
         pop.addEventListener('click', function (e) { var q = e.target.closest('button'); if (!q) return; if (q.dataset.tema) { tema = q.dataset.tema; try { localStorage.setItem('reyengi-tema', tema); } catch (er) {} ponerTema(); } else if (q.dataset.tam) { tam = +q.dataset.tam; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (er) {} ponerTam(); } pinta(); });
         document.addEventListener('pointerdown', fuera, true); document.addEventListener('keydown', tecla, true); var f = pop.querySelector('button'); if (f) f.focus(); }); })();

@@ -65,6 +65,29 @@ dialog.vistaG { width: 96vw; height: 94vh; max-width: none; max-height: none; pa
 dialog.vistaG[open] { display: flex; flex-direction: column; } dialog.vistaG::backdrop { background: rgba(3, 8, 16, .8); }
 dialog.vistaG > div { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--line); } dialog.vistaG > div b { flex: 1; }
 dialog.vistaG iframe { flex: 1; width: 100%; border: 0; background: #3b4656; }
+.bandejas { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.bandejas button { display: inline-flex; align-items: center; gap: 8px; }
+.bandejas button i { font-style: normal; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--panel2); border: 1px solid var(--line); font-size: 11px; }
+.bandejas button b { font-weight: 600; color: var(--muted); }
+.bandejas button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 600; }
+.bandejas button.atr b { color: var(--warn); } .bandejas button.cfg { margin-left: auto; }
+td small.paso { display: block; color: var(--muted); font-size: 12px; } td small.paso.atr, .fl-atr { color: var(--warn); }
+.flujo { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 12px 0; background: var(--bg); display: grid; gap: 8px; }
+.flujo h3 { margin: 0; }
+.fl-pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fl-pasos li { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+.fl-pasos li i { font-style: normal; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; flex: none; }
+.fl-pasos li.hecho i { background: var(--ok); border-color: var(--ok); color: #10240f; } .fl-pasos li.hecho { color: var(--fg); }
+.fl-pasos li.actual { color: var(--fg); font-weight: 600; } .fl-pasos li.actual i { background: var(--accent); border-color: var(--accent); color: #1b0d02; }
+.fl-d { margin: 0; }
+.fl-ruta { margin: 0; padding: 0 0 0 20px; display: grid; gap: 4px; font-size: 12px; }
+.fl-ruta li small { display: block; color: var(--muted); } .fl-ruta li.actual { font-weight: 600; }
+.fl-ruta li input { width: 46%; margin-right: 4px; }
+.fl-emi { display: grid; grid-template-columns: 1.4fr .6fr 1fr; gap: 8px; }
+dialog.dListas { width: min(560px, 94vw); border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 16px; }
+dialog.dListas form { display: grid; gap: 12px; } dialog.dListas h2 { margin: 0; } dialog.dListas label { display: grid; gap: 4px; }
+dialog.dListas textarea { font: 13px var(--f-mono, monospace); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 8px; }
+dialog.dListas .pie { display: flex; gap: 8px; justify-content: flex-end; }
 </style>
 <script src="../acceso.js"></script>
 <link rel="stylesheet" href="../suite.css">
