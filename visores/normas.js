@@ -19,7 +19,7 @@
     ['00', 'Proyecto', 'proyectos/'], ['01', 'Análisis de P&ID', 'pid/'], ['02', 'Listado de instrumentos', 'lazos/#inst'],
     ['03', 'Hojas de datos', 'hojas-datos/'], ['04', 'Especificaciones técnicas', 'especificaciones/'], ['05', 'Listado de E/S', 'lazos/#doc'],
     ['06', 'Diagramas de lazo', 'lazos/#lazos'], ['07', 'Listado de circuitos', 'lazos/#circ'], ['08', 'Unilineales TDI', 'lazos/#uni'],
-    ['09', 'Diagrama de bloques', 'lazos/#blq'], ['10', 'Detalles de montaje', '#montajes'], ['H3', 'Canalizaciones (conduit)', 'lazos/#cond']
+    ['09', 'Diagrama de bloques', 'lazos/#blq'], ['10', 'Detalles de montaje', 'montajes.html#montajes'], ['H3', 'Canalizaciones (conduit)', 'lazos/#cond']
   ];
 
   // ── Parámetros que consumen los algoritmos ──

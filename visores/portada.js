@@ -19,7 +19,7 @@
   menu.appendChild(el('h2', '', 'Secciones'));
   var gr = el('div', 'pt-grid');
   // La Suite 4.0 abre su propia página (motor de planos); va primero y marcada como nueva
-  var s4 = el('a', 'pt-card pt-nuevo'); s4.href = 'suite-4/'; s4.appendChild(el('b', '', 'Suite 4.0 · motor de planos'));
+  var s4 = el('a', 'pt-card pt-nuevo'); s4.href = './'; s4.appendChild(el('b', '', 'Suite 4.0 · página principal'));
   s4.appendChild(el('span', '', 'Árbol 00–09 por fases. Lazos, interconexionados, arquitectura, segmentos y fibra dibujados desde la base de instrumentos, con viñeta, revisiones y DXF.'));
   var nv = el('em', '', 'Nuevo'); nv.style.color = '#6FC48F'; s4.appendChild(nv); s4.style.borderColor = '#6FC48F'; gr.appendChild(s4);
   SEC.forEach(function (s) { var a = el('a', 'pt-card'); a.href = '#' + s[0]; a.appendChild(el('b', '', s[1])); a.appendChild(el('span', '', s[2])); if (s[0] === 'formacion') a.appendChild(el('em', '', 'Próximamente')); gr.appendChild(a); });

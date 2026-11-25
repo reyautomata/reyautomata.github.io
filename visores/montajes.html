@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tablero, guía de etapas y visores 3D · Suite ReyEngi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#022A55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Suite ReyEngi">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Suite ReyEngi · portada: barra corporativa, índice de entregables a la izquierda y contenido en listas. */
+:root {
+  --bg: #0A1626; --panel: #0F2036; --panel2: #13263F; --fg: #E6EDF5; --muted: #9FB0C3; --line: #1E3350;
+  --brand: #022A55; --brand-fg: #FFFFFF; --brand-muted: #A9B6C6; --accent: #EF5A05; --accent-ink: #FF8A45; --chip: #142A45;
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 13.5px; line-height: 1.45; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+header.top { background: linear-gradient(180deg, #034488 0%, #022A55 100%); color: var(--brand-fg); border-bottom: 3px solid var(--accent); }
+.topin { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
+.brandlogo { height: 38px; width: auto; display: block; object-fit: contain; }
+.topin .sep { width: 1px; height: 32px; background: rgba(255,255,255,.25); }
+.ttl { min-width: 0; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 21px; line-height: 1.05; letter-spacing: .3px; }
+.h1sub { margin: 1px 0 0; font: 500 12px var(--f-mono); color: var(--brand-muted); letter-spacing: .3px; }
+.mode { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font: 500 11.5px var(--f-mono); color: var(--brand-muted); }
+.mode i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.shell { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 22px; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 30px max(16px, env(safe-area-inset-left, 0px)); }
+.side { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 10px; }
+.sidet { margin: 4px 6px 6px; font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+.sidet + .sidelist { margin-bottom: 12px; }
+.sidelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.sidelist a, .sidelist button { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; text-align: left; font: 500 13px var(--f-body); color: var(--fg); text-decoration: none; background: transparent; border: 0; border-left: 2px solid transparent; border-radius: 0 5px 5px 0; padding: 6px 8px; cursor: pointer; }
+.sidelist a:hover, .sidelist button:hover { background: var(--panel2); border-left-color: var(--accent); }
+.sidelist b { font: 600 11px var(--f-mono); color: var(--accent-ink); min-width: 20px; }
+.sidelist .ct { margin-left: auto; font: 500 11px var(--f-mono); color: var(--muted); }
+.sidelist button[aria-current="true"] { background: var(--panel2); border-left-color: var(--accent); }
+main { min-width: 0; }
+.blk { margin: 0 0 26px; }
+.blkh { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 10px; }
+.blkh h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 18px; letter-spacing: .4px; text-transform: none; color: var(--fg); }
+.blkh small { font-size: 12px; color: var(--muted); }
+table.ent { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+table.ent th { text-align: left; font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: .8px; color: var(--muted); background: var(--chip); padding: 7px 10px; border-bottom: 1px solid var(--line); }
+table.ent td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.ent tr:last-child td { border-bottom: 0; }
+table.ent tbody tr:hover { background: var(--panel2); }
+table.ent td.n { font: 600 12px var(--f-mono); color: var(--accent-ink); width: 34px; }
+table.ent td.t a { font-weight: 600; text-decoration: none; }
+table.ent td.t a:hover { color: var(--accent-ink); }
+table.ent td.d { color: var(--muted); font-size: 12.5px; }
+.fmt { display: inline-block; font: 600 10.5px var(--f-mono); color: var(--fg); background: var(--chip); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; margin: 1px 2px 1px 0; white-space: nowrap; }
+.go { display: inline-flex; align-items: center; font: 600 12px var(--f-body); color: #fff; background: var(--accent); border-radius: 5px; padding: 5px 11px; text-decoration: none; white-space: nowrap; }
+.go:hover { filter: brightness(1.1); }
+.go:focus-visible, .sidelist a:focus-visible, .sidelist button:focus-visible, table.ent a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 760px) { table.ent td.d, table.ent th.d { display: none; } }
+.mtbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.mtbar input { flex: 1 1 240px; min-width: 0; font: 13px var(--f-body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; min-height: 34px; box-sizing: border-box; }
+.mtbar input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.segv { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.segv button { font: 600 12px var(--f-body); color: var(--muted); background: var(--panel); border: 0; padding: 7px 12px; min-height: 34px; cursor: pointer; }
+.segv button + button { border-left: 1px solid var(--line); }
+.segv button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+.mtvacio { color: var(--muted); padding: 10px 2px; }
+section[data-tab] { margin: 0 0 18px; }
+section[data-tab] > h2 { margin: 0 0 8px; font: 600 11.5px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+section[data-tab] > h2 small { font: 500 11.5px var(--f-mono); letter-spacing: 0; text-transform: none; color: var(--muted); opacity: .8; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.card { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; color: inherit; text-decoration: none; transition: border-color .15s; }
+.card:hover { border-color: var(--accent); background: var(--panel2); }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { width: 40px; height: 40px; border-radius: 6px; background: var(--brand); color: var(--brand-fg); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 17px; border-bottom: 3px solid var(--accent); }
+.card h3 { margin: 1px 0 3px; font-family: var(--f-body); font-weight: 600; font-size: 14px; line-height: 1.25; }
+.card p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.card .codes { display: block; margin-top: 5px; font: 500 11px var(--f-mono); color: var(--accent-ink); }
+/* Vista en lista: una fila por visor */
+.lista .grid { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lista .card, .lista .card.hasthumb { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 7px 12px; row-gap: 0; }
+.lista .card:last-child { border-bottom: 0; }
+.lista .card .thumb, .lista .card .pvtag { display: none; }
+.lista .card.hasthumb .num { margin: 0; box-shadow: none; }
+.lista .num { width: 30px; height: 26px; font-size: 13px; border-bottom-width: 2px; border-radius: 4px; }
+.lista .card > span:not(.num):not(.pvtag) { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+.lista .card h3 { margin: 0; font-size: 13px; }
+.lista .card p { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lista .card .codes { margin: 0; white-space: nowrap; }
+@media (max-width: 760px) { .lista .card > span:not(.num):not(.pvtag) { grid-template-columns: 1fr; gap: 1px; } .lista .card p { white-space: normal; } }
+footer { max-width: 1320px; margin: 0 auto; color: var(--muted); font-size: 11.5px; line-height: 1.5; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 26px max(16px, env(safe-area-inset-left, 0px)); }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .side { display: none; }
+  .mode { margin-left: 0; width: 100%; }
+}
+@media (max-width: 600px) { .brandlogo { height: 30px; } .topin .sep { display: none; } h1 { font-size: 18px; } }
+/* Visor abierto */
+.viewer { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.vbar { display: flex; align-items: center; gap: 8px; background: #021D3D; color: var(--brand-fg); padding: 6px max(12px, env(safe-area-inset-right, 0px)) 6px max(12px, env(safe-area-inset-left, 0px)); padding-top: calc(6px + env(safe-area-inset-top, 0px)); border-bottom: 1px solid #0A3B70; }
+.vbar button { font: 600 12.5px var(--f-body); background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 6px 11px; min-height: 32px; cursor: pointer; }
+.vbar button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.vbar span { font: 600 13px var(--f-body); letter-spacing: .2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #DCE6F1; }
+.viewer iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+.hdlink:focus-visible, .pv-hd:focus-visible, .vbar a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pv-hd { display: inline-flex; align-items: center; background: transparent; color: var(--fg); border: 1px solid var(--accent); border-radius: 6px; padding: 8px 12px; font: 600 13px var(--f-body); min-height: 36px; text-decoration: none; }
+.pv-hd:hover { background: var(--accent); color: #fff; }
+.vbar > span { flex: 1 1 auto; min-width: 0; }
+.vbar a.vhd { font: 600 12.5px var(--f-body); color: #fff; border: 1px solid rgba(255,255,255,.45); border-radius: 6px; padding: 5px 10px; min-height: 32px; display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; box-sizing: border-box; }
+.vbar a.vhd:hover { border-color: var(--accent); }
+.vexp { position: relative; }
+.vbar .vexp > button { background: transparent; border: 1px solid rgba(255,255,255,.45); white-space: nowrap; }
+.vbar .vexp > button:hover { border-color: var(--accent); }
+.vexp-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; width: min(320px, calc(100vw - 24px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+.vbar .vexp-menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; background: transparent; color: var(--fg); border-radius: 6px; padding: 8px 10px; text-align: left; }
+.vbar .vexp-menu button:hover, .vbar .vexp-menu button:focus-visible { background: var(--panel2); outline: none; }
+.vexp-menu b { font: 700 13px var(--f-body); color: var(--accent-ink); }
+.vexp-menu small { font: 500 11.5px var(--f-body); color: var(--muted); }
+@media (max-width: 640px) { .vbar { flex-wrap: wrap; row-gap: 6px; } .vbar span { flex: 1 1 calc(100% - 140px); min-width: 0; } .vbar { position: relative; } .vexp { position: static; } .vexp-menu { left: 12px; right: 12px; width: auto; top: calc(100% + 4px); } }
+.vexp-menu p { margin: 6px 10px 4px; font: 500 11px var(--f-mono); color: var(--muted); }
+.vexp-msg { position: fixed; right: 16px; bottom: 16px; z-index: 40; background: var(--panel); color: var(--fg); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 12px; font: 500 13px var(--f-body); max-width: min(380px, calc(100vw - 32px)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+</style>
+<style id="pvCss">
+.card.hasthumb { grid-template-columns: 54px minmax(0, 1fr); padding: 10px 12px 14px; row-gap: 10px; }
+.card .thumb { grid-column: 1 / -1; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 7px; background: #D9E0E8; display: block; }
+.card.hasthumb .num { margin-top: -36px; margin-left: 6px; position: relative; z-index: 1; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); }
+.card .pvtag { position: absolute; top: 18px; right: 20px; font: 600 11px var(--f-mono, monospace); background: rgba(3, 68, 136, .88); color: #fff; padding: 3px 8px; border-radius: 999px; pointer-events: none; }
+.card.hasthumb { position: relative; }
+.pv-modal { position: fixed; inset: 0; z-index: 30; background: rgba(4, 12, 22, .8); display: grid; place-items: center; padding: 16px; }
+.pv-modal[hidden] { display: none; }
+.pv-box { position: relative; background: var(--panel); color: var(--fg); border-radius: 12px; width: min(1080px, 100%); max-height: calc(100vh - 32px); overflow: auto; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); box-shadow: 0 20px 60px rgba(0, 0, 0, .45); }
+.pv-media { background: #D9E0E8; position: relative; min-height: 260px; }
+.pv-img { width: 100%; height: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; transition: opacity .35s; }
+.pv-dots { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 6px; }
+.pv-dots button { font: 600 12px var(--f-body, sans-serif); border: 0; border-radius: 999px; padding: 6px 12px; min-height: 32px; cursor: pointer; background: rgba(255, 255, 255, .85); color: #0B1A2B; }
+.pv-dots button[aria-pressed="true"] { background: #EF5A05; color: #fff; }
+.pv-info { padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 10px; }
+.pv-sec { font: 600 12px var(--f-mono, monospace); color: var(--accent-ink); text-transform: uppercase; letter-spacing: 1px; }
+.pv-t { margin: 0; display: block; text-transform: none; letter-spacing: 0; color: var(--fg); font-family: var(--f-display); font-weight: 700; font-size: 24px; line-height: 1.05; text-wrap: balance; }
+.pv-d { margin: 0; color: var(--muted); line-height: 1.5; }
+.pv-c { font: 600 12.5px var(--f-mono, monospace); color: var(--accent-ink); }
+.pv-f { margin: 0; padding-left: 18px; color: var(--fg); line-height: 1.5; font-size: 12.5px; }
+.pv-acts { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+.pv-open { background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 8px 16px; font: 700 13px var(--f-body); cursor: pointer; min-height: 36px; }
+.pv-cancel { background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; font: 600 13px var(--f-body); cursor: pointer; min-height: 36px; }
+.pv-x { position: absolute; top: 10px; right: 10px; z-index: 2; border: 0; border-radius: 8px; min-width: 38px; min-height: 38px; background: rgba(255, 255, 255, .9); color: #0B1A2B; font: 700 16px var(--f-body); cursor: pointer; }
+.pv-open:focus-visible, .pv-cancel:focus-visible, .pv-x:focus-visible, .pv-dots button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) { .pv-box { grid-template-columns: 1fr; } .pv-t { font-size: 25px; } }
+@media (prefers-reduced-motion: reduce) { .pv-img { transition: none; } }
+</style>
+<style id="tabsCss">
+.tabs { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; margin: 2px 0 14px; border-bottom: 1px solid var(--line); -webkit-overflow-scrolling: touch; }
+.tabs button { flex: 0 0 auto; font: 600 12.5px var(--f-body); color: var(--muted); background: transparent; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 11px; min-height: 36px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs button:hover { color: var(--fg); }
+.tabs .tn { font: 500 10.5px var(--f-mono); background: var(--chip); border-radius: 999px; padding: 1px 7px; }
+.buscando .tabs button[aria-selected="true"] { border-bottom-color: transparent; color: var(--muted); }
+main section[data-tab][hidden] { display: none !important; }
+</style>
+<style id="inicioCss">
+/* Portada formal: navegación superior, hero, etapas por compuertas, disciplinas desplegables, brownfield y formación */
+:root { --cu: #C8901E; --cu-soft: rgba(200, 144, 30, .14); --ok: #2E9D63; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(118px + var(--rs-cinta, 0px)); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+header.top { position: sticky; top: 0; z-index: 15; }
+.topnav { background: #021D3D; border-top: 1px solid rgba(255,255,255,.08); }
+.topnavin { max-width: 1320px; margin: 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 0 max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px)); }
+.topnavin::-webkit-scrollbar { display: none; }
+.topnav a { flex: 0 0 auto; color: #C9D6E4; text-decoration: none; font: 600 12.5px var(--f-body); padding: 9px 12px; border-bottom: 2px solid transparent; display: inline-flex; align-items: center; gap: 6px; }
+.topnav a:hover, .topnav a.on { color: #fff; border-bottom-color: var(--cu); }
+.topnav a:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.pr { font: 600 9.5px var(--f-mono); letter-spacing: .6px; text-transform: uppercase; color: #1A1206; background: var(--cu); border-radius: 999px; padding: 2px 7px; vertical-align: middle; }
+/* Índice lateral por disciplina */
+.sgrp { border-bottom: 1px solid var(--line); padding: 2px 0 4px; }
+.sgrp:last-of-type { border-bottom: 0; margin-bottom: 10px; }
+.sgrp > summary { list-style: none; cursor: pointer; font: 600 12px var(--f-body); color: var(--fg); padding: 7px 6px; display: flex; align-items: center; gap: 6px; border-radius: 6px; }
+.sgrp > summary::-webkit-details-marker { display: none; }
+.sgrp > summary::before { content: ''; width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; flex: 0 0 auto; }
+.sgrp[open] > summary::before { transform: rotate(45deg); }
+.sgrp > summary:hover { background: var(--panel2); }
+.sgrp > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Hero */
+.hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); gap: 24px; align-items: end; padding: 28px 28px 24px; margin: 0 0 28px; border: 1px solid var(--line); border-radius: 12px;
+  background:
+    linear-gradient(115deg, rgba(10,22,38,.97) 0%, rgba(10,22,38,.9) 55%, rgba(19,38,63,.75) 100%),
+    repeating-linear-gradient(-14deg, transparent 0 26px, rgba(200,144,30,.10) 26px 27px, transparent 27px 54px, rgba(159,176,195,.07) 54px 55px),
+    #0F2036; }
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--cu), var(--accent) 60%, transparent); }
+.kicker { margin: 0 0 8px; font: 600 11.5px var(--f-mono); letter-spacing: 1.6px; text-transform: uppercase; color: var(--cu); }
+.hero h2 { margin: 0 0 12px; font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); line-height: 1.04; letter-spacing: .2px; text-wrap: balance; }
+.lead { margin: 0; color: #C3CFDC; font-size: 14px; line-height: 1.6; max-width: 72ch; }
+.lead b { color: var(--fg); font-weight: 600; }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.go.big { font-size: 13.5px; padding: 10px 16px; border-radius: 7px; }
+.ghost { display: inline-flex; align-items: center; font: 600 13px var(--f-body); color: var(--fg); background: transparent; border: 1px solid #3A5578; border-radius: 7px; padding: 9px 14px; text-decoration: none; cursor: pointer; }
+.ghost:hover { border-color: var(--cu); color: #fff; }
+.ghost.sm { font-size: 12px; padding: 6px 10px; border-radius: 6px; }
+.ghost:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.kpis { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.kpis > div { background: rgba(15,32,54,.92); padding: 12px 14px; }
+.kpis dt { font: 600 10.5px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.kpis dd { margin: 2px 0 0; font: 700 30px/1 var(--f-display); color: #fff; }
+.kpis small { display: block; margin-top: 3px; color: var(--muted); font-size: 11.5px; }
+/* Etapas */
+.fases { display: grid; grid-template-columns: 260px minmax(0, 1fr); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.ftabs { display: flex; flex-direction: column; background: #0C1B2E; border-right: 1px solid var(--line); }
+.ftabs button { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: center; text-align: left; background: transparent; color: var(--muted); border: 0; border-left: 3px solid transparent; border-bottom: 1px solid var(--line); padding: 11px 12px; cursor: pointer; font: inherit; position: relative; }
+.ftabs button:last-child { border-bottom: 0; }
+.ftabs .fl { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--f-mono); border: 1.5px solid #3A5578; color: var(--muted); }
+.ftabs .fn strong { display: block; font: 600 13.5px var(--f-body); color: var(--fg); }
+.ftabs .fn small { display: block; font: 500 11px var(--f-mono); color: var(--muted); margin-top: 1px; }
+.ftabs button[aria-selected="true"] { background: var(--panel); border-left-color: var(--cu); }
+.ftabs button[aria-selected="true"] .fl { background: var(--cu); border-color: var(--cu); color: #1A1206; }
+.ftabs button:hover .fn strong { color: #fff; }
+.ftabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.fpanel { padding: 18px 22px 20px; }
+.fobj { margin: 0 0 10px; font-family: var(--f-display); font-weight: 600; font-size: 19px; line-height: 1.2; color: #fff; }
+.fli { margin: 0 0 14px; padding-left: 18px; color: #C3CFDC; line-height: 1.6; }
+.fli li::marker { color: var(--cu); }
+.flab { margin: 0 0 6px; font: 600 10.5px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; font: 500 12.5px var(--f-body); color: var(--fg); background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px 5px 6px; text-decoration: none; }
+.chip b { font: 700 10.5px var(--f-mono); background: var(--brand); color: #fff; border-radius: 999px; padding: 2px 6px; }
+.chip:hover { border-color: var(--cu); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nota { margin: 8px 2px 0; color: var(--muted); font-size: 11.5px; }
+/* Disciplinas */
+.discs { display: flex; flex-direction: column; gap: 8px; }
+.disc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.disc > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto 18px; gap: 12px; align-items: center; padding: 12px 14px; }
+.disc > summary::-webkit-details-marker { display: none; }
+.disc > summary::after { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; justify-self: center; }
+.disc[open] > summary::after { transform: rotate(-135deg); }
+.disc > summary:hover { background: var(--panel2); }
+.disc > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gcode { width: 44px; height: 38px; border-radius: 7px; display: grid; place-items: center; font: 700 15px var(--f-display); background: var(--brand); color: #fff; border-bottom: 3px solid var(--cu); }
+.gt strong { display: block; font: 600 15px var(--f-body); }
+.gt small { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
+.gn { font: 600 11px var(--f-mono); color: var(--muted); background: var(--chip); border-radius: 999px; padding: 2px 9px; }
+.items { border-top: 1px solid var(--line); }
+.item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item:hover { background: var(--panel2); }
+.item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.item .code { font: 700 12.5px var(--f-mono); color: var(--accent-ink); text-align: center; }
+.item .it strong { display: block; font-weight: 600; font-size: 13.5px; }
+.item .it small { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 1px; }
+.item .meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.phs { display: inline-flex; gap: 3px; }
+.ph { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 4px; font: 700 10.5px var(--f-mono); color: #fff; }
+.phC { background: #5B6FA8; } .phB { background: #2F7DB5; } .phD { background: #C8901E; color: #1A1206; } .phO { background: #2E9D63; }
+.fmts .fmt { font-size: 10px; }
+.acts { display: flex; gap: 8px; margin-top: 8px; }
+/* Brownfield */
+.bfgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.bfc { position: relative; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px; color: inherit; text-decoration: none; border-top: 3px solid var(--brand); }
+.bfc:hover { border-color: var(--line); border-top-color: var(--cu); background: var(--panel2); }
+.bfc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bfn { font: 700 22px var(--f-display); color: var(--cu); }
+.bfc strong { font: 600 15px var(--f-body); }
+.bfc small { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.bfl { margin-top: auto; padding-top: 6px; font: 600 11.5px var(--f-mono); color: var(--accent-ink); }
+/* Formación */
+.forma { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.ruta { background: var(--panel); border: 1px dashed #3A5578; border-radius: 10px; padding: 14px 16px; }
+.rt { margin: 0 0 8px; font: 600 14.5px var(--f-body); color: #fff; }
+.ruta ol, .ruta ul { margin: 0; padding-left: 20px; color: #C3CFDC; line-height: 1.65; font-size: 13px; }
+.ruta li::marker { color: var(--cu); font-weight: 700; }
+.nota-ruta { background: var(--cu-soft); border-color: rgba(200,144,30,.45); }
+.blkh h2 .pr { margin-left: 6px; }
+footer .fbrand { color: var(--fg); margin: 0 0 4px; }
+footer p { margin: 0 0 4px; }
+@media (max-width: 1000px) { .hero { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .hero { padding: 20px 16px 18px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .fases { grid-template-columns: 1fr; }
+  .ftabs { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+  .ftabs button { flex: 0 0 auto; grid-template-columns: 26px auto; border-left: 0; border-bottom: 0; border-right: 1px solid var(--line); border-top: 3px solid transparent; }
+  .ftabs button[aria-selected="true"] { border-top-color: var(--cu); }
+  .ftabs .fn small { display: none; }
+  .fpanel { padding: 14px 14px 16px; }
+  .item { grid-template-columns: 36px minmax(0, 1fr); }
+  .item .meta { grid-column: 2; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .disc > summary { grid-template-columns: 40px minmax(0, 1fr) 16px; }
+  .disc .gn { display: none; }
+}
+.side { top: 108px; max-height: calc(100vh - 120px); }
+@media (max-width: 760px) {
+  html { scroll-padding-top: 96px; }
+  header.top .topin { flex-wrap: nowrap; gap: 10px; padding-top: 8px; padding-bottom: 8px; }
+  header.top .brandlogo { height: 24px; }
+  header.top .h1sub, header.top .mode { display: none; }
+  header.top h1 { font-size: 15.5px; }
+  .topnav a { padding: 8px 10px; font-size: 12px; }
+}
+</style>
+<script src="acceso.js"></script>
+<style>body.rs-portada:not(.pt-lista)::before{content:"Cargando la suite…";position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:var(--bg,#202020);color:var(--muted,#C8C8C8);font:400 14px/20px "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}body.rs-portada:not(.pt-lista){overflow:hidden}</style>
+<link rel="stylesheet" href="suite.css">
+<link rel="stylesheet" href="fluent.css" id="rsFluent">
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?33:103))+'px')}}catch(e){}</script>
+<script src="proyectos.js" defer></script>
+<script src="entregables.js" defer></script>
+<script src="tablero.js" defer></script>
+<script src="portada.js" defer></script>
+<script src="cinta.js" defer></script>
+<script src="suite.js" defer></script>
+</head>
+<body class="rs-portada rs-marco rs-conestado">
+<script>/* si algo falla al cargar, la cubierta se quita igual */window.addEventListener("load",function(){setTimeout(function(){document.body.classList.add("pt-lista")},2500)});setTimeout(function(){document.body.classList.add("pt-lista")},15000);</script>
+<header class="top">
+  <div class="topin">
+    <img class="brandlogo" src="data:image/png;base64,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" alt="ReyEngi · Automatización y Control Industrial" width="136" height="38">
+    <div class="sep" aria-hidden="true"></div>
+    <div class="ttl"><h1>ReyEngi · Ingeniería I&amp;C para la minería</h1><p class="h1sub">Conceptual · básica · detalle · greenfield y brownfield</p></div>
+    <div class="mode" id="mode"><i aria-hidden="true"></i><span id="modeTxt">Versión en línea</span></div>
+  </div>
+  <nav class="topnav" aria-label="Secciones de la portada"><div class="topnavin"><a href="#inicio">Inicio</a><a href="#ciclo">Etapas del proyecto</a><a href="#ingenieria">Ingeniería por disciplina</a><a href="#brownfield">Brownfield y mejora continua</a><a href="#montajes">Detalles típicos</a><a href="#formacion">Formación <span class="pr">Próximamente</span></a></div></nav>
+</header>
+<div class="shell">
+<nav class="side" aria-label="Índice de la suite">
+  <p class="sidet">Jerarquía de ingeniería</p>
+  <details class="sgrp" open><summary>Gestión y dirección del proyecto</summary><ol class="sidelist"><li><a href="proyectos/"><b>00</b>Proyecto</a></li><li><a href="requisiciones/"><b>11</b>Requisiciones de compra</a></li><li><a href="normativa/"><b>H4</b>Normativa SEC y reglas</a></li></ol></details><details class="sgrp" open><summary>Procesos y P&amp;ID</summary><ol class="sidelist"><li><a href="pid/"><b>01</b>Análisis de P&amp;ID</a></li><li><a href="piping/#aprender"><b>H1</b>Piping para leer P&amp;ID</a></li></ol></details><details class="sgrp" open><summary>Instrumentación</summary><ol class="sidelist"><li><a href="lazos/#inst"><b>02</b>Listado de instrumentos</a></li><li><a href="hojas-datos/"><b>03</b>Hojas de datos</a></li><li><a href="especificaciones/"><b>04</b>Especificaciones técnicas</a></li><li><a href="piping/#valvulas"><b>H2</b>Válvulas: tamaño y actuador</a></li><li><a href="#montajes"><b>10</b>Detalles típicos de montaje</a></li></ol></details><details class="sgrp" open><summary>Control y comunicaciones</summary><ol class="sidelist"><li><a href="lazos/#doc"><b>05</b>Listado de entradas y salidas</a></li><li><a href="lazos/#lazos"><b>06</b>Diagramas de lazo</a></li><li><a href="lazos/#blq"><b>09</b>Diagrama de bloques de control y comunicaciones</a></li><li><a href="espesador/"><b>H5</b>Simulador de espesamiento</a></li></ol></details><details class="sgrp" open><summary>Energía de instrumentación y canalizaciones</summary><ol class="sidelist"><li><a href="lazos/#circ"><b>07</b>Listado de circuitos</a></li><li><a href="lazos/#uni"><b>08</b>Unilineales TDI</a></li><li><a href="lazos/#cond"><b>H3</b>Canalizaciones (conduit)</a></li><li><a href="#escalerillas"><b>ES</b>Escalerillas portaconductores</a></li></ol></details>
+  <p class="sidet">Detalles de montaje</p>
+  <ul class="sidelist" id="sideTabs"></ul>
+</nav>
+<main>
+  <section class="hero" id="inicio" aria-labelledby="heroT">
+    <div class="hero-txt">
+      <p class="kicker">Plataforma de ingeniería · Minería · <b style="color:var(--accent)">Suite 4.0</b></p>
+      <h2 id="heroT">Ingeniería de instrumentación y control para proyectos mineros, de la idea a la operación</h2>
+      <p class="lead">ReyEngi reúne en una sola base de proyecto los entregables de ingeniería <b>conceptual</b>, <b>básica</b> y <b>de detalle</b>: P&amp;ID, listados, hojas de datos, especificaciones, lazos, circuitos, tableros, canalizaciones, detalles típicos y requisiciones. Está pensada para plantas nuevas y, sobre todo, para <b>proyectos brownfield</b> en faenas en operación, con la normativa chilena (pliegos SEC RIC y RPTD, D.S. 132 de Seguridad Minera) y la gestión por etapas de la dirección de proyectos.</p>
+      <div class="cta"><a class="go big" href="./">Abrir la Suite 4.0 · motor de planos</a><a class="ghost" href="proyectos/">Crear o abrir un proyecto</a><a class="ghost" href="#ciclo">Recorrer las etapas</a></div>
+    </div>
+    <dl class="kpis">
+      <div><dt>Árbol del proyecto</dt><dd>00–09</dd><small>grupos por fase, con datos compartidos</small></div>
+      <div><dt>Motor de planos</dt><dd>4.0</dd><small>lazos, JB, arquitectura, redes y fibra · DXF</small></div>
+      <div><dt>Detalles típicos</dt><dd id="kpiDet">—</dd><small>visores 3D con plano A3</small></div>
+      <div><dt>Fases</dt><dd>4</dd><small>prefactibilidad, conceptual, básica y detalle</small></div>
+    </dl>
+    <aside class="novedad" aria-label="Novedades" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-left:3px solid #6FC48F;border-radius:6px;background:var(--panel2);font-size:13px">
+      <b style="color:#6FC48F;font:600 11px var(--f-mono,monospace);letter-spacing:.6px;text-transform:uppercase">Nuevo</b>
+      <span><a href="./">Suite 4.0</a>: árbol 00–09 por fases y planos generados desde la base de instrumentos</span>
+      <span>· Válvulas neumáticas <a href="#mtTit">bola (12-E) y tipo cono (12-F)</a></span>
+      <span>· DXF con polilíneas unidas y capas por tipo</span>
+    </aside>
+  </section>
+
+  <section class="blk" id="ciclo" aria-labelledby="cicloT">
+    <div class="blkh"><h2 id="cicloT">Etapas del proyecto e ingeniería</h2><small>Gestión por compuertas (stage-gate): cada etapa cierra con una decisión, una estimación de costos de mayor precisión y los entregables que la respaldan.</small></div>
+    <div class="fases">
+      <div class="ftabs" role="tablist" aria-label="Etapas del proyecto"><button type="button" role="tab" id="tfC" aria-controls="pfC" aria-selected="true"><span class="fl">1</span><span class="fn"><strong>Conceptual</strong><small>Perfil · FEL 1</small></span></button><button type="button" role="tab" id="tfB" aria-controls="pfB" aria-selected="false" tabindex="-1"><span class="fl">2</span><span class="fn"><strong>Básica</strong><small>Prefactibilidad y factibilidad · FEL 2–3</small></span></button><button type="button" role="tab" id="tfD" aria-controls="pfD" aria-selected="false" tabindex="-1"><span class="fl">3</span><span class="fn"><strong>Detalle</strong><small>Ejecución · EPCM</small></span></button><button type="button" role="tab" id="tfP" aria-controls="pfP" aria-selected="false" tabindex="-1"><span class="fl">4</span><span class="fn"><strong>Construcción y puesta en marcha</strong><small>Precomisionamiento · comisionamiento</small></span></button><button type="button" role="tab" id="tfO" aria-controls="pfO" aria-selected="false" tabindex="-1"><span class="fl">5</span><span class="fn"><strong>Operación y mejora continua</strong><small>Brownfield · ciclo PDCA</small></span></button></div>
+      <div class="fpanel" role="tabpanel" id="pfC" aria-labelledby="tfC"><p class="fobj">Identificar y comparar alternativas, fijar el alcance y validar que el negocio se sostiene.</p><ul class="fli"><li>Estimación de orden de magnitud: AACE Clase 5 (−20 a −50 % / +30 a +100 %).</li><li>Criterios de diseño y normativa aplicable; arquitectura de control preliminar.</li><li>Instrumentación principal desde los diagramas de flujo (PFD) y estrategia de control.</li></ul><p class="flab">Entregables de la suite en esta etapa</p><div class="chips"><a class="chip" href="proyectos/"><b>00</b>Proyecto</a><a class="chip" href="normativa/"><b>H4</b>Normativa SEC y reglas</a><a class="chip" href="pid/"><b>01</b>Análisis de P&amp;ID</a><a class="chip" href="lazos/#blq"><b>09</b>Diagrama de bloques de control y comunicaciones</a><a class="chip" href="espesador/"><b>H5</b>Simulador de espesamiento</a></div></div><div class="fpanel" role="tabpanel" id="pfB" aria-labelledby="tfB" hidden><p class="fobj">Congelar la solución técnica, el alcance y el presupuesto para la decisión de inversión.</p><ul class="fli"><li>Estimación AACE Clase 4 (−15 a −30 % / +20 a +50 %) a Clase 3 (−10 a −20 % / +10 a +30 %).</li><li>P&amp;ID emitidos para diseño, listado de instrumentos, hojas de datos y especificaciones.</li><li>Filosofía de control, E/S preliminares y requisiciones de equipos de largo plazo.</li></ul><p class="flab">Entregables de la suite en esta etapa</p><div class="chips"><a class="chip" href="pid/"><b>01</b>Análisis de P&amp;ID</a><a class="chip" href="lazos/#inst"><b>02</b>Listado de instrumentos</a><a class="chip" href="hojas-datos/"><b>03</b>Hojas de datos</a><a class="chip" href="especificaciones/"><b>04</b>Especificaciones técnicas</a><a class="chip" href="lazos/#doc"><b>05</b>Listado de entradas y salidas</a><a class="chip" href="lazos/#uni"><b>08</b>Unilineales TDI</a><a class="chip" href="requisiciones/"><b>11</b>Requisiciones de compra</a><a class="chip" href="piping/#valvulas"><b>H2</b>Válvulas: tamaño y actuador</a></div></div><div class="fpanel" role="tabpanel" id="pfD" aria-labelledby="tfD" hidden><p class="fobj">Emitir los documentos para compra y construcción, coordinados entre disciplinas.</p><ul class="fli"><li>Estimación de control AACE Clase 2 (−5 a −15 % / +5 a +20 %).</li><li>Diagramas de lazo, listado de circuitos, tableros, canalizaciones, escalerillas y detalles típicos.</li><li>Evaluación técnica de ofertas, revisión de documentos de proveedor y hojas de respuesta a comentarios.</li></ul><p class="flab">Entregables de la suite en esta etapa</p><div class="chips"><a class="chip" href="lazos/#lazos"><b>06</b>Diagramas de lazo</a><a class="chip" href="lazos/#circ"><b>07</b>Listado de circuitos</a><a class="chip" href="lazos/#uni"><b>08</b>Unilineales TDI</a><a class="chip" href="#montajes"><b>10</b>Detalles típicos de montaje</a><a class="chip" href="#escalerillas"><b>ES</b>Escalerillas portaconductores</a><a class="chip" href="lazos/#cond"><b>H3</b>Canalizaciones (conduit)</a><a class="chip" href="requisiciones/"><b>11</b>Requisiciones de compra</a></div></div><div class="fpanel" role="tabpanel" id="pfP" aria-labelledby="tfP" hidden><p class="fobj">Montar según los típicos, probar lazo a lazo y entregar la planta operando.</p><ul class="fli"><li>Protocolos de montaje, verificación de lazos y pruebas FAT / SAT.</li><li>Planos como construido (as-built) y cierre de observaciones.</li><li>Capacitación de operadores con simulación del proceso.</li></ul><p class="flab">Entregables de la suite en esta etapa</p><div class="chips"><a class="chip" href="#montajes"><b>10</b>Detalles típicos de montaje</a><a class="chip" href="lazos/#lazos"><b>06</b>Diagramas de lazo</a><a class="chip" href="lazos/#circ"><b>07</b>Listado de circuitos</a><a class="chip" href="espesador/"><b>H5</b>Simulador de espesamiento</a></div></div><div class="fpanel" role="tabpanel" id="pfO" aria-labelledby="tfO" hidden><p class="fobj">Mantener, modificar y optimizar instalaciones existentes con seguridad y sin perder la trazabilidad.</p><ul class="fli"><li>Levantamiento de lo existente, gestión del cambio y paradas programadas de planta.</li><li>Optimización de lazos y lecciones aprendidas hacia el siguiente proyecto.</li><li>Cumplimiento del D.S. 132 de Seguridad Minera y de los pliegos SEC.</li></ul><p class="flab">Entregables de la suite en esta etapa</p><div class="chips"><a class="chip" href="pid/"><b>01</b>Análisis de P&amp;ID</a><a class="chip" href="lazos/#lazos"><b>06</b>Diagramas de lazo</a><a class="chip" href="normativa/"><b>H4</b>Normativa SEC y reglas</a><a class="chip" href="espesador/"><b>H5</b>Simulador de espesamiento</a></div></div>
+    </div>
+    <p class="nota">Rangos de precisión de estimación según la práctica recomendada AACE 18R-97. Las etapas FEL (front-end loading) corresponden a perfil, prefactibilidad y factibilidad.</p>
+  </section>
+
+  <section class="blk" id="ingenieria" aria-labelledby="ingT">
+    <div class="blkh"><h2 id="ingT">Ingeniería por disciplina</h2><small>Jerarquía de entregables y herramientas. Las marcas indican la etapa en que se usan: <span class="ph phC">C</span> conceptual · <span class="ph phB">B</span> básica · <span class="ph phD">D</span> detalle · <span class="ph phO">O</span> operación y brownfield.</small></div>
+    <div class="discs"><details class="disc" open><summary><span class="gcode">G1</span><span class="gt"><strong>Gestión y dirección del proyecto</strong><small>Datos maestros, control documental, revisiones, procura y cumplimiento normativo.</small></span><span class="gn">3</span></summary><div class="items"><a class="item" href="proyectos/"><b class="code">00</b><span class="it"><strong>Proyecto</strong><small>Datos del proyecto, cliente, rótulos y revisiones que comparten todos los documentos.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">Base</span></span></span></a><a class="item" href="requisiciones/"><b class="code">11</b><span class="it"><strong>Requisiciones de compra</strong><small>Requisición por tipo de instrumento, sistema o material: documentos de referencia, suministro con los tags del listado, servicios, requisitos de documentación, inspección de calidad y hoja de respuesta a comentarios.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Word</span><span class="fmt">PDF</span><span class="fmt">Excel</span></span></span></a><a class="item" href="normativa/"><b class="code">H4</b><span class="it"><strong>Normativa SEC y reglas</strong><small>Estado de las normas chilenas (RIC, RPTD, NTSyCS, D.S. 132), matriz norma × entregable, reglas que usan los cálculos y revisión del proyecto.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">Consulta</span></span></span></a></div></details>
+<details class="disc"><summary><span class="gcode">G2</span><span class="gt"><strong>Procesos y P&amp;ID</strong><small>Lectura e interpretación de P&amp;ID y extracción de instrumentos hacia los entregables.</small></span><span class="gn">2</span></summary><div class="items"><a class="item" href="pid/"><b class="code">01</b><span class="it"><strong>Análisis de P&amp;ID</strong><small>Extrae los instrumentos del P&amp;ID (DXF, atributos, PDF), los valida el revisor y los envía a los entregables.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">DXF</span><span class="fmt">PDF</span><span class="fmt">Excel</span></span></span></a><a class="item" href="piping/#aprender"><b class="code">H1</b><span class="it"><strong>Piping para leer P&amp;ID</strong><small>Normas, designación de líneas, simbología, cañerías, velocidades y clases de bridas.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Aprendizaje</span></span></span></a></div></details>
+<details class="disc"><summary><span class="gcode">G3</span><span class="gt"><strong>Instrumentación</strong><small>Listado, hojas de datos, especificaciones, dimensionamiento de válvulas y detalles típicos.</small></span><span class="gn">5</span></summary><div class="items"><a class="item" href="lazos/#inst"><b class="code">02</b><span class="it"><strong>Listado de instrumentos</strong><small>Tag, servicio, P&amp;ID, rango, señal y hoja de datos de cada instrumento.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Excel</span><span class="fmt">Word</span></span></span></a><a class="item" href="hojas-datos/"><b class="code">03</b><span class="it"><strong>Hojas de datos</strong><small>Formularios ISA-TR20 por tipo de instrumento, con tabla de aplicación por tag.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">Excel</span></span></span></a><a class="item" href="especificaciones/"><b class="code">04</b><span class="it"><strong>Especificaciones técnicas</strong><small>Instrumentación, control, comunicaciones y cables por familia.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Word</span></span></span></a><a class="item" href="piping/#valvulas"><b class="code">H2</b><span class="it"><strong>Válvulas: tamaño y actuador</strong><small>Kv/Cv (IEC 60534-2-1), cavitación, tamaño de cuerpo, empuje y torque de actuadores, ISO 5211 y potencia eléctrica.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Cálculo</span></span></span></a><a class="item" href="#montajes"><b class="code">10</b><span class="it"><strong>Detalles típicos de montaje</strong><small>Visores 3D con lista de materiales, notas y plano A3.</small></span><span class="meta"><span class="phs"><span class="ph phD" title="Detalle">D</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">DXF</span><span class="fmt">PNG</span><span class="fmt">OBJ</span><span class="fmt">STL</span></span></span></a></div></details>
+<details class="disc"><summary><span class="gcode">G4</span><span class="gt"><strong>Control y comunicaciones</strong><small>Entradas y salidas, lazos, arquitectura de control y simulación de procesos.</small></span><span class="gn">4</span></summary><div class="items"><a class="item" href="lazos/#doc"><b class="code">05</b><span class="it"><strong>Listado de entradas y salidas</strong><small>Señales por tarjeta y canal del PLC, rangos y alarmas.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Excel</span><span class="fmt">Word</span></span></span></a><a class="item" href="lazos/#lazos"><b class="code">06</b><span class="it"><strong>Diagramas de lazo</strong><small>ISA-5.4: terreno, sala eléctrica y sala de control en lámina A3.</small></span><span class="meta"><span class="phs"><span class="ph phD" title="Detalle">D</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">DXF</span></span></span></a><a class="item" href="lazos/#blq"><b class="code">09</b><span class="it"><strong>Diagrama de bloques de control y comunicaciones</strong><small>Arquitectura por niveles: servidores, HMI, switches, PLC, I/O remotas, CCM, VDF e instrumentos, con medios de comunicación y análisis de fallas.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">DXF</span><span class="fmt">Excel</span></span></span></a><a class="item" href="espesador/"><b class="code">H5</b><span class="it"><strong>Simulador de espesamiento</strong><small>Planta de espesamiento de relaves en 3D: cama, floculante, rastras, bombas de descarga duty/standby, agua recuperada, lazos de control, alarmas y escenarios. Importa los tags del modelo del proyecto.</small></span><span class="meta"><span class="phs"><span class="ph phC" title="Conceptual">C</span><span class="ph phO" title="Operación">O</span></span><span class="fmts"><span class="fmt">Simulación</span></span></span></a></div></details>
+<details class="disc"><summary><span class="gcode">G5</span><span class="gt"><strong>Energía de instrumentación y canalizaciones</strong><small>Circuitos, tableros de distribución, ductos y escalerillas según RIC.</small></span><span class="gn">4</span></summary><div class="items"><a class="item" href="lazos/#circ"><b class="code">07</b><span class="it"><strong>Listado de circuitos</strong><small>Cables de señal, troncales y alimentación con origen, destino y largo.</small></span><span class="meta"><span class="phs"><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Excel</span><span class="fmt">Word</span></span></span></a><a class="item" href="lazos/#uni"><b class="code">08</b><span class="it"><strong>Unilineales TDI</strong><small>Tableros de distribución de instrumentos con cálculo según RIC (SEC).</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">DXF</span><span class="fmt">Excel</span></span></span></a><a class="item" href="lazos/#cond"><b class="code">H3</b><span class="it"><strong>Canalizaciones (conduit)</strong><small>Tamaño de ducto por ocupación de sección según RIC N°04 Tabla N°4.21, dibujo del corte con el espacio libre y escritura en el listado de circuitos.</small></span><span class="meta"><span class="phs"><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">Cálculo</span></span></span></a><a class="item" href="#escalerillas"><b class="code">ES</b><span class="it"><strong>Escalerillas portaconductores</strong><small>Escalerillas, accesorios y soportación por niveles de tensión con las distancias del RIC N°04, verificación normativa y dimensionamiento del recorrido.</small></span><span class="meta"><span class="phs"><span class="ph phB" title="Básica">B</span><span class="ph phD" title="Detalle">D</span></span><span class="fmts"><span class="fmt">PDF</span><span class="fmt">DXF</span><span class="fmt">3D</span></span></span></a></div></details>
+</div>
+    <div class="acts"><button type="button" class="ghost sm" id="abrirTodo">Desplegar todo</button><button type="button" class="ghost sm" id="cerrarTodo">Contraer todo</button></div>
+  </section>
+
+  <section class="blk" id="brownfield" aria-labelledby="bfT">
+    <div class="blkh"><h2 id="bfT">Brownfield y mejora continua</h2><small>Diseñar sobre una faena en operación exige conocer lo existente, coordinar las detenciones y controlar cada cambio.</small></div>
+    <div class="bfgrid"><a class="bfc" href="pid/"><span class="bfn">01</span><strong>Levantamiento y as-built</strong><small>Catastro de instrumentos y lazos existentes, P&amp;ID como construido y verificación en terreno antes de diseñar.</small><span class="bfl">01 · Análisis de P&amp;ID →</span></a><a class="bfc" href="#escalerillas"><span class="bfn">02</span><strong>Tie-ins e interferencias</strong><small>Empalmes con lo existente, modelos 3D y nubes de puntos para ubicar soportes, ductos y escalerillas sin interferir.</small><span class="bfl">ES · Escalerillas portaconductores →</span></a><a class="bfc" href="lazos/#lazos"><span class="bfn">03</span><strong>Paradas programadas</strong><small>Paquetes de conexionado y pruebas listos para la ventana de detención de planta, con lazos y circuitos verificados.</small><span class="bfl">06 · Diagramas de lazo →</span></a><a class="bfc" href="requisiciones/#hr"><span class="bfn">04</span><strong>Gestión del cambio</strong><small>Control documental con revisiones A, B y 0, hojas de respuesta a comentarios y trazabilidad de cada modificación.</small><span class="bfl">11 · Requisiciones de compra →</span></a><a class="bfc" href="normativa/"><span class="bfn">05</span><strong>Seguridad y normativa</strong><small>D.S. 132 de Seguridad Minera, pliegos RIC y RPTD de la SEC y áreas clasificadas, verificados por las reglas de la suite.</small><span class="bfl">H4 · Normativa SEC y reglas →</span></a><a class="bfc" href="espesador/"><span class="bfn">06</span><strong>Mejora continua</strong><small>Ciclo planificar–hacer–verificar–actuar: simulación de estrategias de control, desempeño de lazos y lecciones aprendidas.</small><span class="bfl">H5 · Simulador de espesamiento →</span></a></div>
+  </section>
+
+<section class="blk lista" id="montajes" aria-labelledby="mtTit">
+    <div class="blkh"><h2 id="mtTit">Detalles típicos de montaje</h2><small id="mtLede"></small></div>
+    <div class="mtbar"><input type="search" id="mtBuscar" placeholder="Buscar detalle, código o instrumento (ej. 22-A, radar, válvula)" aria-label="Buscar detalle de montaje"><div class="segv" role="group" aria-label="Vista del catálogo"><button type="button" data-v="lista" aria-pressed="true">Lista</button><button type="button" data-v="tarjetas" aria-pressed="false">Tarjetas</button></div></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones"><button type="button" role="tab" data-tab="ic" data-h="" aria-selected="true">Instrumentación y control <span class="tn"></span></button><button type="button" role="tab" data-tab="em" data-h="emulaciones" aria-selected="false">Emulaciones <span class="tn"></span></button><button type="button" role="tab" data-tab="tb" data-h="tableros" aria-selected="false">Tableros <span class="tn"></span></button><button type="button" role="tab" data-tab="es" data-h="escalerillas" aria-selected="false">Escalerillas <span class="tn"></span></button><button type="button" role="tab" data-tab="fo" data-h="fibra" aria-selected="false">Fibra óptica <span class="tn"></span></button><button type="button" role="tab" data-tab="pm" data-h="procesos" aria-selected="false">Procesos mineros <span class="tn"></span></button><button type="button" role="tab" data-tab="rc" data-h="radio" aria-selected="false">Radiocomunicación <span class="tn"></span></button><button type="button" role="tab" data-tab="se" data-h="seguridad" aria-selected="false">Seguridad electrónica <span class="tn"></span></button></nav>
+  <section data-tab="ic">
+    <h2>Detalles de montaje</h2>
+    <div class="grid">
+      <a class="card" href="visores/1-manometros.html" data-id="1-manometros"><span class="num">1</span><span><h3>Manómetros</h3><p>Sin sello, sello bridado y sello roscado, en tubería horizontal y vertical.</p><span class="codes">1-A · 1-B · 1-C</span></span></a>
+      <a class="card" href="visores/2-transmisor-presion.html" data-id="2-transmisor-presion"><span class="num">2</span><span><h3>Transmisor de presión</h3><p>Los mismos tres montajes con conexión eléctrica en conduit flexible.</p><span class="codes">2-A · 2-B · 2-C</span></span></a>
+      <a class="card" href="visores/3-flujometro-magnetico.html" data-id="3-flujometro-magnetico"><span class="num">3</span><span><h3>Flujómetro magnético</h3><p>Compacto, sensor remoto y transmisor remoto, con puesta a tierra y tramos rectos.</p><span class="codes">3-A · 3-B · 3-C</span></span></a>
+      <a class="card" href="visores/4-interruptor-flujo.html" data-id="4-interruptor-flujo"><span class="num">4</span><span><h3>Interruptor de flujo</h3><p>Paleta en te reductora, orientaciones permitidas y simulación de flujo.</p><span class="codes">4-A</span></span></a>
+      <a class="card" href="visores/5-flujometro-sonar.html" data-id="5-flujometro-sonar"><span class="num">5</span><span><h3>Flujómetro sonar y ultrasónico</h3><p>Sensor sonar abrazado y ultrasónico clamp-on con simulación del arreglo de sensores y del tiempo de tránsito.</p><span class="codes">5-A · 5-B · 5-C · 5-D</span></span></a>
+      <a class="card" href="visores/6-transmisor-nivel.html" data-id="6-transmisor-nivel"><span class="num">6</span><span><h3>Transmisor de nivel</h3><p>Radar con brida y en soporte, indicador e hidrostático, con nivel simulado.</p><span class="codes">6-A · 6-B · 6-C · 6-D</span></span></a>
+      <a class="card" href="visores/7-densimetro-nuclear.html" data-id="7-densimetro-nuclear"><span class="num">7</span><span><h3>Densímetro nuclear</h3><p>Fuente y detector en línea de relaves, obturador y atenuación gamma.</p><span class="codes">7-A · 7-B</span></span></a>
+      <a class="card" href="visores/8-sensor-ph.html" data-id="8-sensor-ph"><span class="num">8</span><span><h3>Sensor y transmisor de pH</h3><p>Contenedor abierto, en línea con portasonda retráctil y transmisor.</p><span class="codes">8-A · 8-B · 8-C</span></span></a>
+      <a class="card" href="visores/9-interruptor-microondas.html" data-id="9-interruptor-microondas"><span class="num">9</span><span><h3>Interruptor de nivel microondas</h3><p>Emisor y receptor en chute de descarga: ventana de PTFE, soportes antivibratorios y haz que se corta cuando el chute se llena.</p><span class="codes">9-A · Detalle 1</span></span></a>
+      <a class="card" href="visores/10-sirena-baliza.html" data-id="10-sirena-baliza"><span class="num">10</span><span><h3>Sirena con baliza</h3><p>Soporte de plancha en poste de 2", canalización y alcance sonoro simulado.</p><span class="codes">10-A</span></span></a>
+      <a class="card" href="visores/11-soportes-instrumentos.html" data-id="11-soportes-instrumentos"><span class="num">11</span><span><h3>Soportes de instrumentos</h3><p>Pedestales de tubo 2" sobre concreto o acero, soporte adosado a estructura o pared y soporte con techo de protección.</p><span class="codes">11-A · 11-B · 11-C · 11-D</span></span></a>
+      <a class="card" href="visores/12-valvulas-onoff.html" data-id="12-valvulas-onoff"><span class="num">12</span><span><h3>Válvulas on/off</h3><p>Cuchilla, mariposa, bola y cono (macho cónico) con actuador neumático, electroválvula, límites y simulación de mando.</p><span class="codes">12-A · 12-B · 12-C · 12-D · 12-E · 12-F</span></span></a>
+      <a class="card" href="visores/13-valvulas-hidraulicas.html" data-id="13-valvulas-hidraulicas"><span class="num">13</span><span><h3>Válvulas on/off hidráulicas</h3><p>Cuchilla y mariposa con actuador hidráulico desde HPU, mangueras con conector rápido y límites.</p><span class="codes">13-A · 13-B</span></span></a>
+      <a class="card" href="visores/14-valvulas-motorizadas.html" data-id="14-valvulas-motorizadas"><span class="num">14</span><span><h3>Válvulas on/off motorizadas</h3><p>Cuchilla, mariposa y bola con actuador eléctrico: fuerza, Profibus DP o discretas, tierra y volante.</p><span class="codes">14-A · 14-B · 14-C</span></span></a>
+      <a class="card" href="visores/15-valvulas-modulantes.html" data-id="15-valvulas-modulantes"><span class="num">15</span><span><h3>Válvulas modulantes</h3><p>Mariposa con posicionador, mariposa, bola y pinch motorizadas, con consigna 4–20 mA o Profibus DP.</p><span class="codes">15-A · 15-B · 15-C · 15-D</span></span></a>
+      <a class="card" href="visores/16-valvulas-autorreguladoras.html" data-id="16-valvulas-autorreguladoras"><span class="num">16</span><span><h3>Válvulas autorreguladoras</h3><p>Reguladora de presión autopilotada con transmisor de posición y reductora proporcional, con P1/P2 simuladas.</p><span class="codes">16-A · 16-B</span></span></a>
+    </div>
+  </section>
+  <section data-tab="ic">
+    <h2>Correas transportadoras <small>detalles típicos genéricos</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/pull-cord-correa.html" data-id="pull-cord-correa"><span class="num">PC</span><span><h3>Pull-cord en correa</h3><p>Paradas de emergencia por cuerda a ambos lados, soporte, canalización y simulación de parada y reset.</p><span class="codes">HSS · par de instrumentos</span></span></a>
+      <a class="card" href="visores/pesometro-correa.html" data-id="pesometro-correa"><span class="num">PS</span><span><h3>Pesómetro de correa</h3><p>Sensor de velocidad en polea de cola, digitalizador e integrador, canalización y simulación de flujo y totalizado.</p><span class="codes">ST · WE · WQIT</span></span></a>
+      <a class="card" href="visores/ruptura-correa.html" data-id="ruptura-correa"><span class="num">RC</span><span><h3>Interruptor de ruptura de correa</h3><p>Par de interruptores con cable cruzado bajo la correa, soportes, canalización y simulación de rotura, disparo y reset.</p><span class="codes">XS · par de instrumentos</span></span></a>
+    </div>
+  </section>
+  <section data-tab="ic">
+    <h2>Más instrumentos de terreno <small>según las hojas de datos</small></h2>
+    <div class="grid">
+      <a class="card" href="#eq-temperatura" data-id="eq-temperatura"><span class="num">17</span><span><h3>Temperatura</h3><p>Termopozo bridado con transmisor en cabezal o remoto en pedestal, e interruptor de temperatura.</p><span class="codes">17-A · 17-B · 17-C</span></span></a>
+      <a class="card" href="#eq-flujo2" data-id="eq-flujo2"><span class="num">18</span><span><h3>Flujómetros vortex y térmico</h3><p>Vortex con tramos rectos marcados y másico térmico de inserción con válvula en caliente.</p><span class="codes">18-A · 18-B</span></span></a>
+      <a class="card" href="#eq-nivel2" data-id="eq-nivel2"><span class="num">19</span><span><h3>Nivel ultrasónico y vibratorio</h3><p>Sensor ultrasónico con haz y transmisor remoto, y horquillas vibratorias de alto y bajo nivel.</p><span class="codes">19-A · 19-B</span></span></a>
+      <a class="card" href="#eq-presion-sw" data-id="eq-presion-sw"><span class="num">20</span><span><h3>Interruptor de presión</h3><p>Toma con válvulas de bloqueo y purga e interruptor PSH / PSL.</p><span class="codes">20-A</span></span></a>
+      <a class="card" href="#eq-analizadores" data-id="eq-analizadores"><span class="num">21</span><span><h3>Analizadores y densímetro no nuclear</h3><p>Conductividad, turbidez, ORP, detector de gases, densímetro no nuclear y visión de espuma.</p><span class="codes">21-A … 21-F</span></span></a>
+      <a class="card" href="#eq-solenoide" data-id="eq-solenoide"><span class="num">22</span><span><h3>Válvula solenoide y tablero neumático</h3><p>Solenoide con válvulas de aislamiento y tablero de electroválvulas con unidad de mantenimiento.</p><span class="codes">22-A · 22-B</span></span></a>
+      <a class="card" href="#eq-correa" data-id="eq-correa"><span class="num">23</span><span><h3>Protecciones de correa</h3><p>Desalineamiento, velocidad cero, interruptor tilt en chute e interruptores de contrapeso.</p><span class="codes">23-A … 23-D</span></span></a>
+      <a class="card" href="#eq-parshall" data-id="eq-parshall"><span class="num">24</span><span><h3>Canaleta Parshall</h3><p>Flujo en canal abierto con nivel ultrasónico o pozo de calma, totalizador y simulación de caudal, señal 4–20 mA y sumergencia.</p><span class="codes">24-A · 24-B</span></span></a>
+      <a class="card" href="#eq-valvula-control" data-id="eq-valvula-control"><span class="num">25</span><span><h3>Válvula modulada con actuador de diafragma</h3><p>Válvula globo con actuador de resorte y diafragma, I/P en el yugo, tubing de aire 3/8" y conduit ¾", con simulación de señal, carrera, apertura y caudal.</p><span class="codes">25-A</span></span></a>
+      <a class="card" href="#eq-soportes-paneles" data-id="eq-soportes-paneles"><span class="num">26</span><span><h3>Soportes y paneles de montaje</h3><p>Panel para tableros y soportes para uno, dos o tres instrumentos en perfil canal, anclados a hormigón o a plataforma, con cálculo de materiales L.R.</p><span class="codes">26-A … 26-E</span></span></a>
+    </div>
+  </section>
+  <section data-tab="tb">
+    <h2>Tableros de control <small>detalles típicos genéricos</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/tablero-control.html" data-id="tablero-control"><span class="num">TC</span><span><h3>Gabinete de control GC-01</h3><p>Gabinete con puerta, fuentes redundantes, switches, CFU PA, E/S PROFIBUS PA y relés; recorrido por componentes y simulación de energía y red.</p><span class="codes">PROFIBUS PA · 24 Vdc redundante</span></span></a>
+      <a class="card" href="visores/tablero-fuerza.html" data-id="tablero-fuerza"><span class="num">TF</span><span><h3>Tablero de fuerza TDF-01</h3><p>Interruptor general 250 A, barras con acrílico, derivados, contactores, RPI y diferenciales; simulación de pérdida de fase y prueba diferencial.</p><span class="codes">380 Vac · 250 A · 18 kA</span></span></a>
+      <a class="card" href="#eq-plc" data-id="eq-plc"><span class="num">CP</span><span><h3>Gabinete PLC y E/S remotas</h3><p>Gabinete con PLC, fuentes redundantes, switch, canaletas y borneras, y E/S remotas en terreno.</p><span class="codes">CP-A · CP-B</span></span></a>
+    </div>
+  </section>
+  <section data-tab="es">
+    <h2>Escalerillas portaconductores <small>sistema autosoportante con riel 42×42</small></h2>
+    <div class="grid">
+      <a class="card" href="#eq-escalerillas" data-id="eq-escalerillas"><span class="num">ES-1</span><span><h3>Escalerillas y accesorios</h3><p>Rectas normal y reforzada, con separador potencia/comunicaciones, curvas horizontales y verticales (C.H., C.V.I., C.V.E.), tee, cruz y reducción con eclisas.</p><span class="codes">ES-1A … ES-1J</span></span></a>
+      <a class="card" href="#eq-escalerillas-soportes" data-id="eq-escalerillas-soportes"><span class="num">ES-2</span><span><h3>Soportación y niveles de tensión</h3><p>Trapecio multinivel con MT, BT fuerza, control, instrumentación y comunicaciones separados según RIC N°04, cruce a 0,15 m, ménsula en muro y tramo vertical.</p><span class="codes">ES-2A … ES-2E</span></span></a>
+      <a class="card" href="#eq-escalerillas-recorrido" data-id="eq-escalerillas-recorrido"><span class="num">ES-3</span><span><h3>Recorrido típico con entrada a tablero</h3><p>Recta, curvas y bajada a tablero sobre trapecios, con dimensionamiento de tiras, eclisas, soportes, riel, hilo corrido, peso y llenado.</p><span class="codes">ES-3A</span></span></a>
+    </div>
+  </section>
+  <section data-tab="fo">
+    <h2>Fibra óptica <small>fichas OCC y Real Optic</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/paneles-fibra-optica.html" data-id="paneles-fibra-optica"><span class="num">FO</span><span><h3>Paneles murales de fibra óptica</h3><p>ZDMB6B, WTC12/24B y FW05 en muro: gomas, reserva, empalmes, adaptadores SC y patch cords; prueba con VFL, macrocurvatura y presupuesto de pérdidas.</p><span class="codes">6 · 24 · 48 puertos SC</span></span></a>
+      <a class="card" href="#eq-comunicaciones" data-id="eq-comunicaciones"><span class="num">COM</span><span><h3>Rack de comunicaciones y caja de conexión</h3><p>Rack de 42 U con switches, ODF y NVR, y caja de conexión de terreno con borneras.</p><span class="codes">COM-A · COM-B</span></span></a>
+    </div>
+  </section>
+  <section data-tab="pm">
+    <h2>Procesos mineros <small>instrumentación y automatización</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/chancado-primario.html" data-id="chancado-primario" data-feat="Planta 3D: tolva, chancador giratorio, pocket, alimentador de placas, CV-01 y acopio|Ciclo real del camión: espera semáforo, retrocede al muro tope y descarga|Práctica: ubica 18 instrumentos en su punto de instalación, con puntaje y solución|Operación con interlocks, consignas y fallas (pull-cord, lubricación, metal, colpa)"><span class="num">M1</span><span><h3>Chancado primario · instrumentación</h3><p>Chancador giratorio con descarga de CAEX, tolva, pocket, alimentador y correa CV-01. Ubica los instrumentos en la planta y opera el proceso con sus lazos y enclavamientos.</p><span class="codes">LIT · YL · ZS · PIT · VT · WIT · HS</span></span></a>
+    </div>
+  </section>
+  <section data-tab="em">
+    <h2>Simuladores de procesos <small>control en tiempo real</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/estanque-impulsion.html" data-id="estanque-impulsion"><span class="num">P1</span><span><h3>Estanque e impulsión con PLC y VDF</h3><p>Estanque Ø5 × 3 m con nivel ultrasónico o radar, 2 bombas (VDF + reserva), tablero con PLC, HMI, botonera local/remoto, Modbus RTU o TCP, válvula de bola o cuchillo, flujómetro magnético, escalerillas y conduits a cada equipo. Diagrama escalera en línea y HMI flotante.</p><span class="codes">PLC · Ladder · VDF · Modbus · HMI · PID</span></span></a>
+    </div>
+  </section>
+  <section data-tab="ic">
+    <h2>Comunicaciones industriales <small>laboratorio por fases</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/comunicaciones-fase1.html" data-id="comunicaciones-fase1"><span class="num">F1</span><span><h3>Fase 1 · Serial e instrumentación</h3><p>Modbus RTU por RS-485 con tramas animadas byte a byte, CRC y fallas; lazo 4–20 mA, HART sobre FSK y señales discretas 24 Vdc.</p><span class="codes">Modbus RTU · RS-485 · 4–20 mA · HART · DI/DO</span></span></a>
+    </div>
+  </section>
+  <section data-tab="ic">
+    <h2>Equipos de demostración</h2>
+    <div class="grid">
+      <a class="card" href="visores/maleta-demo-s7-1200.html" data-id="maleta-demo-s7-1200"><span class="num">PLC</span><span><h3>Maleta demo S7-1200</h3><p>HMI, pilotos, pulsadores, selector y emergencia con lógica de demostración.</p><span class="codes">S7-1200 · KTP700</span></span></a>
+    </div>
+  </section>
+  <section data-tab="rc">
+    <h2>Radiocomunicación <small>enlaces inalámbricos 5 GHz</small></h2>
+    <div class="grid">
+      <a class="card" href="visores/rocket-m5-omni.html" data-id="rocket-m5-omni"><span class="num">5G</span><span><h3>Radio Rocket M5 + omni</h3><p>Mástil, antena, PoE en gabinete y enlace inalámbrico simulado.</p><span class="codes">5 GHz · PoE 24 V</span></span></a>
+    </div>
+  </section>
+  <section data-tab="se">
+    <h2>Seguridad electrónica <small>CCTV, control de acceso e intercomunicación</small></h2>
+    <div class="grid">
+      <a class="card" href="#eq-cctv" data-id="eq-cctv"><span class="num">CCTV</span><span><h3>Cámaras de CCTV</h3><p>Domo PTZ en poste con tablero de terreno y puesta a tierra, y cámara fija en muro con su campo de visión.</p><span class="codes">CCTV-A · CCTV-B</span></span></a>
+      <a class="card" href="#eq-acceso" data-id="eq-acceso"><span class="num">ACS</span><span><h3>Control de acceso</h3><p>Puerta controlada con lector, electroimán, sensor, pulsadores y controlador, y torniquetes de portería.</p><span class="codes">ACS-A · ACS-B</span></span></a>
+      <a class="card" href="#eq-intercom" data-id="eq-intercom"><span class="num">ICS</span><span><h3>Intercomunicador industrial</h3><p>Intercomunicador IP en pedestal con techo, baliza y parlante para áreas ruidosas.</p><span class="codes">ICS-A</span></span></a>
+    </div>
+  </section>
+<p class="mtvacio" id="mtVacio" hidden>Sin resultados para la búsqueda.</p>
+  </section>
+  <section class="blk" id="formacion" aria-labelledby="forT">
+    <div class="blkh"><h2 id="forT">Formación de ingenieros y proyectistas <span class="pr">Próximamente</span></h2><small>Cursos prácticos sobre los mismos entregables de la suite, con casos de proyectos mineros.</small></div>
+    <div class="forma"><div class="ruta"><p class="rt">Ruta proyectista I&amp;C</p><ol><li>Lectura de P&amp;ID y simbología ISA-5.1</li><li>Listados de instrumentos y hojas de datos ISA-TR20</li><li>Diagramas de lazo ISA-5.4 y listado de circuitos</li><li>Canalizaciones y escalerillas según RIC N°04</li><li>Detalles típicos de montaje y planos A3</li></ol></div><div class="ruta"><p class="rt">Ruta ingeniero I&amp;C</p><ol><li>Etapas de ingeniería: conceptual, básica y detalle</li><li>Arquitectura de control y comunicaciones industriales</li><li>Dimensionamiento de válvulas y actuadores</li><li>Especificaciones técnicas, requisiciones y evaluación de ofertas</li><li>Proyectos brownfield: levantamiento, tie-ins y paradas de planta</li></ol></div><div class="ruta nota-ruta"><p class="rt">Cómo se aprenderá</p><ul><li>Cada módulo trabaja sobre un proyecto real de la suite: del P&amp;ID al detalle típico.</li><li>Ejercicios con revisión por etapas, como en una oficina de ingeniería.</li><li>Normativa chilena aplicada: RIC, RPTD y D.S. 132.</li></ul></div></div>
+  </section>
+</main>
+</div>
+<footer><p class="fbrand"><b>ReyEngi</b> · Ingeniería de instrumentación y control para la minería · conceptual, básica y de detalle · greenfield y brownfield</p><p>Modelos referenciales con proporciones aproximadas. Las posiciones de etiquetas que muevas se guardan en este navegador. La verificación normativa apoya al ingeniero y no reemplaza la revisión del proyecto.</p></footer>
+
+<div class="viewer" id="viewer" hidden>
+  <div class="vbar"><button type="button" id="back">← Menú</button><span id="vTitle"></span><a class="vhd" id="vHd" hidden>Hoja de datos</a><a class="vhd" id="vEt" hidden>Especificación técnica</a><div class="vexp"><button type="button" id="vExp" aria-haspopup="true" aria-expanded="false">Exportar 3D ▾</button><div class="vexp-menu" id="vExpMenu" role="menu" hidden><button type="button" role="menuitem" data-fmt="obj"><b>OBJ</b><small>Revit 2025 · SolidWorks · con colores (.zip)</small></button><button type="button" role="menuitem" data-fmt="stl"><b>STL</b><small>SolidWorks · Revit 2025 · impresión 3D</small></button><button type="button" role="menuitem" data-fmt="dxf"><b>DXF 3D</b><small>AutoCAD · Revit (importar CAD) · capas por sistema</small></button><p>Mallas en mm, Z hacia arriba, tal como se ve el montaje.</p></div></div></div>
+  <iframe id="frame" title="Visor 3D"></iframe>
+</div>
+
+<script>
+/* Los visores 3D (biblioteca, tipografías y páginas, unos 5 MB) están en equipos/visores-base.js y se descargan
+   solo al abrir el primer visor. Aquí queda la lista vacía, donde equipos/visores-equipos.js agrega los suyos. */
+window.__VIEWERS = [];
+window.__cargarVisores = function (listo) {
+  if (window.__VBASE === 'ok') { listo(); return; }
+  (window.__VCOLA = window.__VCOLA || []).push(listo);
+  if (window.__VBASE === 'cargando') return;
+  window.__VBASE = 'cargando';
+  var sc = document.createElement('script'); sc.src = 'equipos/visores-base.js';
+  sc.onload = function () {
+    window.__VBASE = 'ok';
+    var base = (window.__VIEWERS_BASE || []).filter(function (v) { return !window.__VIEWERS.some(function (x) { return x.id === v.id; }); });
+    window.__VIEWERS.unshift.apply(window.__VIEWERS, base); window.__VIEWERS_BASE = null;
+    if (window.__prepararVisores) window.__prepararVisores();
+    var c = window.__VCOLA || []; window.__VCOLA = []; c.forEach(function (f) { try { f(); } catch (e) { console.warn(e); } });
+  };
+  sc.onerror = function () { window.__VBASE = ''; var c = window.__VCOLA || []; window.__VCOLA = []; c.forEach(function (f) { try { f(new Error('No se pudieron descargar los visores 3D. Revisa la conexión e inténtalo de nuevo.')); } catch (e) {} }); };
+  document.head.appendChild(sc);
+};
+</script>
+<link rel="stylesheet" href="equipos/fuentes-visores.css">
+<script src="equipos/plano-montaje.js"></script>
+<script src="visor-plus.js"></script>
+<script>
+/* Tipografía compacta común a todos los visores 3D (se agrega al abrir cada visor) */
+window.__VCOMPACTO = 'body{font-size:13.5px}header{padding-block:9px!important;gap:14px!important;border-bottom-width:3px!important}.brand{font-size:19px!important}.sep{height:24px!important}header h1{font-size:22px!important}.howto{font-size:12px!important}' +
+  'aside{padding:14px 16px 22px!important;gap:14px!important}.group{gap:7px}.group h2{font-size:14.5px!important;letter-spacing:1.1px}' +
+  '.type{font-size:13px!important;padding:8px 10px!important;min-height:36px!important;border-width:1px!important;border-radius:6px!important}.type small{font-size:11.5px!important}' +
+  '.seg button{font-size:13px!important;min-height:36px!important;padding:7px 8px!important}.tg{font-size:12.5px!important;min-height:36px!important;padding:7px 9px!important;border-width:1px!important;border-radius:6px!important}' +
+  '.btn{font-size:12.5px!important;min-height:32px!important;padding:6px 10px!important;border-width:1px!important;border-radius:6px!important}.badge{padding:6px 10px!important}.badge b{font-size:13px!important}.badge span{font-size:13px}' +
+  '.info h3{font-size:20px!important}.info p b{font-size:11.5px!important}table{font-size:12px!important}.cap{font-size:14px!important;padding:3px 9px!important}.note{font-size:11.5px!important}' +
+  'aside .plano-sec .pbtns button{font-size:12.5px!important;min-height:36px!important;padding:7px 9px!important;border-width:1px!important;border-radius:6px!important}.tag .pill{font-size:11.5px!important;padding:5px 9px!important}';
+</script>
+<script src="equipos/visores-equipos.js"></script>
+<script>
+/* Registro de escenas para la exportación 3D (OBJ, STL, DXF): cada visor anota la escena que dibuja */
+window.__RE_HOOK = '\n;(function () { try { var SP = window.__LIB.THREE.Scene.prototype, o = SP.onBeforeRender; SP.onBeforeRender = function (r, s, c, rt) { if (!rt) (window.__RE_ESCENAS = window.__RE_ESCENAS || new Set()).add(this); return o.apply(this, arguments); }; } catch (e) {} })();\n';
+/* Un solo generador de plano de montaje para todos los visores: los que traían su copia propia pasan a usar el compartido
+   (equipos/plano-montaje.js), de modo que la lámina, la viñeta y el cuadro de revisiones sean iguales en todos los detalles. */
+window.__prepararVisores = function () {
+if (window.__PLANO) window.__VIEWERS.forEach(function (v) {
+  if (v._prep || v.html.indexOf('window.__PLANO = ') >= 0) return;
+  var i = v.html.indexOf('/* ---------- Plano de montaje'), f = v.html.lastIndexOf('\n})();\n<\/script>');
+  if (i < 0 || f < i) return;
+  v.html = v.html.slice(0, i) + 'try { window.__PLANO(scene, renderer, camera, controls, function () { return typeof labels !== "undefined" ? labels : []; }, THREE); } catch (e) { console.warn("Plano de montaje", e); }\n' + v.html.slice(f);
+  v.html = v.html.replace('<script>/*__LIB__*/', function () { return '<script>window.__PLANO = ' + window.__PLANO.toString() + ';<\/script>\n<script>/*__LIB__*/'; });
+});
+window.__VIEWERS.forEach(function (v) { if (v._prep) return; v._prep = true; v.html = v.html.replace('/*__LIB__*/', function () { return window.__LIBSRC + window.__RE_HOOK + (window.__VPLUS ? '\n;(' + window.__VPLUS.toString() + ')();\n' : ''); }); });
+};
+</script>
+<script>
+(function () {
+  var V = window.__VIEWERS;
+  if (!V) return;                                     // versión en línea: las tarjetas navegan a cada archivo
+  document.getElementById('modeTxt').textContent = 'Visores 3D: se descargan al abrir el primero';
+  var viewer = document.getElementById('viewer'), frame = document.getElementById('frame');
+  function existe(id) { return V.some(function (x) { return x.id === id; }) || [].some.call(document.querySelectorAll('a.card[data-id]'), function (a) { return a.getAttribute('data-id') === id; }); }
+  function open(id) {
+    if (window.__VBASE !== 'ok') {
+      if (!existe(id)) return;
+      document.getElementById('vTitle').textContent = 'Cargando visores 3D…'; frame.srcdoc = ''; viewer.hidden = false; document.body.style.overflow = 'hidden';
+      window.__cargarVisores(function (err) { if (err) { document.getElementById('vTitle').textContent = err.message; return; } if (!viewer.hidden) open(id); });
+      return;
+    }
+    var v = null; for (var i = 0; i < V.length; i++) if (V[i].id === id) v = V[i];
+    if (!v) return;
+    document.getElementById('vTitle').textContent = v.title;
+    if (window.__docsVisor) window.__docsVisor(id, document.getElementById('vHd'), document.getElementById('vEt'));
+    viewer.dataset.id = id; viewer.dataset.title = v.title;
+    frame.srcdoc = v.html.replace('<head>', '<head><style>' + (window.__FONTS || '') + '</style>') + '<style id="rg-compacto">' + (window.__VCOMPACTO || '') + '</style>';
+    viewer.hidden = false; document.body.style.overflow = 'hidden';
+    try { history.replaceState(null, '', '#' + id); } catch (e) { /* sin historial */ }
+    document.getElementById('back').focus();
+  }
+  function close() {
+    viewer.hidden = true; frame.srcdoc = ''; document.body.style.overflow = '';
+    try { history.replaceState(null, '', '#'); } catch (e) { /* */ }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('a.card'), function (a) {
+    a.addEventListener('click', function (e) { e.preventDefault(); open(a.getAttribute('data-id')); });
+  });
+  document.getElementById('back').addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !viewer.hidden) close(); });
+  if (location.hash.length > 1) open(location.hash.slice(1));
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').then(function () {
+    var t = document.getElementById('modeTxt'); if (t) t.textContent = 'App instalable · disponible sin internet';
+  }).catch(function () {}); });
+}
+</script>
+<script id="pvData" src="equipos/miniaturas-base.js"></script>
+<script src="equipos/miniaturas.js"></script>
+<script src="hojas-datos/plantillas.js"></script>
+<script src="hojas-datos/plantillas2.js"></script>
+<script src="hojas-datos/plantillas3.js"></script>
+<script src="hojas-datos/plantillas4.js"></script>
+<script src="exportar-3d.js"></script>
+<link rel="stylesheet" href="mesa/dock.css">
+<script src="mesa/dock.js"></script>
+<script src="mesa/modulo.js"></script>
+<script src="equipos/mesa-montaje.js"></script>
+<script>
+(function () {
+  var btn = document.getElementById('vExp'), menu = document.getElementById('vExpMenu'), viewer = document.getElementById('viewer'), frame = document.getElementById('frame');
+  if (!btn || !window.RE3D) return;
+  // Si el visor se abrió desde la URL antes de cargar las plantillas, actualizar el enlace a la hoja de datos
+  var vh = document.getElementById('vHd');
+  document.addEventListener('DOMContentLoaded', function () { if (vh && !viewer.hidden && viewer.dataset.id && window.__docsVisor) window.__docsVisor(viewer.dataset.id, vh, document.getElementById('vEt')); });
+  function cerrar() { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+  function aviso(t) { var d = document.createElement('div'); d.className = 'vexp-msg'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 5000); }
+  btn.addEventListener('click', function (e) { e.stopPropagation(); var abrir = menu.hidden; menu.hidden = !abrir; btn.setAttribute('aria-expanded', String(abrir)); if (abrir) menu.querySelector('button').focus(); });
+  document.addEventListener('click', function (e) { if (!menu.hidden && !menu.contains(e.target)) cerrar(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { e.stopPropagation(); cerrar(); btn.focus(); } }, true);
+  menu.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-fmt]'); if (!b) return;
+    cerrar();
+    var fmt = b.dataset.fmt;
+    setTimeout(function () {
+      try {
+        var r = window.RE3D.exportar(fmt, viewer.dataset.id, viewer.dataset.title || 'Visor 3D', frame.contentWindow);
+        aviso(fmt.toUpperCase() + ' listo: ' + r.piezas + ' piezas, ' + r.triangulos.toLocaleString('es-CL') + ' triángulos, en mm.');
+      } catch (err) { aviso('No se pudo exportar: ' + err.message); }
+    }, 30);
+  });
+})();
+</script>
+<script src="especificaciones/plantillas-et.js"></script>
+<script src="especificaciones/plantillas-et2.js"></script>
+<script src="especificaciones/plantillas-et3.js"></script>
+<script>
+window.__hdCount = function (id) { return window.HD ? window.HD.plantillas.filter(function (p) { return p.visores.indexOf(id) >= 0; }).length : 0; };
+/* ET de un visor: la familia que contiene un instrumento cuya hoja de datos pertenece al visor */
+window.__etDe = function (id) {
+  if (!window.HD || !window.ET) return null;
+  var hojas = window.HD.plantillas.filter(function (p) { return p.visores.indexOf(id) >= 0; }).map(function (p) { return p.id; });
+  var fam = null, ins = null;
+  window.ET.familias.some(function (f) { return f.instrumentos.some(function (i) { if ((i.das || []).some(function (d) { return hojas.indexOf(d) >= 0; })) { fam = f; ins = i; return true; } return false; }); });
+  return fam ? { id: fam.id, titulo: fam.titulo, instrumento: ins.t } : null;
+};
+window.__docsVisor = function (id, aHd, aEt) {
+  var nh = window.__hdCount(id), et = window.__etDe(id);
+  if (aHd) { aHd.hidden = !nh; aHd.href = 'hojas-datos/#v=' + id; if (aHd.classList.contains('pv-hd')) aHd.textContent = nh > 1 ? 'Hojas de datos (' + nh + ')' : 'Hoja de datos'; }
+  if (aEt) { aEt.hidden = !et; if (et) { aEt.href = 'especificaciones/#et=' + et.id; aEt.title = 'Especificación técnica ' + et.titulo.toLowerCase(); } }
+};
+</script>
+<script id="pvJs">
+(function () {
+  var T = window.__THUMBS || {};
+  var m = document.createElement('div'); m.className = 'pv-modal'; m.hidden = true; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-labelledby', 'pvT');
+  m.innerHTML = '<div class="pv-box"><button class="pv-x" type="button" aria-label="Cerrar vista previa">✕</button><div class="pv-media"><img class="pv-img" alt=""><div class="pv-dots"></div></div><div class="pv-info"><span class="pv-sec"></span><h2 class="pv-t" id="pvT"></h2><p class="pv-d"></p><span class="pv-c"></span><ul class="pv-f"><li>Modelo 3D interactivo: gira, acerca y ordena etiquetas</li><li>Controles de vista y simulación en el panel lateral</li><li>Plano A3 con globos numerados, previsualización ajustable y descarga en PDF/PNG</li></ul><div class="pv-acts"><button class="pv-open" type="button">Abrir</button><a class="pv-hd" hidden>Hoja de datos</a><a class="pv-hd pv-et" hidden>Especificación técnica</a><button class="pv-cancel" type="button">Volver al menú</button></div></div></div>';
+  document.body.appendChild(m);
+  var q = function (s) { return m.querySelector(s); }, cur = null, imgs = [], k = 0, timer = 0, last = null;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setImg(i) { k = i; var im = q('.pv-img'); im.style.opacity = 0.25; setTimeout(function () { im.src = imgs[k]; im.style.opacity = 1; }, reduce ? 0 : 160); Array.prototype.forEach.call(q('.pv-dots').children, function (b, j) { b.setAttribute('aria-pressed', String(j === k)); }); }
+  function close() { m.hidden = true; clearInterval(timer); document.body.style.overflow = ''; if (last) last.focus(); cur = null; }
+  function openPv(a) {
+    cur = a; last = a; var id = a.getAttribute('data-id'); imgs = T[id] || [];
+    var sec = a.closest('section'), h2 = sec && sec.querySelector('h2');
+    q('.pv-sec').textContent = h2 ? (h2.firstChild ? h2.firstChild.textContent : h2.textContent).trim() : '';
+    q('.pv-t').textContent = (a.querySelector('h3') || {}).textContent || '';
+    q('.pv-d').textContent = (a.querySelector('p') || {}).textContent || '';
+    q('.pv-c').textContent = (a.querySelector('.codes') || {}).textContent || '';
+    var F = a.getAttribute('data-feat'), ul = q('.pv-f'); if (!ul.dataset.def) ul.dataset.def = ul.innerHTML; ul.innerHTML = F ? F.split('|').map(function (x) { return '<li>' + x + '</li>'; }).join('') : ul.dataset.def;
+    q('.pv-img').alt = 'Vista previa del visor: ' + q('.pv-t').textContent;
+    if (window.__docsVisor) window.__docsVisor(id, q('.pv-hd:not(.pv-et)'), q('.pv-et'));
+    var dots = q('.pv-dots'); dots.innerHTML = '';
+    imgs.forEach(function (s, j) { var b = document.createElement('button'); b.type = 'button'; b.textContent = j ? 'Otro ángulo' : 'Vista inicial'; b.addEventListener('click', function () { clearInterval(timer); setImg(j); }); dots.appendChild(b); });
+    q('.pv-media').hidden = !imgs.length;
+    if (imgs.length) { q('.pv-img').src = imgs[0]; setImg(0); }
+    clearInterval(timer); if (imgs.length > 1 && !reduce) timer = setInterval(function () { setImg((k + 1) % imgs.length); }, 2600);
+    m.hidden = false; document.body.style.overflow = 'hidden'; q('.pv-open').focus();
+  }
+  q('.pv-open').addEventListener('click', function () { var a = cur; m.hidden = true; clearInterval(timer); document.body.style.overflow = ''; if (!a) return; a.setAttribute('data-go', '1'); a.click(); a.removeAttribute('data-go'); });
+  q('.pv-cancel').addEventListener('click', close); q('.pv-x').addEventListener('click', close);
+  m.addEventListener('click', function (e) { if (e.target === m) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !m.hidden) close(); });
+  Array.prototype.forEach.call(document.querySelectorAll('a.card'), function (a) {
+    var t = T[a.getAttribute('data-id')];
+    if (t && !a.querySelector('.thumb')) {
+      var img = new Image(); img.className = 'thumb'; img.src = t[0]; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+      a.classList.add('hasthumb'); a.insertBefore(img, a.firstChild);
+      var tag = document.createElement('span'); tag.className = 'pvtag'; tag.textContent = 'Vista previa'; a.appendChild(tag);
+      if (t[1]) { a.addEventListener('mouseenter', function () { img.src = t[1]; }); a.addEventListener('mouseleave', function () { img.src = t[0]; }); }
+    }
+    a.addEventListener('click', function (e) { if (a.getAttribute('data-go') === '1') return; e.preventDefault(); e.stopImmediatePropagation(); openPv(a); }, true);
+  });
+})();
+</script>
+<script id="tabsJs">
+(function () {
+  var nav = document.getElementById('tabs'); if (!nav) return;
+  var bs = [].slice.call(nav.querySelectorAll('button')), secs = [].slice.call(document.querySelectorAll('main section[data-tab]'));
+  var tit = document.getElementById('mtTit'), lede = document.getElementById('mtLede'), mt = document.getElementById('montajes');
+  var TXT = { ic: ['Detalles típicos de montaje', 'Instrumentos de terreno: cada visor tiene tipos de montaje, lista de materiales, notas y plano A3 en PDF y DXF.'],
+    em: ['Emulaciones de procesos', 'Procesos simulados en tiempo real con PLC, variadores e instrumentación: opera, provoca fallas y observa la respuesta del control.'],
+    es: ['Escalerillas portaconductores', 'Detalles típicos de escalerillas, accesorios y soportación según catálogo de fabricante, con lista de materiales, plano A3 y dimensionamiento del recorrido.'],
+    tb: ['Tableros eléctricos y de control', 'Gabinetes de control y tableros de fuerza en 3D: componentes, cableado, listas de materiales y planos.'],
+    fo: ['Fibra óptica', 'Paneles murales de fibra óptica: gomas, empalmes, adaptadores, patch cords y pruebas de pérdida.'],
+    pm: ['Procesos mineros', 'Plantas mineras en 3D con su instrumentación y automatización: ubica instrumentos, opera equipos y revisa cada ficha.'],
+    rc: ['Radiocomunicación', 'Enlaces inalámbricos industriales: radio, antena, mástil, alimentación PoE y simulación del enlace.'],
+    se: ['Seguridad electrónica', 'CCTV, control de acceso e intercomunicación industrial: montaje de cámaras, puertas controladas, torniquetes e intercomunicadores.'] };
+  var HASH = {}; bs.forEach(function (b) { HASH[b.dataset.h || ''] = b.dataset.tab; });
+  var side = document.getElementById('sideTabs'), cur = 'ic';
+  bs.forEach(function (b) {
+    var n = 0; secs.forEach(function (s) { if (s.dataset.tab === b.dataset.tab) n += s.querySelectorAll('.card').length; });
+    var t = b.querySelector('.tn'); if (t) t.textContent = n;
+    if (side) { var li = document.createElement('li'), x = document.createElement('button'); x.type = 'button'; x.dataset.tab = b.dataset.tab;
+      x.innerHTML = '<span></span><span class="ct">' + n + '</span>'; x.firstChild.textContent = b.firstChild.textContent.trim();
+      x.addEventListener('click', function () { buscar(''); show(b.dataset.tab, true); mt.scrollIntoView({ block: 'start' }); });
+      li.appendChild(x); side.appendChild(li); }
+  });
+  function show(t, push) {
+    if (!TXT[t]) t = 'ic'; cur = t;
+    bs.forEach(function (b) { var on = b.dataset.tab === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && b.scrollIntoView && push) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+    if (side) [].forEach.call(side.querySelectorAll('button'), function (x) { x.setAttribute('aria-current', String(x.dataset.tab === t)); });
+    secs.forEach(function (s) { s.hidden = s.dataset.tab !== t; });
+    tit.textContent = TXT[t][0]; lede.textContent = TXT[t][1];
+    try { localStorage.setItem('reyengiTab', t); } catch (e) {}
+    if (push) { var b = nav.querySelector('[data-tab="' + t + '"]'); try { history.replaceState(null, '', b && b.dataset.h ? '#' + b.dataset.h : '#montajes'); } catch (e) {} }
+  }
+  bs.forEach(function (b, i) { b.addEventListener('click', function () { buscar(''); show(b.dataset.tab, true); }); b.addEventListener('keydown', function (e) { var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; var o = bs[(i + d + bs.length) % bs.length]; show(o.dataset.tab, true); o.focus(); }); });
+  // Búsqueda en todo el catálogo
+  var q = document.getElementById('mtBuscar'), vacio = document.getElementById('mtVacio');
+  var norm = function (t) { return String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+  function buscar(v) {
+    if (v !== undefined && q.value !== v) q.value = v;
+    var t = norm(q.value.trim()), hay = 0;
+    mt.classList.toggle('buscando', !!t);
+    if (!t) { secs.forEach(function (s) { [].forEach.call(s.querySelectorAll('.card'), function (c) { c.hidden = false; }); }); vacio.hidden = true; show(cur, false); return; }
+    secs.forEach(function (s) { var n = 0; [].forEach.call(s.querySelectorAll('.card'), function (c) { var ok = norm(c.textContent + ' ' + (c.dataset.id || '')).indexOf(t) >= 0; c.hidden = !ok; if (ok) n++; }); s.hidden = !n; hay += n; });
+    tit.textContent = 'Detalles de montaje · búsqueda'; lede.textContent = hay + ' resultado' + (hay === 1 ? '' : 's') + ' en todo el catálogo';
+    vacio.hidden = !!hay;
+  }
+  q.addEventListener('input', function () { buscar(); });
+  q.addEventListener('keydown', function (e) { if (e.key === 'Escape') buscar(''); });
+  // Vista lista o tarjetas
+  var vb = [].slice.call(document.querySelectorAll('.segv button'));
+  function vista(v) { mt.classList.toggle('lista', v === 'lista'); vb.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === v)); }); try { localStorage.setItem('reyengiVista', v); } catch (e) {} }
+  vb.forEach(function (b) { b.addEventListener('click', function () { vista(b.dataset.v); }); });
+  var v0 = 'lista'; try { v0 = localStorage.getItem('reyengiVista') || 'lista'; } catch (e) {}
+  vista(v0);
+  var h = location.hash.replace('#', ''), t0 = HASH[h];
+  if (!t0) { try { t0 = localStorage.getItem('reyengiTab'); } catch (e) {} }
+  show(t0 || 'ic', false);
+  if (h === 'montajes' || (HASH[h] && h)) setTimeout(function () { mt.scrollIntoView({ block: 'start' }); }, 50);
+})();
+</script>
+<script id="inicioJs">
+(function () {
+  'use strict';
+  // Etapas: pestañas accesibles (flechas, Inicio, Fin)
+  var tabs = [].slice.call(document.querySelectorAll('.ftabs [role="tab"]'));
+  function sel(t, foco) {
+    tabs.forEach(function (b) {
+      var on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
+      var p = document.getElementById(b.getAttribute('aria-controls')); if (p) p.hidden = !on;
+    });
+    if (foco) t.focus();
+  }
+  tabs.forEach(function (b, i) {
+    b.addEventListener('click', function () { sel(b); });
+    b.addEventListener('keydown', function (e) {
+      var k = e.key, n = tabs.length, j = k === 'ArrowDown' || k === 'ArrowRight' ? (i + 1) % n : k === 'ArrowUp' || k === 'ArrowLeft' ? (i - 1 + n) % n : k === 'Home' ? 0 : k === 'End' ? n - 1 : -1;
+      if (j >= 0) { e.preventDefault(); sel(tabs[j], true); }
+    });
+  });
+  // Disciplinas: desplegar o contraer todo
+  var discs = [].slice.call(document.querySelectorAll('.disc'));
+  var a = document.getElementById('abrirTodo'), c = document.getElementById('cerrarTodo');
+  if (a) a.addEventListener('click', function () { discs.forEach(function (d) { d.open = true; }); });
+  if (c) c.addEventListener('click', function () { discs.forEach(function (d) { d.open = false; }); });
+  // Cantidad de detalles típicos
+  var k = document.getElementById('kpiDet'); if (k) k.textContent = document.querySelectorAll('#montajes section[data-tab] .card').length;
+  // Enlaces a pestañas del catálogo de detalles (ej. #escalerillas): abre la pestaña y baja al catálogo
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var h = a.getAttribute('href').slice(1); if (!h) return;
+    var b = document.querySelector('#tabs button[data-h="' + h + '"]'); if (!b) return;
+    e.preventDefault(); b.click(); var m = document.getElementById('montajes'); if (m) m.scrollIntoView({ block: 'start' });
+  });
+  // Navegación superior: sección visible
+  var links = [].slice.call(document.querySelectorAll('.topnav a'));
+  var secs = links.map(function (l) { return document.getElementById(l.getAttribute('href').slice(1)); });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { var i = secs.indexOf(e.target); links.forEach(function (l, j) { l.classList.toggle('on', j === i); if (j === i) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current'); }); } });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    secs.forEach(function (s) { if (s) io.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>

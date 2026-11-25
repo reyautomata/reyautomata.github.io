@@ -23,6 +23,8 @@
     lista: '<path d="M7.4 5.5h9M7.4 10h9M7.4 14.5h9M3.8 5.5h.8M3.8 10h.8M3.8 14.5h.8"/>',
     material: '<path d="M10 2.8 16.5 6v8L10 17.2 3.5 14V6z"/><path d="M3.7 6.1 10 9.2l6.3-3.1M10 9.2v8"/>',
     compra: '<path d="M2.6 4h2.2l1.8 8.4h8.2l1.5-5.9H5.7"/><circle cx="8" cy="15.4" r="1"/><circle cx="13.6" cy="15.4" r="1"/>',
+    cruce: '<circle cx="5" cy="5" r="2.4"/><circle cx="15" cy="5" r="2.4"/><circle cx="10" cy="15" r="2.4"/><path d="M7.2 6.2l1.6 6.6M12.8 6.2l-1.6 6.6M7.4 5h5.2"/>',
+    imagen: '<rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><circle cx="7" cy="8" r="1.6"/><path d="M3 15l4.5-4.5 3 3 2.5-2.5 4.5 4.5"/>',
     pid: '<circle cx="10" cy="7.4" r="3.6"/><path d="M6.4 7.4h7.2M10 11v4.4M3 15.4h14"/>',
     lazo: '<circle cx="5.4" cy="10" r="2.4"/><rect x="12.2" y="7.6" width="4.8" height="4.8" rx=".6"/><path d="M7.8 10h4.4M5.4 7.6V4.6h9.2v3M5.4 12.4v3h9.2v-3"/>',
     bloques: '<rect x="2.8" y="7.6" width="4.6" height="4.8" rx=".6"/><rect x="12.6" y="3.4" width="4.6" height="4.4" rx=".6"/><rect x="12.6" y="12.2" width="4.6" height="4.4" rx=".6"/><path d="M7.4 10H10M10 5.6v8.8M10 5.6h2.6M10 14.4h2.6"/>',
@@ -56,11 +58,11 @@
     arriba: '<path d="M5 12.5 10 7.5l5 5"/>', abajo: '<path d="M5 7.5 10 12.5l5-5"/>'
   };
   // Icono y nombre corto de cada tarea, por su código en el explorador
-  var ICOD = { IN: 'inicio', S4: 'plano', '00': 'proy', FA: 'etapas', AR: 'bloques', FL: 'etapas', E1: 'senal', E2: 'tarjeta', MC: 'calc', '04': 'espec', '03': 'hoja', '02': 'lista', '05': 'senal', '07': 'lista', '12': 'material', '11': 'compra',
+  var ICOD = { IN: 'inicio', S4: 'plano', TZ: 'cruce', IM: 'imagen', '00': 'proy', FA: 'etapas', AR: 'bloques', FL: 'etapas', E1: 'senal', E2: 'tarjeta', MC: 'calc', '04': 'espec', '03': 'hoja', '02': 'lista', '05': 'senal', '07': 'lista', '12': 'material', '11': 'compra',
     '01': 'pid', '06': 'lazo', '09': 'bloques', '08': 'unilineal', '10': 'montaje', H3: 'ducto', ES: 'escalerilla', GD: 'todos', B1: 'trabajo', B2: 'revision', B3: 'coord', B4: 'firmas', B5: 'emitir', B6: 'emitido', EX: 'archivos',
     H1: 'tuberia', H2: 'valvula', H5: 'espesador', MT: 'mesa', ET: 'etapas', DI: 'disciplina', BF: 'planta', H4: 'norma', BT: 'libreria',
     D02: 'doc', D07: 'doc', D08: 'lista', D09: 'hoja', P05: 'plano', P07: 'plano', P09: 'bloques', P10: 'tarjeta' };
-  var CORTO = { IN: 'Tablero', S4: 'Suite 4.0', '00': 'Datos del proyecto', FA: 'Fase y alcance', AR: 'Arquitectura', FL: 'Flujo de ingeniería', E1: 'Señales E/S e índice', E2: 'Tarjetas y canales', MC: 'Memoria canalizaciones', '04': 'Especificaciones', '03': 'Hojas de datos', '02': 'Instrumentos', '05': 'Entradas y salidas', '07': 'Circuitos', '12': 'Materiales', '11': 'Requisiciones',
+  var CORTO = { IN: 'Tablero', S4: 'Suite 4.0', TZ: 'Cruces por tag', IM: 'Mejora de imagen', '00': 'Datos del proyecto', FA: 'Fase y alcance', AR: 'Arquitectura', FL: 'Flujo de ingeniería', E1: 'Señales E/S e índice', E2: 'Tarjetas y canales', MC: 'Memoria canalizaciones', '04': 'Especificaciones', '03': 'Hojas de datos', '02': 'Instrumentos', '05': 'Entradas y salidas', '07': 'Circuitos', '12': 'Materiales', '11': 'Requisiciones',
     '01': 'Análisis de P&ID', '06': 'Diagramas de lazo', '09': 'Bloques de control', '08': 'Unilineales TDI', '10': 'Detalles de montaje', H3: 'Corte de ductos', ES: 'Escalerillas', GD: 'Todos', B1: 'En trabajo', B2: 'Revisión', B3: 'Coordinación', B4: 'Firmas', B5: 'Para emitir', B6: 'Emitidos', EX: 'Archivos',
     H1: 'Leer P&ID', H2: 'Válvulas', H5: 'Espesador', MT: 'Mesa libre', ET: 'Etapas', DI: 'Disciplinas', BF: 'Brownfield', H4: 'Normativa SEC', BT: 'Manuales y librerías' };
   // Pestañas: [id, título, grupos del explorador que reúne]. Un grupo que no esté aquí se agrega como pestaña propia.
@@ -68,13 +70,13 @@
   // Paneles de cada grupo: [título, códigos de tarea o de subcategoría, tipo]. Lo que no esté nombrado se agrega solo (por subcategoría o en «Más»).
   // Los títulos llevan el número del grupo en el árbol del proyecto (00 a 09), el mismo del explorador.
   var PANELES = {
-    ini: [['Proyecto', ['IN', 'S4']]],
+    ini: [['Proyecto', ['IN', 'S4', 'TZ']]],
     p00: [['00 Proyecto', ['00', 'FA', 'FL']]],
-    p01: [['01 P&ID', ['01', 'H1']]], p02: [['02 Base de datos', ['E1', 'E2']]], p03: [['03 Arquitectura', ['AR']]],
+    p01: [['01 P&ID', ['01', 'H1', 'IM']]], p02: [['02 Base de datos', ['E1', 'E2', 'TZ']]], p03: [['03 Arquitectura', ['AR']]],
     p04: [['04 Diagramas', ['06', '09', '08']]], p05: [['05 Montaje y canalizaciones', ['10', 'H3', 'ES']]],
     p06: [['06 Listados', ['02', '05', '07', '12', 'MC']]], p07: [['07 Documentos técnicos', ['03', '04']]], p08: [['08 Compras', ['11']]],
     ctl: [['Entregables', ['GD']], ['Flujo de emisión', ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'], 'flujo'], ['Archivos', ['EX']]],
-    her: [['Piping y válvulas', ['H2']], ['Proceso', ['H5']], ['Espacio de trabajo', ['MT']]],
+    her: [['Piping y válvulas', ['H2']], ['Proceso', ['H5']], ['Espacio de trabajo', ['MT']], ['Imagen', ['IM']]],
     gui: [['Guía de ingeniería', ['ET', 'DI', 'BF']], ['Normativa y referencias', ['H4', 'BT']]]
   };
   function svg(n) { return '<svg viewBox="0 0 20 20" aria-hidden="true">' + (IC[n] || IC.doc) + '</svg>'; }
@@ -121,7 +123,7 @@
       '<img class="rc-lo-o" src="' + B + '../img/logo-reyengi-light.png" alt=""><img class="rc-lo-c" src="' + B + '../img/logo-reyengi.png" alt=""></a>' +
       '<div class="rc-tabs" role="tablist" aria-label="Pestañas de la cinta">' +
       tabs.map(function (tb) { return '<button type="button" class="rc-t" role="tab" id="rcT-' + tb.id + '" data-t="' + tb.id + '" aria-controls="rcPan">' + esc(tb.t) + '</button>'; }).join('') + '</div>' +
-      '<div class="rc-bus">' + svg('buscar') + '<input type="search" id="rcBuscar" placeholder="Buscar una tarea" aria-label="Buscar una tarea de la suite" role="combobox" aria-expanded="false" aria-controls="rcRes" aria-autocomplete="list" autocomplete="off" spellcheck="false"><kbd>Ctrl K</kbd><div class="rc-res" id="rcRes" role="listbox" aria-label="Tareas encontradas" hidden></div></div>' +
+      '<div class="rc-bus">' + svg('buscar') + '<input type="search" id="rcBuscar" placeholder="Buscar tarea o tag" aria-label="Buscar una tarea de la suite" role="combobox" aria-expanded="false" aria-controls="rcRes" aria-autocomplete="list" autocomplete="off" spellcheck="false"><kbd>Ctrl K</kbd><div class="rc-res" id="rcRes" role="listbox" aria-label="Tareas encontradas" hidden></div></div>' +
       '<button type="button" class="rc-min" id="rcMin" aria-pressed="false"></button></div><div class="rc-pan" id="rcPan" role="tabpanel"></div>';
     d.body.insertBefore(cinta, d.body.firstChild);
     var pan = cinta.querySelector('#rcPan'), fila = cinta.querySelector('.rc-tabs'), bq = cinta.querySelector('#rcBuscar'), res = cinta.querySelector('#rcRes'), bMin = cinta.querySelector('#rcMin');
@@ -252,7 +254,8 @@
           if (!x.href || x.dev || L.length > 40) return; var H = []; try { H = api.hijos(x.c) || []; } catch (e) {}
           H.forEach(function (c) { if (c && c.href && cabe(norm((c.t || '') + ' ' + (c.s || '')))) L.push({ t: (c.t || '') + (c.s ? ' · ' + c.s : ''), href: c.href, ruta: x.ruta.split(' › ')[0] + ' › ' + (CORTO[x.c] || x.t), ic: x.ic }); });
         });
-        var pos = function (x) { var i = norm(x.t).indexOf(q); return i < 0 ? 99 : i; };
+        try { if (window.RECruces) window.RECruces.buscar(bq.value.trim(), 6).forEach(function (x) { var r = window.RECruces.porTag(x.tag); L.unshift({ t: x.tag + (x.desc ? ' · ' + x.desc : ''), href: B + 'trazabilidad/?tag=' + encodeURIComponent(x.tag), ruta: 'Tag del proyecto › ' + (r ? r.ok + ' listos · ' + r.falta + ' por completar' : 'cruces'), ic: 'cruce', tagHit: 1 }); }); } catch (e) {}
+        var pos = function (x) { if (x.tagHit) return -1; var i = norm(x.t).indexOf(q); return i < 0 ? 99 : i; };
         L = L.map(function (x, i) { return [x, pos(x) + (x.dev ? 200 : 0), i]; }).sort(function (a, b) { return a[1] - b[1] || a[2] - b[2]; }).map(function (a) { return a[0]; }).slice(0, 14);
         if (!L.length) h = '<div class="rc-rh">Nada coincide con «' + esc(bq.value.trim()) + '».</div>';
       }

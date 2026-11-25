@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cruces y trazabilidad por tag · ReyEngi</title>
+<meta name="description" content="Cada instrumento del proyecto con sus documentos: base de la Suite 4.0, señales de E/S, diagrama de lazo, planos, hoja de datos, P&ID, requisición, montaje y fotos de terreno.">
+<meta name="theme-color" content="#1C1C1C">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #202020; --panel: #2B2B2B; --panel2: #323232; --fg: #FFFFFF; --muted: #C8C8C8; --line: #3F3F3F; --brand: #1C1C1C; --accent: #FF8C32; --sel: #60CDFF;
+  --ok: #6FC48F; --falta: #E8A55A; --na: #8B9896; --info: #5DBACB; --f-body: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px/20px var(--f-body); }
+[hidden] { display: none !important; }
+.btn { font: 600 13px var(--f-body); border-radius: 4px; padding: 6px 12px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: #1B0D02; }
+.btn:hover { border-color: var(--sel); } .btn:disabled { opacity: .6; cursor: wait; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+main.tz { padding: 16px 16px 60px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+@media (max-width: 1100px) { main.tz { grid-template-columns: 1fr; } }
+p.sub { margin: 0 0 12px; color: var(--muted); max-width: 900px; }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.caja h2 { margin: 0 0 8px; font-size: 15px; }
+.cifras { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.cifras button { all: unset; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 120px; }
+.cifras button[aria-pressed="true"] { border-color: var(--info); box-shadow: inset 0 -2px 0 var(--info); }
+.cifras button:focus-visible { outline: 2px solid var(--sel); }
+.cifras b { display: block; font-size: 22px; line-height: 28px; } .cifras span { color: var(--muted); font-size: 12px; }
+.cifras .c-falta b { color: var(--falta); } .cifras .c-ok b { color: var(--ok); }
+.sync { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-left: 3px solid var(--info); }
+.sync p { margin: 0; color: var(--muted); font-size: 13px; flex: 1; min-width: 260px; } .sync p b { color: var(--fg); }
+.filtros { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.filtros input { font: 14px var(--f-body); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; min-width: 240px; }
+.tabla { overflow: auto; border: 1px solid var(--line); border-radius: 6px; max-height: calc(100vh - 300px); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 980px; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { background: var(--panel2); color: var(--muted); font-weight: 600; position: sticky; top: 0; z-index: 1; }
+th.c, td.c { text-align: center; }
+tbody tr { cursor: pointer; } tbody tr:hover { background: rgba(255,255,255,.04); } tbody tr.act { background: rgba(93,186,203,.14); }
+td.tag { font: 600 12.5px var(--f-mono); } td.desc { white-space: normal; min-width: 200px; max-width: 320px; color: var(--muted); }
+.e { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; font: 700 12px var(--f-mono); text-decoration: none; }
+.e.ok { background: rgba(111,196,143,.18); color: var(--ok); } .e.falta { background: rgba(232,165,90,.18); color: var(--falta); } .e.na { color: var(--na); }
+.av { display: inline-block; width: 70px; height: 6px; border-radius: 3px; background: var(--panel2); vertical-align: middle; overflow: hidden; } .av i { display: block; height: 100%; background: var(--ok); }
+.ley { display: flex; gap: 14px; color: var(--muted); font-size: 12px; margin-top: 8px; flex-wrap: wrap; }
+aside.det { position: sticky; top: 64px; }
+.det h2 { font: 700 16px var(--f-mono); margin: 0; } .det .sv { color: var(--muted); margin: 2px 0 10px; }
+.det ul { list-style: none; margin: 0; padding: 0; }
+.det li { display: grid; grid-template-columns: 54px 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.det li .g { font: 600 10.5px var(--f-mono); text-transform: uppercase; padding-top: 2px; }
+.det li .g.ok { color: var(--ok); } .det li .g.falta { color: var(--falta); } .det li .g.na { color: var(--na); }
+.det li a { color: var(--fg); } .det li a:hover { color: var(--sel); } .det li small { display: block; color: var(--muted); font-size: 12px; }
+.fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; } .fotos img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); background: #111; }
+.vacio { color: var(--muted); padding: 24px; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: #0F2036; border: 1px solid var(--info); border-radius: 8px; padding: 10px 14px; font-weight: 600; z-index: 50; max-width: 90vw; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<link rel="stylesheet" href="../fluent.css" id="rsFluent">
+
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?33:103))+'px')}}catch(e){}</script>
+<script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <a class="volver" href="../">← Suite ReyEngi</a>
+  <h1>Cruces y trazabilidad por tag <small id="proy">Proyecto activo</small></h1>
+  <a class="btn" href="../suite-4/">Suite 4.0</a>
+  <a class="btn" href="../lazos/#io">Señales de E/S</a>
+  <a class="btn" href="../imagen/">Mejora de imagen</a>
+</div></div>
+<main class="tz">
+  <div>
+    <p class="sub">Cada instrumento del proyecto con todos sus documentos. Se arma solo con lo que ya tienen la Suite 4.0, Lazos, las hojas de datos, el análisis de P&amp;ID, las requisiciones y las fotos: no hay que mantenerlo aparte. Toca una fila para ver el detalle y saltar al documento con el tag destacado.</p>
+    <div class="caja sync"><p id="syncTxt">Revisando…</p><button type="button" class="btn pri" id="bSync">Sincronizar Suite 4.0 ⇄ Lazos y hojas de datos</button></div>
+    <div class="cifras" id="cifras" role="group" aria-label="Filtrar por estado"></div>
+    <div class="filtros"><input type="search" id="q" placeholder="Buscar tag o servicio" aria-label="Buscar tag o servicio"><span id="nres" style="color:var(--muted);font-size:12px"></span></div>
+    <div class="tabla"><table><thead><tr><th>Tag</th><th>Servicio</th><th>Tipo</th><th class="c" title="Base de instrumentos de la Suite 4.0">4.0</th><th class="c" title="Señales de E/S con tarjeta y canal">E/S</th><th class="c" title="Diagrama de lazo">Lazo</th><th class="c" title="Planos de la Suite 4.0 dibujados">Planos</th><th class="c" title="Hoja de datos">HD</th><th class="c">P&amp;ID</th><th class="c" title="Requisición de compra">RQ</th><th class="c" title="Fotos de terreno">Fotos</th><th>Avance</th></tr></thead><tbody id="tb"></tbody></table></div>
+    <div class="ley"><span><span class="e ok">✓</span> listo</span><span><span class="e falta">!</span> por completar</span><span><span class="e na">·</span> no aplica o sin dato</span><span>Clic en una marca para ir directo a ese documento.</span></div>
+  </div>
+  <aside class="caja det" id="det" aria-live="polite"><p class="vacio">Elige un tag para ver dónde aparece.</p></aside>
+</main>
+<script src="../proyectos.js"></script>
+<script src="../cruces.js"></script>
+<script src="../fotos.js"></script>
+<script>
+(function () {
+  'use strict';
+  var X = window.RECruces, P = window.REProyectos, esc = X.esc, $ = function (s) { return document.querySelector(s); };
+  var filtro = 'todos', sel = '', L = [], FILAS = [];
+  try { sel = new URLSearchParams(location.search).get('tag') || ''; } catch (e) {}
+  var COLS = [['s4', function (d) { return d.g === 'Base' && /^Instrumento/.test(d.n); }], ['io', function (d) { return /^Señales/.test(d.n); }], ['lazo', function (d) { return /^Diagrama de lazo/.test(d.n); }],
+    ['pl', null], ['hd', function (d) { return /^Hoja de datos/.test(d.n); }], ['pid', function (d) { return d.g === 'P&ID'; }], ['rq', function (d) { return d.g === 'Compras'; }], ['fo', function (d) { return d.g === 'Terreno'; }]];
+  function celda(r, c) {
+    if (c[0] === 'pl') { var p = r.docs.filter(function (d) { return d.g === 'Planos 4.0'; }); if (!p.length) return '<td class="c"><span class="e na">·</span></td>'; var n = p.filter(function (d) { return d.est === 'ok'; }).length;
+      return '<td class="c"><a class="e ' + (n ? 'ok' : 'na') + '" href="' + esc(p[0].href) + '" title="' + n + ' de ' + p.length + ' planos dibujados" style="width:auto;padding:0 5px">' + n + '/' + p.length + '</a></td>'; }
+    var d = r.docs.filter(c[1])[0]; if (!d) return '<td class="c"><span class="e na">·</span></td>';
+    var s = d.est === 'ok' ? '✓' : d.est === 'falta' ? '!' : '·';
+    return '<td class="c"><a class="e ' + d.est + '" href="' + esc(d.href) + '" title="' + esc(d.n + (d.det ? ' · ' + d.det : '')) + '">' + s + '</a></td>';
+  }
+  function cargar() {
+    L = X.instrumentos(); FILAS = L.map(function (x) { return X.porTag(x.tag, L); }).filter(Boolean);
+    var a = P.activo(); $('#proy').textContent = (a.nombre || a.proyecto || 'Proyecto') + ' · ' + FILAS.length + ' instrumentos';
+    var es = X.estadoSync();
+    $('#syncTxt').innerHTML = es.aLazos || es.aSuite4 ? '<b>' + es.aLazos + '</b> instrumento(s) de la Suite 4.0 sin señales en Lazos y <b>' + es.aSuite4 + '</b> tag(s) de Lazos, hojas de datos o P&amp;ID que no están en la 4.0.' + (es.sinTipo.length ? ' ' + es.sinTipo.length + ' sin tipo equivalente (' + esc(es.sinTipo.slice(0, 5).join(', ')) + (es.sinTipo.length > 5 ? '…' : '') + ').' : '') + ' Sincronizar agrega lo que falta en cada lado y nunca borra nada.'
+      : 'Suite 4.0, Lazos y hojas de datos están al día entre sí. Sincronizar igual completa las tablas de aplicación de las hojas de datos.';
+    pintar();
+  }
+  function pintar() {
+    var q = $('#q').value.trim().toUpperCase();
+    var nOk = 0, nF = 0, n4 = 0, nW = 0;
+    FILAS.forEach(function (r) { if (!r.falta) nOk++; else nF++; if (!r.x.fuentes.s4) nW++; if (r.x.fuentes.s4 && !r.x.fuentes.lazos) n4++; });
+    var C = [['todos', FILAS.length, 'instrumentos', ''], ['falta', nF, 'por completar', 'c-falta'], ['ok', nOk, 'completos', 'c-ok'], ['solo4', n4, 'solo en la 4.0', ''], ['solow', nW, 'fuera de la 4.0', '']];
+    $('#cifras').innerHTML = C.map(function (c) { return '<button type="button" class="' + c[3] + '" data-fil="' + c[0] + '" aria-pressed="' + (filtro === c[0]) + '"><b>' + c[1] + '</b><span>' + c[2] + '</span></button>'; }).join('');
+    var V = FILAS.filter(function (r) {
+      if (filtro === 'falta' && !r.falta) return false; if (filtro === 'ok' && r.falta) return false;
+      if (filtro === 'solo4' && !(r.x.fuentes.s4 && !r.x.fuentes.lazos)) return false; if (filtro === 'solow' && r.x.fuentes.s4) return false;
+      return !q || (r.tag + ' ' + (r.desc || '') + ' ' + r.key).toUpperCase().indexOf(q) >= 0;
+    });
+    $('#nres').textContent = V.length === FILAS.length ? '' : V.length + ' de ' + FILAS.length;
+    $('#tb').innerHTML = V.length ? V.map(function (r) {
+      var tot = r.ok + r.falta, pc = tot ? Math.round(100 * r.ok / tot) : 0;
+      return '<tr data-tag="' + esc(r.tag) + '" class="' + (X.clave(sel) === r.key ? 'act' : '') + '"><td class="tag">' + esc(r.tag) + '</td><td class="desc">' + esc(r.desc || '') + '</td><td>' + esc(r.tipo || (r.x.tipo4Sug ? '≈ ' + X.T4[r.x.tipo4Sug].n : '—')) + '</td>' +
+        COLS.map(function (c) { return celda(r, c); }).join('') + '<td><span class="av" title="' + pc + ' %"><i style="width:' + pc + '%"></i></span> <small>' + pc + '%</small></td></tr>';
+    }).join('') : '<tr><td colspan="12" class="vacio">' + (FILAS.length ? 'Ningún tag coincide.' : 'El proyecto aún no tiene instrumentos. Agrégalos en la Suite 4.0 o en Señales de E/S.') + '</td></tr>';
+    detalle();
+  }
+  function detalle() {
+    var r = sel && FILAS.filter(function (f) { return f.key === X.clave(sel); })[0];
+    if (!r) { $('#det').innerHTML = '<p class="vacio">Elige un tag para ver dónde aparece.</p>'; return; }
+    var G = { ok: 'Listo', falta: 'Falta', na: '—' };
+    $('#det').innerHTML = '<h2>' + esc(r.tag) + '</h2><p class="sv">' + esc(r.desc || 'Sin servicio') + (r.tipo ? ' · ' + esc(r.tipo) : '') + (r.con ? ' · ' + esc(r.con) : '') + '</p>' +
+      '<ul>' + r.docs.map(function (d) { return '<li><span class="g ' + d.est + '">' + G[d.est] + '</span><span>' + (d.href ? '<a href="' + esc(d.href) + '">' + esc(d.n) + '</a>' : esc(d.n)) + (d.det ? '<small>' + esc(d.det) + '</small>' : '') + '</span></li>'; }).join('') +
+      r.otros.map(function (o) { return '<li><span class="g na">Más</span><span>' + (o.href ? '<a href="' + esc(o.href) + '">' + esc(o.n) + '</a>' : esc(o.n)) + '</span></li>'; }).join('') + '</ul>' +
+      '<div class="fotos" id="fotos"></div><p style="margin:10px 0 0"><a class="btn" href="../imagen/?tag=' + encodeURIComponent(r.tag) + '">Mejorar y adjuntar foto o plano</a></p>';
+    if (window.REFotos) window.REFotos.listar(r.tag).then(function (fs) {
+      var c = $('#fotos'); if (!c) return;
+      c.innerHTML = fs.slice(0, 6).map(function (f) { return '<a href="../imagen/?tag=' + encodeURIComponent(r.tag) + '&foto=' + f.id + '" title="' + esc(f.nombre) + '"><img alt="' + esc(f.nombre) + '" src="' + URL.createObjectURL(f.blob) + '"></a>'; }).join('');
+    }).catch(function () {});
+  }
+  function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 6000); }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-fil]'); if (b) { filtro = b.dataset.fil; pintar(); return; }
+    if (e.target.closest('a')) return;
+    var tr = e.target.closest('tr[data-tag]'); if (tr) { sel = tr.dataset.tag; history.replaceState(null, '', '?tag=' + encodeURIComponent(sel)); pintar(); if (window.matchMedia('(max-width:1100px)').matches) $('#det').scrollIntoView({ behavior: 'smooth' }); }
+  });
+  $('#q').addEventListener('input', pintar);
+  $('#bSync').addEventListener('click', function () {
+    var b = this; b.disabled = true;
+    X.sincronizar().then(function (inf) {
+      b.disabled = false; cargar();
+      toast('Listo: ' + inf.senales + ' señal(es) y ' + inf.instLazos + ' instrumento(s) agregados a Lazos · ' + inf.suite4 + ' tag(s) a la Suite 4.0 · ' + inf.hojas + ' fila(s) en hojas de datos' + (inf.errorHojas ? ' (hojas: ' + inf.errorHojas + ')' : '') + '.');
+    }).catch(function (er) { b.disabled = false; toast('No se pudo sincronizar: ' + er.message); });
+  });
+  window.addEventListener('storage', function (e) { if (!e.key || e.key.indexOf('reyengi-proy-v1:') === 0) cargar(); });
+  cargar();
+  if (sel) setTimeout(function () { var tr = document.querySelector('tr.act'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 100);
+})();
+</script>
+</body>
+</html>

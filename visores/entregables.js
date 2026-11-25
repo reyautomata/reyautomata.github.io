@@ -32,9 +32,9 @@
     { id: 'P02-LAZO', subcategory: 'P02', cod: '06', name: 'Diagramas de lazo', discipline: 'CONTROL', module: 'lazos/#lazos', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['PDF', 'DXF'] },
     { id: 'P03-BLQ', subcategory: 'P03', cod: '09', name: 'Diagrama de bloques de control', discipline: 'CONTROL', module: 'lazos/#blq', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['PDF', 'DXF', 'Excel'] },
     { id: 'P04-UNI', subcategory: 'P04', cod: '08', name: 'Unilineales TDI', discipline: 'ELECTRICIDAD', module: 'lazos/#uni', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['PDF', 'DXF', 'Excel'] },
-    { id: 'P06-MONT', subcategory: 'P06', cod: '10', name: 'Detalles típicos de montaje', discipline: 'INSTRUMENTACION', module: '#montajes', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: ['PDF', 'DXF', 'PNG'] },
+    { id: 'P06-MONT', subcategory: 'P06', cod: '10', name: 'Detalles típicos de montaje', discipline: 'INSTRUMENTACION', module: 'montajes.html#montajes', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: ['PDF', 'DXF', 'PNG'] },
     { id: 'P08-DUCTO', subcategory: 'P08', cod: 'H3', name: 'Canalizaciones: corte de ductos', discipline: 'ELECTRICIDAD', module: 'lazos/#cond', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['DXF', 'PDF'] },
-    { id: 'P08-ESC', subcategory: 'P08', cod: 'ES', name: 'Escalerillas portaconductores', discipline: 'ELECTRICIDAD', module: '#escalerillas', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: [], note: 'Visor 3D de selección y montaje.' },
+    { id: 'P08-ESC', subcategory: 'P08', cod: 'ES', name: 'Escalerillas portaconductores', discipline: 'ELECTRICIDAD', module: 'montajes.html#escalerillas', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: [], note: 'Visor 3D de selección y montaje.' },
     { id: 'P09-ARQ', subcategory: 'P09', cod: 'AR', name: 'Arquitectura de control', discipline: 'CONTROL', module: 'arquitectura/', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['SVG', 'PDF'], note: 'Se dibuja desde las tarjetas, gabinetes y cajas de conexiones del proyecto.' }
   ];
   // Fases de ingeniería y alcance de cada generador en cada una (vacío = no aplica en esa fase).

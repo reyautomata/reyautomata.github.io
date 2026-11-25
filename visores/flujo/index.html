@@ -191,7 +191,7 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
         links: [['Listado de circuitos', '../lazos/#circ', 1]], dev: [] },
       { t: 'Detalles de montaje', d: 'Un típico de montaje por tipo de instrumento, asociado a cada tag.',
         datos: m.montajes + ' detalles con revisión registrada', est: m.montajes ? 'ok' : 'pend',
-        links: [['Detalles típicos de montaje', '../#montajes', 1]], dev: [] },
+        links: [['Detalles típicos de montaje', '../montajes.html#montajes', 1]], dev: [] },
       { t: 'Listado de materiales', d: 'Suma de cables, accesorios y materiales de cada típico de montaje.',
         datos: m.circuitos ? 'Calculable con ' + m.circuitos + ' circuitos' : 'Sin circuitos aún', est: m.circuitos ? 'ok' : 'pend',
         links: [['Listado de materiales', '../lazos/#mat', 1]], dev: [] }
@@ -200,7 +200,7 @@ aside.lado { display: flex; flex-direction: column; gap: 16px; position: sticky;
     F[1].pen = m.modulos ? [] : [['Definir gabinetes y tarjetas de E/S', '../lazos/#mod']];
     F[2].pen = m.sinCanal.map(function (s) { return [s.tag + ' sin canal asignado', '../lazos/#io']; });
     F[3].pen = m.sinJb.map(function (s) { return [s.tag + ' sin caja de conexiones', '../lazos/#io']; });
-    F[4].pen = []; F[5].pen = m.montajes ? [] : [['Registrar los detalles típicos de montaje', '../#montajes']]; F[6].pen = [];
+    F[4].pen = []; F[5].pen = m.montajes ? [] : [['Registrar los detalles típicos de montaje', '../montajes.html#montajes']]; F[6].pen = [];
     F.forEach(function (f, i) {
       var prev = F[i - 1];
       if (prev && (prev.est === 'pend' || prev.est === 'bloq')) { f.est = 'bloq'; f.motivo = 'Se habilita cuando «' + prev.t + '» tenga datos.'; }

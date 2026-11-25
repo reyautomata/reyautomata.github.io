@@ -6,6 +6,9 @@
 (function () {
   'use strict';
   var BASE = (function () { try { return new URL('.', document.currentScript.src).href; } catch (e) { return '../'; } })();
+  // Cruces por tag en todas las páginas: buscador de tags de la cinta y resaltado del tag al llegar (?tag=)
+  if (!window.RECruces && !document.querySelector('script[src$="cruces.js"]')) { var scC = document.createElement('script'); scC.src = BASE + 'cruces.js'; scC.defer = true; document.head.appendChild(scC); }
+  if (!window.REFotos && !document.querySelector('script[src$="fotos.js"]')) { var scF = document.createElement('script'); scF.src = BASE + 'fotos.js'; scF.defer = true; document.head.appendChild(scF); }
   // El árbol se arma desde el registro central (entregables.js): DOCUMENTOS y PLANOS con sus subcategorías.
   // Fila de módulo: [código, nombre, enlace]. Fila en desarrollo: [código, nombre, null, 'dev'].
   var REG = window.RE_ENTREGABLES;
@@ -17,19 +20,19 @@
   function dev(id, nom) { var s = REG ? REG.subcategorias.filter(function (x) { return x.id === id; })[0] : null; if (s && s.status === 'AVAILABLE') return null; return [id, s ? s.name : nom, null, 'dev']; }
   function filas(a) { return a.filter(Boolean); }
   var GRUPOS = [
-    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio'], ['S4', 'Suite 4.0 · motor de planos', 'suite-4/']]],
+    ['ini', 'Inicio', [['S4', 'Suite 4.0 · página principal', './'], ['IN', 'Tablero del proyecto y guía', 'montajes.html#inicio']]],
     ['p00', 'Proyecto', [['00', 'Datos del proyecto', 'proyectos/'], ['FA', 'Fase y alcance', 'fase/'], ['FL', 'Flujo de ingeniería', 'flujo/']], '00'],
-    ['p01', 'P&ID', filas([gen('01', 'Análisis de P&ID', 'pid/'), ['H1', 'Piping para leer P&ID', 'piping/#aprender']]), '01'],
-    ['p02', 'Base de datos I&C', [['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']], '02'],
+    ['p01', 'P&ID', filas([gen('01', 'Análisis de P&ID', 'pid/'), ['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['IM', 'Mejora de imagen: P&ID y fotos', 'imagen/']]), '01'],
+    ['p02', 'Base de datos I&C', [['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod'], ['TZ', 'Cruces y trazabilidad por tag', 'trazabilidad/']], '02'],
     ['p03', 'Arquitectura de control', filas([gen('AR', 'Arquitectura de control', 'arquitectura/')]), '03'],
     ['p04', 'Diagramas', filas([gen('06', 'Diagramas de lazo', 'lazos/#lazos'), gen('09', 'Diagrama de bloques de control', 'lazos/#blq'), gen('08', 'Unilineales TDI', 'lazos/#uni'), dev('P07', 'Diagramas de conexionado'), dev('P05', 'Planos de ubicación')]), '04'],
-    ['p05', 'Montaje y canalizaciones', filas([gen('10', 'Detalles típicos de montaje', '#montajes'), gen('H3', 'Canalizaciones: corte de ductos', 'lazos/#cond'), gen('ES', 'Escalerillas portaconductores', '#escalerillas'), dev('P10', 'Disposición de tableros')]), '05'],
+    ['p05', 'Montaje y canalizaciones', filas([gen('10', 'Detalles típicos de montaje', 'montajes.html#montajes'), gen('H3', 'Canalizaciones: corte de ductos', 'lazos/#cond'), gen('ES', 'Escalerillas portaconductores', 'montajes.html#escalerillas'), dev('P10', 'Disposición de tableros')]), '05'],
     ['p06', 'Listados', filas([gen('02', 'Listado de instrumentos', 'lazos/#inst'), gen('05', 'Listado de entradas y salidas', 'lazos/#doc'), gen('07', 'Listado de circuitos', 'lazos/#circ'), gen('12', 'Listado de materiales', 'lazos/#mat'), gen('MC', 'Memoria de cálculo de canalizaciones', 'lazos/#cond')]), '06'],
     ['p07', 'Documentos técnicos', filas([gen('03', 'Hojas de datos', 'hojas-datos/'), gen('04', 'Especificaciones técnicas', 'especificaciones/'), dev('D02', 'Criterios y bases de diseño'), dev('D07', 'Informes técnicos'), dev('D08', 'Protocolos y procedimientos'), dev('D09', 'Matrices y registros')]), '07'],
     ['p08', 'Adquisiciones', filas([gen('11', 'Requisiciones de compra', 'requisiciones/')]), '08'],
     ['ctl', 'Control documental', [['GD', 'Todos los entregables', 'documentos/'], ['B1', 'En trabajo', 'documentos/#trabajo'], ['B2', 'Revisión de la especialidad', 'documentos/#esp'], ['B3', 'Coordinación interna', 'documentos/#coord'], ['B4', 'Firmas', 'documentos/#firmas'], ['B5', 'Para emitir', 'documentos/#emitir'], ['B6', 'Emitidos', 'documentos/#emitido'], ['EX', 'Archivos del proyecto', 'explorador/']], '09'],
     ['her', 'Herramientas', [['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/'], ['MT', 'Mesa de trabajo libre', 'mesa/']]],
-    ['gui', 'Guía y normativa', [['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield'], ['H4', 'Normativa SEC y reglas', 'normativa/'], ['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
+    ['gui', 'Guía y normativa', [['ET', 'Etapas del proyecto', 'montajes.html#ciclo'], ['DI', 'Ingeniería por disciplina', 'montajes.html#ingenieria'], ['BF', 'Brownfield y mejora continua', 'montajes.html#brownfield'], ['H4', 'Normativa SEC y reglas', 'normativa/'], ['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
   ];
   // Recorrido paso a paso (Anterior / Siguiente): los módulos del 00 al 09, en orden
   var PASOS = []; GRUPOS.forEach(function (g) { if (g[3]) g[2].forEach(function (e) { if (e[2]) PASOS.push({ cod: e[0], t: e[1], href: e[2], g: g }); }); });
@@ -49,7 +52,7 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
   function ruta(u) { var x = new URL(u, location.href); return x.pathname.replace(/index\.html$/, ''); }
-  var AQUI = ruta(location.href), SECC = /^#(inst|doc|lazos|circ|uni|blq|cond|io|mod|cfg)$/, EN_LAZOS = /\/lazos\/$/.test(AQUI), EN_INICIO = AQUI === ruta(BASE);
+  var AQUI = ruta(location.href), SECC = /^#(inst|doc|lazos|circ|uni|blq|cond|io|mod|cfg)$/, EN_LAZOS = /\/lazos\/$/.test(AQUI), EN_INICIO = AQUI === ruta(BASE + 'montajes.html');
   function seccion() { // sección visible del módulo de entregables: la pestaña activa o, si no hay, la del enlace
     var t = document.querySelector('.barra .tabs [aria-selected="true"]'); if (t && t.dataset.v) return '#' + t.dataset.v;
     if (/^#lazo=/.test(location.hash)) return '#lazos'; if (/^#ducto=/.test(location.hash)) return '#cond';
@@ -60,7 +63,7 @@
     var u = new URL(href, location.href), p = u.pathname.replace(/index\.html$/, '');
     if (p !== AQUI) return false;
     if (EN_LAZOS) return u.hash === seccion();
-    if (EN_INICIO) { var h = location.hash || '#inicio'; if (u.hash === '#montajes') return h === '#montajes' || !!MONT[h]; return u.hash === h; }
+    if (EN_INICIO) { var h = location.hash || '#inicio'; if (u.hash === 'montajes.html#montajes') return h === '#montajes' || !!MONT[h]; return u.hash === h; }
     if (u.hash) return location.hash === u.hash || (!location.hash && /#aprender$/.test(u.hash));
     return !(/documentos\/$/.test(p) && /^#(trabajo|esp|coord|firmas|emitir|emitido)$/.test(location.hash));   /* las bandejas del control documental tienen su propia fila */
   }
@@ -94,7 +97,7 @@
       MONT = {};
       return [].map.call(document.querySelectorAll('#tabs [data-tab]'), function (b) {
         var h = '#' + (b.dataset.h || 'montajes'), n = b.querySelector('.tn'); MONT[h] = 1;
-        return { t: '', s: b.firstChild.textContent.trim(), n: n ? n.textContent : '', href: BASE + h, act: b.getAttribute('aria-selected') === 'true' && (location.hash === h || (h === '#montajes' && location.hash === '#montajes')), tab: b.dataset.tab };
+        return { t: '', s: b.firstChild.textContent.trim(), n: n ? n.textContent : '', href: BASE + h, act: b.getAttribute('aria-selected') === 'true' && (location.hash === h || (h === '#montajes' && location.hash === 'montajes.html#montajes')), tab: b.dataset.tab };
       });
     }
     return [];
