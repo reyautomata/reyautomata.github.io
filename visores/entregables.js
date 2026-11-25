@@ -34,15 +34,41 @@
     { id: 'P04-UNI', subcategory: 'P04', cod: '08', name: 'Unilineales TDI', discipline: 'ELECTRICIDAD', module: 'lazos/#uni', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['PDF', 'DXF', 'Excel'] },
     { id: 'P06-MONT', subcategory: 'P06', cod: '10', name: 'Detalles típicos de montaje', discipline: 'INSTRUMENTACION', module: '#montajes', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: ['PDF', 'DXF', 'PNG'] },
     { id: 'P08-DUCTO', subcategory: 'P08', cod: 'H3', name: 'Canalizaciones: corte de ductos', discipline: 'ELECTRICIDAD', module: 'lazos/#cond', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['DXF', 'PDF'] },
-    { id: 'P08-ESC', subcategory: 'P08', cod: 'ES', name: 'Escalerillas portaconductores', discipline: 'ELECTRICIDAD', module: '#escalerillas', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: [], note: 'Visor 3D de selección y montaje.' }
+    { id: 'P08-ESC', subcategory: 'P08', cod: 'ES', name: 'Escalerillas portaconductores', discipline: 'ELECTRICIDAD', module: '#escalerillas', status: 'AVAILABLE', inputFormats: ['Modelo 3D'], outputFormats: [], note: 'Visor 3D de selección y montaje.' },
+    { id: 'P09-ARQ', subcategory: 'P09', cod: 'AR', name: 'Arquitectura de control', discipline: 'CONTROL', module: 'arquitectura/', status: 'AVAILABLE', inputFormats: ['Proyecto'], outputFormats: ['SVG', 'PDF'], note: 'Se dibuja desde las tarjetas, gabinetes y cajas de conexiones del proyecto.' }
   ];
+  // Fases de ingeniería y alcance de cada generador en cada una (vacío = no aplica en esa fase).
+  // La fase sale del dato «Fase de ingeniería» del proyecto activo; el explorador atenúa lo que no aplica.
+  var FASES = [
+    { id: 'PF', t: 'Prefactibilidad', d: 'Alternativas y orden de magnitud: criterios generales, arquitectura preliminar y materiales paramétricos.' },
+    { id: 'CO', t: 'Conceptual', d: 'Alternativa seleccionada: P&ID preliminares, índice de instrumentos y E/S estimados, arquitectura conceptual.' },
+    { id: 'BA', t: 'Básica', d: 'Definición para compra de equipos mayores: índice y E/S firmes, hojas de datos, especificaciones, lazos típicos y requisiciones.' },
+    { id: 'DE', t: 'Detalle', d: 'Ingeniería para construcción: todos los lazos, conexionados, montajes, circuitos, canalizaciones y materiales.' }
+  ];
+  var ALCANCE = {
+    'D01-CONDUIT': { BA: 'Preliminar', DE: 'Sí' }, 'D03-ET': { BA: 'Sí', DE: 'Actualización' }, 'D04-HD': { BA: 'Sí', DE: 'Actualización' },
+    'D05-INST': { CO: 'Preliminar', BA: 'Sí', DE: 'Sí' }, 'D05-ES': { CO: 'Estimado', BA: 'Sí', DE: 'Sí' }, 'D05-CIRC': { DE: 'Sí' },
+    'D05-MAT': { PF: 'Paramétrico', CO: 'Estimado', BA: 'Sí', DE: 'Sí' }, 'D06-REQ': { BA: 'Equipos mayores', DE: 'Sí' },
+    'P01-PID': { CO: 'Preliminar', BA: 'Sí', DE: 'Sí' }, 'P02-LAZO': { BA: 'Típicos', DE: 'Todos' }, 'P03-BLQ': { CO: 'Conceptual', BA: 'Sí', DE: 'Sí' },
+    'P04-UNI': { BA: 'Preliminar', DE: 'Sí' }, 'P06-MONT': { BA: 'Típicos', DE: 'Sí' }, 'P08-DUCTO': { DE: 'Sí' }, 'P08-ESC': { BA: 'Preliminar', DE: 'Sí' },
+    'P09-ARQ': { PF: 'Preliminar', CO: 'Conceptual', BA: 'Sí', DE: 'Sí' }
+  };
+  GENERADORES.forEach(function (g) { g.fases = ALCANCE[g.id] || { PF: 'Sí', CO: 'Sí', BA: 'Sí', DE: 'Sí' }; });
+  function faseDe(texto) {   // «Ingeniería de detalles», «Básica», «Conceptual»… → PF · CO · BA · DE
+    var t = String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (/prefact/.test(t)) return 'PF'; if (/concep|perfil/.test(t)) return 'CO'; if (/basic/.test(t)) return 'BA'; return 'DE';
+  }
+  function faseActiva() { try { var a = window.REProyectos && window.REProyectos.activo(); return faseDe(a && a.fase); } catch (e) { return 'DE'; } }
   var idx = {}; SUB.forEach(function (s) { idx[s.id] = s; });
   GENERADORES.forEach(function (g) { g.category = idx[g.subcategory].category; });
   SUB.forEach(function (s) { s.status = GENERADORES.some(function (g) { return g.subcategory === s.id && g.status === 'AVAILABLE'; }) ? 'AVAILABLE' : 'EN_DESARROLLO'; });
   var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
 
   window.RE_ENTREGABLES = {
-    subcategorias: SUB, generadores: GENERADORES,
+    subcategorias: SUB, generadores: GENERADORES, FASES: FASES, faseDe: faseDe, faseActiva: faseActiva,
+    nombreFase: function (id) { var f = FASES.filter(function (x) { return x.id === id; })[0]; return f ? f.t : ''; },
+    porCod: function (cod) { return GENERADORES.filter(function (g) { return g.cod === cod; })[0] || null; },
+    aplica: function (g, fase) { return !g || !g.fases || !!g.fases[fase || faseActiva()]; },
     de: function (categoria) { return SUB.filter(function (s) { return s.category === categoria; }).map(function (s) { return { sub: s, gens: GENERADORES.filter(function (g) { return g.subcategory === s.id; }) }; }); },
     registrar: function (g) { if (!g || !g.id || !idx[g.subcategory] || GENERADORES.some(function (x) { return x.id === g.id; })) return false; g.category = idx[g.subcategory].category; GENERADORES.push(g); if (g.status === 'AVAILABLE') idx[g.subcategory].status = 'AVAILABLE'; return true; },
     buscar: function (texto) {

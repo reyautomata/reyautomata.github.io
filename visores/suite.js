@@ -7,29 +7,42 @@
   'use strict';
   var BASE = (function () { try { return new URL('.', document.currentScript.src).href; } catch (e) { return '../'; } })();
   // El árbol se arma desde el registro central (entregables.js): DOCUMENTOS y PLANOS con sus subcategorías.
-  // Fila de módulo: [código, nombre, enlace]. Fila de subcategoría: [código, nombre, null, 'sub' | 'dev'].
+  // Fila de módulo: [código, nombre, enlace]. Fila en desarrollo: [código, nombre, null, 'dev'].
   var REG = window.RE_ENTREGABLES;
-  function ramas(cat) { var o = []; if (!REG) return o; REG.de(cat).forEach(function (x) { o.push([x.sub.id, x.sub.name, null, x.sub.status === 'AVAILABLE' ? 'sub' : 'dev']); x.gens.forEach(function (g) { if (g.status === 'AVAILABLE') o.push([g.cod, g.name, g.module]); }); }); return o; }
-  // Estructura de trabajo, en el orden en que avanza un entregable:
-  //   proyecto y datos base → área de trabajo (documentos y planos) → control documental (bandejas por etapa y emisión) → apoyo.
-  // Cada módulo aparece una sola vez; la configuración está en el botón «Configuración» al pie del explorador.
+  // Árbol del proyecto en el orden del flujo de ingeniería (00 a 09): cada grupo toma los datos del anterior.
+  //   00 proyecto → 01 P&ID → 02 base de datos → 03 arquitectura → 04 diagramas → 05 montaje → 06 listados → 07 documentos → 08 compras → 09 control documental.
+  // Los nombres y enlaces de los generadores salen del registro central; lo que todavía no tiene generador se muestra «En desarrollo».
+  // El cuarto valor de cada grupo es su código en el árbol. Cada módulo aparece una sola vez; la configuración está al pie del explorador.
+  function gen(cod, nom, href) { var g = REG && REG.porCod ? REG.porCod(cod) : null; if (g && g.status !== 'AVAILABLE') return null; return [cod, g ? g.name : nom, g ? g.module : href]; }
+  function dev(id, nom) { var s = REG ? REG.subcategorias.filter(function (x) { return x.id === id; })[0] : null; if (s && s.status === 'AVAILABLE') return null; return [id, s ? s.name : nom, null, 'dev']; }
+  function filas(a) { return a.filter(Boolean); }
   var GRUPOS = [
     ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio']]],
-    ['ges', 'Proyecto y datos base', [['00', 'Proyectos', 'proyectos/'], ['FL', 'Flujo de ingeniería', 'flujo/'], ['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']]],
-    ['doc', 'En trabajo · Documentos', ramas('DOCUMENTO')],
-    ['pla', 'En trabajo · Planos', ramas('PLANO')],
-    ['ctl', 'Control documental', [['GD', 'Todos los entregables', 'documentos/'], ['B1', 'En trabajo', 'documentos/#trabajo'], ['B2', 'Revisión de la especialidad', 'documentos/#esp'], ['B3', 'Coordinación interna', 'documentos/#coord'], ['B4', 'Firmas', 'documentos/#firmas'], ['B5', 'Para emitir', 'documentos/#emitir'], ['B6', 'Emitidos', 'documentos/#emitido'], ['EX', 'Archivos del proyecto', 'explorador/']]],
-    ['her', 'Herramientas', [['H1', 'Piping para leer P&ID', 'piping/#aprender'], ['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/'], ['MT', 'Mesa de trabajo libre', 'mesa/']]],
+    ['p00', 'Proyecto', [['00', 'Datos del proyecto', 'proyectos/'], ['FA', 'Fase y alcance', 'fase/'], ['FL', 'Flujo de ingeniería', 'flujo/']], '00'],
+    ['p01', 'P&ID', filas([gen('01', 'Análisis de P&ID', 'pid/'), ['H1', 'Piping para leer P&ID', 'piping/#aprender']]), '01'],
+    ['p02', 'Base de datos I&C', [['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']], '02'],
+    ['p03', 'Arquitectura de control', filas([gen('AR', 'Arquitectura de control', 'arquitectura/')]), '03'],
+    ['p04', 'Diagramas', filas([gen('06', 'Diagramas de lazo', 'lazos/#lazos'), gen('09', 'Diagrama de bloques de control', 'lazos/#blq'), gen('08', 'Unilineales TDI', 'lazos/#uni'), dev('P07', 'Diagramas de conexionado'), dev('P05', 'Planos de ubicación')]), '04'],
+    ['p05', 'Montaje y canalizaciones', filas([gen('10', 'Detalles típicos de montaje', '#montajes'), gen('H3', 'Canalizaciones: corte de ductos', 'lazos/#cond'), gen('ES', 'Escalerillas portaconductores', '#escalerillas'), dev('P10', 'Disposición de tableros')]), '05'],
+    ['p06', 'Listados', filas([gen('02', 'Listado de instrumentos', 'lazos/#inst'), gen('05', 'Listado de entradas y salidas', 'lazos/#doc'), gen('07', 'Listado de circuitos', 'lazos/#circ'), gen('12', 'Listado de materiales', 'lazos/#mat'), gen('MC', 'Memoria de cálculo de canalizaciones', 'lazos/#cond')]), '06'],
+    ['p07', 'Documentos técnicos', filas([gen('03', 'Hojas de datos', 'hojas-datos/'), gen('04', 'Especificaciones técnicas', 'especificaciones/'), dev('D02', 'Criterios y bases de diseño'), dev('D07', 'Informes técnicos'), dev('D08', 'Protocolos y procedimientos'), dev('D09', 'Matrices y registros')]), '07'],
+    ['p08', 'Adquisiciones', filas([gen('11', 'Requisiciones de compra', 'requisiciones/')]), '08'],
+    ['ctl', 'Control documental', [['GD', 'Todos los entregables', 'documentos/'], ['B1', 'En trabajo', 'documentos/#trabajo'], ['B2', 'Revisión de la especialidad', 'documentos/#esp'], ['B3', 'Coordinación interna', 'documentos/#coord'], ['B4', 'Firmas', 'documentos/#firmas'], ['B5', 'Para emitir', 'documentos/#emitir'], ['B6', 'Emitidos', 'documentos/#emitido'], ['EX', 'Archivos del proyecto', 'explorador/']], '09'],
+    ['her', 'Herramientas', [['H2', 'Válvulas: tamaño y actuador', 'piping/#valvulas'], ['H5', 'Simulador de espesamiento', 'espesador/'], ['MT', 'Mesa de trabajo libre', 'mesa/']]],
     ['gui', 'Guía y normativa', [['ET', 'Etapas del proyecto', '#ciclo'], ['DI', 'Ingeniería por disciplina', '#ingenieria'], ['BF', 'Brownfield y mejora continua', '#brownfield'], ['H4', 'Normativa SEC y reglas', 'normativa/'], ['BT', 'Manuales, catálogos y librerías', null, 'dev']]]
   ];
+  // Recorrido paso a paso (Anterior / Siguiente): los módulos del 00 al 09, en orden
+  var PASOS = []; GRUPOS.forEach(function (g) { if (g[3]) g[2].forEach(function (e) { if (e[2]) PASOS.push({ cod: e[0], t: e[1], href: e[2], g: g }); }); });
+  function faseAhora() { return REG && REG.faseActiva ? REG.faseActiva() : 'DE'; }
+  function aplicaCod(cod, fase) { var g = REG && REG.porCod ? REG.porCod(cod) : null; return !g || REG.aplica(g, fase); }
   // Asistente de IA local (Ollama en el equipo del usuario): se carga en todas las páginas de la suite
-  window.RS_GRUPOS = GRUPOS; window.RS_BASE = BASE; window.RS_HIJOS = function (c) { return hijosDe(c); };
+  window.RS_GRUPOS = GRUPOS; window.RS_PASOS = PASOS; window.RS_BASE = BASE; window.RS_HIJOS = function (c) { return hijosDe(c); };
   window.RS_ACTUAL = function () { return actual; };
   if (window.top === window && window.REProyectos && !window.RE_GESTION) { var sg = document.createElement('script'); sg.src = BASE + 'gestion.js'; sg.onload = function () { if (window.RE_ARCHIVOS) return; var sf = document.createElement('script'); sf.src = BASE + 'archivos.js'; document.head.appendChild(sf); }; document.head.appendChild(sg); }
   if (window.top === window) { var sa = document.createElement('script'); sa.src = BASE + 'asistente.js'; sa.defer = true; document.head.appendChild(sa); }
   if (!window.RE_DIBUJO) { var sdb = document.createElement('script'); sdb.src = BASE + 'bases-dibujo.js'; document.head.appendChild(sdb); }
   if (window.top === window) { var se = document.createElement('script'); se.src = BASE + 'enlaces.js'; se.defer = true; document.head.appendChild(se); }
-  var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [] };
+  var CLAVE = 'reyengi-marco', U = { w: 252, plegado: false, cerrados: {}, hijos: {}, rec: [], soloFase: false };
   try { Object.assign(U, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
   U.rec = U.rec || []; U.hijos = U.hijos || {}; U.cerrados = U.cerrados || {};
   function recordar() { try { localStorage.setItem(CLAVE, JSON.stringify(U)); } catch (e) {} }
@@ -121,7 +134,9 @@
       h += '<ul role="tree" aria-label="Recientes"><li role="none"><button type="button" class="nodo" role="treeitem" data-g="rec" aria-expanded="' + abR + '"><span class="tw">' + (abR ? '▾' : '▸') + '</span><span class="ic rel"></span><span class="tx">Recientes</span></button>' +
         (abR ? '<ul role="group">' + rec.map(function (r) { return '<li role="none"><a class="nodo hij" role="treeitem" href="' + esc(BASE + r.href) + '" title="' + esc(r.t) + '"><span class="tw"></span><span class="ic fic"></span><span class="tx">' + (r.c ? '<b>' + esc(r.c) + '</b> ' : '') + '<i>' + esc(r.t) + '</i></span></a></li>'; }).join('') + '</ul>' : '') + '</li></ul>';
     }
-    h += '<ul role="tree" aria-label="Suite ReyEngi"><li role="none"><a class="nodo" role="treeitem" href="' + BASE + 'proyectos/" title="Proyecto activo: datos, firmas y revisiones"><span class="tw">▾</span><span class="ic pry"></span><span class="tx"><b>' + esc(proyecto()) + '</b></span></a><ul role="group">';
+    var FASE = faseAhora(), nFase = REG && REG.nombreFase ? REG.nombreFase(FASE) : '';
+    h += '<ul role="tree" aria-label="Suite ReyEngi"><li role="none"><a class="nodo" role="treeitem" href="' + BASE + 'proyectos/" title="Proyecto activo: datos, firmas y revisiones"><span class="tw">▾</span><span class="ic pry"></span><span class="tx"><b>' + esc(proyecto()) + '</b></span></a>' +
+      (nFase ? '<a class="rs-fase" href="' + BASE + 'fase/" title="Fase de ingeniería del proyecto: define qué entregables aplican' + (U.soloFase ? ' (el explorador muestra solo lo que aplica)' : '') + '">' + esc(nFase) + (U.soloFase ? ' · filtrado' : '') + '</a>' : '') + '<ul role="group">';
     GRUPOS.forEach(function (g) {
       var ab = q ? true : !U.cerrados[g[0]], cuerpo = '';
       g[2].forEach(function (e) {
@@ -129,6 +144,7 @@
           if (q && norm(e[0] + ' ' + e[1]).indexOf(q) < 0) return;
           cuerpo += '<li role="none" class="rs-sub' + (e[3] === 'dev' ? ' dev' : '') + '" title="' + esc(e[1]) + (e[3] === 'dev' ? ' · generador en desarrollo' : '') + '"><span class="cod">' + e[0] + '</span><span class="tx">' + esc(e[1]) + '</span>' + (e[3] === 'dev' ? '<span class="rs-dev">En desarrollo</span>' : '') + '</li>'; return;
         }
+        var ap = aplicaCod(e[0], FASE); if (!ap && U.soloFase && !esActual(BASE + e[2])) return;
         var href = BASE + e[2], act = esActual(href), H = e[0] === 'MC' ? [] : hijosDe(e[0]);
         if (act && esActual(href)) actual = { g: g[1], cod: e[0], t: e[1], href: e[2], hijo: H.filter(function (x) { return x.act; })[0] || null };
         var Hv = q ? H.filter(function (x) { return norm(x.t + ' ' + x.s).indexOf(q) >= 0; }) : H;
@@ -136,11 +152,11 @@
         if (q && norm(e[0] + ' ' + e[1]).indexOf(q) >= 0 && !Hv.length) Hv = []; // coincide el módulo: sin hijos filtrados
         nRes += 1 + Hv.length;
         var abH = H.length && (q ? Hv.length > 0 : (U.hijos[e[0]] != null ? U.hijos[e[0]] : act)), n = C[e[0]] || (H.length ? H.length : '');
-        cuerpo += '<li role="none"><a class="nodo" role="treeitem" href="' + href + '"' + (act ? ' aria-current="page"' : '') + (H.length ? ' aria-expanded="' + !!abH + '"' : '') + ' title="' + esc(e[1]) + '"><span class="tw"' + (H.length ? ' data-h="' + e[0] + '" title="' + (abH ? 'Ocultar' : 'Mostrar') + ' los entregables"' : '') + '>' + (H.length ? (abH ? '▾' : '▸') : '') + '</span><span class="cod">' + e[0] + '</span><span class="tx">' + esc(e[1]) + '</span>' + (n ? '<span class="ct">' + n + '</span>' : '') + '</a>' +
+        cuerpo += '<li role="none"><a class="nodo' + (ap ? '' : ' rs-fuera') + '" role="treeitem" href="' + href + '"' + (act ? ' aria-current="page"' : '') + (H.length ? ' aria-expanded="' + !!abH + '"' : '') + ' title="' + esc(e[1] + (ap ? '' : ' · no aplica en ' + nFase.toLowerCase())) + '"><span class="tw"' + (H.length ? ' data-h="' + e[0] + '" title="' + (abH ? 'Ocultar' : 'Mostrar') + ' los entregables"' : '') + '>' + (H.length ? (abH ? '▾' : '▸') : '') + '</span><span class="cod">' + e[0] + '</span><span class="tx">' + esc(e[1]) + '</span>' + (n ? '<span class="ct">' + n + '</span>' : '') + '</a>' +
           (abH ? '<ul role="group" class="rs-hijos">' + Hv.map(nodoHijo).join('') + '</ul>' : '') + (act ? '<div id="rsHueco"></div>' : '') + '</li>';
       });
       if (q && !cuerpo) return;
-      h += '<li role="none"><button type="button" class="nodo grp" role="treeitem" data-g="' + g[0] + '" aria-expanded="' + ab + '" title="' + esc(g[1]) + '"><span class="tw">' + (ab ? '▾' : '▸') + '</span><span class="ic"></span><span class="tx">' + esc(g[1]) + '</span></button>' + (ab ? '<ul role="group">' + cuerpo + '</ul>' : '') + '</li>';
+      h += '<li role="none"><button type="button" class="nodo grp" role="treeitem" data-g="' + g[0] + '" aria-expanded="' + ab + '" title="' + esc((g[3] ? g[3] + ' · ' : '') + g[1]) + '"><span class="tw">' + (ab ? '▾' : '▸') + '</span>' + (g[3] ? '<span class="gcod">' + g[3] + '</span>' : '<span class="ic"></span>') + '<span class="tx">' + esc(g[1]) + '</span></button>' + (ab ? '<ul role="group">' + cuerpo + '</ul>' : '') + '</li>';
     });
     h += '</ul></li></ul>' + (q && !nRes ? '<p class="rs-nada">Nada coincide con «' + esc(filtro) + '».</p>' : '');
     aside.querySelector('.rs-lista').innerHTML = h;
@@ -156,6 +172,11 @@
     var h1 = document.querySelector('.barra h1'); if (EN_LAZOS && h1 && a && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.nodeValue = a.t;
     var est = document.getElementById('rsEstado');
     if (est) est.innerHTML = '<span>Proyecto: <b>' + esc(pr) + '</b></span>' + (a ? '<span>Módulo: <b>' + esc(a.t) + '</b></span>' : '') + (a && a.hijo ? '<span>Entregable: <b>' + esc((a.hijo.t ? a.hijo.t + ' ' : '') + a.hijo.s) + '</b></span>' : '') + '<span class="esp"></span><span>Los datos se guardan en este navegador</span>';
+    // Anterior / Siguiente en el flujo 00 → 09: en la barra de estado (o en la ruta, si la página tiene su propia barra)
+    if (a) { var ip = -1; PASOS.forEach(function (x, i) { if (ip < 0 && x.cod === a.cod) ip = i; });
+      if (ip >= 0) { var pa = PASOS[ip - 1], ps = PASOS[ip + 1], dst = est || r;
+        if (dst) dst.insertAdjacentHTML('beforeend', '<span class="rs-pasos" role="navigation" aria-label="Flujo de ingeniería">' + (pa ? '<a href="' + BASE + pa.href + '" title="Paso anterior: ' + esc(pa.g[3] + ' · ' + pa.t) + '">‹ ' + esc(pa.t) + '</a>' : '') +
+          '<em>Paso ' + (ip + 1) + ' de ' + PASOS.length + '</em>' + (ps ? '<a class="sig" href="' + BASE + ps.href + '" title="Paso siguiente: ' + esc(ps.g[3] + ' · ' + ps.t) + '">' + esc(ps.t) + ' ›</a>' : '') + '</span>'); } }
     // Recientes: se anota el entregable abierto o, si no hay, el módulo
     if (a && !(EN_INICIO && !a.hijo)) {
       var it = a.hijo ? { c: a.hijo.t || a.cod, t: a.hijo.s || a.t, href: a.hijo.href.replace(BASE, '').replace(/^#/, a.href.replace(/#.*$/, '') + '#') } : { c: a.cod, t: a.t, href: a.href };
@@ -219,9 +240,10 @@
       function cerrar() { if (pop) { pop.remove(); pop = null; bt.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', fuera, true); document.removeEventListener('keydown', tecla, true); } }
       function fuera(e) { if (pop && !pop.contains(e.target) && !bt.contains(e.target)) cerrar(); } function tecla(e) { if (e.key === 'Escape') { cerrar(); bt.focus(); } }
       function pinta() { pop.innerHTML = '<h3>Tema</h3><div class="seg" role="group" aria-label="Tema">' + [['oscuro', 'Oscuro'], ['claro', 'Claro (beta)']].map(function (x) { return '<button type="button" data-tema="' + x[0] + '" aria-pressed="' + (tema === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+        '<h3>Explorador</h3><div class="seg" role="group" aria-label="Qué muestra el explorador"><button type="button" data-solo="0" aria-pressed="' + !U.soloFase + '">Todo el árbol</button><button type="button" data-solo="1" aria-pressed="' + !!U.soloFase + '">Solo lo de la fase</button></div>' +
         '<h3>Tamaño del texto</h3><div class="seg" role="group" aria-label="Tamaño del texto">' + TAMS.map(function (t, i) { return '<button type="button" data-tam="' + i + '" aria-pressed="' + (tam === i) + '">' + t.charAt(0).toUpperCase() + t.slice(1) + '</button>'; }).join('') + '</div><p>Estándar sigue la escala de Windows 11 (14 px en texto y controles, 12 px en etiquetas). Compacto y mínimo muestran más filas en los listados.</p><h3>Bases de dibujo (DXF)</h3><div class="seg" role="group" aria-label="Bases de dibujo">' + (window.RE_DIBUJO ? Object.keys(window.RE_DIBUJO.PERFILES).map(function (k) { return '<button type="button" data-dib="' + k + '" aria-pressed="' + (window.RE_DIBUJO.id() === k) + '">' + (k === 'reyengi' ? 'ReyEngi' : 'Gran minería 1') + '</button>'; }).join('') : '') + '</div><div class="enl"><a href="#" data-dibver>Ver las bases del perfil</a></div><h3>Proyecto</h3><div class="enl"><a href="' + BASE + 'configuracion/">Configuración general</a><a href="' + BASE + 'lazos/#cfg">Configuración de entregables</a><a href="' + BASE + 'generador/">Generador de entregables</a></div>'; }
       bt.addEventListener('click', function () { if (pop) return cerrar(); pop = document.createElement('div'); pop.className = 'rs-conf'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Configuración'); pinta(); document.body.appendChild(pop); bt.setAttribute('aria-expanded', 'true');
-        pop.addEventListener('click', function (e) { if (e.target.closest('[data-dibver]')) { e.preventDefault(); cerrar(); if (window.RE_DIBUJO) window.RE_DIBUJO.mostrar(); return; } var q = e.target.closest('button'); if (!q) return; if (q.dataset.dib && window.RE_DIBUJO) { window.RE_DIBUJO.poner(q.dataset.dib); } else if (q.dataset.tema) { tema = q.dataset.tema; try { localStorage.setItem('reyengi-tema', tema); } catch (er) {} ponerTema(); } else if (q.dataset.tam) { tam = +q.dataset.tam; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (er) {} ponerTam(); } pinta(); });
+        pop.addEventListener('click', function (e) { if (e.target.closest('[data-dibver]')) { e.preventDefault(); cerrar(); if (window.RE_DIBUJO) window.RE_DIBUJO.mostrar(); return; } var q = e.target.closest('button'); if (!q) return; if (q.dataset.solo) { U.soloFase = q.dataset.solo === '1'; recordar(); pintar(); } else if (q.dataset.dib && window.RE_DIBUJO) { window.RE_DIBUJO.poner(q.dataset.dib); } else if (q.dataset.tema) { tema = q.dataset.tema; try { localStorage.setItem('reyengi-tema', tema); } catch (er) {} ponerTema(); } else if (q.dataset.tam) { tam = +q.dataset.tam; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (er) {} ponerTam(); } pinta(); });
         document.addEventListener('pointerdown', fuera, true); document.addEventListener('keydown', tecla, true); var f = pop.querySelector('button'); if (f) f.focus(); }); })();
     document.getElementById('rsTam').addEventListener('click', function () { tam = (tam + 1) % 3; try { localStorage.setItem('reyengi-tam2', String(tam)); } catch (e) {} ponerTam(); this.title = 'Tamaño del texto: ' + TAMS[tam] + ' (pulsa para cambiar)'; var es = document.getElementById('rsEstado'); if (es) { var av = document.createElement('span'); av.textContent = 'Tamaño del texto: ' + TAMS[tam]; av.style.color = '#FFB070'; es.appendChild(av); setTimeout(function () { av.remove(); }, 2500); } });
     document.getElementById('rsAbrirTodo').addEventListener('click', function () { U.cerrados = {}; GRUPOS.forEach(function (g) { g[2].forEach(function (e) { U.hijos[e[0]] = true; }); }); recordar(); pintar(); });

@@ -56,23 +56,25 @@
     arriba: '<path d="M5 12.5 10 7.5l5 5"/>', abajo: '<path d="M5 7.5 10 12.5l5-5"/>'
   };
   // Icono y nombre corto de cada tarea, por su código en el explorador
-  var ICOD = { IN: 'inicio', '00': 'proy', FL: 'etapas', E1: 'senal', E2: 'tarjeta', MC: 'calc', '04': 'espec', '03': 'hoja', '02': 'lista', '05': 'senal', '07': 'lista', '12': 'material', '11': 'compra',
+  var ICOD = { IN: 'inicio', '00': 'proy', FA: 'etapas', AR: 'bloques', FL: 'etapas', E1: 'senal', E2: 'tarjeta', MC: 'calc', '04': 'espec', '03': 'hoja', '02': 'lista', '05': 'senal', '07': 'lista', '12': 'material', '11': 'compra',
     '01': 'pid', '06': 'lazo', '09': 'bloques', '08': 'unilineal', '10': 'montaje', H3: 'ducto', ES: 'escalerilla', GD: 'todos', B1: 'trabajo', B2: 'revision', B3: 'coord', B4: 'firmas', B5: 'emitir', B6: 'emitido', EX: 'archivos',
     H1: 'tuberia', H2: 'valvula', H5: 'espesador', MT: 'mesa', ET: 'etapas', DI: 'disciplina', BF: 'planta', H4: 'norma', BT: 'libreria',
     D02: 'doc', D07: 'doc', D08: 'lista', D09: 'hoja', P05: 'plano', P07: 'plano', P09: 'bloques', P10: 'tarjeta' };
-  var CORTO = { IN: 'Tablero', '00': 'Proyectos', FL: 'Flujo de ingeniería', E1: 'Señales E/S e índice', E2: 'Tarjetas y canales', MC: 'Memoria canalizaciones', '04': 'Especificaciones', '03': 'Hojas de datos', '02': 'Instrumentos', '05': 'Entradas y salidas', '07': 'Circuitos', '12': 'Materiales', '11': 'Requisiciones',
+  var CORTO = { IN: 'Tablero', '00': 'Datos del proyecto', FA: 'Fase y alcance', AR: 'Arquitectura', FL: 'Flujo de ingeniería', E1: 'Señales E/S e índice', E2: 'Tarjetas y canales', MC: 'Memoria canalizaciones', '04': 'Especificaciones', '03': 'Hojas de datos', '02': 'Instrumentos', '05': 'Entradas y salidas', '07': 'Circuitos', '12': 'Materiales', '11': 'Requisiciones',
     '01': 'Análisis de P&ID', '06': 'Diagramas de lazo', '09': 'Bloques de control', '08': 'Unilineales TDI', '10': 'Detalles de montaje', H3: 'Corte de ductos', ES: 'Escalerillas', GD: 'Todos', B1: 'En trabajo', B2: 'Revisión', B3: 'Coordinación', B4: 'Firmas', B5: 'Para emitir', B6: 'Emitidos', EX: 'Archivos',
     H1: 'Leer P&ID', H2: 'Válvulas', H5: 'Espesador', MT: 'Mesa libre', ET: 'Etapas', DI: 'Disciplinas', BF: 'Brownfield', H4: 'Normativa SEC', BT: 'Manuales y librerías' };
   // Pestañas: [id, título, grupos del explorador que reúne]. Un grupo que no esté aquí se agrega como pestaña propia.
-  var PESTANAS = [['ini', 'Inicio', ['ini', 'ges']], ['doc', 'Documentos', ['doc']], ['pla', 'Planos', ['pla']], ['ctl', 'Control documental', ['ctl']], ['her', 'Herramientas', ['her']], ['gui', 'Guía', ['gui']]];
+  var PESTANAS = [['ini', 'Inicio', ['ini', 'p00']], ['bas', 'Ingeniería base', ['p01', 'p02', 'p03']], ['pla', 'Diagramas y montaje', ['p04', 'p05']], ['doc', 'Listados y documentos', ['p06', 'p07', 'p08']], ['ctl', 'Control documental', ['ctl']], ['her', 'Herramientas', ['her']], ['gui', 'Guía', ['gui']]];
   // Paneles de cada grupo: [título, códigos de tarea o de subcategoría, tipo]. Lo que no esté nombrado se agrega solo (por subcategoría o en «Más»).
+  // Los títulos llevan el número del grupo en el árbol del proyecto (00 a 09), el mismo del explorador.
   var PANELES = {
     ini: [['Proyecto', ['IN']]],
-    ges: [['Proyecto', ['00', 'FL']], ['Datos base', ['E1', 'E2']]],   // dos grupos de una pestaña pueden compartir panel: se unen por título
-    doc: [['Cálculo', ['D01']], ['Especificación y datos', ['D03', 'D04']], ['Listados', ['D05']], ['Compras', ['D06']]],
-    pla: [['Diagramas', ['P01', 'P02', 'P03', 'P04']], ['Montaje y canalizaciones', ['P06', 'P08']]],
+    p00: [['00 Proyecto', ['00', 'FA', 'FL']]],
+    p01: [['01 P&ID', ['01', 'H1']]], p02: [['02 Base de datos', ['E1', 'E2']]], p03: [['03 Arquitectura', ['AR']]],
+    p04: [['04 Diagramas', ['06', '09', '08']]], p05: [['05 Montaje y canalizaciones', ['10', 'H3', 'ES']]],
+    p06: [['06 Listados', ['02', '05', '07', '12', 'MC']]], p07: [['07 Documentos técnicos', ['03', '04']]], p08: [['08 Compras', ['11']]],
     ctl: [['Entregables', ['GD']], ['Flujo de emisión', ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'], 'flujo'], ['Archivos', ['EX']]],
-    her: [['Piping y válvulas', ['H1', 'H2']], ['Proceso', ['H5']], ['Espacio de trabajo', ['MT']]],
+    her: [['Piping y válvulas', ['H2']], ['Proceso', ['H5']], ['Espacio de trabajo', ['MT']]],
     gui: [['Guía de ingeniería', ['ET', 'DI', 'BF']], ['Normativa y referencias', ['H4', 'BT']]]
   };
   function svg(n) { return '<svg viewBox="0 0 20 20" aria-hidden="true">' + (IC[n] || IC.doc) + '</svg>'; }
