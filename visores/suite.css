@@ -445,3 +445,22 @@ body.rs-plegado .rc { left: 22px; }
 .rs-flujo :focus-visible { outline: 2px solid var(--sel, #60CDFF); outline-offset: 1px; }
 @media (max-width: 600px) { .rs-flujo { bottom: 8px; flex-wrap: wrap; } }
 @media print { .rs-flujo { display: none !important; } }
+
+/* ── Árbol del proyecto por fases (00 a 09) ── */
+.rs-arbol .nodo.grp .gcod { flex: none; min-width: 20px; padding: 0 4px; border-radius: 3px; font: 700 10px/16px var(--f-mono, monospace); text-align: center; color: var(--sel, #60CDFF); background: rgba(96, 205, 255, .12); }
+.rs-arbol .nodo.rs-fuera { opacity: .42; }
+.rs-arbol .nodo.rs-fuera:hover, .rs-arbol .nodo.rs-fuera:focus-visible { opacity: .8; }
+.rs-arbol .rs-fase { display: inline-block; margin: 1px 0 4px 34px; padding: 0 8px; border-radius: 9px; font: 600 10.5px/18px var(--f-body, system-ui); color: #1B0D02; background: var(--accent, #FF8C32); text-decoration: none; }
+.rs-arbol .rs-fase:hover, .rs-arbol .rs-fase:focus-visible { filter: brightness(1.1); outline: none; }
+.rs-estado > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-estado .rs-pasos { display: inline-flex; gap: 8px; align-items: center; margin-left: 12px; flex: none; overflow: visible; }
+.rs-estado .rs-pasos em { font-style: normal; opacity: .7; }
+.rs-estado .rs-pasos a { color: var(--fg, #fff); text-decoration: none; padding: 0 8px; border-radius: 4px; border: 1px solid var(--line, #3F3F3F); line-height: 18px; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-estado .rs-pasos a.sig { border-color: var(--accent, #FF8C32); }
+.rs-estado .rs-pasos a:hover, .rs-estado .rs-pasos a:focus-visible { background: var(--hover, rgba(255,255,255,.06)); outline: none; }
+.rs-ruta .rs-pasos { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; opacity: 1; flex: none; }
+.rs-ruta .rs-pasos em { font-style: normal; opacity: .6; }
+.rs-ruta .rs-pasos a { padding: 0 6px; border-radius: 4px; border: 1px solid var(--line, #3F3F3F); line-height: 16px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.rs-ruta .rs-pasos a.sig { color: var(--fg, #fff); border-color: var(--accent, #FF8C32); }
+@media (max-width: 900px) { .rs-ruta .rs-pasos a { max-width: 110px; } }
+[data-tema="claro"] .rs-arbol .nodo.grp .gcod { color: #005FB8; background: rgba(0, 95, 184, .1); }

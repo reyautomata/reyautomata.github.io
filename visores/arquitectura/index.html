@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arquitectura de control · ReyEngi</title>
+<meta name="description" content="Diagrama de arquitectura de control dibujado desde la base del proyecto: sala de control, controlador, gabinetes, tarjetas de E/S, cajas de conexiones y enlaces de comunicación.">
+<meta name="theme-color" content="#1C1C1C">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #202020; --panel: #2B2B2B; --panel2: #323232; --fg: #FFFFFF; --muted: #C8C8C8; --line: #3F3F3F; --brand: #1C1C1C; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #60CDFF;
+  --ok: #6CCB5F; --warn: #F2C661; --f-body: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px/20px var(--f-body); }
+[hidden] { display: none !important; }
+button, .btn { font: 600 13px var(--f-body); border-radius: 4px; padding: 6px 12px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+button.pri { background: var(--accent); border-color: var(--accent); color: #1B0D02; }
+button:hover, .btn:hover { border-color: var(--sel); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+input, select { font: 13px var(--f-body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; min-height: 28px; width: 100%; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+main.ar { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 14px; padding: 14px 16px 20px; height: calc(100vh - var(--rs-cinta, 0px) - 120px); min-height: 520px; }
+@media (max-width: 1100px) { main.ar { grid-template-columns: minmax(0, 1fr); height: auto; } .visor { height: 70vh; } }
+.visor { position: relative; background: #E9E9E9; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: grab; min-height: 420px; }
+.visor.mov { cursor: grabbing; }
+.lienzo { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.lienzo svg { display: block; box-shadow: 0 4px 18px rgba(0,0,0,.25); }
+.zoom { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px; }
+.zoom button { min-height: 28px; padding: 2px 9px; }
+.zoom span { min-width: 46px; text-align: center; font: 12px var(--f-mono); color: var(--muted); }
+.lado { overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.caja h2 { margin: 0 0 8px; font-size: 14px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: 13px; }
+.kv span:nth-child(odd) { color: var(--muted); }
+.kv b { text-align: right; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { padding: 3px 3px; border-bottom: 1px solid var(--line); text-align: left; }
+td input, td select { font-size: 12px; padding: 2px 4px; }
+td:nth-child(1) { width: 26%; } td:nth-child(2), td:nth-child(3), td:nth-child(4) { width: 22%; } td:nth-child(5) { width: 30px; }
+table { table-layout: fixed; }
+th { color: var(--muted); font-weight: 600; }
+td button { min-height: 26px; padding: 0 7px; }
+.nota { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.vacio { color: var(--muted); font-size: 12.5px; }
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+.form label { display: grid; gap: 2px; font: 600 11.5px var(--f-body); color: var(--muted); }
+.form label.ancho { grid-column: 1 / -1; }
+@media print { .barra, .lado, .zoom, #rsMarco, #rsCinta, .rs-estado, .rs-div { display: none !important; } main.ar { display: block; height: auto; padding: 0; } .visor { border: 0; background: #fff; height: auto; overflow: visible; } .lienzo { position: static; transform: none !important; } .lienzo svg { width: 100% !important; height: auto !important; box-shadow: none; } body { background: #fff; } }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<link rel="stylesheet" href="../fluent.css" id="rsFluent">
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?33:103))+'px')}}catch(e){}</script>
+<script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <a class="volver" href="../">← Suite ReyEngi</a>
+  <h1>Arquitectura de control <small id="proy">Proyecto activo</small></h1>
+  <a class="btn" href="../lazos/#mod">Tarjetas y canales</a>
+  <a class="btn" href="../lazos/#io">Señales de E/S</a>
+  <button type="button" id="bSvg">Exportar SVG</button>
+  <button type="button" class="pri" id="bPdf">Imprimir / PDF</button>
+</div></div>
+<main class="ar">
+  <div class="visor" id="visor"><div class="lienzo" id="lienzo"></div>
+    <div class="zoom"><button type="button" data-z="-1" aria-label="Alejar">−</button><span id="zPct">100%</span><button type="button" data-z="1" aria-label="Acercar">+</button><button type="button" data-z="0">Ajustar</button></div>
+  </div>
+  <div class="lado">
+    <div class="caja"><h2>Sistema según la base del proyecto</h2><div class="kv" id="res"></div>
+      <p class="nota">Se dibuja desde 02 · Base de datos: tarjetas (gabinete y chasis) y señales (caja de conexiones). Cambia esos datos y el plano se actualiza.</p></div>
+    <div class="caja"><h2>Equipos y enlaces de comunicación</h2>
+      <p class="nota" style="margin:0 0 8px">Agrega lo que no sale de las tarjetas: switches, RIO remotos, CCM, variadores, cabeceras de fibra o segmentos de bus. «Depende de» indica a qué equipo se conecta y «Enlace», con qué protocolo.</p>
+      <table><thead><tr><th>TAG</th><th>Tipo</th><th>Depende de</th><th>Enlace</th><th></th></tr></thead><tbody id="eqs"></tbody></table>
+      <div style="margin-top:8px"><button type="button" id="bAdd">+ Agregar equipo</button></div>
+    </div>
+    <div class="caja"><h2>Plano</h2><div class="form">
+      <label>N° de plano<input data-d="codigo"></label><label>Revisión<input data-d="rev"></label>
+      <label class="ancho">Título<input data-d="titulo"></label></div></div>
+  </div>
+</main>
+<script src="../proyectos.js"></script>
+<script src="../lazos/tarjetas.js"></script>
+<script>
+(function () {
+  'use strict';
+  var P = window.REProyectos, $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var TIPOS = ['Switch', 'RIO remoto', 'CCM / VDF', 'Cabecera de fibra (ODF)', 'Conversor de medios', 'Segmento FF H1', 'Segmento Profibus PA', 'Red Profibus DP', 'Modbus RTU', 'Servidor / historiador', 'Estación HMI', 'Otro'];
+  var ENLACES = ['', 'EtherNet/IP', 'Profinet', 'Modbus TCP', 'Modbus RTU', 'Profibus DP', 'Profibus PA', 'Foundation Fieldbus H1', 'HART', 'Fibra óptica', 'Ethernet de control', 'Cableado'];
+  var A = P.leer('arquitectura', null) || {}; A.equipos = A.equipos || []; A.doc = Object.assign({ codigo: 'IN-AC-001', rev: 'A', titulo: 'DIAGRAMA DE ARQUITECTURA DE CONTROL' }, A.doc || {});
+  function guardar() { P.escribir('arquitectura', A); }
+  function lazos() {
+    var L = P.leer('lazos', null) || {}; L.cfg = Object.assign({ gabinete: 'GABINETE DE CONTROL PLC-01', zonaControl: 'SALA DE CONTROL', hmi: 'ESTACIÓN DE OPERACIÓN (HMI)', proveedor: 'rockwell' }, L.cfg || {});
+    L.modulos = L.modulos || []; L.senales = (L.senales || []).filter(function (s) { return s.tag; }); return L;
+  }
+  function proveedor(id) { var T = window.LAZOS_TARJETAS, p = T && T.proveedores.filter(function (x) { return x.id === id; })[0]; return p ? p.nombre : 'Controlador'; }
+
+  // ── Modelo de nodos desde la base ──
+  function modelo() {
+    var L = lazos(), c = L.cfg, N = {}, orden = [];
+    function nodo(k, o) { if (!N[k]) { N[k] = Object.assign({ k: k, hijos: [], lin: [] }, o); orden.push(k); } return N[k]; }
+    var sc = nodo('§sc', { t: c.zonaControl, sub: 'Nivel 3 · operación', tipo: 'sala' });
+    nodo('§hmi', { t: c.hmi, sub: 'HMI / ingeniería', tipo: 'hmi', padre: '§sc', enlace: 'Ethernet de control' });
+    var ctl = nodo('§ctl', { t: 'CONTROLADOR', sub: proveedor(c.proveedor), tipo: 'ctl', padre: '§sc', enlace: 'Ethernet de control' });
+    var modDe = {}; L.modulos.forEach(function (m) { modDe[m.id] = m; });
+    function gabDe(m) { return (m && m.gabinete) || c.gabinete; }
+    L.modulos.forEach(function (m) {
+      var g = nodo('G:' + gabDe(m), { t: gabDe(m), sub: '', tipo: 'gab', padre: '§ctl', tj: {}, chasis: {} });
+      g.tj[m.tipo] = (g.tj[m.tipo] || 0) + 1; g.chasis[m.chasis || 1] = 1;
+    });
+    // Cajas de conexiones: cuelgan del gabinete al que llegan la mayoría de sus señales
+    var jb = {}, directo = {};
+    L.senales.forEach(function (s) {
+      var m = modDe[s.mod], g = gabDe(m);
+      if (s.jb) { jb[s.jb] = jb[s.jb] || { tags: {}, gab: {} }; jb[s.jb].tags[s.tag] = 1; if (m) jb[s.jb].gab[g] = (jb[s.jb].gab[g] || 0) + 1; }
+      else if (m) { directo[g] = directo[g] || {}; directo[g][s.tag] = 1; }
+    });
+    Object.keys(jb).sort().forEach(function (k) {
+      var gs = jb[k].gab, g = Object.keys(gs).sort(function (a, b) { return gs[b] - gs[a]; })[0] || c.gabinete;
+      nodo('G:' + g, { t: g, sub: '', tipo: 'gab', padre: '§ctl', tj: {}, chasis: {} });
+      nodo('J:' + k, { t: k, sub: Object.keys(jb[k].tags).length + ' instrumentos', tipo: 'jb', padre: 'G:' + g, enlace: 'Multipar' });
+    });
+    Object.keys(directo).forEach(function (g) { nodo('D:' + g, { t: 'CABLEADO DIRECTO', sub: Object.keys(directo[g]).length + ' instrumentos', tipo: 'jb', padre: 'G:' + g, enlace: 'Cableado' }); });
+    // Equipos agregados a mano
+    A.equipos.forEach(function (e) {
+      if (!e.tag) return;
+      nodo('E:' + e.tag, { t: e.tag, sub: e.tipo || '', tipo: /segmento|profibus|modbus|ff/i.test(e.tipo || '') ? 'bus' : 'eq', padreTxt: e.padre, enlace: e.enlace || '' });
+    });
+    // Resolver «Depende de» por nombre visible
+    var porNombre = {}; orden.forEach(function (k) { porNombre[N[k].t.toUpperCase()] = k; });
+    orden.forEach(function (k) { var n = N[k]; if (n.padreTxt != null) n.padre = porNombre[String(n.padreTxt).toUpperCase()] || '§ctl'; });
+    Object.keys(N).forEach(function (k) {
+      var n = N[k]; if (n.tipo === 'gab') n.sub = Object.keys(n.tj).map(function (t) { return t + '×' + n.tj[t]; }).join(' · ') || 'sin tarjetas';
+    });
+    var raices = []; orden.forEach(function (k) { var n = N[k]; if (n.padre && N[n.padre] && n.padre !== k) N[n.padre].hijos.push(n); else raices.push(n); });
+    return { N: N, raices: raices, L: L };
+  }
+
+  // ── Dibujo (milímetros, lámina A3 horizontal) ──
+  function t(x, y, s, o) { o = o || {}; return '<text x="' + x + '" y="' + y + '" font-size="' + (o.fs || 2.5) + '"' + (o.a ? ' text-anchor="' + o.a + '"' : '') + (o.b ? ' font-weight="700"' : '') + ' fill="' + (o.c || '#111') + '">' + esc(s) + '</text>'; }
+  function r(x, y, w, h, o) { o = o || {}; return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + (o.f || 'none') + '" stroke="' + (o.s || '#111') + '" stroke-width="' + (o.w || .3) + '"' + (o.rx ? ' rx="' + o.rx + '"' : '') + (o.d ? ' stroke-dasharray="' + o.d + '"' : '') + '/>'; }
+  function l(x1, y1, x2, y2, w) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#111" stroke-width="' + (w || .3) + '"/>'; }
+  function ini(n) { return String(n || '').split(/\s+/).filter(Boolean).map(function (w) { return w[0].toUpperCase(); }).join(''); }
+  function vineta(x, y) {
+    var d = P.activo(), D = A.doc, s = r(x, y, 180, 44, { w: .5 });
+    s += l(x, y + 11, x + 180, y + 11) + l(x, y + 25, x + 180, y + 25) + l(x, y + 34, x + 180, y + 34) + l(x + 60, y, x + 60, y + 11);
+    s += t(x + 2, y + 3.6, 'CLIENTE', { fs: 1.8 }) + t(x + 2, y + 8.6, (d.cliente || '—').slice(0, 34), { fs: 2.8, b: 1 });
+    s += t(x + 62, y + 3.6, 'PROYECTO', { fs: 1.8 }) + t(x + 62, y + 8.6, ((d.numero ? d.numero + ' · ' : '') + (d.proyecto || d.nombre || '—')).slice(0, 64), { fs: 2.5, b: 1 });
+    var tt = String(D.titulo || '').toUpperCase(); s += t(x + 2, y + 14.4, 'TÍTULO', { fs: 1.8 }) + t(x + 90, y + 19.6, tt.slice(0, 60), { fs: 3.2, b: 1, a: 'middle' }) + (tt.length > 60 ? t(x + 90, y + 23.4, tt.slice(60, 120), { fs: 3.2, b: 1, a: 'middle' }) : '');
+    [[0, 'ELABORÓ', d.por], [36, 'REVISÓ', d.reviso], [72, 'APROBÓ', d.aprobo], [108, 'FECHA', P.hoy ? P.hoy() : ''], [144, 'ESCALA', 'S/E']].forEach(function (f) { if (f[0]) s += l(x + f[0], y + 25, x + f[0], y + 34); s += t(x + f[0] + 1.5, y + 28, f[1], { fs: 1.8 }) + t(x + f[0] + 1.5, y + 32.2, String(f[2] || '—').slice(0, 18), { fs: 2.3, b: 1 }); });
+    s += l(x + 150, y + 34, x + 150, y + 44) + t(x + 2, y + 37.4, 'N° DE PLANO', { fs: 1.8 }) + t(x + 2, y + 42.4, D.codigo || '—', { fs: 3.4, b: 1 });
+    s += t(x + 152, y + 37.4, 'REV', { fs: 1.8 }) + t(x + 165, y + 42.6, D.rev || 'A', { fs: 3.6, b: 1, a: 'middle' });
+    return s;
+  }
+  var COL = { sala: '#DCE8F5', hmi: '#DCE8F5', ctl: '#FBE7C6', gab: '#E2F0D9', jb: '#FFFFFF', eq: '#EEEAF6', bus: '#F5F5F5' };
+  function plano() {
+    var M = modelo(), W = 420, H = 297, s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" font-family="Arial, Helvetica, sans-serif"><rect width="' + W + '" height="' + H + '" fill="#fff"/>';
+    s += r(20, 10, W - 30, H - 20, { w: .7 });
+    for (var c = 0; c < 8; c++) { var xx = 20 + (W - 30) / 8 * (c + .5); s += t(xx, 7.5, c + 1, { fs: 2.4, a: 'middle' }) + t(xx, H - 4.5, c + 1, { fs: 2.4, a: 'middle' }); }
+    s += vineta(W - 190, H - 54);
+    var BW = 34, BH = 15, GX = 6, GY = 22;
+    function ancho(n) { n._w = n.hijos.length ? n.hijos.reduce(function (a, h) { return a + ancho(h); }, 0) : BW + GX; return n._w; }
+    var tot = M.raices.reduce(function (a, n) { return a + ancho(n); }, 0), prof = 0;
+    function ubicar(n, x0, k) { prof = Math.max(prof, k); n._y = k * (BH + GY); if (!n.hijos.length) n._x = x0 + GX / 2; else { var x = x0; n.hijos.forEach(function (h) { ubicar(h, x, k + 1); x += h._w; }); n._x = (n.hijos[0]._x + n.hijos[n.hijos.length - 1]._x) / 2; } }
+    var x = 0; M.raices.forEach(function (n) { ubicar(n, x, 0); x += n._w; });
+    var aw = W - 40, ah = H - 80, alto = (prof + 1) * (BH + GY), e = Math.min(1.6, aw / tot, ah / alto);
+    s += '<g transform="translate(' + (25 + (aw - tot * e) / 2) + ',22) scale(' + e + ')">';
+    function dib(n) {
+      n.hijos.forEach(function (h) {
+        var ym = n._y + BH + GY / 2, fo = /fibra/i.test(h.enlace || ''), bus = h.tipo === 'bus';
+        s += '<path d="M' + (n._x + BW / 2) + ' ' + (n._y + BH) + ' V' + ym + ' H' + (h._x + BW / 2) + ' V' + h._y + '" fill="none" stroke="' + (fo ? '#B05A00' : '#111') + '" stroke-width="' + (fo ? .6 : .35) + '"' + (bus ? ' stroke-dasharray="1.5 1"' : '') + '/>';
+        if (h.enlace) s += t(h._x + BW / 2 + 1.2, h._y - 1.6, h.enlace, { fs: 2.1, c: fo ? '#B05A00' : '#444' });
+        dib(h);
+      });
+      s += r(n._x, n._y, BW, BH, { f: COL[n.tipo] || '#fff', w: .4, rx: n.tipo === 'bus' ? 2.5 : .6, d: n.tipo === 'bus' ? '1.5 1' : '' });
+      var tt = String(n.t), l1 = tt.slice(0, 20), l2 = tt.length > 20 ? tt.slice(20, 40) : '';
+      s += t(n._x + BW / 2, n._y + (l2 ? 4.6 : 6.2), l1, { fs: 2.5, a: 'middle', b: 1 }) + (l2 ? t(n._x + BW / 2, n._y + 7.8, l2, { fs: 2.5, a: 'middle', b: 1 }) : '');
+      s += t(n._x + BW / 2, n._y + 12.2, String(n.sub || '').slice(0, 26), { fs: 2, a: 'middle', c: '#444' });
+    }
+    M.raices.forEach(dib);
+    s += '</g>';
+    var niv = ['NIVEL 3 · SALA DE CONTROL', 'NIVEL 2 · CONTROLADOR', 'NIVEL 1 · GABINETES DE E/S', 'NIVEL 0 · TERRENO'];
+    s += t(25, 16, niv.slice(0, Math.min(prof + 1, 4)).join('   ›   '), { fs: 2.4, c: '#555' });
+    if (!M.L.modulos.length && !M.L.senales.length) s += t(W / 2, H / 2 - 20, 'Sin tarjetas ni señales en la base: cárgalas en 02 · Base de datos (Señales de E/S y Tarjetas y canales).', { fs: 4, a: 'middle', c: '#777' });
+    s += '<g font-size="2.1">' + t(25, H - 18, 'NOTAS:', { fs: 2.2, b: 1 }) + t(25, H - 14.5, '1. DIAGRAMA GENERADO DESDE LA BASE DE DATOS DEL PROYECTO (TARJETAS, SEÑALES Y CAJAS DE CONEXIONES).', { fs: 2 }) + t(25, H - 11.5, '2. LÍNEAS NARANJAS: ENLACES DE FIBRA ÓPTICA. LÍNEAS SEGMENTADAS: REDES DE BUS DE CAMPO.', { fs: 2 }) + '</g>';
+    return { svg: s + '</svg>', M: M };
+  }
+
+  // ── Visor: zoom y desplazamiento ──
+  var Z = { s: 1, x: 0, y: 0 }, V = $('#visor'), LZ = $('#lienzo'), PX = 4, SVG = '';
+  function aplicar() { LZ.style.transform = 'translate(' + Z.x + 'px,' + Z.y + 'px) scale(' + Z.s + ')'; $('#zPct').textContent = Math.round(Z.s * 100) + '%'; }
+  function ajustar() { var w = 420 * PX, h = 297 * PX; Z.s = Math.min((V.clientWidth - 30) / w, (V.clientHeight - 30) / h); Z.x = (V.clientWidth - w * Z.s) / 2; Z.y = (V.clientHeight - h * Z.s) / 2; aplicar(); }
+  function zoomEn(f, cx, cy) { var ns = Math.max(.05, Math.min(8, Z.s * f)); Z.x = cx - (cx - Z.x) * ns / Z.s; Z.y = cy - (cy - Z.y) * ns / Z.s; Z.s = ns; aplicar(); }
+  V.addEventListener('wheel', function (e) { e.preventDefault(); var b = V.getBoundingClientRect(); zoomEn(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - b.left, e.clientY - b.top); }, { passive: false });
+  var arr = null;
+  V.addEventListener('pointerdown', function (e) { if (e.target.closest('.zoom')) return; arr = { x: e.clientX - Z.x, y: e.clientY - Z.y }; V.classList.add('mov'); });
+  window.addEventListener('pointermove', function (e) { if (!arr) return; Z.x = e.clientX - arr.x; Z.y = e.clientY - arr.y; aplicar(); });
+  window.addEventListener('pointerup', function () { arr = null; V.classList.remove('mov'); });
+  V.querySelector('.zoom').addEventListener('click', function (e) { var b = e.target.closest('[data-z]'); if (!b) return; if (b.dataset.z === '0') ajustar(); else zoomEn(b.dataset.z === '1' ? 1.25 : .8, V.clientWidth / 2, V.clientHeight / 2); });
+
+  // ── Panel lateral ──
+  function pintar(primera) {
+    var R = plano(), L = R.M.L; SVG = R.svg; LZ.innerHTML = SVG; var sv = LZ.querySelector('svg'); sv.setAttribute('width', 420 * PX); sv.setAttribute('height', 297 * PX);
+    if (primera) ajustar();
+    var d = P.activo(); $('#proy').textContent = (d.nombre || d.proyecto || 'Proyecto') + ' · ' + A.doc.codigo;
+    var tj = {}; L.modulos.forEach(function (m) { tj[m.tipo] = (tj[m.tipo] || 0) + 1; });
+    var gab = {}, jbs = {}; L.modulos.forEach(function (m) { gab[m.gabinete || L.cfg.gabinete] = 1; }); L.senales.forEach(function (s) { if (s.jb) jbs[s.jb] = 1; });
+    $('#res').innerHTML = [['Plataforma', proveedor(L.cfg.proveedor)], ['Gabinetes', Object.keys(gab).length], ['Tarjetas', L.modulos.length + (L.modulos.length ? ' (' + Object.keys(tj).map(function (k) { return k + ' ' + tj[k]; }).join(', ') + ')' : '')], ['Señales', L.senales.length], ['Cajas de conexiones', Object.keys(jbs).length], ['Equipos agregados', A.equipos.length]]
+      .map(function (x) { return '<span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b>'; }).join('');
+    var nombres = Object.keys(R.M.N).map(function (k) { return R.M.N[k].t; });
+    function sel(i, k, ops, v) { return '<select data-e="' + i + '" data-k="' + k + '">' + ops.map(function (o) { return '<option' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + (v && ops.indexOf(v) < 0 ? '<option selected>' + esc(v) + '</option>' : '') + '</select>'; }
+    $('#eqs').innerHTML = A.equipos.map(function (e, i) {
+      return '<tr><td><input data-e="' + i + '" data-k="tag" value="' + esc(e.tag) + '"></td><td>' + sel(i, 'tipo', TIPOS, e.tipo) + '</td><td>' + sel(i, 'padre', [''].concat(nombres.filter(function (n) { return n !== e.tag; })), e.padre || '') + '</td><td>' + sel(i, 'enlace', ENLACES, e.enlace || '') + '</td><td><button type="button" data-borrar="' + i + '" aria-label="Quitar">✕</button></td></tr>';
+    }).join('') || '<tr><td colspan="5" class="vacio">Sin equipos agregados.</td></tr>';
+    document.querySelectorAll('[data-d]').forEach(function (x) { if (document.activeElement !== x) x.value = A.doc[x.dataset.d] || ''; });
+  }
+  document.addEventListener('change', function (e) {
+    var x = e.target;
+    if (x.dataset.e != null) { var q = A.equipos[+x.dataset.e]; if (q) { q[x.dataset.k] = x.dataset.k === 'tag' ? x.value.toUpperCase().trim() : x.value; guardar(); pintar(); } }
+    if (x.dataset.d) { A.doc[x.dataset.d] = x.value; guardar(); pintar(); }
+  });
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-borrar]'); if (b) { A.equipos.splice(+b.dataset.borrar, 1); guardar(); pintar(); } });
+  $('#bAdd').addEventListener('click', function () { A.equipos.push({ tag: 'SW-' + String(A.equipos.length + 1).padStart(2, '0'), tipo: 'Switch', padre: 'CONTROLADOR', enlace: 'EtherNet/IP' }); guardar(); pintar(); });
+  $('#bSvg').addEventListener('click', function () { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([SVG], { type: 'image/svg+xml' })); a.download = (A.doc.codigo || 'arquitectura') + '.svg'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); });
+  $('#bPdf').addEventListener('click', function () { window.print(); });
+  window.addEventListener('storage', function (ev) { if (ev.key && /:(lazos|arquitectura)$/.test(ev.key)) { A = P.leer('arquitectura', null) || A; A.equipos = A.equipos || []; pintar(); } });
+  window.addEventListener('resize', function () { clearTimeout(window.__arT); window.__arT = setTimeout(ajustar, 120); });
+  pintar(true);
+})();
+</script>
+</body>
+</html>

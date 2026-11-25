@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fase y alcance · ReyEngi</title>
+<meta name="description" content="Fase de ingeniería del proyecto (prefactibilidad, conceptual, básica o detalle) y matriz de entregables de instrumentación y control que aplican en cada una.">
+<meta name="theme-color" content="#1C1C1C">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<style>
+:root { --bg: #202020; --panel: #2B2B2B; --panel2: #323232; --fg: #FFFFFF; --muted: #C8C8C8; --line: #3F3F3F; --brand: #1C1C1C; --accent: #FF8C32; --accent-ink: #FFB070; --sel: #60CDFF;
+  --ok: #6CCB5F; --warn: #F2C661; --f-body: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; --f-mono: ui-monospace, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px/20px var(--f-body); }
+[hidden] { display: none !important; }
+.btn { font: 600 13px var(--f-body); border-radius: 4px; padding: 6px 12px; min-height: 32px; cursor: pointer; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; }
+.btn:hover { border-color: var(--sel); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+.barra { position: sticky; top: 0; z-index: 10; background: var(--brand); border-bottom: 1px solid var(--line); padding: 8px 16px; }
+.barra .fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.barra h1 { margin: 0 auto 0 0; font-size: 16px; }
+.barra h1 small { display: block; font: 500 12px var(--f-mono); color: var(--muted); }
+.barra a.volver { color: var(--muted); font: 600 13px var(--f-mono); text-decoration: none; }
+main.fa { padding: 18px 16px 60px; max-width: 1400px; }
+p.sub { margin: 0 0 14px; color: var(--muted); max-width: 900px; }
+.fases { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+@media (max-width: 900px) { .fases { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fase { text-align: left; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 12px 14px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 6px; }
+.fase:hover { border-color: var(--sel); }
+.fase[aria-pressed="true"] { border: 2px solid var(--accent); padding: 11px 13px; }
+.fase b { font-size: 15px; }
+.fase span { color: var(--muted); font-size: 12.5px; line-height: 18px; }
+.fase em { font-style: normal; font: 600 11.5px var(--f-mono); color: var(--accent-ink); }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.caja h2 { margin: 0 0 8px; font-size: 15px; }
+.resumen { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.resumen b { color: var(--fg); font-size: 20px; display: block; line-height: 26px; }
+.tabla { overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { background: var(--panel2); color: var(--muted); font-weight: 600; position: sticky; top: 0; }
+tr.grp td { background: var(--panel2); font: 700 12px var(--f-mono); color: var(--sel); }
+td.si { color: var(--fg); font-weight: 600; }
+td.no { color: var(--muted); opacity: .55; }
+th.act, td.act { background: rgba(255, 140, 50, .12) !important; }
+td a { color: var(--fg); text-decoration: none; } td a:hover { color: var(--sel); text-decoration: underline; }
+td .dev { font: 600 10.5px var(--f-mono); color: var(--warn); margin-left: 6px; }
+td.cod { font: 600 12px var(--f-mono); color: var(--muted); }
+.nota { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; }
+</style>
+<script src="../acceso.js"></script>
+<link rel="stylesheet" href="../suite.css">
+<link rel="stylesheet" href="../fluent.css" id="rsFluent">
+<script>/* antes de pintar: tema elegido y espacio de la cinta de opciones, para que nada salte al cargar */try{var d=document.documentElement,L=localStorage;if(L.getItem('reyengi-tema')==='claro')d.setAttribute('data-tema','claro');if(window.top===window){d.className+=' rs-pre';d.style.setProperty('--rs-cinta',(+L.getItem('reyengi-cinta-h')||(matchMedia('(max-width:900px)').matches?33:103))+'px')}}catch(e){}</script>
+<script src="../entregables.js" defer></script>
+<script src="../cinta.js" defer></script>
+<script src="../suite.js" defer></script>
+</head>
+<body>
+<div class="barra"><div class="fila">
+  <a class="volver" href="../">← Suite ReyEngi</a>
+  <h1>Fase y alcance <small id="proy">Proyecto activo</small></h1>
+  <a class="btn" href="../proyectos/">Datos del proyecto</a>
+  <a class="btn" href="../flujo/">Flujo de ingeniería</a>
+</div></div>
+<main class="fa">
+  <p class="sub">La fase de ingeniería del proyecto define qué entregables de instrumentación y control aplican y con qué alcance. Al cambiarla se actualiza el explorador: lo que no aplica queda atenuado (o se oculta, si en Configuración eliges «Solo lo de la fase»). No se borra ningún dato.</p>
+  <div class="fases" id="fases" role="group" aria-label="Fase de ingeniería"></div>
+  <div class="caja"><h2 id="tRes">Alcance en la fase</h2><div class="resumen" id="res"></div></div>
+  <div class="caja"><h2>Matriz de entregables por fase</h2>
+    <div class="tabla"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+    <p class="nota">Clic en un entregable para abrir su módulo. Los que aún no tienen generador figuran como «En desarrollo».</p>
+  </div>
+</main>
+<script src="../proyectos.js"></script>
+<script>
+(function () {
+  'use strict';
+  var P = window.REProyectos, $ = function (s) { return document.querySelector(s); };
+  var TEXTO = { PF: 'Prefactibilidad', CO: 'Ingeniería conceptual', BA: 'Ingeniería básica', DE: 'Ingeniería de detalles' };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  function pintar() {
+    var R = window.RE_ENTREGABLES; if (!R || !R.FASES) return;
+    var a = P.activo(), F = R.faseDe(a.fase);
+    $('#proy').textContent = (a.nombre || a.proyecto || 'Proyecto') + ' · fase: ' + (a.fase || TEXTO.DE);
+    $('#fases').innerHTML = R.FASES.map(function (f) {
+      var n = R.generadores.filter(function (g) { return g.status === 'AVAILABLE' && g.fases[f.id]; }).length;
+      return '<button type="button" class="fase" data-f="' + f.id + '" aria-pressed="' + (f.id === F) + '"><b>' + esc(f.t) + '</b><span>' + esc(f.d) + '</span><em>' + n + ' entregables con generador</em></button>';
+    }).join('');
+    // Filas en el orden del árbol del proyecto (00 a 09)
+    var G = window.RS_GRUPOS || [], filas = '', nAp = 0, nNo = 0, nDev = 0;
+    $('#th').innerHTML = '<tr><th>Código</th><th>Entregable</th>' + R.FASES.map(function (f) { return '<th class="' + (f.id === F ? 'act' : '') + '">' + f.t + '</th>'; }).join('') + '</tr>';
+    G.forEach(function (g) {
+      if (!g[3] || g[0] === 'ctl') return;
+      var cuerpo = '';
+      g[2].forEach(function (e) {
+        var gen = R.porCod(e[0]);
+        if (!e[2]) { nDev++; cuerpo += '<tr><td class="cod">' + esc(e[0]) + '</td><td>' + esc(e[1]) + '<span class="dev">En desarrollo</span></td>' + R.FASES.map(function (f) { return '<td class="no' + (f.id === F ? ' act' : '') + '">—</td>'; }).join('') + '</tr>'; return; }
+        if (!gen) { cuerpo += '<tr><td class="cod">' + esc(e[0]) + '</td><td><a href="../' + esc(e[2]) + '">' + esc(e[1]) + '</a></td>' + R.FASES.map(function (f) { return '<td class="no' + (f.id === F ? ' act' : '') + '">Siempre</td>'; }).join('') + '</tr>'; return; }
+        if (gen.fases[F]) nAp++; else nNo++;
+        cuerpo += '<tr><td class="cod">' + esc(e[0]) + '</td><td><a href="../' + esc(e[2]) + '">' + esc(e[1]) + '</a></td>' + R.FASES.map(function (f) { var v = gen.fases[f.id]; return '<td class="' + (v ? 'si' : 'no') + (f.id === F ? ' act' : '') + '">' + esc(v || '—') + '</td>'; }).join('') + '</tr>';
+      });
+      if (cuerpo) filas += '<tr class="grp"><td colspan="' + (2 + R.FASES.length) + '">' + esc(g[3] + ' · ' + g[1]) + '</td></tr>' + cuerpo;
+    });
+    $('#tb').innerHTML = filas;
+    $('#tRes').textContent = 'Alcance en ' + R.nombreFase(F).toLowerCase();
+    $('#res').innerHTML = '<span><b>' + nAp + '</b>entregables aplican</span><span><b>' + nNo + '</b>no aplican en esta fase</span><span><b>' + nDev + '</b>en desarrollo</span>';
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('.fase[data-f]'); if (!b) return;
+    var id = P.activoId(), d = P.datos(id); d.fase = TEXTO[b.dataset.f]; P.guardar(id, d);
+    pintar();
+    try { window.dispatchEvent(new StorageEvent('storage', { key: 'reyengi-fase' })); } catch (er) {}
+  });
+  if (document.readyState === 'complete') pintar(); else window.addEventListener('load', pintar);
+})();
+</script>
+</body>
+</html>

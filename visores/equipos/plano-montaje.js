@@ -177,14 +177,85 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
     }
     return out;
   }
+  /* Une los tramos de línea antes de escribir el DXF: quita repetidos y tramos mínimos, fusiona los colineales que se tocan o se
+   * traslapan (o que quedan separados por menos de «gap»), encadena los que comparten extremo en polilíneas (cerradas si vuelven
+   * al inicio) y quita los vértices intermedios alineados. Entrada: [[x1, y1, x2, y2], ...] en mm. Salida: [{ p: [[x, y], ...], c: cerrada }]. */
+  function unirLineas(segs, o) {
+    o = o || {}; var tol = o.tol || 0.01, gap = o.gap == null ? tol : o.gap, simp = o.simp == null ? 0.02 : o.simp;
+    var G = {}, orden = [], i, j;
+    for (i = 0; i < segs.length; i++) {
+      var s = segs[i], dx = s[2] - s[0], dy = s[3] - s[1], L = Math.sqrt(dx * dx + dy * dy); if (!(L >= tol)) continue;
+      var ux = dx / L, uy = dy / L; if (ux < -1e-9 || (Math.abs(ux) <= 1e-9 && uy < 0)) { ux = -ux; uy = -uy; }
+      var off = -uy * s[0] + ux * s[1], t1 = ux * s[0] + uy * s[1], t2 = ux * s[2] + uy * s[3];
+      var k = Math.round(Math.atan2(uy, ux) * 720 / Math.PI) + '|' + Math.round(off / (tol * 4));
+      if (!G[k]) { G[k] = { ux: ux, uy: uy, off: off, r: [] }; orden.push(k); }
+      G[k].r.push([Math.min(t1, t2), Math.max(t1, t2)]);
+    }
+    var S = [];
+    orden.forEach(function (k) {
+      var g = G[k], r = g.r.sort(function (a, b) { return a[0] - b[0]; }), cur = r[0].slice();
+      var pt = function (t) { return [g.ux * t - g.uy * g.off, g.uy * t + g.ux * g.off]; };
+      for (var m = 1; m <= r.length; m++) {
+        if (m < r.length && r[m][0] <= cur[1] + gap) { if (r[m][1] > cur[1]) cur[1] = r[m][1]; continue; }
+        if (cur[1] - cur[0] >= tol) { var a = pt(cur[0]), b = pt(cur[1]); S.push([a[0], a[1], b[0], b[1]]); }
+        if (m < r.length) cur = r[m].slice();
+      }
+    });
+    if (o.snap) {                                       // extremos a menos de «snap» se juntan en un mismo punto (aristas curvas muestreadas)
+      var R = o.snap, C = {}, rep = function (x, y) {
+        var cx = Math.floor(x / R), cy = Math.floor(y / R), best = null, bd = R * R;
+        for (var a = -1; a <= 1; a++) for (var b = -1; b <= 1; b++) { var L2 = C[(cx + a) + ',' + (cy + b)]; if (L2) L2.forEach(function (p) { var d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y); if (d <= bd) { bd = d; best = p; } }); }
+        if (!best) { best = [x, y]; (C[cx + ',' + cy] = C[cx + ',' + cy] || []).push(best); }
+        return best;
+      };
+      S = S.map(function (s) { var a = rep(s[0], s[1]), b = rep(s[2], s[3]); return [a[0], a[1], b[0], b[1]]; }).filter(function (s) { return Math.abs(s[0] - s[2]) + Math.abs(s[1] - s[3]) > tol; });
+    }
+    var q = Math.max(tol, 0.005), key = function (x, y) { return Math.round(x / q) + ',' + Math.round(y / q); }, N = {}, used = [];
+    S.forEach(function (s, n) { s.ka = key(s[0], s[1]); s.kb = key(s[2], s[3]); (N[s.ka] = N[s.ka] || []).push(n); (N[s.kb] = N[s.kb] || []).push(n); });
+    var deg = function (k) { return N[k] ? N[k].length : 0; }, out = [];
+    function camino(k0, n0) {
+      var p = [S[n0].ka === k0 ? [S[n0][0], S[n0][1]] : [S[n0][2], S[n0][3]]], cur = k0, n = n0;
+      for (;;) {
+        used[n] = 1; var s = S[n], fin = s.ka === cur ? s.kb : s.ka; p.push(s.ka === cur ? [s[2], s[3]] : [s[0], s[1]]);
+        if (fin === k0 && deg(k0) === 2) return { p: p.slice(0, -1), c: true };
+        if (deg(fin) !== 2) break;
+        var sig = N[fin].filter(function (x) { return !used[x]; })[0]; if (sig == null) break; cur = fin; n = sig;
+      }
+      return { p: p, c: false };
+    }
+    Object.keys(N).forEach(function (k) { if (deg(k) !== 2) N[k].forEach(function (n) { if (!used[n]) out.push(camino(k, n)); }); });
+    S.forEach(function (s, n) { if (!used[n]) out.push(camino(s.ka, n)); });
+    out.forEach(function (c) {                          // vértices intermedios alineados
+      var p = c.p; if (p.length < 3) return; var r = [p[0]];
+      for (j = 1; j < p.length - 1; j++) {
+        var a = r[r.length - 1], b = p[j + 1], x = p[j], ex = b[0] - a[0], ey = b[1] - a[1], LL = Math.sqrt(ex * ex + ey * ey) || 1;
+        if (Math.abs((x[0] - a[0]) * ey - (x[1] - a[1]) * ex) / LL > simp) r.push(x);
+      }
+      r.push(p[p.length - 1]); c.p = r;
+    });
+    return out;
+  }
   function dxfBuilder() {
     const K = 420 / W, E = [], f = (v) => (Math.round(v * 1000) / 1000).toString();
     const P = (p) => [p[0] * K, (H - p[1]) * K];
     const aci = (c) => { c = String(c).toLowerCase(); return c === '#034488' ? 5 : c === '#ef5a05' ? 30 : c === '#c9d6e3' ? 9 : (c === '#fff' || c === '#ffffff') ? 255 : 7; };
     const R = { layer: 'MARCO', E };
     const BD = (() => { try { const d = window.RE_DIBUJO || (window.parent && window.parent.RE_DIBUJO); return d && d.activo() ? d : null; } catch (e) { return null; } })();   // bases de dibujo del proyecto
-    const ent = (type, layer, color, codes) => E.push('0\n' + type + '\n8\n' + (BD ? BD.capa(layer, type === 'TEXT' ? { t: 'tx', h: 2.5 } : null) : layer) + '\n' + (color !== 7 ? '62\n' + color + '\n' : '') + codes.map(([g, v]) => g + '\n' + v).join('\n') + '\n');
-    R.line = (a, b, layer, c = 7) => { const p = P(a), q = P(b); ent('LINE', layer, c, [[10, f(p[0])], [20, f(p[1])], [30, 0], [11, f(q[0])], [21, f(q[1])], [31, 0]]); };
+    const ent = (type, layer, color, codes) => E.push('0\n' + type + '\n8\n' + (BD ? BD.capa(layer, type === 'TEXT' ? { t: 'tx', h: 2.5 } : null) : layer) + '\n' + (color !== 7 ? '62\n' + color + '\n' : '') + (codes.length ? codes.map(([g, v]) => g + '\n' + v).join('\n') + '\n' : ''));
+    // Las líneas se acumulan por capa y color, y al exportar se escriben unidas en polilíneas (unirLineas): en VISTAS se cierran
+    // también los cortes de menos de 3 px que deja el muestreo de visibilidad, para que cada arista salga continua.
+    const LB = new Map();
+    R.line = (a, b, layer, c = 7) => { const p = P(a), q = P(b), k = layer + '|' + c; if (!LB.has(k)) LB.set(k, { layer, c, s: [] }); LB.get(k).s.push([p[0], p[1], q[0], q[1]]); };
+    const volcar = () => {
+      for (const g of LB.values()) for (const ch of unirLineas(g.s, { tol: 0.01, gap: g.layer === 'VISTAS' ? 3 * K : 0.01, snap: g.layer === 'VISTAS' ? 0.2 : 0, simp: g.layer === 'VISTAS' ? 0.04 : 0.005 })) {
+        const p = ch.p;
+        if (p.length === 2 && !ch.c) { ent('LINE', g.layer, g.c, [[10, f(p[0][0])], [20, f(p[0][1])], [30, 0], [11, f(p[1][0])], [21, f(p[1][1])], [31, 0]]); continue; }
+        ent('POLYLINE', g.layer, g.c, [[66, 1], [10, 0], [20, 0], [30, 0], [70, ch.c ? 1 : 0]]);
+        for (const v of p) ent('VERTEX', g.layer, g.c, [[10, f(v[0])], [20, f(v[1])], [30, 0]]);
+        ent('SEQEND', g.layer, 7, []);
+      }
+      LB.clear();
+    };
     R.strokePath = (path, col) => {
       const c = aci(col);
       for (const sp of path) {
@@ -211,6 +282,7 @@ window.__PLANO = function (scene, renderer, camera, controls, labelsFn, THREE) {
         '0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLTYPE\n70\n1\n0\nLTYPE\n2\nCONTINUOUS\n70\n0\n3\nSolid line\n72\n65\n73\n0\n40\n0.0\n0\nENDTAB\n' +
         '0\nTABLE\n2\nLAYER\n70\n' + LAY.length + '\n' + LAY.map(([n, c]) => '0\nLAYER\n2\n' + n + '\n70\n0\n62\n' + c + '\n6\nCONTINUOUS\n').join('') + '0\nENDTAB\n' +
         '0\nTABLE\n2\nSTYLE\n70\n1\n0\nSTYLE\n2\nREYENGI\n70\n0\n40\n0.0\n41\n1.0\n50\n0.0\n71\n0\n42\n2.5\n3\narial.ttf\n4\n\n0\nENDTAB\n0\nENDSEC\n';
+      volcar();
       const str = head + '0\nSECTION\n2\nENTITIES\n' + E.join('') + '0\nENDSEC\n0\nEOF\n';
       const SP = { 0x2014: 0x97, 0x2013: 0x96, 0x201C: 0x93, 0x201D: 0x94, 0x2018: 0x91, 0x2019: 0x92, 0x2022: 0x95, 0x2026: 0x85, 0x20AC: 0x80, 0x3BC: 0xB5 };
       const parts = []; let buf = [];
