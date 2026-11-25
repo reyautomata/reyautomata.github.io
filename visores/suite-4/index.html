@@ -1,0 +1,1378 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Suite ReyEngi 4.0 · motor de planos</title>
+<meta name="description" content="Suite ReyEngi 4.0: planos y documentos de instrumentación y control generados desde la base de instrumentos, con viñeta, revisiones, trazabilidad y exportación DXF.">
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<script src="../acceso.js"></script>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: consola de ingeniería — barra de proyecto arriba, árbol fijo a la izquierda, área de trabajo a la derecha */
+:root{
+  --bg:#EEF2F1; --panel:#FFFFFF; --sunk:#E3EAE8; --fg:#13201F; --mut:#566866; --line:#CFDAD7;
+  --acc:#0E5C6B; --accS:#DCEBEC; --hot:#B8640F; --hotS:#F6E7D3;
+  --ok:#2E7D4F; --okS:#DDEFE3; --pre:#8A6A12; --preS:#F3EACB; --no:#8B9896;
+  --c-hw:#5E6B7A; --c-ff:#1F7A8C; --c-dp:#7A4FA3; --c-eth:#B8640F; --c-fo:#C0392B;
+  --f-disp:"Archivo","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1615; --panel:#152120; --sunk:#1B2928; --fg:#E2ECEA; --mut:#96A9A6; --line:#2A3B39;
+  --acc:#5DBACB; --accS:#183538; --hot:#E8A55A; --hotS:#3A2A17;
+  --ok:#6FC48F; --okS:#183323; --pre:#D9B954; --preS:#33301A; --no:#62716F;
+  --c-hw:#9AA8B8; --c-ff:#5DBACB; --c-dp:#B592D9; --c-eth:#E8A55A; --c-fo:#EE7A6B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1615; --panel:#152120; --sunk:#1B2928; --fg:#E2ECEA; --mut:#96A9A6; --line:#2A3B39;
+  --acc:#5DBACB; --accS:#183538; --hot:#E8A55A; --hotS:#3A2A17;
+  --ok:#6FC48F; --okS:#183323; --pre:#D9B954; --preS:#33301A; --no:#62716F;
+  --c-hw:#9AA8B8; --c-ff:#5DBACB; --c-dp:#B592D9; --c-eth:#E8A55A; --c-fo:#EE7A6B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:290px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;background:var(--panel);border-bottom:1px solid var(--line);
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand b{font-family:var(--f-disp);font-size:17px;letter-spacing:.01em}
+.brand .v{font-family:var(--f-mono);font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.proj{display:flex;flex-direction:column;min-width:0;flex:1 1 260px}
+.proj .c{font-family:var(--f-mono);font-size:12px;color:var(--acc)}
+.proj .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fases{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.fases button{border:0;background:transparent;padding:7px 13px;font-size:13px;color:var(--mut)}
+.fases button+button{border-left:1px solid var(--line)}
+.fases button[aria-pressed="true"]{background:var(--acc);color:var(--panel);font-weight:600}
+.tag-ej{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--hot);background:var(--hotS);border-radius:4px;padding:3px 8px}
+
+.tree{background:var(--panel);border-right:1px solid var(--line);padding:10px 8px 40px;position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto}
+.sec{margin-top:12px}
+.sec>h3{font-family:var(--f-disp);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:0 8px 4px;display:flex;justify-content:space-between;gap:8px}
+.sec>h3 span{font-family:var(--f-mono);letter-spacing:0;text-transform:none;font-weight:400}
+.node{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;text-align:left;padding:5px 8px;border-radius:6px;font-size:13px}
+.node:hover{background:var(--sunk)}
+.node[aria-current="true"]{background:var(--accS);color:var(--acc);font-weight:600;box-shadow:inset 3px 0 0 var(--acc)}
+.node .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .k{font-family:var(--f-mono);font-size:11px;color:var(--mut);min-width:26px}
+.node .ct{font-family:var(--f-mono);font-size:11px;color:var(--mut)}
+.node.off{color:var(--no)}
+.node.off .ct::after{content:" · no aplica"}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--no)}
+.dot.p{background:var(--pre)} .dot.c{background:var(--ok)}
+
+main{min-width:0;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.vw{max-width:1180px;display:flex;flex-direction:column;gap:18px}
+.crumb{font-family:var(--f-mono);font-size:12px;color:var(--mut);word-break:break-all}
+h1{font-family:var(--f-disp);font-size:26px;line-height:1.15;margin:2px 0 0;text-wrap:balance}
+h2{font-family:var(--f-disp);font-size:17px;margin:0;text-wrap:balance}
+p{margin:0;max-width:72ch}
+.lead{color:var(--mut)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:var(--f-disp);font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--mut)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-family:var(--f-disp);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:left;background:var(--sunk);padding:8px 10px;white-space:nowrap;position:sticky;top:0}
+td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:top}
+tr.clk{cursor:pointer} tr.clk:hover td{background:var(--accS)}
+tr.sel td{background:var(--hotS)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:4px;padding:1px 7px;font-size:12px;white-space:nowrap;border:1px solid var(--line);background:var(--panel)}
+.chip.c{background:var(--okS);color:var(--ok);border-color:transparent}
+.chip.p{background:var(--preS);color:var(--pre);border-color:transparent}
+.chip.n{color:var(--no)}
+.chip.t{font-family:var(--f-mono);cursor:pointer;color:var(--acc)}
+.chip.t:hover{border-color:var(--acc)}
+.chip.nv{background:var(--hotS);color:var(--hot);border-color:transparent}
+.pr{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:7px 12px;font-size:13px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--panel);font-weight:600}
+.btn:hover{filter:brightness(.96)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mut)}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;color:var(--fg);min-width:0}
+.err{color:var(--hot);font-size:12px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px 12px 46px;position:relative;cursor:pointer}
+.steps li:hover{border-color:var(--acc)}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:11px;width:24px;height:24px;border-radius:50%;background:var(--accS);color:var(--acc);font-family:var(--f-disp);font-weight:700;display:grid;place-items:center;font-size:13px}
+.steps b{display:block;font-size:13px} .steps span{font-size:12px;color:var(--mut)}
+.chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.chain li{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 16px;padding:9px 0;border-top:1px solid var(--line)}
+.chain li:first-child{border-top:0}
+.chain .g{font-size:12px;color:var(--mut)}
+.chain .d{font-size:13px}
+.chain .cd{font-family:var(--f-mono);font-size:12px;color:var(--acc);cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--mut)}
+.svgw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+svg.arq text{fill:var(--fg);font-family:var(--f-body)}
+svg .tg{font-family:var(--f-mono);font-size:11px}
+svg .sm{font-size:10px;fill:var(--mut)}
+svg .nd{fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+svg .nd.ctl{fill:var(--sunk);stroke:var(--mut)}
+svg .nd.sel{stroke:var(--hot);stroke-width:2.4}
+svg .hit{cursor:pointer}
+svg .hit:hover .nd{stroke:var(--acc)}
+svg path{fill:none;stroke-width:1.8}
+.l-hw{stroke:var(--c-hw)} .l-ff{stroke:var(--c-ff)} .l-dp{stroke:var(--c-dp)} .l-eth{stroke:var(--c-eth)} .l-fo{stroke:var(--c-fo);stroke-dasharray:6 4}
+.tb{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:2px solid var(--fg);font-size:11px;max-width:760px;background:var(--panel)}
+.tb div{border:1px solid var(--fg);padding:4px 6px;min-width:0;overflow-wrap:anywhere}
+.tb small{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.tb .lg{grid-column:span 2;grid-row:span 2;display:grid;place-items:center;font-family:var(--f-disp);font-weight:700;font-size:15px}
+.tb .w2{grid-column:span 2} .tb .w4{grid-column:span 4}
+.opt{display:flex;flex-direction:column;gap:6px}
+.opt label{flex-direction:row;align-items:flex-start;gap:8px;color:var(--fg);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.opt label:has(input:checked){border-color:var(--acc);background:var(--accS)}
+.opt input{margin-top:3px}
+.opt .ruta{display:block;font-family:var(--f-mono);font-size:11px;color:var(--mut);word-break:break-all}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.flow .st{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.flow .st b{font-family:var(--f-mono);color:var(--acc)} .flow .st span{display:block;font-size:12px;color:var(--mut)}
+.note{font-size:12px;color:var(--mut)}
+#toast{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:13px;max-width:min(420px,calc(100vw - 32px));z-index:20}
+@media (max-width:880px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .tree{position:static;max-height:44vh;border-right:0;border-bottom:1px solid var(--line)}
+  .chain li{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:root{--paper:#FFFFFF;--ink:#16181A;--pend:#C26A00;--pendS:#FFF1DC}
+.vw.ancho{max-width:none}
+.inpend{border-color:var(--hot)!important;background:var(--hotS)!important}
+.ct.pendc{color:var(--hot)}
+.wiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.nstep{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accS);color:var(--acc);font-size:12px;margin-right:8px;vertical-align:2px}
+.opt label.dis{opacity:.55;cursor:not-allowed}
+.plhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.plwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.plwrap.sin{grid-template-columns:minmax(0,1fr)}
+.hojaw{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper);min-width:0}
+svg.hoja{display:block;width:100%;min-width:900px;height:auto}
+svg.hoja .papel{fill:var(--paper)}
+svg.hoja text{fill:var(--ink);font-family:var(--f-mono)}
+svg.hoja .ink{stroke:var(--ink)}
+svg.hoja .pend,svg.hoja .pendt{fill:var(--pend);font-weight:600}
+svg.hoja .pend[data-f]{cursor:pointer;text-decoration:underline}
+.cajon{background:var(--panel);border:1px solid var(--line);border-radius:10px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:flex;flex-direction:column}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{flex:1 1 auto;border:0;background:transparent;padding:9px 8px;font-size:12px;color:var(--mut);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+.pends{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.pends .chip{cursor:pointer}
+.cbody{padding:12px;display:flex;flex-direction:column;gap:10px}
+.fld{display:flex;gap:6px;align-items:flex-end}.fld label{flex:1;min-width:0}
+.btn.mini{padding:4px 8px;font-size:11px;white-space:nowrap}
+.impacto{border:1px solid var(--hot);background:var(--hotS);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+.impacto ul{margin:0;padding-left:16px;max-height:180px;overflow:auto}
+.cd{font-family:var(--f-mono);font-size:12px;color:var(--acc);cursor:pointer;background:none;border:0;padding:0;text-align:left}
+@media (max-width:1100px){.plwrap{grid-template-columns:minmax(0,1fr)}.cajon{position:static;max-height:none}}
+svg.hoja path,svg.hoja polyline{stroke-width:1}
+svg.hoja .fillp{fill:#DCE8F2}
+svg.hoja .papel.ink{fill:var(--paper)}
+svg.hoja polygon.ink:not([fill]){fill:var(--ink)}
+
+/* 4.0: vistas nuevas (fase y alcance, enlaces de fibra) y recorrido paso a paso, con el lenguaje visual de la 3.0 */
+.fcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.fcard{text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:5px}
+.fcard:hover{border-color:var(--acc)}.fcard[aria-pressed="true"]{border:2px solid var(--acc);padding:11px 13px;background:var(--accS)}
+.fcard b{font-family:var(--f-disp);font-size:15px}.fcard span{font-size:12px;color:var(--mut)}.fcard em{font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--acc)}
+td input,td select{width:100%;padding:5px 7px;font-size:12px}
+tr.grph td{background:var(--sunk);font-family:var(--f-disp);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.pasos{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:14px}
+.pasos .note{font-family:var(--f-mono)}
+</style>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><b>Suite ReyEngi</b><span class="v">4.0 · simulación</span></div>
+    <div class="proj"><span class="c" id="pc"></span><span class="n" id="pn"></span></div>
+    <div class="fases" id="fases" role="group" aria-label="Tipo de ingeniería"></div>
+    <a class="btn" href="../" title="Volver a la Suite ReyEngi web (hojas de datos, especificaciones, visores 3D)">← Suite web</a>
+    <span class="tag-ej" title="Estructura y codificación tomadas de tus proyectos; instrumentos inventados para la simulación">Instrumentos de ejemplo</span>
+  </header>
+  <nav class="tree" id="tree" aria-label="Árbol del proyecto"></nav>
+  <main id="main"></main>
+</div>
+<div id="toast" hidden></div>
+<script>
+'use strict';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=(n,k=2)=>String(n).padStart(k,'0');
+const FASES=[['pre','Prefactibilidad'],['con','Conceptual'],['bas','Básica'],['det','Detalle']];
+const REV={pre:'RA',con:'RA',bas:'RB',det:'R0'};
+const REVL={pre:'A',con:'A',bas:'B',det:'0'};
+const REVD={A:'EMITIDO PARA REVISIÓN INTERNA',B:'EMITIDO PARA APROBACIÓN',0:'EMITIDO PARA CONSTRUCCIÓN',1:'EMITIDO PARA CONSTRUCCIÓN'};
+
+/* ---------- Tipos de instrumento ----------
+   k: an (transmisor análogo), cv (válvula de control), xv (on/off), di (switch), red (equipo por red), loc (local)
+   alims: alimentaciones posibles; define el típico (2 hilos / 4 hilos 24 VDC / 4 hilos 120 VAC) */
+const TIPOS={
+  xvb:{n:'Válvula de bola on/off neumática',base:'xv',k:'xv',sig:[['XY','DO'],['ZSO','DI'],['ZSC','DI']],det:'06 Valvulas y Actuadores',hd:'HD VÁLVULA ON/OFF',et:'ET VÁLVULAS Y ACTUADORES',fam:'Válvulas y actuadores',log:1,ok:['JB-01','DIRECTO'],alims:['24VDC','120VAC'],mont:'12-E'},
+  xvc:{n:'Válvula tipo cono (macho cónico) on/off neumática',base:'xv',k:'xv',sig:[['XY','DO'],['ZSO','DI'],['ZSC','DI']],det:'06 Valvulas y Actuadores',hd:'HD VÁLVULA ON/OFF',et:'ET VÁLVULAS Y ACTUADORES',fam:'Válvulas y actuadores',log:1,ok:['JB-01','DIRECTO'],alims:['120VAC','24VDC'],mont:'12-F'},
+  xv:{n:'Válvula on/off neumática',k:'xv',sig:[['XY','DO'],['ZSO','DI'],['ZSC','DI']],det:'06 Valvulas y Actuadores',hd:'HD VÁLVULA ON/OFF',et:'ET VÁLVULAS Y ACTUADORES',fam:'Válvulas y actuadores',log:1,ok:['JB-01','DIRECTO'],alims:['120VAC','24VDC']},
+  cv:{n:'Válvula de control con posicionador',k:'cv',sig:[['?Y','AO']],det:'06 Valvulas y Actuadores',hd:'HD VÁLVULA DE CONTROL',et:'ET VÁLVULAS Y ACTUADORES',fam:'Válvulas y actuadores',log:1,ok:['JB-02','DIRECTO'],alims:['loop']},
+  mov:{n:'Actuador eléctrico multivuelta',k:'red',sig:[['HS','RED'],['ZS','RED'],['XY','RED']],det:'06 Valvulas y Actuadores',hd:'HD ACTUADOR ELÉCTRICO',et:'ET VÁLVULAS Y ACTUADORES',fam:'Válvulas y actuadores',log:1,ok:['SEG-DP01'],alims:['120VAC']},
+  pit:{n:'Transmisor de presión',k:'an',sig:[['PIT','AI']],det:'03 Presion',hd:'34 HD TRANSMISOR PRESIÓN',et:'14 ET TRANSMISOR PRESIÓN',fam:'Transmisores',ok:['JB-02','DIRECTO','SEG-FF01'],alims:['loop','24VDC']},
+  fit:{n:'Flujómetro magnético',k:'an',sig:[['FIT','AI']],det:'01 Flujo',hd:'32 HD TRANSMISOR FLUJO',et:'12 ET TRANSMISOR FLUJO',fam:'Transmisores',ok:['JB-02','DIRECTO','SEG-FF01'],alims:['24VDC','120VAC'],fe:1},
+  lit:{n:'Transmisor de nivel radar',k:'an',sig:[['LIT','AI']],det:'02 Nivel',hd:'33 HD TRANSMISOR NIVEL',et:'13 ET TRANSMISOR NIVEL',fam:'Transmisores',ok:['JB-02','DIRECTO','SEG-FF01'],alims:['loop','24VDC','120VAC']},
+  dit:{n:'Densímetro nuclear',k:'an',sig:[['DIT','AI']],det:'05 Analisis y Densidad',hd:'35 HD DENSÍMETRO NUCLEAR',et:'25 ET INSTRUMENTOS',fam:'Analizadores',ok:['JB-02','DIRECTO'],alims:['120VAC','24VDC']},
+  lsh:{n:'Switch de nivel',k:'di',sig:[['LSHH','DI']],det:'02 Nivel',hd:'HD SWITCH DE NIVEL',et:'25 ET INSTRUMENTOS',fam:'Transmisores',ok:['JB-01','DIRECTO'],alims:['120VAC','24VDC']},
+  pi:{n:'Manómetro',k:'loc',sig:[],det:'03 Presion',hd:'31 HD MANÓMETRO',et:'11 ET MANÓMETRO',fam:'Indicadores locales',ok:['LOCAL'],alims:['—']},
+  vdf:{n:'Variador de frecuencia',k:'red',sig:[['SC','RED'],['SI','RED']],det:'11 Cajas, Tableros y Paneles',hd:'HD VARIADOR',et:'ET VARIADORES (EE)',fam:'Variadores',log:1,ok:['SW-01'],alims:['480VAC']},
+  cam:{n:'Cámara CCTV',k:'red',sig:[['CAM','RED']],det:'10 CCTV y Comunicaciones',hd:'41 HD SIS CCTV',et:'21 ET SIS CCTV',fam:'CCTV',ok:['SW-01'],alims:['24VDC']}
+};
+const ALIMN={loop:'2 hilos (alimentado por el lazo)','24VDC':'4 hilos, 24 VDC','120VAC':'4 hilos, 120 VAC','480VAC':'Fuerza (EE)','—':'Sin alimentación'};
+const CONEX={
+  'DIRECTO':{n:'Directo al gabinete RIO-01',proto:'Cableado directo',cls:'hw'},
+  'JB-01':{n:'Caja de paso señales discretas',proto:'Cableado 24 VDC / 120 VAC',cls:'hw'},
+  'JB-02':{n:'Caja de paso señales análogas',proto:'4-20 mA + HART',cls:'hw'},
+  'SEG-FF01':{n:'Segmento H1',proto:'Foundation Fieldbus H1',cls:'ff',max:8},
+  'SEG-DP01':{n:'Red de actuadores',proto:'Profibus DP',cls:'dp',max:30},
+  'SW-01':{n:'Switch de terreno',proto:'EtherNet/IP / Modbus TCP',cls:'eth',max:16},
+  'LOCAL':{n:'Indicación local',proto:'Sin señal',cls:'loc'}
+};
+const PCOL={hw:'--c-hw',ff:'--c-ff',dp:'--c-dp',eth:'--c-eth',fo:'--c-fo'};
+
+/* ---------- Tarjetas de E/S por servicio (modelos de referencia; verificar con catálogo vigente) ---------- */
+const PLATS={ab:'Allen-Bradley ControlLogix 1756',s7:'Siemens ET 200SP'};
+const CARDS={
+  AI:{n:'Entrada análoga 4-20 mA HART, aislada',ty:'AI',tb:'TBAI-01',ab:['1756-IF8IH',8],s7:['6ES7134-6TD00-0CA1 · AI 4xI HART',4]},
+  AO:{n:'Salida análoga 4-20 mA HART, aislada',ty:'AO',tb:'TBAO-01',ab:['1756-OF8IH',8],s7:['6ES7135-6TD00-0CB1 · AQ 4xI HART',4]},
+  DI24:{n:'Entrada discreta 24 VDC',ty:'DI',tb:'TBDI-01',ab:['1756-IB16',16],s7:['6ES7131-6BH01-0BA0 · DI 16x24VDC',16]},
+  DI120:{n:'Entrada discreta 120 VAC',ty:'DI',tb:'TBDI-02',ab:['1756-IA16',16],s7:['6ES7131-6FD01-0BB1 · DI 4x120..230VAC',4]},
+  DO24:{n:'Salida discreta 24 VDC',ty:'DO',tb:'TBDO-01',ab:['1756-OB16E',16],s7:['6ES7132-6BH01-0BA0 · DQ 16x24VDC',16]},
+  DOR:{n:'Salida discreta a relé, contactos aislados',ty:'DO',tb:'TBDO-02',ab:['1756-OW16I',16],s7:['6ES7132-6HD01-0BB1 · RQ 4xNA',4]}
+};
+const CKEYS=['AI','AO','DI24','DI120','DO24','DOR'];
+const OPC={AI:['AI'],AO:['AO'],DI:['DI24','DI120'],DO:['DOR','DO24']};
+
+/* ---------- Típicos de lazo (lista estándar PENTA-DWR-1000-IN-2000) ---------- */
+const TIPL=[
+  {c:'2002',n:'AIT medidor de análisis (ORP, pH o turbidez)'},
+  {c:'2003',n:'DIT medición de densidad, 4 cables 120 VAC',k:'ai4ac',t:'dit',a:'120VAC'},
+  {c:'2004',n:'DIT medición de densidad, 4 cables 24 VDC',k:'ai4dc',t:'dit',a:'24VDC'},
+  {c:'2005',n:'FIT medición de flujo, 4 cables 120 VAC',k:'ai4ac',t:'fit',a:'120VAC'},
+  {c:'2006',n:'FIT medición de flujo, 4 cables 24 VDC',k:'ai4dc',t:'fit',a:'24VDC'},
+  {c:'2007',n:'LIT medición de nivel, 2 cables',k:'ai2',t:'lit',a:'loop'},
+  {c:'2008',n:'LIT medición de nivel, 4 cables 120 VAC',k:'ai4ac',t:'lit',a:'120VAC'},
+  {c:'2009',n:'LIT medición de nivel, 4 cables 24 VDC',k:'ai4dc',t:'lit',a:'24VDC'},
+  {c:'2010',n:'LIT nivel tipo radar, 4 cables 120 VAC'},
+  {c:'2011',n:'PDIT presión diferencial'},
+  {c:'2012',n:'PIT medición de presión, 2 cables',k:'ai2',t:'pit',a:'loop'},
+  {c:'2013',n:'ST velocidad, 2 cables'},{c:'2014',n:'ST velocidad, 4 cables 24 VDC'},{c:'2015',n:'ST velocidad, 4 cables 120 VAC'},
+  {c:'2016',n:'TE temperatura descansos motor'},{c:'2017',n:'TIT temperatura'},{c:'2018',n:'TT + VT temperatura y vibración'},
+  {c:'2019',n:'WIT pesómetro, señal 4-20 mA'},{c:'2020',n:'WIT pesómetro, señal comunicación',k:'red'},
+  {c:'2101',n:'ZS interruptores de posición (válvula manual)'},
+  {c:'2105',n:'LSH interruptor de nivel alto (tilt-switch), 120 VAC',k:'di',t:'lsh',a:'120VAC'},
+  {c:'2108',n:'XS equipo detector de metales'},
+  {c:'S/N',n:'SV control válvula solenoide 24 VDC (lista estándar, sin lámina)',k:'xv',t:'xv',a:'24VDC'},
+  {c:'S/N',n:'SV control válvula solenoide 120 VAC (lista estándar, sin lámina)',k:'xv',t:'xv',a:'120VAC'},
+  {c:'S/N',n:'FCV-FIT control de flujo 2 cables (lista estándar, sin lámina)',k:'cv',t:'cv',a:'loop'},
+  {c:'NUEVO',n:'PIT medición de presión, 4 cables 24 VDC (derivado de 2006)',k:'ai4dc',t:'pit',a:'24VDC'},
+  {c:'NUEVO',n:'LSH interruptor de nivel, 24 VDC (derivado de 2105)',k:'di',t:'lsh',a:'24VDC'}
+];
+const KINDN={ai2:'Transmisor 2 hilos',ai4dc:'Transmisor 4 hilos 24 VDC',ai4ac:'Transmisor 4 hilos 120 VAC',cv:'Lazo de control con válvula',xv:'Válvula on/off con solenoide y finales de carrera',di:'Interruptor discreto',red:'Equipo por red de comunicación'};
+
+/* ---------- Entregables ---------- */
+const ENT=[
+ {id:'gen',g:'PLA',car:'00 GENERALES',n:'Índice y simbología',tp:'PL',f:[0,1,2,2],src:'Todos los planos del proyecto'},
+ {id:'pid',g:'PLA',car:'01 P&ID',n:'Diagramas P&ID',tp:'PL',f:[0,1,2,2],src:'Instrumentos (base de datos)'},
+ {id:'laz',g:'PLA',car:'05 DIAG LAZOS',n:'Diagramas de lazo',tp:'PL',f:[0,0,0,2],src:'Instrumentos + E/S + bornes + típicos'},
+ {id:'blq',g:'PLA',car:'06 DIAG BLOQUES',n:'Diagramas de bloques',tp:'PL',f:[1,2,2,2],src:'Arquitectura'},
+ {id:'int',g:'PLA',car:'07 DIAG INTER',n:'Interconexionados',tp:'PL',f:[0,0,1,2],src:'Cajas JB, gabinete RIO, circuitos'},
+ {id:'seg',g:'PLA',car:'08 DIAG SEGMENT',n:'Diagramas de segmentos',tp:'PL',f:[0,0,1,2],src:'Redes de campo'},
+ {id:'fo',g:'PLA',car:'09 DIAG CABLES FO',n:'Diagramas de fibra óptica',tp:'PL',f:[0,0,1,2],src:'Enlaces FO de la arquitectura'},
+ {id:'log',g:'PLA',car:'10 DIAG LOG Y FUN',n:'Lógicos y funcionales',tp:'PL',f:[0,0,1,2],src:'Equipos con mando + filosofía'},
+ {id:'arq',g:'PLA',car:'21 ARQUITECTURAS',n:'Arquitectura de control',tp:'PL',f:[1,1,2,2],src:'Sistema de control'},
+ {id:'can',g:'PLA',car:'31 CANALIZA',n:'Canalizaciones',tp:'PL',f:[0,1,1,2],src:'Circuitos + conduits'},
+ {id:'det',g:'PLA',car:'41 DETALLES',n:'Detalles de montaje',tp:'PL',f:[0,0,1,2],src:'Biblioteca 06 DETALLES MONTAJE'},
+ {id:'dsp',g:'PLA',car:'51 DESP GRAF',n:'Despliegues gráficos',tp:'PL',f:[0,0,0,2],src:'P&ID + listado E/S'},
+ {id:'crt',g:'DOC',car:'01 CRT IN',n:'Criterios de diseño I&C',tp:'CR',f:[1,2,2,2],src:'Bases típicas › Criterio de diseño I&C'},
+ {id:'et',g:'DOC',car:'11–25 ET',n:'Especificaciones técnicas',tp:'ET',f:[0,1,2,2],src:'Familias de instrumentos'},
+ {id:'hd',g:'DOC',car:'31–44 HD',n:'Hojas de datos',tp:'HD',f:[0,0,2,2],src:'Instrumentos (una por tag)'},
+ {id:'lin',g:'DOC',car:'51 LIST INSTRUMENTOS',n:'Listado de instrumentos',tp:'LI',f:[1,1,2,2],src:'Instrumentos'},
+ {id:'lio',g:'DOC',car:'52 LIST IO',n:'Listado de E/S',tp:'LI',f:[0,1,2,2],src:'Señales + tarjetas por servicio'},
+ {id:'lci',g:'DOC',car:'53 LIST CIRCUITOS',n:'Listado de circuitos',tp:'LI',f:[0,0,1,2],src:'Cables de cada típico'},
+ {id:'lmt',g:'DOC',car:'54 LIST MATERIALES',n:'Listado de materiales',tp:'LI',f:[1,1,1,2],src:'Circuitos + conduits + cajas + tarjetas'},
+ {id:'lco',g:'DOC',car:'55 LIST CONDUITS',n:'Listado de conduits',tp:'LI',f:[0,0,1,2],src:'Circuitos',nuevo:1},
+ {id:'fil',g:'DOC',car:'61 FILOSOFIA DE CONTROL',n:'Filosofía de control',tp:'FC',f:[0,1,2,2],src:'Equipos con mando'},
+ {id:'rq',g:'COM',car:'25 GESTIÓN COMPRAS',n:'Requisiciones',tp:'RQ',f:[0,0,1,2],src:'ET + HD por familia'},
+ {id:'evt',g:'COM',car:'25 GESTIÓN COMPRAS',n:'Evaluaciones técnicas',tp:'EVT',f:[0,0,1,2],src:'Requisiciones'},
+ {id:'cap',g:'COM',car:'26 CAPEX-OPEX',n:'Estimación de costos',tp:'EC',f:[2,2,2,2],src:'MTO + equipos'}
+];
+const ENTI=Object.fromEntries(ENT.map(e=>[e.id,e]));
+const GRP={PLA:{n:'Planos I&C',ruta:'10 En Trabajo\\12 PLA IN'},DOC:{n:'Documentos I&C',ruta:'10 En Trabajo\\14 DOC IN'},COM:{n:'Compras y costos',ruta:'10 En Trabajo'}};
+const CLASE=['Clase 5 (orden de magnitud)','Clase 4 (conceptual)','Clase 3 (control de presupuesto)','Clase 2 (definitiva)'];
+
+/* ---------- Viñetas ---------- */
+const VIN={
+ plano:[
+  {id:'penta',n:'Formato Penta (lámina estándar 18.04.22)',ruta:'02 ESTANDARES\\01 SIMBOLOGIA\\Formatos Penta\\18.04.22',est:'penta'},
+  {id:'keypro',n:'Timbre Penta–Keypro con cliente (RA)',ruta:'00 CARPETA ZERO\\TIMBRE_PENTA_KEYPRO_RA.dwg',est:'keypro'},
+  {id:'cli',n:'Viñeta del cliente',ruta:'02 ESTANDARES\\02 CRITERIOS\\<cliente>',est:'cliente'}],
+ doc:[
+  {id:'pword',n:'Formato Word del proyecto',ruta:'10 En Trabajo\\19 FORMATOS PLA-DOC'},
+  {id:'ginf',n:'Plantilla de informes',ruta:'02 ESTANDARES\\09 GESTION\\Informes'}],
+ lista:[
+  {id:'pxls',n:'Listados Excel del proyecto',ruta:'10 En Trabajo\\19 FORMATOS PLA-DOC'},
+  {id:'mtx',n:'Matriz de documentos',ruta:'02 ESTANDARES\\09 GESTION\\Entregables por fase\\Matriz de documentos.xls'}]
+};
+/* Campos de viñeta: comunes a todo el proyecto (se pueden propagar) */
+const VF=[
+ ['contratista','Contratista'],['cliente','Cliente'],['proyecto','Nombre del proyecto'],['proyecto2','Subproyecto / área'],['fase','Etapa'],['contrato','N° contrato construcción'],
+ ['diseno','Diseñó'],['dibujo','Dibujó'],['jdisc','Jefe disciplina'],['jproy','Jefe proyecto'],['gting','Gte. ingeniería cliente'],['gtproy','Gte. proyecto cliente'],
+ ['sala','Sala eléctrica'],['gab','Gabinete de E/S'],['hmi','Estación de operación'],['tdi','Tablero alimentación instrumentos']
+];
+const BIB={
+ tip:['01 P&ID','02 Bloques y Arquitectura','03 Lazos','04 Segmentos','05 Fibra Optica','06 Interconexionado','07 Canalizaciones','08 Despliegues Graficos','09 Logicos','10 Unilineales','11 Isometricos','12 Malla Tierra y Pararrayos','13 Alumbrado','14 Sala Electrica','15 Detalles EE','16 Juegos EE Penta','17 Juegos IN Penta','18 CCTV'],
+ det:['00 Juegos de estandar','01 Flujo','02 Nivel','03 Presion','04 Temperatura','05 Analisis y Densidad','06 Valvulas y Actuadores','07 Correas, Motores y Mecanicos','08 Deteccion Incendio y Gas','09 Senalizacion y Mando Local','10 CCTV y Comunicaciones','11 Cajas, Tableros y Paneles','12 Soportes','13 Aire de Instrumentos y Tubing','14 Canalizacion, Cables y Fibra'],
+ hdet:['Adenda CRT','Data Instrumentos','ET HD Equipos','ET Instrumentos','Evaluacion tecnica','HD Instrumentos','Requisiciones']
+};
+const TIPPLA={pid:'01 P&ID',blq:'02 Bloques y Arquitectura',arq:'02 Bloques y Arquitectura',laz:'03 Lazos',seg:'04 Segmentos',fo:'05 Fibra Optica',int:'06 Interconexionado',can:'07 Canalizaciones',dsp:'08 Despliegues Graficos',log:'09 Logicos'};
+const GESTION=['00 Traspaso Comercial','01 Coordinador','02 Control Gestión','03 HSEG','04 Minutas','05 Notas de envío','06 Correspondencia','07 Calidad','08 RFI-SDI','09 KOM','10 Taller Mat','11 Auditoría','12 Hallazgos y Actividades Pendientes'];
+
+/* ---------- Estado ---------- */
+const DEF={fase:'det',vista:'ficha',sel:'PIT-1610',plat:'ab',plano:null,
+ proy:{cod:'P2861D',area:'000',cliente:'MLP',nombre:'Automatización de válvulas (simulación)',carpeta:'01 PROYECTOS\\MLP\\2861D Automatización válvulas TEC-16 OT#5'},
+ vin:{plano:'penta',doc:'pword',lista:'pxls'},
+ vinG:{contratista:'PENTA INGENIEROS ASOCIADOS',cliente:'MLP',proyecto:'AUTOMATIZACIÓN DE VÁLVULAS',proyecto2:'',fase:'INGENIERÍA DE DETALLES',contrato:'',
+   diseno:'',dibujo:'',jdisc:'',jproy:'',gting:'',gtproy:'',sala:'000-ER-001',gab:'GABINETE RIO 000-RIO-01',hmi:'ESTACIÓN DE OPERACIÓN (HMI)',tdi:'000-TDI-001'},
+ reglas:{res:20,esp:20,do:'DOR'},
+ planos:[],
+ ins:[
+  {tag:'XV-1601',desc:'Descarga estanque TK-16',tipo:'xv',con:'JB-01',pid:'PID-01',alim:'120VAC'},
+  {tag:'XV-1602',desc:'Alimentación a hidrociclones',tipo:'xv',con:'JB-01',pid:'PID-01',alim:'120VAC'},
+  {tag:'XV-1605',desc:'Aislamiento aire de planta',tipo:'xvb',con:'JB-01',pid:'PID-01',alim:'24VDC'},
+  {tag:'XV-1606',desc:'Descarga espesador TK-16 a bombas',tipo:'xvc',con:'JB-01',pid:'PID-02',alim:'120VAC'},
+  {tag:'LSHH-1614',desc:'Nivel muy alto cajón de descarga',tipo:'lsh',con:'DIRECTO',pid:'PID-01',alim:'120VAC'},
+  {tag:'PIT-1610',desc:'Presión descarga bomba BP-16A',tipo:'pit',con:'DIRECTO',pid:'PID-02',alim:'loop',rango:'0-1000 kPa',alm:'H,L',marca:'',modelo:''},
+  {tag:'DIT-1615',desc:'Densidad de pulpa en descarga',tipo:'dit',con:'JB-02',pid:'PID-02',alim:'120VAC',rango:'1,0-2,0 t/m³',alm:'H'},
+  {tag:'FIT-1611',desc:'Flujo de pulpa a hidrociclones',tipo:'fit',con:'JB-02',pid:'PID-02',alim:'24VDC',rango:'0-800 m³/h',alm:'L'},
+  {tag:'FV-1611',desc:'Control de flujo a hidrociclones',tipo:'cv',con:'JB-02',pid:'PID-02',alim:'loop'},
+  {tag:'LIT-1612',desc:'Nivel estanque TK-16',tipo:'lit',con:'SEG-FF01',pid:'PID-01',alim:'loop',alm:'H,L'},
+  {tag:'PIT-1613',desc:'Presión batería de hidrociclones',tipo:'pit',con:'SEG-FF01',pid:'PID-02',alim:'loop'},
+  {tag:'MOV-1603',desc:'Válvula dardo línea A',tipo:'mov',con:'SEG-DP01',pid:'PID-01',alim:'120VAC'},
+  {tag:'MOV-1604',desc:'Válvula dardo línea B',tipo:'mov',con:'SEG-DP01',pid:'PID-01',alim:'120VAC'},
+  {tag:'VDF-1620',desc:'Variador bomba BP-16A',tipo:'vdf',con:'SW-01',pid:'PID-02',alim:'480VAC'},
+  {tag:'CAM-1630',desc:'Cámara sector estanque',tipo:'cam',con:'SW-01',pid:'PID-01',alim:'120VAC'},
+  {tag:'PI-1616',desc:'Presión succión bomba BP-16A',tipo:'pi',con:'LOCAL',pid:'PID-02',alim:'—'}
+ ]};
+const FODEF=[{id:'CF-01',de:'RIO-01',a:'PLC-01',hilos:6,tipo:'MULTIMODO OM3 ARMADA',conector:'LC',odfDe:'ODF RIO-01',odfA:'ODF PLC-01',jumper:'LC-LC DÚPLEX 2 m',conv:'—',len:300},
+ {id:'CF-02',de:'PLC-01',a:'SALA DE CONTROL',hilos:12,tipo:'MONOMODO',conector:'LC',odfDe:'ODF PLC-01',odfA:'ODF SALA DE CONTROL',jumper:'LC-LC DÚPLEX 3 m',conv:'SWITCH CON SFP 1000BASE-LX',len:800}];
+const KEY='reyengi4-v1';
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.ins)||!S.vinG)S=JSON.parse(JSON.stringify(DEF));
+S.fo=Array.isArray(S.fo)&&S.fo.length?S.fo:JSON.parse(JSON.stringify(FODEF));
+S.codif={patron:'{PROY}-{AREA}-{DISC}-{TIPO}-{NUM}',disc:'IN',dig:3,...(S.codif||{})};
+S.cerr=S.cerr||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const fi=()=>FASES.findIndex(f=>f[0]===S.fase);
+const insAlim=i=>i.alim||TIPOS[i.tipo].alims[0];
+
+/* ---------- Modelo: todo se deriva de los instrumentos ---------- */
+function kindDe(i){if(i.cx.cls==='loc')return null;if(i.cx.cls!=='hw')return 'red';const k=i.t.k;
+  if(k==='an'){const a=insAlim(i);return a==='loop'?'ai2':a==='24VDC'?'ai4dc':'ai4ac';}return k;}
+function tipicoDe(i){const k=kindDe(i);if(!k)return null;
+  return TIPL.find(x=>x.k===k&&x.t===(i.t.base||i.tipo)&&(!x.a||x.a===insAlim(i)))||TIPL.find(x=>x.k===k&&!x.t)||{c:'GEN',n:'Típico genérico: '+KINDN[k],k};}
+function cardDe(i,ty){const o=i.cards&&i.cards[ty];if(o)return o;
+  if(ty==='DI')return insAlim(i)==='120VAC'?'DI120':'DI24';if(ty==='DO')return S.reglas.do;return ty;}
+function modelo(){
+  const ins=S.ins.map((r,ix)=>{const t=TIPOS[r.tipo],cx=CONEX[r.con];const k=r.tag.indexOf('-');const num=k>=0?r.tag.slice(k+1):r.tag;const L=r.tag[0];
+    const o={...r,t,cx,num,L,fila:ix+1};
+    o.sig=t.sig.map(([p,ty])=>({tag:p.replace('?',L)+'-'+num,ty:cx.cls==='hw'?ty:'RED'}));
+    o.kind=kindDe(o);o.tip=tipicoDe(o);o.tg=S.proy.area+r.tag.replace(/-/g,'');return o;});
+  const res=S.reglas.res/100,P=S.plat;
+  // tarjetas
+  const hw=[];ins.forEach(i=>i.sig.forEach(s=>{if(s.ty!=='RED'){s.card=cardDe(i,s.ty);hw.push(s);}}));
+  const cnt={};hw.forEach(s=>cnt[s.card]=(cnt[s.card]||0)+1);
+  const mods=[];let slot=1;const base={};
+  CKEYS.filter(k=>cnt[k]).forEach(k=>{const ch=CARDS[k][P][1];const m=Math.max(1,Math.ceil(cnt[k]*(1+res)/ch));base[k]=slot;
+    for(let j=0;j<m;j++)mods.push({slot:slot+j,key:k,model:CARDS[k][P][0],ch,used:Math.max(0,Math.min(ch,cnt[k]-j*ch))});slot+=m;});
+  const idx={},tbn={},fu={};
+  hw.forEach(s=>{const k=s.card,c=CARDS[k][P][1];const n=idx[k]=(idx[k]||0);idx[k]++;
+    s.slot=base[k]+Math.floor(n/c);s.canal=n%c;s.dir=`RIO-01 · S${s.slot} · C${pad(s.canal)}`;
+    const tb=CARDS[k].tb;const b=tbn[tb]||0;tbn[tb]=b+3;s.tb=tb;s.tbn=b+1;const f=(fu[tb]||0)+1;fu[tb]=f;s.fu='FU'+pad(f);});
+  // red
+  const nodo={};ins.forEach(i=>i.sig.forEach(s=>{if(s.ty==='RED'){nodo[i.con]=nodo[i.con]||{};if(!(i.tag in nodo[i.con]))nodo[i.con][i.tag]=Object.keys(nodo[i.con]).length+1;s.dir=`${i.con} · nodo ${nodo[i.con][i.tag]}`;}}));
+  // bornes en cajas de paso
+  const born={};ins.forEach(i=>{if(i.con.startsWith('JB'))i.sig.forEach(s=>{const b=born[i.con]||0;born[i.con]=b+3;s.born=`X1:${b+1}-${b+2}`;s.jbn=b+1;});});
+  const io=[];ins.forEach(i=>{i.io=i.sig.map(s=>{const r={...s,inst:i.tag,desc:i.desc,proto:i.cx.proto,con:i.con};io.push(r);return r;});});
+  // cables según típico
+  const cab=[],cond=[];let cd=0;const C=CR();
+  const addCab=(id,de,a,spec,len,dia,tags,uso)=>{let c=null;if(dia){cd++;c='CD-'+pad(cd,3);cond.push({id:c,dia,len,cab:id,de,a,tags});}const o={id,de,a,spec,len,cd:c,tags,uso};cab.push(o);return o;};
+  ins.forEach(i=>{const dest=i.con==='DIRECTO'?'RIO-01':i.con;i.cb={};const k=i.kind,T=[i.tag];
+    if(i.cx.cls==='hw'){
+      if(i.t.fe)i.cb.X01=addCab(i.tg+'-X01',i.tag.replace(/^\w+/,'FE'),i.tag,'Cable del proveedor',10,C.dmin,T,'Elemento primario');
+      if(k==='ai2'||k==='ai4dc'||k==='ai4ac'||k==='cv')i.cb.J01=addCab(i.tg+'-J01',i.tag,dest,C.an,40,C.dmin,T,'Señal 4-20 mA + HART');
+      if(k==='ai4dc')i.cb.J02=addCab(i.tg+'-J02',i.tag,'RIO-01',C.p24,45,C.dmin,T,'Alimentación 24 VDC');
+      if(k==='ai4ac')i.cb.F01=addCab(i.tg+'-F01',i.tag,S.vinG.tdi||'TDI',C.p120,60,C.dmin,T,'Alimentación 120 VAC');
+      if(k==='xv'){i.cb.C01=addCab(i.tg+'-C01',i.tag,dest,C.dos,40,C.dmin,T,'Solenoide');i.cb.C02=addCab(i.tg+'-C02',i.tag,dest,C.dis,40,C.dmin,T,'Finales de carrera');}
+      if(k==='di')i.cb.C01=addCab(i.tg+'-C01',i.tag,dest,C.di1,40,C.dmin,T,'Contacto');
+    }else if(i.cx.cls==='ff')i.cb.R01=addCab(i.tg+'-R01',i.tag,i.con,'Spur FF tipo A 18 AWG',25,C.dmin,T,'Ramal FF');
+    else if(i.cx.cls==='dp')i.cb.R01=addCab(i.tg+'-R01',i.tag,i.con,'Profibus DP 1x2x22 AWG',25,C.dmin,T,'Red DP');
+    else if(i.cx.cls==='eth')i.cb.R01=addCab(i.tg+'-R01',i.tag,i.con,'Cat6 S/FTP industrial',60,'1"',T,'Ethernet');
+  });
+  const grupos={};ins.forEach(i=>{if(i.cx.cls!=='loc')(grupos[i.con]=grupos[i.con]||[]).push(i)});
+  Object.keys(CONEX).filter(k=>grupos[k]&&k!=='DIRECTO').forEach(k=>{const arr=grupos[k],cx=CONEX[k],tags=arr.map(i=>i.tag);let c;
+    if(cx.cls==='hw'){const ns=arr.reduce((a,i)=>a+i.sig.length,0);const pares=[6,12,24,36,48].find(x=>x>=Math.ceil(ns*(1+C.rpares/100)))||48;c=addCab('CM-'+k,k,'RIO-01',`Multipar ${pares}p+Sh ind.+Sh gral. #18AWG`,120,'1-1/2"',tags,'Multipar');}
+    else if(cx.cls==='ff')c=addCab('CT-'+k,k,'RIO-01','Troncal FF tipo A 18 AWG',150,'1"',tags,'Troncal FF');
+    else if(cx.cls==='dp')c=addCab('CT-'+k,k,'RIO-01','Profibus DP 1x2x22 AWG',150,'1"',tags,'Troncal DP');
+    else c=addCab('CT-'+k,k,'RIO-01','Cat6 S/FTP industrial',30,'1"',tags,'Ethernet');
+    arr.forEach(i=>i.cb.CM=c);});
+  S.fo.forEach(f=>addCab(f.id,f.de,f.a,`FO ${f.hilos}F ${f.tipo}`,+f.len||0,null,[],'Fibra óptica'));
+  ins.forEach(i=>{i.cab=cab.filter(c=>c.tags.includes(i.tag));i.cond=cond.filter(c=>c.tags.includes(i.tag));});
+  // documentos
+  const docs=[],ctr={},PP=S.proy;
+  const add=(ent,title,refs,extra)=>{const e=ENTI[ent];ctr[e.tp]=(ctr[e.tp]||0)+1;const d={ent,code:codigoDoc(e.tp,ctr[e.tp]),title,refs,...extra};docs.push(d);return d;};
+  const uniq=a=>[...new Set(a)];
+  const GEN={
+    gen:()=>{add('gen','Índice de planos I&C',[],{key:'IDX'});add('gen','Simbología y nomenclatura I&C',[],{key:'SIM'});},
+    pid:()=>uniq(ins.map(i=>i.pid)).sort().forEach(p=>add('pid',`Aporte I&C a P&ID ${p}`,ins.filter(i=>i.pid===p).map(i=>[i.tag,`burbuja en ${p}`]),{key:p})),
+    laz:()=>ins.filter(i=>i.kind).forEach(i=>add('laz',`Lazo ${i.tag} · ${i.desc}`,[[i.tag,`típico ${i.tip.c} · `+i.sig.map(s=>s.tag).join(', ')]],{tag:i.tag,key:i.tag})),
+    blq:()=>add('blq','Diagrama de bloques del sistema de control',ins.filter(i=>i.sig.length).map(i=>[i.tag,`bloque ${i.con}`]),{key:'U'}),
+    int:()=>{Object.keys(grupos).filter(k=>CONEX[k].cls==='hw'&&k!=='DIRECTO').forEach(k=>add('int',`Interconexionado ${k}`,grupos[k].map(i=>[i.tag,'bornes '+i.sig.map(s=>s.born).join(', ')]),{key:k}));
+      const h=ins.filter(i=>i.cx.cls==='hw');if(h.length)add('int','Interconexionado gabinete RIO-01',h.map(i=>[i.tag,i.sig.map(s=>`${s.tb}:${s.tbn}`).join(', ')]),{gab:1,key:'RIO-01'});},
+    seg:()=>Object.keys(grupos).filter(k=>!['hw','loc'].includes(CONEX[k].cls)).forEach(k=>add('seg',`${CONEX[k].cls==='eth'?'Red':'Segmento'} ${k} · ${CONEX[k].proto}`,grupos[k].map(i=>[i.tag,i.sig[0].dir.replace(k+' · ','')]),{key:k})),
+    fo:()=>add('fo','Enlaces FO: '+S.fo.map(f=>f.id).join(' · '),ins.filter(i=>i.sig.length).map(i=>[i.tag,'ruta '+S.fo.map(f=>f.id).join(' → ')]),{key:'U'}),
+    log:()=>ins.filter(i=>i.t.log).forEach(i=>add('log',`Lógica de mando ${i.tag}`,[[i.tag,'permisivos, enclavamientos y modos']],{key:i.tag})),
+    arq:()=>add('arq','Arquitectura de control',ins.filter(i=>i.sig.length).map(i=>[i.tag,`${i.con} → RIO-01 → PLC-01 → sala de control`]),{key:'U'}),
+    can:()=>add('can','Canalizaciones de instrumentación',ins.filter(i=>i.cond.length).map(i=>[i.tag,i.cond.map(c=>`${c.id} ${c.dia}`).join(', ')]),{key:'U'}),
+    det:()=>uniq(ins.map(i=>i.t.det)).forEach(d=>add('det',`Detalle típico · ${d.replace(/^\d+ /,'')}`,ins.filter(i=>i.t.det===d).map(i=>[i.tag,'06 DETALLES MONTAJE\\'+d]),{key:d})),
+    dsp:()=>add('dsp','Despliegue gráfico del área',ins.filter(i=>i.sig.length).map(i=>[i.tag,'objeto HMI con '+i.sig.length+' señal(es)']),{key:'U'}),
+    crt:()=>add('crt','Criterio de diseño de instrumentación y control',[]),
+    et:()=>uniq(ins.map(i=>i.t.et)).forEach(e=>add('et',e.replace(/^\d+ /,''),ins.filter(i=>i.t.et===e).map(i=>[i.tag,'alcance de la especificación']))),
+    hd:()=>ins.forEach(i=>add('hd',`${i.t.hd.replace(/^\d+ /,'')} · ${i.tag}`,[[i.tag,'hoja de datos del tag']])),
+    lin:()=>add('lin','Listado de instrumentos',ins.map(i=>[i.tag,'fila '+i.fila])),
+    lio:()=>add('lio','Listado de entradas y salidas',ins.filter(i=>i.io.length).map(i=>[i.tag,i.io.map(s=>s.dir).join(' / ')])),
+    lci:()=>add('lci','Listado de circuitos',ins.filter(i=>i.cab.length).map(i=>[i.tag,i.cab.map(c=>c.id).join(', ')])),
+    lmt:()=>add('lmt','Listado de materiales (MTO)',ins.filter(i=>i.cab.length).map(i=>[i.tag,'cables, conduits, prensaestopas, tarjetas'])),
+    lco:()=>add('lco','Listado de conduits',ins.filter(i=>i.cond.length).map(i=>[i.tag,i.cond.map(c=>c.id).join(', ')])),
+    fil:()=>add('fil','Filosofía de control',ins.filter(i=>i.t.log).map(i=>[i.tag,'secuencia y modos de operación'])),
+    rq:()=>uniq(ins.map(i=>i.t.fam)).forEach(f=>add('rq',`Requisición · ${f}`,ins.filter(i=>i.t.fam===f).map(i=>[i.tag,'ítem de compra']))),
+    evt:()=>uniq(ins.map(i=>i.t.fam)).forEach(f=>add('evt',`Evaluación técnica · ${f}`,ins.filter(i=>i.t.fam===f).map(i=>[i.tag,'comparación de ofertas']))),
+    cap:()=>add('cap',`Estimación de costos · ${CLASE[fi()]}`,[])
+  };
+  ENT.forEach(e=>GEN[e.id]());
+  const traza={};docs.forEach(d=>d.refs.forEach(([t,x])=>{(traza[t]=traza[t]||[]).push({d,x})}));
+  S.planos.forEach(p=>{if(p.tag)(traza[p.tag]=traza[p.tag]||[]).push({d:{ent:'laz',code:'Plano creado',title:'Diagrama de lazo dibujado en la suite'},x:'viñeta y campos editables',plano:p.id});});
+  const mto=[];const sum={};
+  cab.forEach(c=>{sum[c.spec]=(sum[c.spec]||0)+c.len});
+  Object.entries(sum).forEach(([k,v])=>mto.push(['Cable '+k,'m',v,'Listado de circuitos']));
+  const sd={};cond.forEach(c=>{sd[c.dia]=(sd[c.dia]||0)+c.len});
+  Object.entries(sd).forEach(([k,v])=>mto.push([`Conduit ${C.cmat} ${k}`,'m',v,'Listado de conduits']));
+  mto.push(['Prensaestopas','u',cab.filter(c=>c.cd).length*2,'2 por circuito']);
+  mods.forEach(m=>{});const mc={};mods.forEach(m=>mc[m.model]=(mc[m.model]||0)+1);Object.entries(mc).forEach(([k,v])=>mto.push(['Tarjeta '+k,'u',v,`Listado de E/S (reserva ${S.reglas.res} %)`]));
+  const hwJ=Object.keys(grupos).filter(k=>CONEX[k].cls==='hw'&&k!=='DIRECTO').length;if(hwJ)mto.push([`Caja de paso (JB) ${C.jbmat}`,'u',hwJ,'Interconexionados']);
+  const ff=Object.keys(grupos).filter(k=>CONEX[k].cls==='ff').length;if(ff){mto.push(['Acondicionador de energía FF','u',ff,'Segmentos']);mto.push(['Terminador FF','u',ff*2,'Segmentos']);}
+  const dp=Object.keys(grupos).filter(k=>CONEX[k].cls==='dp').length;if(dp)mto.push(['Terminador Profibus DP','u',dp*2,'Segmentos']);
+  return {ins,io,cab,cond,docs,traza,grupos,mto,mods};
+}
+const docDe=(M,ent,f)=>M.docs.find(d=>d.ent===ent&&(!f||f(d)));
+/* ================= Bases típicas: criterio de diseño I&C consolidado =================
+   Fuentes (02 ESTANDARES\02 CRITERIOS): Anglo PLB-0000-CRT-1000-IN-0001; Centinela CEN-ST-000-I-GD-001;
+   Collahuasi PGP-I-000-DC-J-003/006/007/008/009 y GU-J-015; CMP GDP-I-CDI-001/002; Codelco ST-TI-026, ST-TI-030,
+   SGPD-02IIN-CRTTC-0001; BHP MinAm CRT01004; Escondida UCMPS-0000-IC-CRT-11001, 25713-220-3DR-J11-00001 (OGP1),
+   25870-000-3DR-J11-00002 (EWS); Spence SPC-0000-IC-DES-9000001.
+   Fila: [tema, requisito, valor base, lo que piden los clientes, usado por la suite] */
+const CRIT_DOC='02 ESTANDARES\\02 CRITERIOS\\00 BASE I&C\\PENTA-CRT-1000-IN-0001 Criterio diseño I&C base RA.docx';
+const CRIT_BASE={an:'1x1p+Sh #16AWG',p24:'1x1p+Sh #16AWG',p120:'1x3c #14AWG',dos:'1x3c #14AWG',dis:'1x4c #14AWG',di1:'1x3c #14AWG',dmin:'3/4"',cmat:'acero galvanizado',jbmat:'acero inoxidable 316 IP66',rpares:20};
+const CR=()=>({...CRIT_BASE,...(S.crit||{})});
+const CRIT=[
+ ['Normas y códigos','Simbología e identificación','ISA 5.1 (P&ID y tags), ISA 5.4 (diagramas de lazo), ISA 20 (hojas de datos)','Todos los clientes citan ISA 5.1; Anglo y CMDIC exigen ISA 5.4 para lazos',1],
+ ['Normas y códigos','Buses de campo','IEC 61158 (FF H1 / Profibus), IEC 61784','BHP Escondida y Spence: FF H1 según IEC 61158; Codelco: FF, Profibus PA, DeviceNet',0],
+ ['Normas y códigos','Instalación eléctrica','NEC/NFPA 70 y normativa SEC (RIC N°04 canalizaciones, N°06 puesta a tierra); se aplica la más exigente','Anglo, CMP, Centinela, Codelco: NEC + SEC; Spence: NEC o código local, el más exigente',0],
+ ['Normas y códigos','Grado de protección','IEC 60529 (IP) / NEMA 250','Todos',0],
+ ['Condiciones de sitio','Protección de instrumentos y cajas en terreno','IP66 / NEMA 4X (inoxidable o equivalente en zonas corrosivas)','Spence: NEMA 4 o IP66, 4X corrosivo; Anglo y CMDIC: IP65 mínimo; Centinela: IP66',1],
+ ['Condiciones de sitio','Gabinetes en salas eléctricas','IP55 / NEMA 12','Spence: NEMA 12/IP55; CMDIC: Rittal; Codelco: según ST-TI-029',0],
+ ['Condiciones de sitio','Altitud y temperatura','Según documento de condiciones de sitio del cliente; derrateo de UPS 1 % cada 100 m sobre 1000 m','Ningún criterio I&C fija valores; todos remiten a su documento de sitio. Spence define el derrateo de UPS',0],
+ ['Identificación','Formato de tag de instrumento','ÁREA-FUNCIÓN-NÚMERO (ej. 000-PIT-1610), función según ISA 5.1','Codelco 3110-LIT-120; Escondida 0530-LIT-0101A (4+4 dígitos); Anglo 4810-PDAH-214; Centinela 400-FIT-1232A; CMDIC AAAA-XXX-NNNNN; CMP 100-LIT-120',1],
+ ['Identificación','Tag de circuito','TAG del instrumento + tipo + correlativo: J señal 4-20 mA, J02 alimentación 24 VDC, F alimentación 120 VAC, C discretas, R redes, X cable del proveedor','CMDIC: tag-JPP (J analógica, C 120 Vac, D DC, R comunicaciones, S incendio); Centinela: C, S, F, R; Escondida: J, DC, C, CP, R, S, G. Típicos Penta: J01, J02, F01, C01, X01',1],
+ ['Identificación','Tag de señal de E/S','Igual al tag del instrumento con la función de la señal (ZSO-1601, XY-1601)','CMDIC: el tag del instrumento es el tag de E/S, con sufijos ZSH, ZSL, RUN, TRIP, CMD',1],
+ ['Señales','Señal análoga','4-20 mA con HART, 2 hilos alimentados por el lazo cuando el instrumento lo permite','BHP MinAm: HART obligatorio en analógicos; Codelco, Anglo, CMP, CMDIC: 4-20 mA + HART',1],
+ ['Señales','Uso de bus de campo','Según cliente: FF H1 en BHP Escondida y Spence (control regulatorio), Profibus DP para actuadores y equipos eléctricos, EtherNet/IP para paquetes. Cableado convencional en el resto','Spence: FF por defecto (4-20 mA solo con desviación, salvo relaves); Escondida: FF H1, 4-20 mA solo con aprobación; CMP: FF solo con informe técnico; Codelco: FF preferente',1],
+ ['Señales','Señales prohibidas en bus','Paradas de emergencia, detección de incendio y gas y enclavamientos de seguridad van cableados','BHP Escondida explícito; Codelco y CMDIC: enclavamientos de seguridad cableados',0],
+ ['Señales','Señales discretas: tensión','120 VAC por defecto (BHP, Anglo, CMDIC). 24 VDC cuando el cliente lo acepta o en paquetes que lo traen','Anglo y CMDIC: 120 Vac; Spence y OGP1: DI/DO 120 Vac (24 Vdc solo en PLC de molinos); Centinela: 24 VDC o 120 VAC; CMP: 120 VAC y 24 Vcc',1],
+ ['Señales','Lógica de falla segura','Contacto cerrado en condición normal; abre en alarma o falla (normalmente energizado)','BHP MinAm, Escondida, Spence, Anglo y CMDIC lo exigen',1],
+ ['Señales','Contactos de switches','SPDT, 120 VAC 2 A mínimo; DPDT o 2 SPDT donde se pide enclavamiento cableado','BHP MinAm: SPDT 2 A; Escondida: DPDT; Spence: 2 SPDT herméticos; Codelco pull-cord: 2 SPDT 10 A',0],
+ ['Señales','Alarmas de proceso','Configuradas en el sistema de control desde la señal análoga; switch discreto solo como protección adicional','BHP MinAm explícito',1],
+ ['Alimentación','Instrumentos de 2 hilos','24 VDC desde el gabinete de E/S, con fusible por lazo en la bornera','Codelco ST-TI-026 §7.6; Spence §13.1.5; CMP: bornera portafusible en todas las E/S',1],
+ ['Alimentación','Instrumentos de 4 hilos','120 VAC ±10 %, 50 Hz desde tablero de distribución de instrumentos (TDI) alimentado por UPS; 24 VDC cuando el instrumento lo permite','Codelco y Escondida: 120 VAC; Spence: 120 Vac desde UPS; típicos Penta 2003–2010 con variantes 24 VDC y 120 VAC',1],
+ ['Alimentación','UPS','Doble conversión, 60 min de autonomía, 20 % de margen','Codelco automatización 60 min; Spence 1 h; OGP1 60 min (120 min en sitios remotos); Codelco informática 45 min',0],
+ ['Alimentación','Fuentes 24 VDC','Redundantes, dimensionadas a la carga + 30 %','Anglo: +30 %; OGP1: +30 %; CMDIC: redundantes con voting unit; CMP: 20 % reserva',0],
+ ['Sistema de control','Arquitectura','CPU redundante (hot standby), fuentes y red redundantes; E/S remotas en gabinetes de terreno unidas por fibra óptica','CMP: fault tolerant hasta el backplane; Centinela: CPU hot back-up sin E/S redundantes; CMDIC: todo redundante',1],
+ ['Sistema de control','Reserva de E/S instalada','20 % por tipo de señal, cableada a bornes','Anglo 20 %; Codelco 20 %; Spence 20 % al FAT; OGP1 20 %; Escondida 25 %; CMP 15 %',1],
+ ['Sistema de control','Espacio de reserva en gabinetes','30 % de espacio y ranuras libres','Anglo 30 %; CMDIC 30 %; OGP1 30 %; Spence 20 %; CMP 10 %',0],
+ ['Sistema de control','Capacidad libre de CPU y memoria','50 % libre después de las pruebas en terreno','Spence 50 %; Escondida 50 % memoria; OGP1 60 % CPU',0],
+ ['Sistema de control','Tarjeta para señal análoga','AI y AO 4-20 mA HART con canales aislados','CMP GDP-I-CDI-002 §9.2.7; Spence §11.4.3',1],
+ ['Sistema de control','Tarjeta para señal discreta','DI 120 VAC o 24 VDC aislada; DO a relé con contacto seco 120 VAC 2 A / 24 VDC 1 A, aislada y con indicación de estado','CMP §9.2.7; Spence §11.4.3: DI 120 Vac aislado, DO 120 Vac a relé; OGP1: DO carga mínima 2 A',1],
+ ['Sistema de control','Separación de voltajes en tarjetas y borneras','Tarjetas y borneras distintas para 24 VDC, 120 VAC y señales análogas (TBAI, TBAO, TBDI, TBDO)','Escondida y Spence: no mezclar 120 Vac con 24 Vdc; típicos Penta usan TBAI-01, TBDI-01',1],
+ ['Sistema de control','Protección contra transientes','Supresor en lazos de terreno: en serie en 2 hilos, en alimentación y señal en 4 hilos','CMDIC: DEHN en todo instrumento y Blitzductor en E/S; Escondida: supresores en todas las tarjetas',0],
+ ['Redes de campo','Foundation Fieldbus H1: equipos por segmento','8 equipos máximo, con hasta 3 válvulas','Escondida 8 (2 válvulas críticas); Spence 10 (3 válvulas, macrociclo 1 s); Centinela 10 (6 válvulas)',1],
+ ['Redes de campo','FF H1: reglas de diseño','Transmisor y válvula del mismo lazo en el mismo segmento; LAS de respaldo; acondicionador redundante; mínimo 12 V en el equipo; ramal máximo 60 m','Escondida spur 60 m; Spence spur 120 m y 15 V; Centinela spur 60/30/10 m según equipos; Codelco 9–32 V',1],
+ ['Redes de campo','Profibus DP','Máximo 30 nodos; actuadores de servicio y reserva en segmentos distintos','Escondida 30 nodos; Spence 6 nodos en gabinetes RIO, 20/10 en accionamientos',1],
+ ['Redes de campo','Ethernet de terreno','EtherNet/IP preferente para paquetes; Modbus TCP como alternativa; tramos > 100 m en fibra óptica','BHP MinAm: EtherNet/IP primero; Spence: > 100 m en FO',0],
+ ['Cables','Señal análoga 1 par','1 par trenzado con pantalla, 16 AWG, 300 V, 90 °C','Codelco, Centinela, CMDIC, Escondida, Anglo: 16 AWG; Spence y CMP: 18 AWG',1],
+ ['Cables','Multipar análogo','18 AWG con pantalla individual por par y pantalla general, drenaje 20 AWG','Centinela y CMDIC 18 AWG; CMP 20 AWG; Spence 18 AWG XLPE',1],
+ ['Cables','Señales discretas','14 AWG, 600 V; cables separados para DI y DO','Anglo, Centinela y CMDIC 14 AWG; CMP 16 AWG; Spence 16–18 AWG con DI/DO separados',1],
+ ['Cables','Alimentación de instrumentos','3 conductores 14 AWG, 600 V','Anglo y Centinela 14 AWG mínimo; CMDIC 12 AWG; CMP 12–16 AWG; Spence 14–16 AWG',1],
+ ['Cables','Buses','FF tipo A 18 AWG (chaqueta naranja); Profibus DP 22 AWG (chaqueta púrpura); Cat6 S/FTP industrial','Spence Belden 3076F / 3079A; Escondida Belden 1334A / 3079A',1],
+ ['Cables','Reserva de pares en multipares','20 %','Centinela 20 %',1],
+ ['Cables','Colores de conductores','Señal + negro, − blanco (o rojo/blanco); 24 VDC café/gris; 120 VAC rojo/blanco/verde','CMDIC: 4-20 mA negro/blanco, 24 VDC café/gris, 120 VAC rojo/blanco/verde; Escondida: rojo (+)/blanco (−); típicos Penta: Ne/Ro',1],
+ ['Cables','Empalmes','No se permiten empalmes en terreno','Escondida',0],
+ ['Canalizaciones','Conduit','Acero galvanizado ANSI C80.1 en zonas no corrosivas; con PVC o PVC Sch 80 en corrosivas; diámetro mínimo 3/4"','Escondida C80.1 o PVC Sch 80; Spence galvanizado / con PVC (mínimo ilegible en el PDF, verificar); RIC N°04',1],
+ ['Canalizaciones','Llenado máximo','40 % en conduits y escalerillas','Escondida 40 %; RIC N°04 por número de conductores',0],
+ ['Canalizaciones','Segregación','Cuatro grupos: (1) 4-20 mA, buses y RTD; (2) 24 VDC; (3) 120 VAC; (4) fuerza. Separación conduit–conduit: 1-3 = 3", 1-4 = 12"; fibra óptica en canalización dedicada','Spence Tabla 15.1 (niveles 1 a 5); Escondida: no mezclar 120 Vac con 24 Vdc, FF ni Profibus',1],
+ ['Canalizaciones','Acometida a instrumento','Conduit flexible estanco de 1 m máximo o prensaestopas','Spence',0],
+ ['Cajas y gabinetes','Caja de paso (JB) en terreno','Acero inoxidable 316, IP66, bornes de reserva 20 %, un cable por borne','Spence: un cable por borne, 20 % reserva; Anglo: 30 % espacio; CMDIC: inoxidable',1],
+ ['Cajas y gabinetes','Gabinete de E/S','Chapa ≥ 1,9 mm, entrada por abajo, borneras portafusible, barras de tierra separadas','Spence §11.4.1; CMDIC Rittal 1000×600×2000 mm separado del de CPU; CMP portafusibles',0],
+ ['Puesta a tierra','Pantallas','A tierra en un solo punto, en el gabinete de E/S, sobre barra de instrumentación aislada','Todos los clientes',1],
+ ['Puesta a tierra','Barras','Tres barras: seguridad (Gnd1), referencia 0 V aislada (Gnd2) y pantallas (Gnd3)','Spence Gnd1/2/3; Centinela: tierra aislada, 0 VDC, pantallas FF y 4-20 mA; CMDIC: servicio, instrumentos y pantallas; CMP malla < 2 Ω',1],
+ ['Fibra óptica','Enlaces entre gabinetes y salas','Monomodo entre salas y multimodo OM3 dentro del área; 100 % de hilos de reserva instalados; ODF en cada extremo','CMDIC DC-J-006; EWS; Spence: todo enlace > 100 m en FO',1],
+ ['Documentación','Contenido del diagrama de lazo','Instrumento con marca y modelo, caja de paso, bornera del gabinete, tarjeta (chasis, slot, canal), función en HMI, número de cable y bornes en cada punto, referencias cruzadas a listados','Anglo §9.1 (único que lo define); ISA 5.4; típicos PENTA-DWR-1000-IN-20xx',1],
+ ['Documentación','Diagrama de segmentos','Uno por segmento de bus, con cálculo de carga y largo','Anglo; Escondida',1],
+ ['Documentación','Idioma y formato','Español; entrega nativa (DWG, DOCX, XLSX) + PDF','Spence §7.2; Anglo',0],
+ ['Documentación','Referencias cruzadas en planos','Número y descripción de los documentos relacionados en el cuadro de referencias','Spence §7.2',1],
+ ['Válvulas','On/off','Dos finales de carrera (abierto y cerrado) SPDT 120 VAC 2 A, solenoide integral, posición de falla según P&ID','BHP MinAm, CMDIC, CMP, Spence (inductivos); Codelco: 2 DI por válvula',1],
+ ['Válvulas','Control','Posicionador HART 4-20 mA o FF, con retroalimentación de posición; falla cerrada salvo definición del P&ID','Codelco ST-TI-030; CMDIC; Escondida: posicionador FF',1],
+ ['Montaje','Tubing y aire de instrumentos','Tubing inoxidable 316; panel electroneumático a 20 m máximo de la válvula','OGP1: 20 m; CMDIC: diámetro no indicado en el PDF',0]
+];
+/* ================= Motor de dibujo: diagrama de lazo (formato de los típicos PENTA-DWR-1000-IN-20xx) ================= */
+const W=1189,H=841,ZX=[60,560,905,1129],YT=52,YH=106,YB=640;
+const vv=(v)=>v!=null&&String(v).trim()!=='';
+function tx(x,y,s,o={}){const pend=o.pend&&!vv(s);const t=pend?(o.ph||'PENDIENTE'):s;
+  return `<text x="${x}" y="${y}" font-size="${o.fs||9}" text-anchor="${o.a||'start'}"${o.w?' font-weight="600"':''} class="${pend?'pend':''}${o.c?' '+o.c:''}"${pend&&o.f?` data-f="${o.f}"`:''}>${esc(t)}</text>`;}
+const ln=(p,o={})=>`<polyline points="${p.map(q=>q.join(',')).join(' ')}" class="ink" fill="none" stroke-width="${o.sw||1}"${o.d?` stroke-dasharray="${o.d}"`:''}></polyline>`;
+const rc=(x,y,w,h,o={})=>`<rect x="${x}" y="${y}" width="${w}" height="${h}"${o.r?` rx="${o.r}"`:''} class="ink${o.fill?' fillp':''}" fill="none" stroke-width="${o.sw||1}"></rect>`;
+const ci=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" class="ink" fill="none"></circle>`;
+function wrapT(s,n){const w=s.split(' '),out=[];let l='';w.forEach(x=>{if((l+' '+x).trim().length>n){out.push(l.trim());l=x;}else l+=' '+x;});if(l.trim())out.push(l.trim());return out;}
+const tierra=(x,y)=>ln([[x,y],[x,y+8]])+ln([[x-7,y+8],[x+7,y+8]])+ln([[x-4.5,y+11],[x+4.5,y+11]])+ln([[x-2,y+14],[x+2,y+14]]);
+const corte=(x,y)=>`<path d="M${x-3} ${y-7} q 7 7 0 14" class="ink" fill="none"></path>`;
+function flecha(x,y,a,b){return `<polygon points="${x},${y} ${x+12},${y-9} ${x+92},${y-9} ${x+82},${y} ${x+92},${y+9} ${x+12},${y+9}" class="ink" fill="none"></polygon>`+tx(x+48,y+4,b,{a:'middle',fs:8.5})+tx(x+48,y-14,a,{a:'middle',fs:8.5});}
+function burb(xr,wy,id,spec,top,yb){ // globo de cable con guía hacia el conductor en x=xr
+  const y=yb??wy-36,x=xr-142;
+  return (top?tx(x+60,y-13,top,{a:'middle',fs:8.5}):'')+`<rect x="${x}" y="${y-9}" width="120" height="18" rx="9" class="ink" fill="none"></rect>`+tx(x+60,y+4,id,{a:'middle',fs:8.5})+tx(x+60,y+22,spec,{a:'middle',fs:8.5})
+   +ln([[x+120,y],[xr,y],[xr,wy-7]])+corte(xr,wy);}
+function caja(x,y,w,h,tag,ins,terms,o={}){
+  let s='';if(!o.sinMarca){s+=tx(x,y-20,'MARCA: '+(ins.marca||''),{fs:8.5,c:vv(ins.marca)?'':'pend'});s+=tx(x,y-8,'MODELO: '+(ins.modelo||''),{fs:8.5,c:vv(ins.modelo)?'':'pend'});}
+  s+=rc(x,y,w,h)+ln([[x,y+20],[x+w,y+20]])+tx(x+w/2,y+14,tag,{a:'middle',fs:10,w:1});
+  const pts=[];terms.forEach((t,j)=>{const ty=y+(o.t0||40)+j*16;s+=rc(x+w-26,ty-8,26,16)+tx(x+w-13,ty+3.5,t,{a:'middle',fs:8.5});pts.push([x+w,ty]);});
+  return {s,pts};}
+function bornera(x,y,name,rows){let s=rc(x,y,56,16)+tx(x+28,y+11.5,name,{a:'middle',fs:8.5});const c=[];
+  rows.forEach((r,j)=>{const ry=y+16+j*16;s+=rc(x+8,ry,40,16)+tx(x+28,ry+11.5,r,{a:'middle',fs:8.5});c.push(ry+8);});return {s,c,xl:x+8,xr:x+48};}
+function tarjeta(x,y,sig,rows){const P=S.plat,k=sig.card,C=CARDS[k];let s='';const w1=58,w2=136,wt=w1+w2;
+  s+=tx(x+wt/2,y-8,'(NOTA 1)',{a:'middle',fs:8});
+  s+=rc(x,y,w1,16)+rc(x+w1,y,w2,16)+tx(x+w1/2,y+11.5,'TIPO',{a:'middle',fs:8.5})+tx(x+w1+w2/2,y+11.5,`${C.ty} (${C[P][0].split(' ·')[0]})`,{a:'middle',fs:8.5});
+  const cw=wt/3;['CHASIS','SLOT','CANAL'].forEach((h,j)=>{s+=rc(x+j*cw,y+16,cw,16)+tx(x+j*cw+cw/2,y+27.5,h,{a:'middle',fs:8.5});});
+  ['0',String(sig.slot),pad(sig.canal)].forEach((h,j)=>{s+=rc(x+j*cw,y+32,cw,16)+tx(x+j*cw+cw/2,y+43.5,h,{a:'middle',fs:8.5});});
+  s+=rc(x,y+48,w1,16)+rc(x+w1,y+48,w2,16)+tx(x+w1/2,y+59.5,'TERMINAL',{a:'middle',fs:8});
+  const c=[];rows.forEach((r,j)=>{const ry=y+64+j*16;s+=rc(x,ry,w1,16)+rc(x+w1,ry,w2,16)+tx(x+w1/2,ry+11.5,r,{a:'middle',fs:8.5});c.push(ry+8);});
+  return {s,c,xl:x,xr:x+wt};}
+function hmi(x,y,list){let s='';const c=[];list.forEach(([cod,num,txt],j)=>{const yy=y+j*46;s+=rc(x,yy,36,36)+ci(x+18,yy+18,18)+ln([[x,yy+18],[x+36,yy+18]])+tx(x+18,yy+14,cod,{a:'middle',fs:8.5})+tx(x+18,yy+31,num,{a:'middle',fs:8.5})+wrapT(txt,26).slice(0,2).map((l,m,a)=>tx(x+46,yy+21+(a.length>1?(m?6:-6):0),l,{fs:8.5})).join('');c.push(yy+18);});return {s,c};}
+const enlace=(x1,y1,x2,y2)=>ln([[x1,y1],[x2,y1],[x2,y2]],{d:'3 5'});
+
+/* --- escenas por tipo de típico --- */
+function alarmas(i,base){const L=i.L,n=i.num,out=[];const a=(i.alm||'').toUpperCase().split(/[ ,;]+/).filter(Boolean);
+  const NV={HH:'MUY ALTA',H:'ALTA',L:'BAJA',LL:'MUY BAJA'},VAR={P:'PRESIÓN',F:'FLUJO',L:'NIVEL',D:'DENSIDAD',T:'TEMPERATURA',A:'ANÁLISIS'};
+  a.filter(x=>x.startsWith('H')).forEach(x=>out.push([L+'A'+x,n,`ALARMA ${VAR[L]||''} ${NV[x]||x}`]));
+  out.push([L+(base||'I'),n,`INDICACIÓN DE ${VAR[L]||'VARIABLE'}`]);
+  a.filter(x=>x.startsWith('L')).forEach(x=>out.push([L+'A'+x,n,`ALARMA ${VAR[L]||''} ${NV[x]||x}`]));return out;}
+const orto=(x1,y1,x2,y2,k)=>{const m=x1+10+k*7;return ln([[x1,y1],[m,y1],[m,y2],[x2,y2]]);};
+/* columnas del terreno: elemento 70-170 · instrumento 190-310 · globos 330-470 · caja de paso 500-556 */
+function sigAI(i,wy,M,opt={}){
+  let s='';const sg=i.sig[0],ftag=`${S.proy.area}-${i.tag}`;const k=i.kind;const fe=i.t.fe&&!opt.sinFE;const xI=fe?200:180,wI=120;
+  if(fe){const f=caja(70,wy-60,100,100,`${S.proy.area}-FE-${i.num}`,i,[],{});s+=f.s+rc(140,wy-14,30,14)+ln([[170,wy-7],[xI,wy-7]])+rc(xI,wy-14,16,14);
+    s+=burb(250,wy+62,i.cb.X01?.id||'','CABLE PROVEEDOR','(NOTA 6)',wy+92).replace(/<polyline[^>]*><\/polyline><path[^>]*><\/path>$/,'')+ln([[108,wy+92],[96,wy+92],[96,wy+40]]);}
+  const terms=k==='ai4dc'?['+','-','L+','L-']:['+','-'];
+  const b=caja(xI,wy-60,wI,k==='ai4ac'?126:(k==='ai4dc'?116:96),ftag,i,terms,{});s+=b.s;
+  const pS=[b.pts[0],b.pts[1]],ySig=pS[0][1],y2=pS[1][1];const jb=i.con.startsWith('JB');
+  s+=tx(xI+wI+4,ySig-3,'Ne',{fs:7.5})+tx(xI+wI+4,y2-3,'Ro',{fs:7.5});
+  let xa;
+  if(jb){const jx=500;const bj=bornera(jx,ySig-24,i.con,[`${sg.jbn}`,`${sg.jbn+1}`,'SH']);s+=bj.s;
+    s+=ln([[xI+wI,ySig],[jx+8,bj.c[0]]])+ln([[xI+wI,y2],[jx+8,bj.c[1]]]);
+    s+=burb(470,ySig,i.cb.J01.id,CR().an,'4-20mA + HART  (NOTA 2)');
+    s+=ln([[bj.xr,bj.c[0]],[ZX[1]+70,bj.c[0]]])+ln([[bj.xr,bj.c[1]],[ZX[1]+60,bj.c[1]]]);
+    s+=burb(ZX[1]+70,ySig,i.cb.CM.id,`par ${Math.ceil(sg.jbn/3)} · ${i.cb.CM.spec.replace('Multipar ','')}`,'MULTIPAR',ySig-82);xa=ZX[1]+70;
+  }else{s+=ln([[xI+wI,ySig],[ZX[1]+70,ySig]])+ln([[xI+wI,y2],[ZX[1]+60,y2]]);s+=burb(500,ySig,i.cb.J01.id,CR().an,'4-20mA + HART  (NOTA 2)');xa=ZX[1]+70;}
+  const tbx=640,loop=k==='ai2';
+  const rows=loop?[sg.fu,`${sg.tbn}`,`${sg.tbn+1}`,'SH']:[`${sg.tbn}`,`${sg.tbn+1}`,'SH'];
+  const tb=bornera(tbx,ySig-24,sg.tb,rows);s+=tb.s;const last=tb.c[rows.length-1];
+  s+=ln([[xa,ySig],[tb.xl,tb.c[0]]])+ln([[ZX[1]+60,y2],[ZX[1]+80,y2],[ZX[1]+80,tb.c[1]],[tb.xl,tb.c[1]]]);
+  s+=ln([[ZX[1]+96,ySig+10],[ZX[1]+96,last],[tb.xl,last]],{d:'4 3'})+ln([[tb.xr,last],[tb.xr+14,last]])+tierra(tb.xr+14,last)+tx(tb.xr+26,last+22,'(NOTA 4)',{fs:8})+tx(tb.xr+6,last-5,'(NOTA 5)',{fs:8});
+  if(loop){s+=ln([[tb.xr,tb.c[0]],[tb.xr+22,tb.c[0]],[tb.xr+22,tb.c[0]-30]])+tx(tb.xr+4,tb.c[0]-34,'+24VDC',{fs:8.5});s+=tx(tbx-40,tb.c[2]+3,'0VDC',{fs:8.5})+ln([[tbx-8,tb.c[2]],[tb.xl,tb.c[2]]]);}
+  const card=tarjeta(745,ySig-72,sg,['+','-']);s+=card.s;
+  s+=orto(tb.xr,loop?tb.c[1]:tb.c[0],card.xl,card.c[0],0)+orto(tb.xr,loop?tb.c[2]:tb.c[1],card.xl,card.c[1],1);
+  if(k==='ai4dc'){const pp=[b.pts[2],b.pts[3]];const ty=last+34;const t2=bornera(tbx,ty,'TB-24VDC',['1','2']);s+=t2.s;
+    s+=ln([[pp[0][0],pp[0][1]],[ZX[1]+40,pp[0][1]],[ZX[1]+40,t2.c[0]],[t2.xl,t2.c[0]]])+ln([[pp[1][0],pp[1][1]],[ZX[1]+30,pp[1][1]],[ZX[1]+30,t2.c[1]],[t2.xl,t2.c[1]]]);
+    s+=burb(500,pp[1][1],i.cb.J02.id,CR().p24,'24VDC',pp[1][1]+36);
+    s+=ln([[t2.xr,t2.c[0]],[t2.xr+12,t2.c[0]]])+flecha(t2.xr+12,t2.c[0],'24VDC','CB XX')+ln([[t2.xr,t2.c[1]],[t2.xr+10,t2.c[1]]])+tx(t2.xr+14,t2.c[1]+14,'0VDC  (NOTA 8)',{fs:8});}
+  if(k==='ai4ac'){const by=wy+66;s+=['L','N','G'].map((t,j)=>rc(xI+20+j*24,by,24,14)+tx(xI+32+j*24,by+10.5,t,{a:'middle',fs:8})).join('');
+    const yp=YB-200;s+=ln([[xI+32,by+14],[xI+32,by+26],[xI+80,by+26]])+ln([[xI+56,by+14],[xI+56,by+26]])+ln([[xI+80,by+14],[xI+80,yp],[ZX[1]+130,yp]]);
+    s+=burb(500,yp,i.cb.F01.id,CR().p120,'120 VAC  (NOTA 7)',yp-32)+flecha(ZX[1]+130,yp,'120 VAC','CB XX');}
+  return {s,card,y:ySig,b};}
+function sigAO(i,wy,M){let s='';const sg=i.sig[0];const L=i.L,n=i.num,A=S.proy.area;
+  s+=tx(80,wy-62,'VÁLVULA DE CONTROL',{fs:8.5});const vb=caja(80,wy-50,110,110,`${A}-${L}V-${n}`,i,[],{sinMarca:1});s+=vb.s;
+  const cx=135,cy=wy+24;s+=`<path d="M${cx-22} ${cy-12} L${cx+22} ${cy+12} L${cx+22} ${cy-12} L${cx-22} ${cy+12} Z" class="ink" fill="none"></path>`+ln([[cx,cy],[cx,cy-22]])+`<path d="M${cx-14} ${cy-22} a14 12 0 0 1 28 0 Z" class="ink" fill="none"></path>`;
+  s+=tx(230,wy-50,'POSICIONADOR  (NOTA 6)',{fs:8.5});const pb=caja(230,wy-40,110,90,`${A}-${L}Y-${n}`,i,['+','-'],{t0:44,sinMarca:1});s+=pb.s+rc(240,wy-12,26,26)+tx(253,wy+5,'I/P',{a:'middle',fs:8});
+  s+=ln([[230,wy+24],[190,wy+24]])+[0,1,2].map(j=>ln([[200+j*8,wy+19],[206+j*8,wy+29]])).join('');
+  s+=ln([[285,wy+50],[285,wy+72]])+[0,1].map(j=>ln([[280,wy+58+j*7],[290,wy+52+j*7]])).join('')+tx(295,wy+70,'IA (AIRE DE INSTRUMENTOS)',{fs:8});
+  const p=pb.pts;s+=ln([[p[0][0],p[0][1]],[ZX[1]+70,p[0][1]]])+ln([[p[1][0],p[1][1]],[ZX[1]+60,p[1][1]]]);
+  s+=burb(500,p[0][1],i.cb.J01.id,CR().an,'4-20mA + HART');
+  const tb=bornera(640,p[0][1]-24,sg.tb,[`${sg.tbn}`,`${sg.tbn+1}`,'SH']);s+=tb.s+ln([[ZX[1]+70,p[0][1]],[tb.xl,tb.c[0]]])+ln([[ZX[1]+60,p[1][1]],[ZX[1]+80,p[1][1]],[ZX[1]+80,tb.c[1]],[tb.xl,tb.c[1]]])+ln([[tb.xr,tb.c[2]],[tb.xr+14,tb.c[2]]])+tierra(tb.xr+14,tb.c[2]);
+  const card=tarjeta(745,p[0][1]-72,sg,['+','-']);s+=card.s+orto(tb.xr,tb.c[0],card.xl,card.c[0],0)+orto(tb.xr,tb.c[1],card.xl,card.c[1],1);
+  return {s,card,y:p[0][1]};}
+
+function escena(i,M){
+  let s='';const H=[];let hy=150;const k=i.kind;
+  if(k==='ai2'||k==='ai4dc'||k==='ai4ac'){const r=sigAI(i,230,M);s+=r.s;const h=hmi(950,r.y-60,alarmas(i));s+=h.s;h.c.forEach(c=>s+=enlace(r.card.xr,r.card.c[0],950,c));s+=tx(950,r.y-60+h.c.length*46+4,'(NOTA 3)',{fs:8});}
+  else if(k==='cv'){const tr=M.ins.find(x=>x.num===i.num&&x.t.k==='an'&&x.cx.cls==='hw');
+    let r1=null;if(tr){r1=sigAI(tr,230,M);s+=r1.s;}else s+=tx(110,170,`TRANSMISOR ${i.L}IT-${i.num}: NO DEFINIDO EN LA BASE`,{fs:9,c:'pend'});
+    const r2=sigAO(i,tr&&tr.kind==='ai4dc'?440:420,M);s+=r2.s;
+    const list=[[i.L+'IC',i.num,`CONTROL DE ${({F:'FLUJO',L:'NIVEL',P:'PRESIÓN',T:'TEMPERATURA'})[i.L]||'VARIABLE'}`]];if(tr)list.unshift(...alarmas(tr));
+    const h=hmi(950,150,list);s+=h.s;if(r1)s+=enlace(r1.card.xr,r1.card.c[0],950,h.c[0]);s+=enlace(r2.card.xr,r2.card.c[0],968,h.c[h.c.length-1]+18);}
+  else if(k==='xv'){const n=i.num,A=S.proy.area,al=insAlim(i);s+=tx(80,140,(i.t.base?i.t.n.replace(/ on\/off neumática/i,''):'VÁLVULA ON/OFF').toUpperCase()+(i.t.mont?'  (DETALLE '+i.t.mont+')':''),{fs:8.5});
+    const vb=caja(80,180,110,150,`${A}-XV-${n}`,i,[],{});s+=vb.s;const cx=135,cy=280;s+=`<path d="M${cx-22} ${cy-12} L${cx+22} ${cy+12} L${cx+22} ${cy-12} L${cx-22} ${cy+12} Z" class="ink" fill="none"></path>`+ln([[cx,cy],[cx,cy-24]])+rc(cx-16,cy-44,32,20)+tx(cx,cy-30,'S',{a:'middle',fs:9});
+    const sv=caja(220,180,130,64,`${A}-XY-${n}`,i,['+','-'],{sinMarca:1,t0:34});const zs=caja(220,290,130,90,`${A}-ZS-${n}`,i,['C','ZSO','ZSC'],{sinMarca:1,t0:36});s+=sv.s+zs.s+tx(224,354,'(NOTA 6)',{fs:8});
+    s+=ln([[190,212],[220,212]],{d:'4 3'})+ln([[190,320],[220,320]],{d:'4 3'});
+    const so=i.sig.find(x=>x.ty==='DO'),d1=i.sig.find(x=>x.tag.startsWith('ZSO')),d2=i.sig.find(x=>x.tag.startsWith('ZSC'));
+    const jb=i.con.startsWith('JB');const xe=ZX[1]+70,V=al==='24VDC'?'24 VDC':'120 VAC';
+    s+=ln([[sv.pts[0][0],sv.pts[0][1]],[xe,sv.pts[0][1]]])+ln([[sv.pts[1][0],sv.pts[1][1]],[xe-10,sv.pts[1][1]]]);s+=burb(495,sv.pts[0][1],i.cb.C01.id,CR().dos,V);
+    zs.pts.forEach((p,j)=>s+=ln([[p[0],p[1]],[xe-j*10,p[1]]]));s+=burb(495,zs.pts[0][1],i.cb.C02.id,CR().dis,V);
+    if(jb)s+=rc(512,sv.pts[0][1]-18,34,zs.pts[2][1]-sv.pts[0][1]+36,{})+tx(529,sv.pts[0][1]-24,i.con,{a:'middle',fs:8})+tx(529,zs.pts[2][1]+32,i.cb.CM.id,{a:'middle',fs:8});
+    const tdo=bornera(640,sv.pts[0][1]-24,so.tb,[so.fu,`${so.tbn}`]);s+=tdo.s+ln([[xe,sv.pts[0][1]],[tdo.xl,tdo.c[0]]])+ln([[xe-10,sv.pts[1][1]],[tdo.xl,tdo.c[1]]]);
+    s+=ln([[tdo.xr,tdo.c[0]],[tdo.xr+16,tdo.c[0]],[tdo.xr+16,tdo.c[0]-28]])+tx(tdo.xr,tdo.c[0]-32,al==='24VDC'?'+24VDC':'F120 VAC',{fs:8});
+    const cdo=tarjeta(745,sv.pts[0][1]-72,so,['OUT','COM']);s+=cdo.s+orto(tdo.xr,tdo.c[0],cdo.xl,cdo.c[0],0)+orto(tdo.xr,tdo.c[1],cdo.xl,cdo.c[1],1);
+    const tdi=bornera(640,zs.pts[0][1]+6,d1.tb,[d1.fu,`${d1.tbn}`,`${d2.tbn}`]);s+=tdi.s;zs.pts.forEach((p,j)=>s+=ln([[xe-j*10,p[1]],[xe-j*10,tdi.c[j]],[tdi.xl,tdi.c[j]]]));
+    s+=tx(640,tdi.c[2]+28,al==='24VDC'?'COM 0VDC':'N120 VAC',{fs:8});
+    const cdi=tarjeta(745,zs.pts[0][1]+40,d1,['IN '+pad(d1.canal),'IN '+pad(d2.canal)]);s+=cdi.s+orto(tdi.xr,tdi.c[1],cdi.xl,cdi.c[0],0)+orto(tdi.xr,tdi.c[2],cdi.xl,cdi.c[1],1);
+    const h=hmi(950,150,[['XV',n,'MANDO ABRIR / CERRAR'],['ZSO',n,'VÁLVULA ABIERTA'],['ZSC',n,'VÁLVULA CERRADA'],['XA',n,'FALLA DE POSICIÓN']]);s+=h.s;
+    s+=enlace(cdo.xr,cdo.c[0],950,h.c[0])+enlace(cdi.xr,cdi.c[0],950,h.c[1])+enlace(cdi.xr,cdi.c[1],960,h.c[2]+18);}
+  else if(k==='di'){const n=i.num,A=S.proy.area,d=i.sig[0],al=insAlim(i);
+    const sb=caja(180,200,130,120,`${A}-${i.tag}`,i,['NC','C','NO'],{});s+=sb.s;s+=tx(186,250,'(NOTA 6)',{fs:8});
+    const xe=ZX[1]+70;s+=ln([[sb.pts[0][0],sb.pts[0][1]],[xe,sb.pts[0][1]]])+ln([[sb.pts[1][0],sb.pts[1][1]],[xe-10,sb.pts[1][1]]]);
+    s+=burb(495,sb.pts[0][1],i.cb.C01.id,CR().di1,al==='24VDC'?'24 VDC':'120 VAC');
+    const tb=bornera(640,sb.pts[0][1]-24,d.tb,[d.fu,`${d.tbn}`,`${d.tbn+1}`]);s+=tb.s+ln([[xe,sb.pts[0][1]],[tb.xl,tb.c[0]]])+ln([[xe-10,sb.pts[1][1]],[tb.xl,tb.c[1]]]);
+    s+=ln([[tb.xr,tb.c[0]],[tb.xr+18,tb.c[0]],[tb.xr+18,tb.c[0]-34]])+tx(tb.xr+2,tb.c[0]-38,al==='24VDC'?'+24VDC':'F120 VAC',{fs:8.5})+tx(tbx0(),tb.c[2]+22,al==='24VDC'?'0VDC':'N120 VAC',{fs:8.5})+ln([[tb.xl-30,tb.c[2]],[tb.xl,tb.c[2]]])+ln([[tb.xl-30,tb.c[2]],[tb.xl-30,tb.c[2]+12]]);
+    const cd=tarjeta(745,sb.pts[0][1]-72,d,['IN',al==='24VDC'?'COM':'NEUTRO']);s+=cd.s+orto(tb.xr,tb.c[1],cd.xl,cd.c[0],0)+orto(tb.xr,tb.c[2],cd.xl,cd.c[1],1);
+    const h=hmi(950,sb.pts[0][1]-18,[[i.tag.split('-')[0].replace(/S/,'A'),n,'ALARMA '+(i.desc||'').toUpperCase()]]);s+=h.s+enlace(cd.xr,cd.c[0],950,h.c[0]);}
+  else if(k==='red'){const A=S.proy.area;const b=caja(170,200,150,110,`${A}-${i.tag}`,i,['COM','SH'],{});s+=b.s;const p=b.pts;
+    s+=ln([[p[0][0],p[0][1]],[ZX[1]+40,p[0][1]]]);s+=burb(470,p[0][1],i.cb.R01.id,i.cb.R01.spec,i.cx.proto);
+    s+=rc(ZX[1]+40,p[0][1]-40,150,70)+tx(ZX[1]+115,p[0][1]-24,i.con,{a:'middle',fs:9,w:1})+tx(ZX[1]+115,p[0][1]-8,i.cx.proto,{a:'middle',fs:8})+tx(ZX[1]+115,p[0][1]+8,i.sig[0].dir.replace(i.con+' · ',''),{a:'middle',fs:8});
+    s+=ln([[ZX[1]+190,p[0][1]],[760,p[0][1]]])+rc(760,p[0][1]-24,130,48)+tx(825,p[0][1]-6,'MÓDULO COMUNICACIÓN',{a:'middle',fs:8})+tx(825,p[0][1]+10,'RIO-01 / PLC-01',{a:'middle',fs:8});
+    const h=hmi(950,p[0][1]-40,i.sig.map(x=>[x.tag.split('-')[0],i.num,'SEÑAL POR RED']));s+=h.s;h.c.forEach(c=>s+=enlace(890,p[0][1],950,c));}
+  return s;}
+function tbx0(){return 590;}
+
+function notas(i,M,k){const lio=docDe(M,'lio'),lci=docDe(M,'lci'),fil=docDe(M,'fil');
+  const n=[`PARA DETALLES MÓDULO E/S VER LISTADO ENTRADAS Y SALIDAS, DOC. N° ${lio?lio.code:'PENDIENTE'}.`,
+   `PARA LARGO, TIPO, CALIBRE Y CANALIZACIÓN DE LOS CABLES VER LISTADO DE CIRCUITOS, DOC. N° ${lci?lci.code:'PENDIENTE'}.`,
+   `PARA ENCLAVAMIENTOS ASOCIADOS AL LAZO DE CONTROL, VER DOCUMENTO FILOSOFÍA DE CONTROL N° ${fil?fil.code:'PENDIENTE'}.`,
+   'BARRA TIERRA DEDICADA DE INSTRUMENTACIÓN. PANTALLA ATERRIZADA EN UN SOLO PUNTO, EN EL GABINETE.',
+   'CONEXIONADO INTERNO POR PROVEEDOR DEL SISTEMA DE CONTROL.',
+   'PUNTOS DE CONEXIÓN SERÁN ENTREGADOS POR EL VENDOR DEL INSTRUMENTO.'];
+  if(k==='ai4ac')n.push('PARA DETALLE DE CONEXIÓN EN TABLERO DE DISTRIBUCIÓN DE INSTRUMENTACIÓN VER DIAGRAMA UNILINEAL, PLANO N° PENDIENTE (EE).');
+  if(k==='ai4dc')n.push('PARA DETALLE DE CONEXIÓN DE ALIMENTACIÓN 24 VDC DESDE GABINETE VER DIAGRAMA UNILINEAL, PLANO N° PENDIENTE (EE).');
+  if(i.con.startsWith('JB')){const d=docDe(M,'int',x=>x.title.includes(i.con));n.push(`PARA BORNES EN CAJA ${i.con} VER INTERCONEXIONADO, DOC. N° ${d?d.code:'PENDIENTE'}.`);}
+  return notasTxt(n);}
+function notasTxt(n){const L=[];n.forEach((t,j)=>wrapT(`${j+1}.- ${t}`,96).forEach((l,m)=>L.push([l,m])));
+  let y=YB-6-L.length*10;let s=tx(64,y-12,'NOTAS:',{fs:8.5,w:1});
+  L.forEach(([l,m])=>{s+=tx(64+(m?14:0),y,l,{fs:7.6,c:l.includes('PENDIENTE')?'pendt':''});y+=10;});return s;}
+
+function marco(){let s=rc(14,14,W-28,H-28)+rc(40,40,W-80,H-80,{sw:1.4});
+  const cw=(W-80)/7;for(let j=0;j<7;j++){const x=40+j*cw;if(j)s+=ln([[x,14],[x,40]])+ln([[x,H-40],[x,H-14]]);s+=tx(x+cw/2,31,String(j+1),{a:'middle',fs:10})+tx(x+cw/2,H-22,String(j+1),{a:'middle',fs:10});}
+  const rh=(H-80)/5;'ABCDE'.split('').forEach((l,j)=>{const y=40+j*rh;if(j)s+=ln([[14,y],[40,y]])+ln([[W-40,y],[W-14,y]]);s+=tx(27,y+rh/2+4,l,{a:'middle',fs:10})+tx(W-27,y+rh/2+4,l,{a:'middle',fs:10});});
+  return s;}
+function zonas(v,k){let s=rc(ZX[0],YT,ZX[3]-ZX[0],YB-YT)+ln([[ZX[1],YT],[ZX[1],YB]])+ln([[ZX[2],YT],[ZX[2],YB]])+ln([[ZX[1],YT+27],[ZX[3],YT+27]])+ln([[ZX[0],YH],[ZX[3],YH]]);
+  s+=tx((ZX[0]+ZX[1])/2,YT+33,'TERRENO',{a:'middle',fs:12});
+  s+=tx((ZX[1]+ZX[2])/2,YT+19,'SALA ELÉCTRICA '+(v.sala||''),{a:'middle',fs:11.5,c:vv(v.sala)?'':'pend'})+tx((ZX[1]+ZX[2])/2,YT+46,v.gab||'GABINETE PENDIENTE',{a:'middle',fs:11.5,c:vv(v.gab)?'':'pend'});
+  s+=tx((ZX[2]+ZX[3])/2,YT+19,'SALA DE CONTROL',{a:'middle',fs:11.5})+tx((ZX[2]+ZX[3])/2,YT+46,v.hmi||'PENDIENTE',{a:'middle',fs:11,c:vv(v.hmi)?'':'pend'});
+  if(k==='ai4ac'){const y=YB-262;s+=ln([[ZX[1],y],[ZX[2],y]])+ln([[ZX[1],y+40],[ZX[2],y+40]])+tx((ZX[1]+ZX[2])/2,y+16,'TABLERO DE ALIMENTACIÓN DE INSTRUMENTOS',{a:'middle',fs:10})+tx((ZX[1]+ZX[2])/2,y+32,'N° '+(v.tdi||'PENDIENTE'),{a:'middle',fs:10,c:vv(v.tdi)?'':'pend'});}
+  return s;}
+function refsLazo(M,i){return [docDe(M,'pid',d=>d.key===i.pid),docDe(M,'lio'),docDe(M,'lci'),i.con.startsWith('JB')?docDe(M,'int',d=>d.key===i.con):i.cx.cls==='hw'?docDe(M,'int',d=>d.gab):docDe(M,'seg',d=>d.key===i.con),docDe(M,'fil')].filter(Boolean);}
+function revTabla(p,M,refs){let s='';const x0=40,x1=330,x2=640,yb=H-40,rh=13.5;
+  // referencias (cruce con otros documentos)
+  refs=(refs||[]).filter(Boolean);
+  s+=rc(x0,yb-rh*6,x1-x0,rh*6)+ln([[x0+16,yb-rh*6],[x0+16,yb]])+`<text x="${x0+11}" y="${yb-6}" font-size="7" transform="rotate(-90 ${x0+11} ${yb-6})">REFERENCIAS</text>`;
+  s+=ln([[x0+16,yb-rh],[x1,yb-rh]])+ln([[x0+150,yb-rh*6],[x0+150,yb]])+tx(x0+83,yb-4,'N° PLANO',{a:'middle',fs:7.5})+tx(x0+220,yb-4,'DESCRIPCIÓN',{a:'middle',fs:7.5});
+  refs.slice(0,5).forEach((d,j)=>{const y=yb-rh*(j+2);s+=ln([[x0+16,y],[x1,y]])+tx(x0+20,y+rh-3.5,d.code,{fs:7})+tx(x0+154,y+rh-3.5,d.title.toUpperCase().slice(0,30),{fs:7});});
+  const cols=[x1,x1+18,x1+70,x1+102,x1+134,x1+166,x2];s+=rc(x1,yb-rh*6,x2-x1,rh*6);cols.slice(1,-1).forEach(c=>s+=ln([[c,yb-rh*6],[c,yb]]));
+  ['N°','FECHA','PROY.','REVISÓ','APROBÓ','DESCRIPCIÓN'].forEach((h,j)=>s+=tx((cols[j]+cols[j+1])/2,yb-4,h,{a:'middle',fs:7}));
+  for(let j=1;j<6;j++)s+=ln([[x1,yb-rh*j],[x2,yb-rh*j]]);
+  p.revs.slice(-5).reverse().forEach((r,j)=>{const y=yb-rh*(j+2)+rh-3.5;[r.n,r.fecha,r.por,r.rev,r.apr,r.desc].forEach((v,c)=>s+=tx(c===5?cols[c]+4:(cols[c]+cols[c+1])/2,y,v||(c>=2&&c<=4?'—':''),{a:c===5?'start':'middle',fs:7}));});
+  return s;}
+function vineta(p,M,info){const v=p.v,est=p.est,x=640,y=H-40-150,w=W-40-x;let s=rc(x,y,w,150,{sw:1.3});const d=info.code?{code:info.code}:null;
+  const fir=est==='keypro'?[['PROYECTÓ','diseno'],['DIBUJÓ','dibujo'],['J. DISCIPLINA','jdisc'],['GERENTE PROY.','jproy'],['APROBÓ CLIENTE','gting']]:[['DISEÑÓ','diseno'],['DIBUJÓ','dibujo'],['JEFE DISCIPLINA','jdisc'],['JEFE PROYECTO','jproy'],['GTE. INGENIERÍA','gting'],['GTE. PROYECTO','gtproy']];
+  const lw=236;s+=ln([[x+lw,y],[x+lw,y+150]]);
+  if(est==='cliente'){s+=tx(x+lw/2,y+28,v.cliente||'',{a:'middle',fs:16,w:1,pend:1,f:'cliente'})+tx(x+lw/2,y+44,'VIÑETA DEL CLIENTE',{a:'middle',fs:7.5});}
+  else{s+=tx(x+lw/2,y+24,est==='keypro'?'[ LOGO CONTRATISTA ]':'[ LOGO PENTA ]',{a:'middle',fs:9})+tx(x+lw/2,y+38,v.contratista||'',{a:'middle',fs:7.5,pend:1,f:'contratista'});
+    if(est==='keypro')s+=tx(x+lw/2,y+52,'CLIENTE: '+(v.cliente||'PENDIENTE'),{a:'middle',fs:8,c:vv(v.cliente)?'':'pend'});}
+  const fy=y+50;s+=ln([[x,fy],[x+lw,fy]])+tx(x+4,fy+10,'N° CTO. ING.:',{fs:7})+tx(x+70,fy+10,v.contrato||'',{fs:7,pend:1,f:'contrato'});
+  s+=ln([[x,fy+14],[x+lw,fy+14]])+tx(x+120,fy+23.5,'NOMBRE',{a:'middle',fs:7})+tx(x+200,fy+23.5,'FIRMA / FECHA',{a:'middle',fs:7});
+  fir.forEach(([l,kf],j)=>{const yy=fy+26+j*12;s+=ln([[x,yy],[x+lw,yy]])+tx(x+4,yy+9.5,l,{fs:7})+tx(x+84,yy+9.5,v[kf]||'',{fs:7,pend:1,f:kf});});
+  s+=ln([[x+80,fy+14],[x+80,y+150]])+ln([[x+160,fy+14],[x+160,y+150]]);
+  const rx=x+lw,rw=w-lw;const lines=[v.proyecto,v.fase,v.proyecto2,info.t1,(p.tit||info.t2||'').toUpperCase()];
+  lines.forEach((l,j)=>{if(j===2&&!vv(l))return;s+=tx(rx+rw/2,y+30+j*15,l||'',{a:'middle',fs:j===4?9.5:9,pend:j<2,f:j===0?'proyecto':'fase'});});
+  s+=ln([[rx,y+112],[x+w,y+112]])+tx(rx+4,y+108,'N° CONTRATO CONSTRUCCIÓN:',{fs:6.5});
+  s+=tx(rx+4,y+122,'ESCALA',{fs:6.5})+tx(rx+12,y+141,'S/E',{fs:9})+ln([[rx+40,y+112],[rx+40,y+150]])+ln([[rx+92,y+112],[rx+92,y+150]]);
+  s+=`<path d="M${rx+46} ${y+124} l16 7 l-16 7 z" class="ink" fill="none"></path>`+ci(rx+76,y+131,7)+ln([[rx+66,y+131],[rx+86,y+131]])+ln([[rx+76,y+121],[rx+76,y+141]]);
+  s+=tx(rx+96,y+122,'IDENTIFICACIÓN PLANO',{fs:6.5})+tx(rx+96,y+142,d?d.code:'PENDIENTE',{fs:9.6,w:1});
+  s+=ln([[x+w-38,y+112],[x+w-38,y+150]])+tx(x+w-34,y+122,'REVISIÓN',{fs:6.5})+`<polygon points="${x+w-19},${y+128} ${x+w-10},${y+145} ${x+w-28},${y+145}" class="ink" fill="none"></polygon>`+tx(x+w-19,y+143,(p.revs[p.revs.length-1]||{}).n||'',{a:'middle',fs:8});
+  s+=tx(x+w,H-4,`ARCHIVO: ${d?d.code:''}_${(p.revs[p.revs.length-1]||{}).n||''}.dwg`,{a:'end',fs:7});
+  return s;}
+function hoja(p,M,cont,info){
+  return `<svg viewBox="0 0 ${W} ${H}" class="hoja" role="img" aria-label="${esc(info.t1+' '+(info.t2||''))}" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="${W}" height="${H}" class="papel"></rect>`+marco()+cont+revTabla(p,M,info.refs)+vineta(p,M,info)
+   +`<text x="12" y="${H/2}" font-size="7" transform="rotate(-90 12 ${H/2})" text-anchor="middle">Este documento y el diseño que contiene es de propiedad exclusiva de "${esc(p.v.cliente||'CLIENTE')}". No puede ser usado ni reproducido sin consentimiento escrito del dueño.</text></svg>`;}
+function docPlano(p,M){const ent=p.ent||'laz',key=p.ent&&p.ent!=='laz'?p.key:p.tag;return M.docs.find(d=>d.ent===ent&&d.key===key);}
+function dibujar(p,M){if(p.ent&&p.ent!=='laz')return dibujarOtro(p,M);
+  const i=M.ins.find(x=>x.tag===p.tag);if(!i)return null;const k=i.kind;const d=docPlano(p,M);
+  return hoja(p,M,zonas(p.v,k)+escena(i,M)+notas(i,M,k),{code:d&&d.code,t1:'DIAGRAMA DE LAZO',t2:`${i.tag} ${i.desc}`,refs:refsLazo(M,i)});}
+/* ================= Resto de planos I&C: generadores sobre la misma hoja y viñeta =================
+   Referencias revisadas: 2692B (interconexionado por par de válvulas, bloques DW-006), 2712D (listado de entregables),
+   TF0221-4330-J-DW-0007 (segmento), ICAT-0000-IC-IHU-00007 (FO), MQ11-03-DR-4040-IN8001 (lógicos),
+   PENTA-DRW-1000-IN-002 (detalles de montaje), OGP1-C07P007-1320-08-DW-0007 (despliegue), 4600027011-06300-105AT-00001 (canalización). */
+const DSH={AI:'',AO:'',DI:'7 4',DO:'12 3 2 3',RED:'2 3',FO:'9 3'};
+function tablaSvg(x,y,cols,rows,o={}){const rh=o.rh||13,fs=o.fs||7.4;let s='',cx=x;const wt=cols.reduce((a,c)=>a+c.w,0);
+  if(o.tit){s+=rc(x,y,wt,rh+2)+tx(x+wt/2,y+rh-2,o.tit,{a:'middle',fs:fs+0.8,w:1});y+=rh+2;}
+  cols.forEach(c=>{s+=rc(cx,y,c.w,rh)+tx(cx+c.w/2,y+rh-3.5,c.h,{a:'middle',fs,w:1});cx+=c.w;});
+  rows.forEach((r,j)=>{let xx=x;const yy=y+rh*(j+1);cols.forEach((c,k)=>{s+=rc(xx,yy,c.w,rh);const v=r[k]==null?'':String(r[k]);s+=tx(c.l?xx+3:xx+c.w/2,yy+rh-3.5,v.length*fs*0.6>c.w-4?v.slice(0,Math.floor((c.w-4)/(fs*0.6))):v,{a:c.l?'start':'middle',fs,c:v==='PENDIENTE'?'pendt':''});xx+=c.w;});});
+  return {s,h:rh*(rows.length+1)+(o.tit?rh+2:0),w:wt};}
+const marcoArea=(t)=>rc(ZX[0],YT,ZX[3]-ZX[0],YB-YT)+(t?ln([[ZX[0],YT+26],[ZX[3],YT+26]])+tx((ZX[0]+ZX[3])/2,YT+18,t,{a:'middle',fs:12}):'');
+const zona=(x,y,w,h,t,sub)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" class="ink" fill="none" stroke-dasharray="10 4"></rect>`+tx(x+8,y+13,t,{fs:8.5,w:1})+(sub?tx(x+8,y+24,sub,{fs:7.5}):'');
+const bloque=(x,y,w,h,l1,l2,l3)=>rc(x,y,w,h)+tx(x+w/2,y+h/2-(l2?(l3?8:3):-3),l1,{a:'middle',fs:8,w:1})+(l2?tx(x+w/2,y+h/2+(l3?3:8),l2,{a:'middle',fs:7.2}):'')+(l3?tx(x+w/2,y+h/2+13,l3,{a:'middle',fs:7.2}):'');
+const lin=(p,d)=>ln(p,d?{d}:{});
+const term=(x,y)=>rc(x-6,y-5,12,10)+tx(x,y+3,'T',{a:'middle',fs:7});
+function leyendaSvg(x,y,items){let s=rc(x,y,250,14+items.length*16)+tx(x+125,y+10,'SIMBOLOGÍA Y NOMENCLATURA',{a:'middle',fs:8,w:1});
+  items.forEach(([d,t],j)=>{const yy=y+24+j*16;s+=(d==='box'?rc(x+10,yy-6,40,12):lin([[x+10,yy],[x+60,yy]],d))+tx(x+70,yy+3,t,{fs:7.4});});return s;}
+const LEY=[['','SEÑAL ANÁLOGA 4-20 mA + HART'],['7 4','SEÑAL DE ENTRADA DISCRETA'],['12 3 2 3','SEÑAL DE SALIDA DISCRETA'],['2 3','RED DE COMUNICACIÓN / BUS DE CAMPO'],['9 3','FIBRA ÓPTICA']];
+const tipoSig=i=>i.cx.cls!=='hw'?'RED':(i.sig.find(s=>s.ty==='AO')?'AO':i.sig.find(s=>s.ty==='AI')?'AI':i.sig.find(s=>s.ty==='DO')?'DO':'DI');
+const equipos=M=>{const r={};M.ins.forEach(i=>((i.desc||'').match(/\b[A-Z]{1,3}-\d+[A-Z]?\b/g)||[]).forEach(e=>{(r[e]=r[e]||[]).push(i.tag)}));return r;};
+const rev=()=>REV[S.fase];
+
+/* ---------- 00 Índice y simbología ---------- */
+function genIdx(p,M){const pla=M.docs.filter(d=>ENTI[d.ent].g==='PLA'&&ENTI[d.ent].f[fi()]>0);
+  const rows=pla.map(d=>{const pl=S.planos.find(q=>docPlano(q,M)===d);return [d.code,d.title.toUpperCase(),pl?(pl.revs[pl.revs.length-1]||{}).n:rev(),pl?'DIBUJADO':'POR DIBUJAR'];});
+  const cols=[{h:'N° PLANO',w:150},{h:'TÍTULO',w:250,l:1},{h:'REV',w:34},{h:'ESTADO',w:74}];const per=40;let s=marcoArea('ÍNDICE DE PLANOS DE INSTRUMENTACIÓN Y CONTROL');
+  for(let c=0;c*per<rows.length&&c<2;c++){const t=tablaSvg(70+c*530,92,cols,rows.slice(c*per,(c+1)*per),{rh:12.5});s+=t.s;}
+  return {s:s+notasTxt([`ÍNDICE GENERADO DESDE LA BASE DEL PROYECTO PARA LA FASE ${FASES[fi()][1].toUpperCase()}: ${pla.length} PLANOS.`]),t1:'ÍNDICE DE PLANOS',t2:'INSTRUMENTACIÓN Y CONTROL',refs:[docDe(M,'lin'),docDe(M,'lio')]};}
+function genSim(p,M){let s=marcoArea('SIMBOLOGÍA Y NOMENCLATURA DE INSTRUMENTACIÓN (ISA 5.1)');const x=[80,345,610,875];let y0=100;
+  const cab=(x,t)=>tx(x,y0,t,{fs:9,w:1})+ln([[x,y0+4],[x+240,y0+4]]);
+  s+=cab(x[0],'INSTRUMENTOS');[['c','INSTRUMENTO EN TERRENO'],['cl','INSTRUMENTO EN PANEL PRINCIPAL'],['sq','FUNCIÓN COMPARTIDA EN HMI / DCS'],['hx','FUNCIÓN EN COMPUTADOR'],['pl','FUNCIÓN EN PLC']].forEach(([k,t],j)=>{const cx=x[0]+20,cy=y0+32+j*48;
+    if(k==='sq'||k==='pl')s+=rc(cx-18,cy-18,36,36);if(k==='hx')s+=`<polygon points="${cx-18},${cy} ${cx-9},${cy-17} ${cx+9},${cy-17} ${cx+18},${cy} ${cx+9},${cy+17} ${cx-9},${cy+17}" class="ink" fill="none"></polygon>`;
+    if(k==='pl')s+=`<polygon points="${cx},${cy-17} ${cx+17},${cy} ${cx},${cy+17} ${cx-17},${cy}" class="ink" fill="none"></polygon>`;if(k==='c'||k==='cl'||k==='sq')s+=ci(cx,cy,17);if(k!=='c')s+=ln([[cx-18,cy],[cx+18,cy]]);
+    s+=tx(cx,cy-4,'FIT',{a:'middle',fs:7})+tx(cx,cy+10,'1611',{a:'middle',fs:7})+tx(cx+30,cy+3,t,{fs:7.6});});
+  s+=cab(x[1],'LÍNEAS DE SEÑAL');[['','CONEXIÓN A PROCESO / LÍNEA PRINCIPAL',1.8],['7 4','SEÑAL ELÉCTRICA'],['n','SEÑAL NEUMÁTICA'],['2 3','ENLACE DE DATOS / BUS DE CAMPO'],['9 3','FIBRA ÓPTICA'],['12 3 2 3','SALIDA DISCRETA']].forEach(([d,t,w],j)=>{const yy=y0+30+j*34;
+    s+=d==='n'?ln([[x[1],yy],[x[1]+70,yy]])+[0,1].map(k=>ln([[x[1]+28+k*8,yy+5],[x[1]+34+k*8,yy-5]])).join(''):ln([[x[1],yy],[x[1]+70,yy]],{d,sw:w||1});s+=tx(x[1]+80,yy+3,t,{fs:7.6});});
+  s+=cab(x[2],'ELEMENTOS DE CONEXIÓN');let yy=y0+30;
+  s+=`<rect x="${x[2]}" y="${yy-9}" width="70" height="18" rx="9" class="ink" fill="none"></rect>`+tx(x[2]+35,yy+3,'TAG-J01',{a:'middle',fs:7})+tx(x[2]+80,yy+3,'GLOBO DE CABLE (CIRCUITO)',{fs:7.6});yy+=34;
+  s+=rc(x[2]+20,yy-8,30,16)+tx(x[2]+35,yy+3,'FU01',{a:'middle',fs:7})+tx(x[2]+80,yy+3,'BORNE PORTAFUSIBLE',{fs:7.6});yy+=34;
+  s+=rc(x[2]+20,yy-8,30,16)+tx(x[2]+35,yy+3,'1',{a:'middle',fs:7})+tx(x[2]+80,yy+3,'BORNE DE CONEXIÓN',{fs:7.6});yy+=30;
+  s+=tierra(x[2]+35,yy-8)+tx(x[2]+80,yy+3,'BARRA TIERRA INSTRUMENTACIÓN',{fs:7.6});yy+=34;
+  s+=`<path d="M${x[2]+13} ${yy-10} L${x[2]+57} ${yy+10} L${x[2]+57} ${yy-10} L${x[2]+13} ${yy+10} Z" class="ink" fill="none"></path>`+tx(x[2]+80,yy+3,'VÁLVULA',{fs:7.6});yy+=34;
+  s+=rc(x[2]+22,yy-10,26,20)+tx(x[2]+35,yy+4,'S',{a:'middle',fs:8})+tx(x[2]+80,yy+3,'VÁLVULA SOLENOIDE',{fs:7.6});yy+=34;
+  s+=rc(x[2]+22,yy-12,26,24)+tx(x[2]+35,yy+3,'I/P',{a:'middle',fs:7})+tx(x[2]+80,yy+3,'POSICIONADOR ELECTRONEUMÁTICO',{fs:7.6});yy+=34;
+  s+=term(x[2]+35,yy)+tx(x[2]+80,yy+3,'TERMINADOR DE BUS',{fs:7.6});
+  s+=cab(x[3],'NOMENCLATURA');
+  s+=tablaSvg(x[3],y0+14,[{h:'SUFIJO',w:50},{h:'CIRCUITO',w:190,l:1}],[['J01','SEÑAL 4-20 mA / ANÁLOGA'],['J02','ALIMENTACIÓN 24 VDC'],['F01','ALIMENTACIÓN 120 VAC'],['C01/C02','CONTROL DISCRETO'],['R01','RED / BUS DE CAMPO'],['X01','CABLE DEL PROVEEDOR'],['CM-','MULTIPAR CAJA → GABINETE'],['CT-','TRONCAL DE RED'],['CF-','CABLE DE FIBRA ÓPTICA']]).s;
+  s+=tablaSvg(x[3],y0+168,[{h:'LETRA',w:40},{h:'1ª LETRA',w:100,l:1},{h:'SIGUIENTES',w:100,l:1}],[['A','ANÁLISIS','ALARMA'],['C','—','CONTROL'],['D','DENSIDAD','—'],['F','FLUJO','—'],['H','MANUAL','ALTO'],['I','—','INDICACIÓN'],['L','NIVEL','BAJO'],['P','PRESIÓN','—'],['S','VELOCIDAD','SWITCH'],['T','TEMPERATURA','TRANSMISOR'],['V','VIBRACIÓN','VÁLVULA'],['X','SIN CLASIFICAR','SIN CLASIFICAR'],['Y','EVENTO','RELÉ / CONVERTIDOR'],['Z','POSICIÓN','ACTUADOR']]).s;
+  return {s:s+notasTxt(['SIMBOLOGÍA SEGÚN ISA 5.1 Y TÍPICOS PENTA-DWR-1000-IN-2001.','TAG DE INSTRUMENTO: ÁREA-FUNCIÓN-NÚMERO; TAG DE CIRCUITO: ÁREA+TAG SIN GUIONES + SUFIJO.']),t1:'SIMBOLOGÍA Y NOMENCLATURA',t2:'INSTRUMENTACIÓN Y CONTROL',refs:[docDe(M,'crt')]};}
+
+/* ---------- 01 Aporte a P&ID y 51 Despliegue gráfico (misma disposición de proceso) ---------- */
+function proceso(ins,modo){let s='';const yL=360,A=S.proy.area;const eq=[...new Set(ins.flatMap(i=>(i.desc||'').match(/\b[A-Z]{1,3}-\d+[A-Z]?\b/g)||[]))];
+  const tk=eq.find(e=>e.startsWith('TK')),bp=eq.find(e=>e.startsWith('BP'));let x=110;
+  const burbuja=(cx,cy,i,camp)=>{const t=i.tag.split('-');let r='';if(!camp)r+=rc(cx-17,cy-17,34,34);r+=ci(cx,cy,17)+(camp?'':ln([[cx-17,cy],[cx+17,cy]]));return r+tx(cx,cy-3,t[0],{a:'middle',fs:7})+tx(cx,cy+10,t[1]||'',{a:'middle',fs:7});};
+  const dato=(cx,cy,i)=>{const u=(i.rango||'').replace(/^[\d,.\s-]+/,'')||'%';return rc(cx-34,cy-12,68,24)+tx(cx,cy-2,i.tag,{a:'middle',fs:6.8,w:1})+tx(cx,cy+9,`###.# ${u}`,{a:'middle',fs:6.8});};
+  const inst=(cx,i,y0)=>{const yb=y0||yL-70;let r=ln([[cx,yL],[cx,yb+17]])+burbuja(cx,yb,i,true);
+    if(modo==='pid'&&i.sig.length){r+=ln([[cx,yb-17],[cx,yb-50]],{d:i.cx.cls==='hw'?'7 4':'2 3'})+burbuja(cx,yb-67,{tag:(i.L+(i.t.k==='di'?'A':'I'))+'-'+i.num},false);}
+    if(modo==='dsp')r+=dato(cx,yb-48,i);return r;};
+  if(tk){const ti=ins.filter(i=>i.L==='L');s+=rc(x,yL-150,130,190)+tx(x+65,yL-158,tk,{a:'middle',fs:9,w:1});
+    if(modo==='dsp'){s+=`<rect x="${x+8}" y="${yL-60}" width="114" height="92" class="fillp ink"></rect>`+tx(x+65,yL-70,'NIVEL ##.# %',{a:'middle',fs:7.5});}
+    ti.forEach((i,j)=>{const yy=yL-120+j*46;s+=ln([[x+130,yy],[x+170,yy]])+burbuja(x+187,yy,i,true)+(modo==='pid'&&i.sig.length?ln([[x+204,yy],[x+232,yy]],{d:i.cx.cls==='hw'?'7 4':'2 3'})+burbuja(x+249,yy,{tag:(i.L+(i.t.k==='di'?'A':'I'))+'-'+i.num},false):'')+(modo==='dsp'?dato(x+245,yy,i):'');});
+    s+=ln([[x+130,yL+20],[x+300,yL+20],[x+300,yL]],{sw:1.8});x+=300;}
+  else s+=ln([[ZX[0]+20,yL],[x,yL]],{sw:1.8});
+  const resto=ins.filter(i=>!(tk&&i.L==='L')&&i.t.k!=='loc'||i.t.k==='loc').filter(i=>!(tk&&i.L==='L'));
+  let xs=x;const nres=resto.filter(i=>i.tipo!=='vdf').length;const paso=Math.max(60,Math.min(110,(ZX[3]-60-x-(bp?90:0))/(nres+0.4)));
+  if(bp){const vdf=ins.find(i=>i.tipo==='vdf');s+=ci(xs+40,yL,22)+ln([[xs+40,yL-22],[xs+62,yL]])+ln([[xs+40,yL+22],[xs+62,yL]])+tx(xs+40,yL+40,bp,{a:'middle',fs:8.5,w:1});
+    if(vdf){s+=rc(xs+20,yL+52,40,22)+tx(xs+40,yL+67,'M',{a:'middle',fs:9})+ln([[xs+40,yL+22],[xs+40,yL+52]]);s+=(modo==='pid'?burbuja(xs+40,yL+110,vdf,false):dato(xs+40,yL+105,{...vdf,rango:'Hz'}))+tx(xs+62,yL+82,vdf.tag,{fs:7});}
+    s+=ln([[x,yL],[xs+18,yL]],{sw:1.8});xs+=90;}
+  s+=ln([[xs,yL],[ZX[3]-30,yL]],{sw:1.8})+`<polygon points="${ZX[3]-30},${yL-6} ${ZX[3]-18},${yL} ${ZX[3]-30},${yL+6}" class="ink"></polygon>`;
+  resto.filter(i=>i.tipo!=='vdf').forEach((i,j)=>{const cx=xs+paso*(j+0.6);
+    if(['xv','cv','mov','xvb','xvc'].includes(i.tipo)){s+=`<path d="M${cx-14} ${yL-9} L${cx+14} ${yL+9} L${cx+14} ${yL-9} L${cx-14} ${yL+9} Z" class="papel ink"></path>`+ln([[cx,yL],[cx,yL-26]]);
+      s+=(i.tipo==='mov'?rc(cx-10,yL-42,20,16)+tx(cx,yL-30,'M',{a:'middle',fs:8}):(i.tipo==='xv'||i.tipo==='xvb'||i.tipo==='xvc')?rc(cx-10,yL-42,20,16)+tx(cx,yL-30,'S',{a:'middle',fs:8}):`<path d="M${cx-12} ${yL-26} a12 10 0 0 1 24 0 Z" class="ink" fill="none"></path>`);
+      s+=modo==='pid'?ln([[cx,yL-42],[cx,yL-80]],{d:i.cx.cls==='hw'?'7 4':'2 3'})+burbuja(cx,yL-97,{tag:(i.tipo==='cv'?i.L+'IC':i.tipo==='mov'?'HS':'XV')+'-'+i.num},false)+tx(cx,yL+24,i.tag,{a:'middle',fs:7}):rc(cx-30,yL-80,60,24)+tx(cx,yL-70,i.tag,{a:'middle',fs:6.8,w:1})+tx(cx,yL-60,i.tipo==='cv'?'##.# %':'ABIERTA',{a:'middle',fs:6.8});}
+    else if(i.tipo==='cam'){s+=rc(cx-14,yL+40,28,16)+tx(cx,yL+76,i.tag,{a:'middle',fs:7})+ln([[cx+14,yL+48],[cx+24,yL+42],[cx+24,yL+54],[cx+14,yL+48]]);}
+    else s+=inst(cx,i,yL-(j%2?70:120));});
+  return s;}
+function genPid(p,M){const ins=M.ins.filter(i=>i.pid===p.key);
+  return {s:marcoArea(`APORTE DE INSTRUMENTACIÓN · ${p.key}`)+proceso(ins,'pid')+leyendaSvg(870,470,[['','LÍNEA DE PROCESO'],['7 4','SEÑAL ELÉCTRICA'],['2 3','ENLACE DE DATOS / BUS']])+notasTxt(['ESQUEMA DE APORTE I&C: LA BASE DE PROCESO (LÍNEAS, EQUIPOS Y DIMENSIONES) LA ENTREGA LA DISCIPLINA DE PROCESOS.',`INSTRUMENTOS INCORPORADOS DESDE LA BASE DE DATOS DEL PROYECTO (${ins.length} TAGS).`,'SIMBOLOGÍA SEGÚN ISA 5.1, VER PLANO DE SIMBOLOGÍA.']),
+    t1:'DIAGRAMA DE PROCESO E INSTRUMENTACIÓN',t2:`APORTE I&C ${p.key}`,refs:[docDe(M,'gen',d=>d.key==='SIM'),docDe(M,'lin'),docDe(M,'lio')]};}
+function genDsp(p,M){const ins=M.ins.filter(i=>i.t.k!=='loc');
+  return {s:marcoArea('DESPLIEGUE GRÁFICO DE OPERACIÓN (HMI)')+proceso(ins,'dsp')+tablaSvg(870,460,[{h:'COLOR',w:70},{h:'ESTADO',w:180,l:1}],[['VERDE','EN SERVICIO / ABIERTA'],['ROJO','DETENIDO / CERRADA'],['AMARILLO','ALARMA'],['MAGENTA','FALLA / DISCREPANCIA'],['GRIS','FUERA DE SERVICIO']],{tit:'CONVENCIÓN DE COLORES'}).s
+    +notasTxt(['DESPLIEGUE BASADO EN P&ID Y LISTADO DE E/S; CADA OBJETO TIENE FACEPLATE CON MODO, ALARMAS Y TENDENCIA.',`VARIABLES ENLAZADAS: ${M.io.length} SEÑALES DEL LISTADO DE E/S.`]),t1:'DESPLIEGUE GRÁFICO',t2:'PANTALLA GENERAL DEL ÁREA',refs:[docDe(M,'lio'),docDe(M,'fil')]};}
+
+/* ---------- 06 Bloques y 21 Arquitectura ---------- */
+function genBlq(p,M){let s=marcoArea('');const v=p.v;
+  s+=zona(300,70,560,190,'SALA ELÉCTRICA '+(v.sala||''),'')+zona(330,100,500,140,v.gab||'GABINETE DE E/S','');
+  const mods=M.mods;const mw=Math.min(34,(440)/(mods.length+4));const mx=360;const pos={};
+  [{n:'CPU/COM'},...mods,{n:'FF'},{n:'DP'},{n:'ETH'}].forEach((m,j)=>{const x=mx+j*(mw+4);s+=rc(x,140,mw,70);const lab=m.n||(CARDS[m.key].ty);s+=`<text x="${x+mw/2+3}" y="175" font-size="7" text-anchor="middle" transform="rotate(-90 ${x+mw/2+3} 175)">${esc(m.n||CARDS[m.key].ty+' '+m.model.split(' ')[0])}</text>`;pos[m.n||('S'+m.slot)]=x+mw/2;});
+  const grupos=Object.keys(M.grupos);const gw=(ZX[3]-ZX[0]-80)/Math.max(grupos.length,1);
+  grupos.forEach((k,j)=>{const cx=ZX[0]+40+gw*(j+0.5),cls=CONEX[k].cls;const arr=M.grupos[k];
+    const h=24+arr.length*11;s+=rc(cx-gw/2+8,440,gw-16,h)+tx(cx,454,k,{a:'middle',fs:8,w:1});arr.forEach((i,m)=>s+=tx(cx,467+m*11,i.tag,{a:'middle',fs:7}));
+    if(cls==='hw'){const tys=[...new Set(arr.flatMap(i=>i.sig.map(s2=>s2.ty)))];tys.forEach((ty,m)=>{const sl=arr.flatMap(i=>i.sig).find(s2=>s2.ty===ty);const tx0=pos['S'+sl.slot];const xx=cx-12+m*8;
+      s+=lin([[xx,440],[xx,330-m*8-j*3],[tx0,330-m*8-j*3],[tx0,210]],DSH[ty]);});}
+    else{const tx0=pos[cls==='ff'?'FF':cls==='dp'?'DP':'ETH'];if(tx0!=null)s+=lin([[cx,440],[cx,300-j*4],[tx0,300-j*4],[tx0,210]],DSH.RED);}});
+  s+=lin([[pos['CPU/COM'],140],[pos['CPU/COM'],62],[260,62]],DSH.FO)+tx(100,58,'A PLC-01 / SALA DE CONTROL (CF-01)',{fs:7.4});
+  s+=leyendaSvg(870,300,LEY.concat([['box','MÓDULO DE E/S EN GABINETE']]));
+  return {s:s+notasTxt([`MÓDULOS DE E/S SEGÚN LISTADO DE E/S, CON ${S.reglas.res} % DE RESERVA INSTALADA POR TIPO DE SEÑAL.`,'PARA ARQUITECTURA DE REDES VER PLANO DE ARQUITECTURA DE CONTROL.']),t1:'DIAGRAMA DE BLOQUES',t2:'SISTEMA DE CONTROL',refs:[docDe(M,'arq'),docDe(M,'lio'),docDe(M,'int',d=>d.gab)]};}
+function genArq(p,M){let s=marcoArea('');const v=p.v;
+  s+=zona(380,64,420,110,'SALA DE CONTROL',v.hmi||'')+bloque(400,100,110,40,'SRV-01/02','SERVIDORES SCADA','REDUNDANTES')+bloque(530,100,110,40,'HMI-01/02','ESTACIONES DE','OPERACIÓN')+bloque(660,100,120,40,'SW-CORE','SWITCH NÚCLEO');
+  s+=ln([[510,120],[530,120]])+ln([[640,120],[660,120]]);
+  s+=zona(380,196,420,90,'SALA ELÉCTRICA '+(v.sala||''),'')+bloque(420,226,150,44,'PLC-01','CPU REDUNDANTE','HOT STANDBY')+bloque(610,226,150,44,'SW-01 / ODF','SWITCH ANILLO','PATCH PANEL FO');
+  s+=lin([[720,140],[720,226]],DSH.FO)+tx(726,190,foTxt(1,1),{fs:7.2})+ln([[570,248],[610,248]]);
+  s+=zona(380,306,420,80,v.gab||'GABINETE RIO-01','')+bloque(420,334,150,40,'RIO-01','ADAPTADOR E/S','REDUNDANTE')+bloque(610,334,150,40,`${M.mods.length} MÓDULOS E/S`,'+ FF / DP / ETH');
+  s+=lin([[685,270],[685,334]],DSH.FO)+tx(691,305,foTxt(0,1),{fs:7.2})+ln([[570,354],[610,354]]);
+  const gs=Object.keys(M.grupos);const gw=(ZX[3]-ZX[0]-60)/Math.max(gs.length,1);
+  gs.forEach((k,j)=>{const cx=ZX[0]+30+gw*(j+0.5),cls=CONEX[k].cls;const arr=M.grupos[k];s+=bloque(cx-gw/2+10,420,gw-20,34,k,CONEX[k].proto.split(' / ')[0]);
+    s+=lin([[cx,420],[cx,400],[590,400],[590,374]],cls==='hw'?'':DSH.RED);arr.forEach((i,m)=>{s+=tx(cx,470+m*10,i.tag,{a:'middle',fs:7});});});
+  s+=leyendaSvg(870,64,[['','CABLEADO DE COBRE'],['2 3','RED DE CAMPO / ETHERNET'],['9 3','FIBRA ÓPTICA']]);
+  return {s:s+notasTxt(['ARQUITECTURA GENERADA DESDE LA BASE DE INSTRUMENTOS Y REDES DEL PROYECTO.','ENLACES SOBRE 100 m EN FIBRA ÓPTICA SEGÚN CRITERIO BASE.']),t1:'ARQUITECTURA DE CONTROL',t2:'SISTEMA DE CONTROL Y COMUNICACIONES',refs:[docDe(M,'blq'),docDe(M,'fo'),docDe(M,'seg')]};}
+
+/* ---------- 07 Interconexionado ---------- */
+function genInt(p,M){const k=p.key,A=S.proy.area;
+  if(k==='RIO-01'){const hw=M.ins.filter(i=>i.cx.cls==='hw');const rows=[];M.mods.forEach(m=>{const ss=M.io.filter(s=>s.card===m.key&&s.slot===m.slot);for(let c=0;c<m.ch;c++){const g=ss.find(s=>s.canal===c);const ins=g&&M.ins.find(i=>i.tag===g.inst);
+      rows.push([`S${m.slot}`,m.model.split(' ')[0],pad(c),g?g.tag:'RESERVA',g?g.tb:CARDS[m.key].tb,g?`${g.tbn}-${g.tbn+1}`:'—',g?g.fu:'—',g&&ins?(ins.cb.CM?ins.cb.CM.id:(ins.cb.J01||ins.cb.C01||ins.cb.C02||{}).id||''):'']);}});
+    const cols=[{h:'SLOT',w:36},{h:'MÓDULO',w:78},{h:'CANAL',w:40},{h:'SEÑAL',w:92},{h:'BORNERA',w:62},{h:'BORNES',w:50},{h:'FUSIBLE',w:48},{h:'CIRCUITO',w:118}];
+    let s=marcoArea(`INTERCONEXIONADO ${p.v.gab||'GABINETE RIO-01'}`);const per=34;for(let c=0;c*per<rows.length&&c<2;c++)s+=tablaSvg(66+c*532,90,cols,rows.slice(c*per,(c+1)*per),{rh:12.6,tit:c?'(CONTINUACIÓN)':'ASIGNACIÓN DE CANALES, BORNES Y FUSIBLES'}).s;
+    return {s:s+notasTxt([`CANALES DE RESERVA CABLEADOS A BORNES SEGÚN CRITERIO (${S.reglas.res} %).`,'UN SOLO CONDUCTOR DE TERRENO POR BORNE; PANTALLAS A BARRA DE INSTRUMENTACIÓN AISLADA.']),t1:'DIAGRAMA DE INTERCONEXIONADO',t2:(p.v.gab||'GABINETE RIO-01'),refs:[docDe(M,'lio'),docDe(M,'lci'),docDe(M,'blq')]};}
+  const arr=M.grupos[k]||[];const sigs=arr.flatMap(i=>i.sig.map(s=>({...s,i})));const cm=arr[0]&&arr[0].cb.CM;let s=rc(ZX[0],YT,ZX[3]-ZX[0],YB-YT)+ln([[560,YT],[560,YB]])+ln([[ZX[0],YT+26],[ZX[3],YT+26]])+tx(310,YT+18,'TERRENO',{a:'middle',fs:12})+tx(845,YT+18,'SALA ELÉCTRICA '+(p.v.sala||'')+' · '+(p.v.gab||''),{a:'middle',fs:11});
+  const jx=430,tbx=640,y0=130,rh=Math.min(16,380/Math.max(sigs.length*3,1));
+  s+=rc(jx-10,y0-24,96,sigs.length*3*rh+40)+tx(jx+38,y0-10,k,{a:'middle',fs:9,w:1})+tx(jx+38,y0+sigs.length*3*rh+30,'X1',{a:'middle',fs:8});
+  s+=rc(tbx-10,y0-24,96,sigs.length*3*rh+40)+tx(tbx+38,y0-10,'GABINETE RIO-01',{a:'middle',fs:8,w:1});
+  let lastIns=null;sigs.forEach((g,j)=>{const yy=y0+j*3*rh;['+','-','SH'].forEach((t,m)=>{const ry=yy+m*rh;s+=rc(jx+20,ry,36,rh)+tx(jx+38,ry+rh-3,String(g.jbn+m),{a:'middle',fs:7})+rc(tbx+20,ry,36,rh)+tx(tbx+38,ry+rh-3,m<2?`${g.tbn+m}`:'SH',{a:'middle',fs:7});
+      s+=ln([[jx+56,ry+rh/2],[tbx+20,ry+rh/2]],m===2?{d:'4 3'}:{});s+=ln([[jx,ry+rh/2],[jx+20,ry+rh/2]]);});
+    s+=tx(jx-14,yy+rh,g.tag,{a:'end',fs:7.4,w:1});s+=tx(tbx+60,yy+rh,`${g.tb}`,{fs:7})+tx(tbx+60,yy+2*rh,g.fu||'',{fs:7});
+    if(g.i!==lastIns){lastIns=g.i;const cb=g.i.cb.J01||g.i.cb.C01;s+=rc(90,yy-2,130,22)+tx(155,yy+8,`${A}-${g.i.tag}`,{a:'middle',fs:7.6,w:1})+tx(155,yy+17,g.i.t.n.toUpperCase().slice(0,24),{a:'middle',fs:6.4});
+      s+=ln([[220,yy+9],[jx-70,yy+9]])+tx(240,yy+5,cb?cb.id:'',{fs:7})+tx(240,yy+16,cb?cb.spec:'',{fs:6.6});}});
+  if(cm)s+=tx((jx+tbx)/2+20,y0-30,`${cm.id} · ${cm.spec}`,{a:'middle',fs:7.6,w:1});
+  const rows=sigs.map(g=>[g.i.tag,g.tag,g.ty,(g.i.cb.J01||g.i.cb.C01||{}).id||'',`${g.jbn}-${g.jbn+1}`,`${Math.ceil(g.jbn/3)}`,g.tb,`${g.tbn}-${g.tbn+1}`,g.dir.replace('RIO-01 · ','')]);
+  s+=tablaSvg(ZX[0]+520,YB-40-12.6*(rows.length+2),[{h:'TAG',w:62},{h:'SEÑAL',w:62},{h:'TIPO',w:30},{h:'CIRCUITO',w:96},{h:'BORNES JB',w:52},{h:'PAR',w:28},{h:'BORNERA',w:52},{h:'BORNES',w:44},{h:'DIRECCIÓN',w:84}],rows,{rh:12.6,tit:`TABLA DE ASIGNACIÓN ${k}`}).s;
+  return {s:s+notasTxt([`CAJA ${k} ${CR().jbmat.toUpperCase()}, BORNES DE RESERVA 20 %.`,'PARA LARGO, TIPO Y CALIBRE DE CABLES VER LISTADO DE CIRCUITOS.']),t1:'DIAGRAMA DE INTERCONEXIONADO',t2:`CAJA DE PASO ${k}`,refs:[docDe(M,'lci'),docDe(M,'lio'),docDe(M,'int',d=>d.gab)]};}
+
+/* ---------- 08 Segmentos ---------- */
+function genSeg(p,M){const k=p.key,cx=CONEX[k],arr=M.grupos[k]||[];let s=marcoArea('');const v=p.v;
+  s+=zona(70,70,300,240,'SALA ELÉCTRICA '+(v.sala||''),v.gab||'')+zona(420,70,700,520,'TERRENO','');
+  const yb=200;let calc=[];
+  if(cx.cls==='ff'){s+=bloque(100,110,120,44,'LINKING DEVICE','FF H1 / HSE')+bloque(100,180,120,44,'ACONDICIONADOR','FF REDUNDANTE','24 VDC')+ln([[160,154],[160,180]])+term(240,yb+2);
+    const tr=arr[0]&&arr[0].cb.CM;s+=ln([[220,yb+2],[560,yb+2]],{sw:1.6})+tx(380,yb-8,tr?`${tr.id} · ${tr.spec}`:'TRONCAL',{a:'middle',fs:7.6,w:1});
+    s+=bloque(560,yb-30,110,64,'MEGABLOCK','CAJA DE DISTRIBUCIÓN',`${Math.max(4,Math.ceil(arr.length*1.25/2)*2)} PUERTOS`)+term(684,yb+2);
+    arr.forEach((i,j)=>{const y=110+j*62;s+=ln([[670,yb+2],[720,yb+2],[720,y+20],[850,y+20]],{d:'2 3'})+bloque(850,y,150,40,`${S.proy.area}-${i.tag}`,i.t.n.toUpperCase().slice(0,22))+tx(760,y+16,i.cb.R01?i.cb.R01.id:'',{fs:7})+tx(760,y+30,'SPUR 25 m',{fs:7});});
+    const I=arr.length*20+20,L=(150+arr.length*25)/1000,R=44,V=25-I/1000*R*L*2;
+    calc=[['EQUIPOS EN SEGMENTO',`${arr.length}`,`≤ ${cx.max}`,arr.length<=cx.max?'CUMPLE':'NO CUMPLE'],['VÁLVULAS EN SEGMENTO',`${arr.filter(i=>['cv','mov'].includes(i.tipo)).length}`,'≤ 3','CUMPLE'],['CONSUMO TOTAL',`${I} mA`,'≤ 500 mA',I<=500?'CUMPLE':'NO CUMPLE'],['LARGO TOTAL CABLE',`${Math.round(L*1000)} m`,'≤ 1900 m','CUMPLE'],['SPUR MÁXIMO','25 m','≤ 60 m','CUMPLE'],['TENSIÓN EN EQUIPO MÁS LEJANO',`${V.toFixed(1)} V`,'≥ 12 V',V>=12?'CUMPLE':'NO CUMPLE']];}
+  else if(cx.cls==='dp'){s+=bloque(100,170,120,50,'MAESTRO DP','MÓDULO PROFIBUS','EN RIO-01')+term(240,yb);s+=ln([[220,yb],[1080,yb]],{sw:1.6})+term(1080,yb);
+    arr.forEach((i,j)=>{const x=470+j*170;s+=ln([[x+60,yb],[x+60,yb+60]],{d:'2 3'})+bloque(x,yb+60,120,50,`${S.proy.area}-${i.tag}`,i.t.n.toUpperCase().slice(0,20),`NODO ${j+3}`)+tx(x+66,yb+40,i.cb.R01?i.cb.R01.id:'',{fs:7});});
+    calc=[['NODOS EN SEGMENTO',`${arr.length+1}`,`≤ ${cx.max}`,'CUMPLE'],['VELOCIDAD','500 kbps','≥ 500 kbps','CUMPLE'],['LARGO TRONCAL',`${150} m`,'≤ 400 m','CUMPLE'],['TERMINADORES','2 (EXTREMOS)','2','CUMPLE']];}
+  else{s+=bloque(100,170,120,50,'SW-01','SWITCH INDUSTRIAL','EN GABINETE');arr.forEach((i,j)=>{const y=110+j*70;s+=ln([[220,195],[300,195],[300,y+20],[850,y+20]],{d:'2 3'})+bloque(850,y,150,40,`${S.proy.area}-${i.tag}`,i.t.n.toUpperCase().slice(0,22))+tx(560,y+16,i.cb.R01?`${i.cb.R01.id} · ${i.cb.R01.spec}`:'',{fs:7});});
+    calc=[['PUERTOS USADOS',`${arr.length}`,`≤ ${cx.max}`,'CUMPLE'],['LARGO MÁXIMO COBRE','60 m','≤ 100 m','CUMPLE']];}
+  s+=tablaSvg(80,330,[{h:'VERIFICACIÓN',w:120,l:1},{h:'VALOR',w:56},{h:'CRITERIO',w:56},{h:'ESTADO',w:58}],calc,{tit:'CÁLCULO DEL SEGMENTO'}).s;
+  return {s:s+notasTxt([`SEGMENTO ${k} · ${cx.proto.toUpperCase()}. REGLAS SEGÚN CRITERIO BASE (FF: ${CONEX['SEG-FF01'].max} EQUIPOS, SPUR 60 m, 12 V MÍNIMO).`,'TRANSMISOR Y VÁLVULA DEL MISMO LAZO EN EL MISMO SEGMENTO.','CÁLCULO DE TENSIÓN CON CABLE TIPO A (44 Ω/km POR CONDUCTOR) Y 20 mA POR EQUIPO; LARGOS ESTIMADOS.']),t1:'DIAGRAMA DE SEGMENTO',t2:`${k} ${cx.proto}`,refs:[docDe(M,'arq'),docDe(M,'lci'),docDe(M,'lin')]};}
+
+/* ---------- 09 Fibra óptica ---------- */
+const COLFO=['AZUL','NARANJO','VERDE','CAFÉ','GRIS','BLANCO','ROJO','NEGRO','AMARILLO','VIOLETA','ROSADO','AQUA'];
+function genFO(p,M){let s=marcoArea('');const L=S.fo.slice(0,3),n=L.length||1,cw=(ZX[3]-ZX[0]-40)/n;
+  const cabs=L.map((f,j)=>{const x1=ZX[0]+30+j*cw;return {...f,n:Math.max(1,Math.min(24,+f.hilos||6)),spec:`FO ${f.hilos}F ${f.tipo}`.toUpperCase(),x1,x2:x1+Math.min(cw-130,420)};});
+  const odf=(x,y,n,t)=>{let r=rc(x,y,90,24+n*14)+tx(x+45,y+15,t,{a:'middle',fs:7.4,w:1});for(let f=0;f<n;f++){r+=ci(x+20,y+30+f*14,5)+tx(x+40,y+33+f*14,pad(f+1),{fs:7});}return r;};
+  cabs.forEach(c=>{const y=118,nh=Math.min(c.n,12);s+=odf(c.x1,y,nh,(c.odfDe||'ODF '+c.de).toUpperCase())+odf(c.x2,y,nh,(c.odfA||'ODF '+c.a).toUpperCase());
+    for(let f=0;f<nh;f++){const yy=y+30+f*14;s+=ln([[c.x1+90,yy],[c.x2,yy]],f<2?{}:{d:'3 3'});}
+    s+=tx((c.x1+c.x2+90)/2,y-22,`${c.id} · ${c.spec} · ${c.len} m`,{a:'middle',fs:7.8,w:1})+tx((c.x1+c.x2+90)/2,y-9,`CONECTOR ${c.conector||'—'} · JUMPER ${(c.jumper||'—').toUpperCase()}${c.conv&&c.conv!=='—'?' · '+c.conv.toUpperCase():''}`,{a:'middle',fs:7});
+    s+=tablaSvg(c.x1,y+40+nh*14,[{h:'HILO',w:34},{h:'COLOR',w:62},{h:'USO',w:150,l:1}],COLFO.slice(0,nh).map((col,f)=>[pad(f+1),col,f===0?'TX ENLACE PRINCIPAL':f===1?'RX ENLACE PRINCIPAL':f===2?'TX ENLACE REDUNDANTE':f===3?'RX ENLACE REDUNDANTE':'RESERVA']),{tit:`ASIGNACIÓN DE HILOS ${c.id}`}).s;});
+  const con=[...new Set(cabs.map(c=>c.conector).filter(Boolean))].join(' / ')||'LC';
+  return {s:s+notasTxt([`CONECTORES ${con} EN ODF; JUMPERS PRECONECTORIZADOS SEGÚN TABLA DE ENLACES (03 › ENLACES DE FIBRA ÓPTICA).`,'100 % DE HILOS INSTALADOS Y CERTIFICADOS; HILOS SIN USO QUEDAN COMO RESERVA.','COLORES DE HILOS SEGÚN TIA-598.'].concat(S.fo.length>3?[`SE MUESTRAN 3 DE ${S.fo.length} ENLACES; EL RESTO VA EN HOJAS SIGUIENTES.`]:[])),t1:'DIAGRAMA DE FIBRA ÓPTICA',t2:'ENLACES '+cabs.map(c=>c.id).join(' · '),refs:[docDe(M,'arq'),docDe(M,'lci')]};}
+
+/* ---------- 10 Lógicos ---------- */
+function genLog(p,M){const i=M.ins.find(x=>x.tag===p.key);let s=marcoArea('');if(!i)return {s,t1:'DIAGRAMA LÓGICO',t2:p.key,refs:[]};
+  const n=i.num;const ent=(x,y,t,d)=>rc(x,y-11,150,22)+tx(x+4,y+3,t,{fs:7.6})+(d?tx(x+4,y+14,d,{fs:6.6}):'')+ln([[x+150,y],[x+170,y]]);
+  const sal=(x,y,t)=>ln([[x-20,y],[x,y]])+rc(x,y-11,150,22)+tx(x+4,y+3,t,{fs:7.6});
+  const g=(x,y,t,ni)=>{let r=rc(x,y-((ni-1)*8+12),50,(ni-1)*16+24)+tx(x+25,y+3,t,{a:'middle',fs:8,w:1});return r;};
+  const perm=M.ins.filter(x=>x.pid===i.pid&&x.t.k==='di').map(x=>x.tag);
+  if(i.tipo==='xv'||i.tipo==='xvb'||i.tipo==='xvc'||i.tipo==='mov'){
+    s+=ent(80,140,`HS-${n} MODO REMOTO (HMI)`)+ent(80,180,`HS-${n} ABRIR (HMI)`)+ent(80,220,`HS-${n} CERRAR (HMI)`)+ent(80,270,perm[0]?`${perm[0]} NIVEL MUY ALTO`:'PERMISIVO DE PROCESO','ENCLAVAMIENTO (NOTA 2)');
+    s+=g(330,180,'AND',3)+ln([[250,140],[300,140],[300,172],[330,172]])+ln([[250,180],[330,180]])+ln([[250,270],[310,270],[310,188],[330,188]])+tx(305,265,'NOT',{fs:6.6});
+    s+=rc(430,166,60,44)+tx(460,182,'S',{a:'middle',fs:8})+tx(460,200,'R',{a:'middle',fs:8})+tx(460,192,'FF',{a:'middle',fs:6})+ln([[380,180],[430,178]])+ln([[250,220],[400,220],[400,198],[430,198]]);
+    s+=ln([[490,188],[560,188]])+sal(560,188,`XY-${n} SOLENOIDE / ORDEN`);
+    s+=ent(80,360,`ZSO-${n} VÁLVULA ABIERTA`)+ent(80,400,`ZSC-${n} VÁLVULA CERRADA`);
+    s+=g(330,380,'XOR',2)+ln([[250,360],[330,372]])+ln([[250,400],[330,388]])+tx(406,374,'NOT',{fs:6.6})+rc(430,365,70,30)+tx(465,378,'TON',{a:'middle',fs:8,w:1})+tx(465,389,'T = 30 s',{a:'middle',fs:6.6})+ln([[380,380],[430,380]]);
+    s+=ln([[500,380],[560,380]])+sal(560,380,`XA-${n} FALLA DE POSICIÓN (ALARMA)`);
+    s+=ln([[250,360],[270,360],[270,450],[560,450]])+sal(560,450,`ZSO-${n} INDICACIÓN EN HMI`)+ln([[250,400],[260,400],[260,490],[560,490]])+sal(560,490,`ZSC-${n} INDICACIÓN EN HMI`);}
+  else if(i.tipo==='cv'){const tr=M.ins.find(x=>x.num===i.num&&x.t.k==='an');
+    s+=ent(80,170,`${tr?tr.tag:i.L+'IT-'+n} VARIABLE DE PROCESO`,'4-20 mA + HART')+ent(80,230,`${i.L}IC-${n} SET POINT (HMI)`)+ent(80,290,`${i.L}IC-${n} MODO AUTO/MANUAL`)+ent(80,350,`${i.L}IC-${n} SALIDA MANUAL (HMI)`);
+    s+=rc(330,150,100,100)+tx(380,195,'PID',{a:'middle',fs:12,w:1})+tx(380,212,`${i.L}IC-${n}`,{a:'middle',fs:7.6})+ln([[250,170],[330,170]])+ln([[250,230],[330,230]]);
+    s+=rc(500,250,70,70)+tx(535,280,'A/M',{a:'middle',fs:9,w:1})+ln([[430,200],[470,200],[470,270],[500,270]])+ln([[250,350],[480,350],[480,300],[500,300]])+ln([[250,290],[535,290],[535,320]],{d:'3 3'});
+    s+=ln([[570,285],[620,285]])+sal(620,285,`${i.L}Y-${n} SALIDA 4-20 mA A POSICIONADOR`);
+    s+=ln([[250,170],[290,170],[290,420],[620,420]])+sal(620,420,`${i.L}AL/${i.L}AH-${n} ALARMAS (HMI)`);}
+  else{s+=ent(80,170,`HS-${n} PARTIR (HMI)`)+ent(80,210,`HS-${n} DETENER (HMI)`)+ent(80,260,'PERMISIVOS DE PROCESO')+ent(80,310,`${i.tag} LISTO (RED)`);
+    s+=g(330,250,'AND',3)+rc(430,190,60,44)+tx(460,206,'S',{a:'middle',fs:8})+tx(460,224,'R',{a:'middle',fs:8})+ln([[250,170],[430,200]])+ln([[250,210],[420,210],[420,226],[430,226]])+ln([[250,260],[330,250]])+ln([[250,310],[300,310],[300,262],[330,262]])+ln([[380,250],[400,250],[400,214],[430,214]]);
+    s+=ln([[490,212],[560,212]])+sal(560,212,`${i.tag} ORDEN DE PARTIDA (RED)`)+ln([[250,310],[270,310],[270,380],[560,380]])+sal(560,380,`${i.tag} ESTADO EN HMI`);}
+  s+=leyendaSvg(870,90,[['box','ENTRADA / SALIDA DE LÓGICA'],['','SEÑAL LÓGICA']]).replace('SIMBOLOGÍA Y NOMENCLATURA','SIMBOLOGÍA (ISA 5.2)');
+  return {s:s+notasTxt(['LÓGICA EN LÓGICA POSITIVA; DESCRIPCIONES SEGÚN FILOSOFÍA DE CONTROL.','PERMISIVOS Y ENCLAVAMIENTOS A CONFIRMAR EN LA FILOSOFÍA DE CONTROL.','TIEMPO DE FALLA DE POSICIÓN AJUSTABLE EN TERRENO.']),t1:'DIAGRAMA LÓGICO Y FUNCIONAL',t2:`${i.tag} ${i.desc}`,refs:[docDe(M,'fil'),docDe(M,'laz',d=>d.key===i.tag),docDe(M,'lio')]};}
+
+/* ---------- 31 Canalizaciones ---------- */
+const ODC=sp=>/Multipar (\d+)p/.test(sp)?({6:15,12:20,24:26,36:30,48:34})[+sp.match(/Multipar (\d+)p/)[1]]||30:/1x1p/.test(sp)?7.5:/1x3c/.test(sp)?11:/1x4c/.test(sp)?12:/FF|Profibus|DP/.test(sp)?8:/Cat6/.test(sp)?7:/proveedor/i.test(sp)?9:10;
+const IDC={'3/4"':20.9,'1"':26.6,'1-1/2"':40.9,'2"':52.5};
+function genCan(p,M){let s=marcoArea('DIAGRAMA DE CANALIZACIONES DE INSTRUMENTACIÓN (ESQUEMÁTICO)');const cs=M.cond;
+  const rows=cs.map(c=>{const cab=M.cab.find(x=>x.id===c.cab);const od=ODC(cab?cab.spec:'');const ai=Math.PI*(IDC[c.dia]||26.6)**2/4,ac=Math.PI*od*od/4,pct=ac/ai*100;return [c.id,c.dia,c.cab,c.de,c.a,`${c.len}`,`${pct.toFixed(0)} %`,pct<=53?'CUMPLE':'NO CUMPLE'];});
+  const ys=110;s+=ln([[600,ys],[600,ys+300]],{sw:3})+tx(596,ys-6,'ESCALERILLA EI-01 (300 mm)',{a:'end',fs:7.4,w:1});
+  cs.slice(0,22).forEach((c,j)=>{const y=ys+8+j*13.4;s+=tx(80,y+3,c.de,{fs:7})+ln([[170,y],[600,y]],{d:c.dia==='1-1/2"'?'':'5 2'})+tx(180,y-2,`${c.id} Ø${c.dia}`,{fs:6.6})+tx(330,y-2,c.cab,{fs:6.6});});
+  s+=ln([[600,ys+300],[600,ys+330],[860,ys+330]],{sw:3})+tx(700,ys+344,'A SALA ELÉCTRICA / GABINETE RIO-01',{fs:7.4});
+  s+=tablaSvg(650,ys-6,[{h:'CONDUIT',w:50},{h:'Ø',w:40},{h:'CIRCUITO',w:118},{h:'LARGO',w:40},{h:'LLENADO',w:50},{h:'ESTADO',w:62}],rows.map(r=>[r[0],r[1],r[2],r[5],r[6],r[7]]).slice(0,22),{rh:12,tit:'OCUPACIÓN DE CONDUITS (RIC N°04 / NEC: 1 CABLE ≤ 53 %, 3 O MÁS ≤ 40 %)'}).s;
+  return {s:s+notasTxt([`CONDUIT DE ${CR().cmat.toUpperCase()}, DIÁMETRO MÍNIMO ${CR().dmin}; ACOMETIDA A INSTRUMENTO CON CONDUIT FLEXIBLE ESTANCO DE 1 m MÁXIMO.`,'SEGREGACIÓN: SEÑALES 4-20 mA Y BUSES SEPARADAS DE 120 VAC Y FUERZA SEGÚN CRITERIO BASE.','DIAGRAMA ESQUEMÁTICO: LA PLANTA DE DISPOSICIÓN SE DIBUJA SOBRE EL LAYOUT DEL ÁREA. OCUPACIÓN CON DIÁMETROS DE CABLE TÍPICOS, VERIFICAR CON CATÁLOGO.']),t1:'CANALIZACIONES DE INSTRUMENTACIÓN',t2:'DIAGRAMA Y OCUPACIÓN DE CONDUITS',refs:[docDe(M,'lco'),docDe(M,'lci'),docDe(M,'det',d=>/Canalizacion/.test(d.key))]};}
+
+/* ---------- 41 Detalles de montaje ---------- */
+const MATDET={
+ 'Presion':[['1','c/u','TRANSMISOR SEGÚN HOJA DE DATOS'],['2','c/u','MANIFOLD 2 VÁLVULAS AC. INOX. 316'],['1','c/u','POSTE TUBO 2" AC. GALV. CON PLACA BASE'],['2','c/u','ABRAZADERA TIPO U 2" C/PERNO Y TUERCA'],['LR','m','TUBING AC. INOX. 316 1/2"'],['LR','m','CONDUIT FLEXIBLE CON CUBIERTA PVC 3/4"'],['1','c/u','CONECTOR RECTO PARA CONDUIT FLEXIBLE 3/4"']],
+ 'Nivel':[['1','c/u','TRANSMISOR DE NIVEL SEGÚN HOJA DE DATOS'],['1','c/u','BRIDA DE MONTAJE SEGÚN HD'],['LR','m','CONDUIT FLEXIBLE CON CUBIERTA PVC 3/4"'],['1','c/u','CONECTOR RECTO PARA CONDUIT FLEXIBLE'],['1','c/u','SOPORTE ANGULO L 2"x2"x1/4" GALV.']],
+ 'Flujo':[['1','c/u','FLUJÓMETRO SEGÚN HOJA DE DATOS'],['2','c/u','ANILLO DE PUESTA A TIERRA'],['1','c/u','POSTE TUBO 2" PARA TRANSMISOR REMOTO'],['LR','m','CONDUIT FLEXIBLE CON CUBIERTA PVC 3/4"'],['1','c/u','CABLE DEL PROVEEDOR ELEMENTO-TRANSMISOR']],
+ 'Valvulas':[['1','c/u','VÁLVULA CON ACTUADOR SEGÚN HD'],['1','c/u','CAJA DE TERMINALES EN VÁLVULA'],['LR','m','TUBING AC. INOX. 316 3/8" AIRE INSTRUMENTOS'],['1','c/u','FILTRO REGULADOR CON MANÓMETRO'],['LR','m','CONDUIT FLEXIBLE CON CUBIERTA PVC 3/4"']],
+ 'Analisis':[['1','c/u','FUENTE Y DETECTOR SEGÚN HD'],['1','c/u','ABRAZADERA DE MONTAJE A CAÑERÍA'],['1','c/u','SEÑALÉTICA RADIACTIVA SEGÚN NORMA'],['LR','m','CONDUIT FLEXIBLE CON CUBIERTA PVC 3/4"']],
+ 'CCTV':[['1','c/u','CÁMARA SEGÚN HD'],['1','c/u','POSTE / SOPORTE A ESTRUCTURA'],['1','c/u','CAJA DE CONEXIONES IP66'],['LR','m','CONDUIT FLEXIBLE 1"']],
+ 'Cajas':[['1','c/u','CAJA AC. INOX. 316 IP66'],['2','c/u','PERFIL UNISTRUT P1000 GALV.'],['4','c/u','PERNO DE ANCLAJE 3/8"'],['LR','c/u','PRENSAESTOPAS SEGÚN CABLE']]};
+function genDet(p,M){const cat=p.key||'';const tags=M.ins.filter(i=>i.t.det===cat);let s=marcoArea('');const tipo=/Presion/.test(cat)?'Presion':/Nivel/.test(cat)?'Nivel':/Flujo/.test(cat)?'Flujo':/Valvula/.test(cat)?'Valvulas':/Analisis/.test(cat)?'Analisis':/CCTV/.test(cat)?'CCTV':'Cajas';
+  const x=280,y=120;
+  if(tipo==='Presion'||tipo==='Flujo'){s+=ln([[x,y+60],[x,y+370]],{sw:3})+ln([[x-50,y+370],[x+50,y+370]],{sw:2})+rc(x-20,y+20,40,40)+ci(x,y+40,14)+tx(x+30,y+30,'TRANSMISOR',{fs:7.4})+ln([[x,y+60],[x,y+80]]);
+    s+=ln([[x+20,y+40],[x+120,y+40],[x+120,y+140]],{d:'6 3'})+tx(x+126,y+100,'CONDUIT FLEXIBLE (2)',{fs:7})+ln([[x-170,y+240],[x+30,y+240]],{sw:6})+tx(x-170,y+230,'LÍNEA DE PROCESO',{fs:7.4})+ln([[x-100,y+240],[x-100,y+60],[x-20,y+60]],{d:tipo==='Presion'?'':'3 3'})+tx(x-150,y+150,tipo==='Presion'?'TUBING 1/2" (5)':'CABLE PROVEEDOR',{fs:7})+tx(x+10,y+300,'POSTE 2" (3)',{fs:7});}
+  else if(tipo==='Nivel'){s+=rc(x-140,y+120,280,250)+tx(x-130,y+360,'ESTANQUE',{fs:7.4})+rc(x-20,y+90,40,30)+ln([[x,y+120],[x,y+200]],{d:'4 3'})+ci(x,y+70,18)+tx(x+30,y+70,'TRANSMISOR RADAR (1)',{fs:7})+ln([[x+18,y+70],[x+150,y+70],[x+150,y+160]],{d:'6 3'})+tx(x+156,y+120,'CONDUIT FLEXIBLE (3)',{fs:7});}
+  else if(tipo==='Valvulas'){s+=ln([[x-200,y+260],[x+200,y+260]],{sw:6})+`<path d="M${x-30} ${y+240} L${x+30} ${y+280} L${x+30} ${y+240} L${x-30} ${y+280} Z" class="papel ink"></path>`+rc(x-40,y+150,80,60)+tx(x,y+185,'ACTUADOR',{a:'middle',fs:7.4})+rc(x+60,y+160,40,30)+tx(x+80,y+180,'CT',{a:'middle',fs:7.4})+ln([[x,y+210],[x,y+240]])+ln([[x+100,y+175],[x+200,y+175],[x+200,y+100]],{d:'6 3'})+tx(x+206,y+130,'CONDUIT FLEXIBLE (5)',{fs:7})+ln([[x-40,y+180],[x-140,y+180],[x-140,y+100]])+tx(x-200,y+90,'AIRE INSTRUMENTOS (3)(4)',{fs:7});}
+  else if(tipo==='Analisis'){s+=ln([[x-200,y+240],[x+200,y+240]],{sw:10})+rc(x-60,y+200,40,80)+tx(x-40,y+300,'FUENTE',{a:'middle',fs:7})+rc(x+20,y+200,40,80)+tx(x+40,y+300,'DETECTOR',{a:'middle',fs:7})+ln([[x+60,y+220],[x+160,y+220],[x+160,y+120]],{d:'6 3'});}
+  else if(tipo==='CCTV'){s+=ln([[x,y+60],[x,y+370]],{sw:4})+rc(x+4,y+60,70,26)+tx(x+40,y+77,'CÁMARA',{a:'middle',fs:7.4})+rc(x-50,y+200,40,40)+tx(x-30,y+224,'CC',{a:'middle',fs:7})+ln([[x-30,y+240],[x-30,y+370]],{d:'6 3'});}
+  else{s+=ln([[x-80,y+80],[x-80,y+370]],{sw:3})+ln([[x+80,y+80],[x+80,y+370]],{sw:3})+rc(x-90,y+140,180,160)+tx(x,y+225,'CAJA DE PASO',{a:'middle',fs:8,w:1})+[0,1,2].map(j=>ln([[x-60+j*60,y+300],[x-60+j*60,y+370]],{d:'6 3'})).join('');}
+  s+=tx(x,y+410,'DETALLE 1',{a:'middle',fs:12,w:1});
+  const mats=(MATDET[tipo]||[]).map((m,j)=>[String(j+1),m[0],m[1],m[2]]);
+  s+=tablaSvg(620,90,[{h:'ITEM',w:34},{h:'CANT.',w:40},{h:'UNID.',w:40},{h:'DESCRIPCIÓN',w:380,l:1}],mats,{tit:'LISTA DE MATERIALES'}).s;
+  s+=tablaSvg(620,110+(mats.length+2)*13,[{h:'TAG',w:90},{h:'SERVICIO',w:250,l:1},{h:'P&ID',w:60},{h:'CONEXIÓN',w:94}],tags.map(i=>[i.tag,i.desc.toUpperCase(),i.pid,i.con]),{tit:'LISTA DE INSTRUMENTOS'}).s;
+  return {s:s+notasTxt([`DETALLE BASE: 02 ESTANDARES\\06 DETALLES MONTAJE\\${cat.toUpperCase()}.`,'MATERIALES SE CUANTIFICAN EN EL LISTADO DE MATERIALES DEL PROYECTO.','ALTURA DE MONTAJE ACCESIBLE DESDE PISO O PLATAFORMA; VERIFICAR INTERFERENCIAS EN TERRENO.']),t1:'DETALLE DE MONTAJE',t2:cat.replace(/^\d+ /,'').toUpperCase(),refs:[docDe(M,'lmt'),docDe(M,'lin')]};}
+
+function dibujarOtro(p,M){const G={gen:p.key==='SIM'?genSim:genIdx,pid:genPid,blq:genBlq,arq:genArq,int:genInt,seg:genSeg,fo:genFO,log:genLog,can:genCan,det:genDet,dsp:genDsp}[p.ent];if(!G)return null;
+  const r=G(p,M);const d=docPlano(p,M);return hoja(p,M,r.s,{code:d&&d.code,t1:r.t1,t2:r.t2,refs:r.refs});}
+/* ================= Interfaz ================= */
+function arbol(M){
+  const f=fi(),cuenta=id=>M.docs.filter(d=>d.ent===id).length;
+  const n=(v,nm,ct,k,extra)=>({v,nm,ct,k,...extra});
+  const e=id=>{const x=ENTI[id];return n('ent:'+id,x.n,cuenta(id),x.car.split(' ')[0],{st:x.f[f],nuevo:x.nuevo});};
+  const pend=S.planos.reduce((a,p)=>a+pendientes(p,M).length,0),nseg=Object.keys(M.grupos).filter(k=>!['hw','loc'].includes(CONEX[k].cls)).length;
+  return [
+   {c:'00',h:'Proyecto',items:[n('ficha','Ficha del proyecto'),n('fase','Fase y alcance'),n('vin','Viñetas y formatos base'),n('codif','Codificación de documentos'),n('ges','Gestión del proyecto',GESTION.length)]},
+   {c:'01',h:'P&ID',items:[n('pidreg','P&ID e instrumentos',[...new Set(M.ins.map(i=>i.pid))].length),e('pid')]},
+   {c:'02',h:'Base de datos I&C',items:[n('ins','Instrumentos',M.ins.length),n('red','Redes y segmentos',nseg),n('cab','Cables y circuitos',M.cab.length),n('con','Conduits',M.cond.length)]},
+   {c:'03',h:'Arquitectura de control',items:[n('arq-v','Arquitectura (vista interactiva)'),n('fo-v','Enlaces de fibra óptica',S.fo.length),e('arq'),e('blq')]},
+   {c:'04',h:'Diagramas',items:[e('laz'),e('int'),e('seg'),e('fo'),e('log'),e('dsp'),e('gen')]},
+   {c:'05',h:'Montaje y canalizaciones',items:[e('det'),e('can')]},
+   {c:'06',h:'Listados',items:[e('lin'),e('lio'),e('lci'),e('lco'),e('lmt')]},
+   {c:'07',h:'Documentos técnicos',items:[e('crt'),e('et'),e('hd'),e('fil')]},
+   {c:'08',h:'Adquisiciones y costos',items:[e('rq'),e('evt'),e('cap')]},
+   {c:'09',h:'Planos y control documental',items:[n('nuevo','Nuevo plano'),n('planos','Planos del proyecto',S.planos.length,'',{pend}),n('traza','Trazabilidad por tag'),n('rev','Revisiones y emisiones')]},
+   {c:'BIB',h:'Bases típicas y biblioteca',items:[n('crit','Criterio de diseño I&C',CRIT.length,'CRT'),n('tipl','Típicos de lazo',TIPL.length),n('tarj','Tarjetas de E/S por servicio',CKEYS.length),n('bib','Biblioteca 02 ESTANDARES')]}
+  ];
+}
+let LASTM=null;
+const PASOS=M=>arbol(M).filter(g=>g.c!=='BIB').flatMap(g=>g.items.map(it=>({...it,g})));
+function pintaArbol(M){LASTM=M;
+  document.getElementById('tree').innerHTML=arbol(M).map(g=>`<div class="sec"><h3>${esc(g.c+' · '+g.h)}<span>${g.items.length}</span></h3>${g.items.map(it=>{
+    const off=it.st===0,dot=it.st===undefined?'':`<span class="dot ${it.st===2?'c':it.st===1?'p':''}"></span>`;
+    const ct=it.pend?`<span class="ct pendc">${it.pend} pend.</span>`:it.ct!=null&&it.ct!==undefined?`<span class="ct">${it.ct}</span>`:'';
+    return `<button class="node${off?' off':''}" data-v="${esc(it.v)}" aria-current="${S.vista===it.v||(S.vista.startsWith('plano:')&&it.v==='planos')}">${dot}${it.k?`<span class="k">${esc(it.k)}</span>`:''}<span class="nm">${esc(it.nm)}${it.nuevo?' ·<em> nuevo</em>':''}</span>${ct}</button>`}).join('')}</div>`).join('');
+}
+function pasosHtml(M){const P=PASOS(M),v=S.vista.startsWith('plano:')?'planos':S.vista,ix=P.findIndex(x=>x.v===v);if(ix<0)return '';const pa=P[ix-1],ps=P[ix+1];
+  return `<nav class="pasos" aria-label="Flujo de ingeniería">${pa?`<button class="btn" data-v="${esc(pa.v)}">‹ ${esc(pa.g.c+' · '+pa.nm)}</button>`:'<span></span>'}<span class="note">Paso ${ix+1} de ${P.length}</span>${ps?`<button class="btn pri" data-v="${esc(ps.v)}">${esc(ps.g.c+' · '+ps.nm)} ›</button>`:'<span></span>'}</nav>`;}
+const chipF=v=>v===2?'<span class="chip c">Completo</span>':v===1?'<span class="chip p">Preliminar</span>':'<span class="chip n">—</span>';
+const tagChip=t=>`<span class="chip t" data-tag="${esc(t)}">${esc(t)}</span>`;
+const protoDot=cls=>cls&&PCOL[cls]?`<span class="pr" style="background:var(${PCOL[cls]})"></span>`:'';
+function tabla(cols,rows,opts={}){
+  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th class="${c.num?'num':''}">${esc(c.h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr${opts.row?opts.row(r):''}>${cols.map(c=>`<td class="${c.num?'num':''}${c.mono?' mono':''}">${c.f?c.f(r):esc(r[c.k])}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}" class="note">Sin registros todavía.</td></tr>`}</tbody></table></div>`;
+}
+function cab(ruta,titulo,lead,raiz){return `<div><div class="crumb">${esc(raiz||S.proy.carpeta)}${ruta?'\\'+esc(ruta):''}</div><h1>${esc(titulo)}</h1>${lead?`<p class="lead">${lead}</p>`:''}</div>`}
+const V={};
+
+V.ficha=M=>{const vis=M.docs.filter(d=>ENTI[d.ent].f[fi()]>0);const pla=vis.filter(d=>ENTI[d.ent].g==='PLA').length,P=S.proy;
+  return `${cab('','Ficha del proyecto',`Ingeniería de <b>${esc(FASES[fi()][1].toLowerCase())}</b>. Al cambiar la fase arriba, el árbol marca qué entregables aplican: verde completo, ocre preliminar, gris no aplica.`)}
+  <div class="stats"><div class="stat"><b>${M.ins.length}</b><span>instrumentos</span></div><div class="stat"><b>${M.io.filter(s=>s.ty!=='RED').length}</b><span>señales cableadas</span></div><div class="stat"><b>${M.mods.length}</b><span>tarjetas de E/S</span></div><div class="stat"><b>${pla}</b><span>planos en esta fase</span></div><div class="stat"><b>${S.planos.length}</b><span>planos dibujados</span></div></div>
+  <div class="card"><h2>Datos base</h2><p class="note">El código y el área arman la codificación de todos los planos y documentos (formato de tus emitidos: <span class="mono">P919D-000-IN-PL-022 R0</span>).</p>
+   <div class="form"><label for="f-cod">Código proyecto<input id="f-cod" data-p="cod" value="${esc(P.cod)}"></label><label for="f-area">Área<input id="f-area" data-p="area" value="${esc(P.area)}"></label><label for="f-cli">Cliente<input id="f-cli" data-p="cliente" value="${esc(P.cliente)}"></label><label for="f-nom" style="grid-column:span 2">Nombre<input id="f-nom" data-p="nombre" value="${esc(P.nombre)}"></label></div></div>
+  <div class="card"><h2>Flujo de ingeniería</h2><p class="note">El explorador sigue este orden y al pie de cada vista están «Anterior / Siguiente» para recorrerlo paso a paso.</p><ol class="steps">
+   <li data-v="fase"><b>00 · Fase y formatos</b><span>Tipo de ingeniería, viñetas y codificación</span></li>
+   <li data-v="pidreg"><b>01 · P&ID</b><span>Instrumentos incorporados desde cada hoja</span></li>
+   <li data-v="ins"><b>02 · Base de datos</b><span>Tag, servicio, tipo, alimentación y conexión</span></li>
+   <li data-v="arq-v"><b>03 · Arquitectura</b><span>Terreno → RIO → PLC → sala de control, fibra óptica</span></li>
+   <li data-v="ent:laz"><b>04-05 · Planos</b><span>Lazos, interconexionados, segmentos, fibra, montajes</span></li>
+   <li data-v="ent:lio"><b>06-08 · Documentos</b><span>Listados cruzados, HD, ET, requisiciones</span></li>
+   <li data-v="planos"><b>09 · Control documental</b><span>Viñetas, pendientes, revisiones y trazabilidad</span></li></ol></div>`;};
+V.vin=M=>{const sel=k=>VIN[k].map(o=>`<label><input type="radio" name="vin-${k}" value="${o.id}" ${S.vin[k]===o.id?'checked':''}><span>${esc(o.n)}<span class="ruta">${esc(o.ruta)}</span></span></label>`).join('');
+  return `${cab('10 En Trabajo\\19 FORMATOS PLA-DOC','Viñetas y formatos base','La viñeta de planos elegida aquí es la que propone el asistente de planos. Los campos comunes (cliente, firmas, salas) se llenan una vez y se copian a cada plano nuevo.')}
+  <div class="grid2"><div class="card"><h2>Planos (DWG)</h2><div class="opt">${sel('plano')}</div></div>
+  <div class="card"><h2>Documentos (Word)</h2><div class="opt">${sel('doc')}</div><h2>Listados (Excel)</h2><div class="opt">${sel('lista')}</div></div></div>
+  <div class="card"><h2>Campos comunes de la viñeta</h2><p class="note">Los que quedan vacíos aparecen en ámbar como PENDIENTE en los planos.</p>
+  <div class="form">${VF.map(([k,l])=>`<label for="g-${k}">${esc(l)}<input id="g-${k}" data-g="${k}" value="${esc(S.vinG[k]||'')}" class="${vv(S.vinG[k])?'':'inpend'}"></label>`).join('')}</div></div>`;};
+V.ges=()=>`${cab('00 Gestión del Proyecto','00 Gestión del proyecto','Misma estructura de tus proyectos (2861D, 2692B, 2712D). La suite la crea vacía al dar de alta el proyecto.')}${tabla([{h:'Carpeta',k:'c',mono:1}],GESTION.map(c=>({c})))}`;
+
+/* ---- Bases típicas ---- */
+V.crit=M=>{const temas=[...new Set(CRIT.map(c=>c[0]))];
+  return `${cab('','Criterio de diseño de instrumentación y control','Base consolidada desde los criterios de Anglo, Centinela, Collahuasi, CMP, Codelco, BHP Escondida y BHP Spence que tienes en 02 ESTANDARES\\02 CRITERIOS. Cada fila trae el valor que propone la base y lo que exige cada cliente. Los valores marcados <span class="chip nv">usa la suite</span> alimentan los planos y listados.','BIBLIOTECA DE PROYECTOS\\02 ESTANDARES\\02 CRITERIOS')}
+  <div class="card"><div class="row"><span class="note">Documento Word del criterio base:</span><span class="mono">${esc(CRIT_DOC)}</span></div></div>
+  ${temas.map(t=>`<div class="card"><h2>${esc(t)}</h2>${tabla([{h:'Requisito',f:r=>esc(r[1])+(r[4]?` <span class="chip nv">usa la suite</span>`:'')},{h:'Valor base',f:r=>`<b>${esc(r[2])}</b>`},{h:'Lo que piden los clientes',f:r=>`<span class="note">${esc(r[3])}</span>`}],CRIT.filter(c=>c[0]===t))}</div>`).join('')}`;};
+V.tipl=M=>`${cab('05 TIPICOS\\03 Lazos\\124 DIAGRAMA DE LAZO','Típicos de lazo','Tu lista estándar PENTA-DWR-1000-IN-2000. Los marcados como parametrizados ya se dibujan solos en la suite desde la base de instrumentos; el resto queda para la siguiente etapa.','BIBLIOTECA DE PROYECTOS\\02 ESTANDARES')}
+  ${tabla([{h:'Lámina',f:r=>`<span class="mono">${r.c==='S/N'||r.c==='NUEVO'?r.c:'IN-'+r.c}</span>`},{h:'Típico',k:'n'},{h:'Forma',f:r=>r.k?esc(KINDN[r.k]):'<span class="note">—</span>'},{h:'En la suite',f:r=>r.k?'<span class="chip c">Parametrizado</span>':'<span class="chip n">Pendiente</span>'},{h:'Instrumentos del proyecto',f:r=>M.ins.filter(i=>i.tip===r||(i.tip&&i.tip.c===r.c&&r.c!=='S/N'&&r.c!=='NUEVO')).map(i=>tagChip(i.tag)).join(' ')}],TIPL)}`;
+V.tarj=M=>`${cab('','Tarjetas de E/S por servicio','Regla que usa la suite para asignar tarjeta a cada señal según su servicio. Puedes cambiar la plataforma, la reserva y el tipo de salida discreta; todo el proyecto se recalcula.')}
+  <div class="card"><div class="form">
+   <label for="r-plat">Plataforma<select id="r-plat">${Object.entries(PLATS).map(([k,n])=>`<option value="${k}" ${S.plat===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
+   <label for="r-res">Reserva instalada de E/S (%)<input id="r-res" type="number" min="0" max="50" value="${S.reglas.res}"></label>
+   <label for="r-do">Salidas discretas<select id="r-do"><option value="DOR" ${S.reglas.do==='DOR'?'selected':''}>Relé, contactos aislados</option><option value="DO24" ${S.reglas.do==='DO24'?'selected':''}>24 VDC transistor</option></select></label></div></div>
+  ${tabla([{h:'Servicio de la señal',f:r=>esc(r.svc)},{h:'Tarjeta',f:r=>esc(CARDS[r.k].n)},{h:'Modelo de referencia',f:r=>`<span class="mono">${esc(CARDS[r.k][S.plat][0])}</span>`},{h:'Canales',f:r=>CARDS[r.k][S.plat][1],num:1},{h:'Bornera',f:r=>`<span class="mono">${CARDS[r.k].tb}</span>`}],[
+   {svc:'Transmisor 4-20 mA + HART (2 o 4 hilos)',k:'AI'},{svc:'Posicionador de válvula de control 4-20 mA + HART',k:'AO'},{svc:'Contacto seco 24 VDC (finales de carrera, switches)',k:'DI24'},{svc:'Contacto 120 VAC (switches de proceso, pull-cord, estados)',k:'DI120'},{svc:'Solenoide, baliza o mando (según regla)',k:S.reglas.do},{svc:'Alternativa de salida discreta',k:S.reglas.do==='DOR'?'DO24':'DOR'}])}
+  <div class="card"><h2>Tarjetas resultantes en RIO-01</h2>${tabla([{h:'Slot',k:'slot',num:1},{h:'Tarjeta',f:r=>esc(CARDS[r.key].n)},{h:'Modelo',f:r=>`<span class="mono">${esc(r.model)}</span>`},{h:'Usados / canales',f:r=>`${r.used} / ${r.ch}`,num:1}],M.mods)}<p class="note">Modelos de referencia: verificar con el catálogo vigente del fabricante antes de emitir.</p></div>`;
+
+/* ---- Instrumentos ---- */
+V.ins=M=>{const tipos=Object.entries(TIPOS).map(([k,t])=>`<option value="${k}">${esc(t.n)}</option>`).join('');
+  return `${cab('','Instrumentos','Base de datos central. Cada fila alimenta lazos, E/S, interconexionados, segmentos, circuitos, conduits, HD y requisiciones. La alimentación define el típico del diagrama de lazo.')}
+  <div class="card"><h2>Incorporar instrumento</h2>
+   <form id="fins" class="form" novalidate>
+    <label for="i-tag">Tag<input id="i-tag" placeholder="FIT-1640" required></label><label for="i-desc">Servicio<input id="i-desc" placeholder="Flujo agua de proceso"></label>
+    <label for="i-tipo">Tipo<select id="i-tipo">${tipos}</select></label><label for="i-alim">Alimentación<select id="i-alim"></select></label><label for="i-con">Conexión<select id="i-con"></select></label>
+    <label for="i-pid">P&ID<input id="i-pid" value="PID-01"></label><button class="btn pri" type="submit">Incorporar y actualizar planos</button></form><p class="err" id="ierr" hidden></p></div>
+  ${tabla([{h:'#',k:'fila',num:1},{h:'Tag',f:r=>tagChip(r.tag)},{h:'Servicio',k:'desc'},{h:'Tipo',f:r=>esc(r.t.n)},{h:'Alimentación',f:r=>esc(ALIMN[insAlim(r)]||insAlim(r))},{h:'Conexión',f:r=>protoDot(r.cx.cls)+`<span class="mono">${esc(r.con)}</span>`},{h:'Típico',f:r=>r.tip?`<span class="mono">${esc(r.tip.c)}</span>`:'<span class="note">—</span>'},{h:'Señales',f:r=>r.sig.map(s=>`<span class="mono">${esc(s.tag)}</span> <span class="note">${s.ty==='RED'?'red':s.card}</span>`).join('<br>')||'<span class="note">local</span>'},{h:'',f:r=>r.kind?`<button class="btn" data-crear="${esc(r.tag)}">Dibujar lazo</button>`:''},{h:'',f:r=>`<button class="btn" data-del="${esc(r.tag)}" aria-label="Quitar ${esc(r.tag)}">Quitar</button>`}],M.ins,{row:r=>` class="${r.tag===S.sel?'sel':''}"`})}`;};
+
+/* ---- Asistente de nuevo plano ---- */
+let W8={tag:null,est:null,tip:null,ent:'laz'};
+V.nuevo=M=>{const elig=M.ins.filter(i=>i.kind);if(!W8.tag||!elig.find(i=>i.tag===W8.tag))W8.tag=(elig.find(i=>!S.planos.some(p=>p.tag===i.tag))||elig[0]||{}).tag;
+  const i=M.ins.find(x=>x.tag===W8.tag);W8.est=W8.est||VIN.plano.find(o=>o.id===S.vin.plano).est;
+  const opts=i?TIPL.filter(x=>x.k&&x.t===(i.t.base||i.tipo)):[];const gen=i&&!opts.length?[i.tip]:[];
+  return `${cab('10 En Trabajo\\12 PLA IN\\05 DIAG LAZOS','Nuevo diagrama de lazo','Elige la viñeta, el instrumento, el típico y las tarjetas. El plano se crea con los datos cruzados del proyecto y queda editable.')}
+  <div class="wiz">
+   <section class="card"><h2><span class="nstep">1</span>Viñeta</h2><div class="opt">${VIN.plano.map(o=>`<label><input type="radio" name="w-est" value="${o.est}" ${W8.est===o.est?'checked':''}><span>${esc(o.n)}<span class="ruta">${esc(o.ruta)}</span></span></label>`).join('')}</div></section>
+   <section class="card"><h2><span class="nstep">2</span>Tipo de plano e instrumento</h2>
+    <label for="w-ent">Tipo de plano<select id="w-ent">${ENT.filter(e=>e.g==='PLA').map(e=>`<option value="${e.id}" ${W8.ent===e.id?'selected':''}>${esc(e.car)} · ${esc(e.n)}</option>`).join('')}</select></label>
+    ${W8.ent!=='laz'?`<label for="w-doc">Plano<select id="w-doc">${M.docs.filter(d=>d.ent===W8.ent&&d.key).map(d=>`<option value="${d.ent}|${esc(d.key)}">${esc(d.code)} · ${esc(d.title)}${tienePlano(d)?' (ya dibujado)':''}</option>`).join('')}</select></label><p class="note">Se alimenta de: ${esc(ENTI[W8.ent].src)}.</p>`:''}
+    ${W8.ent==="laz"?`<label for="w-tag">Instrumento<select id="w-tag">${elig.map(x=>`<option value="${esc(x.tag)}" ${x.tag===W8.tag?'selected':''}>${esc(x.tag)} · ${esc(x.desc)}${S.planos.some(p=>p.tag===x.tag)?' (ya dibujado)':''}</option>`).join('')}</select></label>
+    ${i?`<p class="note">${esc(i.t.n)} · ${esc(i.con)} · ${esc(i.cx.proto)}</p>`:''}`:""}</section>
+   ${W8.ent!=="laz"?"":`<section class="card"><h2><span class="nstep">3</span>Típico</h2>${i?`<div class="opt">${(opts.length?opts:gen).map(x=>`<label><input type="radio" name="w-tip" value="${esc(x.a||'')}" ${x===i.tip||(x.c===i.tip.c&&x.a===insAlim(i))?'checked':''}><span>${esc(x.c==='S/N'||x.c==='NUEVO'||x.c==='GEN'?x.c:'PENTA-DWR-1000-IN-'+x.c)} · ${esc(x.n)}<span class="ruta">${esc(KINDN[x.k]||'')}${x.a?' · '+esc(ALIMN[x.a]):''}</span></span></label>`).join('')}</div><p class="note">Al elegir un típico se ajusta la alimentación del instrumento en la base (2 hilos, 4 hilos 24 VDC o 120 VAC).</p>`:'<p class="note">Agrega instrumentos con señal en la base.</p>'}</section>
+   <section class="card"><h2><span class="nstep">4</span>Tarjetas según servicio</h2>${i?tabla([{h:'Señal',k:'tag',mono:1},{h:'Servicio',f:s=>esc(s.ty==='RED'?i.cx.proto:s.ty)},{h:'Tarjeta',f:s=>s.ty==='RED'?'<span class="note">módulo de comunicación</span>':`<select data-wcard="${s.ty}" aria-label="Tarjeta para ${esc(s.tag)}">${OPC[s.ty].map(k=>`<option value="${k}" ${s.card===k?'selected':''}>${esc(CARDS[k].n)}</option>`).join('')}</select>`},{h:'Modelo',f:s=>s.card?`<span class="mono">${esc(CARDS[s.card][S.plat][0])}</span>`:''},{h:'Dirección',k:'dir',mono:1}],i.sig):''}</section>`}
+  </div>
+  <div class="row">${W8.ent==="laz"?`<button class="btn pri" data-accion="crear" ${i?"":"disabled"}>Crear plano</button>`:`<button class="btn pri" data-accion="crear-otro">Crear plano</button>`}<button class="btn" data-accion="crear-fase">Dibujar todos los planos de la fase</button><button class="btn" data-accion="crear-todos">Crear todos los lazos del proyecto</button><span class="note">${S.planos.length} plano(s) creados</span></div>`;};
+
+/* ---- Plano ---- */
+let PT='vin',RN=null;
+function pendientes(p,M){const out=[];VF.forEach(([k,l])=>{if(['proyecto2'].includes(k))return;if(!vv(p.v[k])&&!(p.est!=='keypro'&&false))out.push(['v',k,l]);});
+  const i=(p.ent||'laz')==='laz'&&M.ins.find(x=>x.tag===p.tag);if(i){if(!vv(i.marca))out.push(['i','marca','Marca del instrumento']);if(!vv(i.modelo))out.push(['i','modelo','Modelo del instrumento']);}
+  if(p.est==='keypro'){const ix=out.findIndex(x=>x[1]==='gtproy');if(ix>=0)out.splice(ix,1);}return out;}
+V.plano=(M,id)=>{const p=S.planos.find(x=>x.id===id);if(!p)return cab('','Plano no encontrado','');if((p.ent||'laz')!=='laz')return planoOtro(p,M);
+  const i=M.ins.find(x=>x.tag===p.tag);if(!i)return `${cab('','Plano sin instrumento','El instrumento '+esc(p.tag)+' ya no existe en la base.')}<button class="btn" data-borrarplano="${p.id}">Quitar plano</button>`;
+  const d=docDe(M,'laz',q=>q.tag===i.tag);const pe=pendientes(p,M);
+  return `<div class="plhead">${cab('10 En Trabajo\\12 PLA IN\\05 DIAG LAZOS',`${d?d.code:''} · Lazo ${i.tag}`,`Típico ${esc(i.tip.c)} · ${esc(i.tip.n)}. ${pe.length?`<span class="chip nv">${pe.length} campo(s) pendiente(s)</span>`:'<span class="chip c">Sin pendientes</span>'}`)}
+   <div class="row"><button class="btn" data-accion="cajon" aria-expanded="${!S.cajonOff}">${S.cajonOff?'Abrir':'Cerrar'} edición de campos</button><button class="btn pri" data-accion="dxf">Descargar DXF</button><button class="btn" data-borrarplano="${p.id}">Quitar plano</button></div></div>
+  <div class="plwrap${S.cajonOff?' sin':''}"><div class="hojaw">${dibujar(p,M)}</div>${S.cajonOff?'':cajon(p,i,M,pe)}</div>
+  <p class="note">El plano se redibuja con cada cambio de la base: tags, bornes, tarjetas, cables y números de documento salen del modelo del proyecto. Los textos en ámbar están pendientes; haz clic en uno para ir a su campo. Exportar a DWG/DXF queda para la versión de escritorio.</p>`;};
+function planoOtro(p,M){const d=docPlano(p,M);const e=ENTI[p.ent];const pe=pendientes(p,M);if(PT==='ins'||PT==='tar')PT='vin';
+  if(!d)return `${cab('','Plano sin documento','El documento de origen ya no existe en el modelo (por ejemplo, se quitó la caja o el segmento).')}<button class="btn" data-borrarplano="${p.id}">Quitar plano</button>`;
+  return `<div class="plhead">${cab('10 En Trabajo\\12 PLA IN\\'+e.car,`${d.code} · ${d.title}`,`${esc(e.n)}. Se alimenta de: ${esc(e.src)}. ${pe.length?`<span class="chip nv">${pe.length} campo(s) pendiente(s)</span>`:'<span class="chip c">Sin pendientes</span>'}`)}
+   <div class="row"><button class="btn" data-accion="cajon" aria-expanded="${!S.cajonOff}">${S.cajonOff?'Abrir':'Cerrar'} edición de campos</button><button class="btn pri" data-accion="dxf">Descargar DXF</button><button class="btn" data-borrarplano="${p.id}">Quitar plano</button></div></div>
+  <div class="plwrap${S.cajonOff?' sin':''}"><div class="hojaw">${dibujar(p,M)}</div>${S.cajonOff?'':cajon(p,null,M,pe)}</div>
+  <p class="note">Contenido generado desde la base del proyecto; cambia con cada modificación de instrumentos, tarjetas o conexiones.</p>`;}
+function cajon(p,i,M,pe){const tabs=i?[['vin','Viñeta'],['ins','Instrumento'],['tar','Típico y tarjetas'],['rev','Revisiones']]:[['vin','Viñeta'],['rev','Revisiones']];
+  let body='';
+  if(PT==='vin'){const difs=k=>S.planos.filter(q=>q.id!==p.id&&(q.v[k]||'')!==(p.v[k]||'')).length;
+    body=`<p class="note">Campos de este plano. Si un campo debe quedar igual en todo el proyecto, usa «A todas».</p>
+    ${VF.map(([k,l])=>{const n=difs(k);return `<div class="fld"><label for="pv-${k}">${esc(l)}<input id="pv-${k}" data-pv="${k}" value="${esc(p.v[k]||'')}" class="${vv(p.v[k])?'':'inpend'}"></label>${n?`<button class="btn mini" data-prop="${k}" title="Copiar a las otras ${n} viñetas">A todas (${n})</button>`:''}</div>`}).join('')}
+    <label for="pv-tit">Título del plano (vacío = automático)<input id="pv-tit" data-ptit="1" value="${esc(p.tit||'')}" placeholder="${esc(i?(i.tag+' '+i.desc).toUpperCase():'TÍTULO AUTOMÁTICO')}"></label>
+    <button class="btn pri" data-accion="prop-todo">Actualizar todas las viñetas del proyecto con esta</button>`;}
+  if(PT==='ins'){const imp=RN&&RN.old===i.tag?RN:null;
+    body=`<label for="pi-tag">Tag<input id="pi-tag" value="${esc(imp?imp.nuevo:i.tag)}"></label>
+    ${imp?`<div class="impacto"><b>${esc(i.tag)} → ${esc(imp.nuevo)}</b><p class="note">Este cambio actualiza ${imp.docs.length} documento(s) y ${imp.planos} plano(s):</p><ul>${imp.docs.map(x=>`<li><span class="mono">${esc(x.d.code)}</span> ${esc(x.d.title)}</li>`).join('')}</ul><div class="row"><button class="btn pri" data-accion="renombrar">Aplicar en toda la ingeniería</button><button class="btn" data-accion="cancelar-rn">Cancelar</button></div></div>`:`<button class="btn" data-accion="impacto">Revisar impacto del cambio de tag</button>`}
+    ${[['desc','Servicio'],['marca','Marca'],['modelo','Modelo'],['rango','Rango'],['alm','Alarmas (HH,H,L,LL)']].map(([k,l])=>`<label for="pi-${k}">${l}<input id="pi-${k}" data-pi="${k}" value="${esc(i[k]||'')}" class="${(k==='marca'||k==='modelo')&&!vv(i[k])?'inpend':''}"></label>`).join('')}
+    <p class="note">Marca, modelo y rango también salen en la hoja de datos y el listado de instrumentos.</p>`;}
+  if(PT==='tar'){const opts=TIPL.filter(x=>x.k&&x.t===(i.t.base||i.tipo));
+    body=`<label for="pt-alim">Típico / alimentación<select id="pt-alim">${(opts.length?opts:[i.tip]).map(x=>`<option value="${esc(x.a||'')}" ${x.a===insAlim(i)?'selected':''}>${esc(x.c)} · ${esc(x.n)}</option>`).join('')}</select></label>
+    ${i.sig.filter(s=>s.ty!=='RED').map(s=>`<label for="pc-${s.tag}">Tarjeta ${esc(s.tag)} (${s.ty})<select id="pc-${s.tag}" data-pcard="${s.ty}">${OPC[s.ty].map(k=>`<option value="${k}" ${s.card===k?'selected':''}>${esc(CARDS[k].n)} · ${esc(CARDS[k][S.plat][0].split(' ·')[0])}</option>`).join('')}</select></label><p class="note mono">${esc(s.dir)} · ${esc(s.tb)}:${s.tbn}</p>`).join('')}
+    <label for="pt-con">Conexión<select id="pt-con">${i.t.ok.map(k=>`<option value="${k}" ${k===i.con?'selected':''}>${k} · ${esc(CONEX[k].proto)}</option>`).join('')}</select></label>`;}
+  if(PT==='rev'){body=`${tabla([{h:'Rev',k:'n',mono:1},{h:'Fecha',k:'fecha',mono:1},{h:'Descripción',k:'desc'}],p.revs)}
+    <div class="form"><label for="nr-n">Rev<input id="nr-n" value="${esc(sigRev(p))}"></label><label for="nr-desc">Descripción<input id="nr-desc" value="${esc(REVD[sigRev(p)]||'EMITIDO PARA CONSTRUCCIÓN')}"></label>
+    <label for="nr-por">Proy.<input id="nr-por" value="${esc(ini(p.v.diseno))}"></label><label for="nr-rev">Revisó<input id="nr-rev" value="${esc(ini(p.v.jdisc))}"></label><label for="nr-apr">Aprobó<input id="nr-apr" value="${esc(ini(p.v.jproy))}"></label></div>
+    <button class="btn pri" data-accion="nueva-rev">Agregar revisión</button><button class="btn" data-accion="rev-todos">Agregar esta revisión a todos los lazos</button>`;}
+  return `<aside class="cajon" aria-label="Edición de campos"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${PT===k}" data-tab="${k}">${l}</button>`).join('')}</div>
+   ${pe.length?`<div class="pends"><b>Pendientes</b>${pe.map(([t,k,l])=>`<button class="chip nv" data-ir="${t}:${k}">${esc(l)}</button>`).join(' ')}</div>`:''}<div class="cbody">${body}</div></aside>`;}
+const ini=s=>(s||'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('.').toUpperCase()+((s||'').trim()?'.':'');
+function sigRev(p){const l=(p.revs[p.revs.length-1]||{}).n;const seq=['A','B','C','0','1','2','3'];const j=seq.indexOf(l);return j>=0&&j<seq.length-1?seq[j+1]:'0';}
+function nuevoPlano(tag,est,ent,key){const id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);const v={...S.vinG};v.fase=v.fase||('INGENIERÍA DE '+FASES[fi()][1].toUpperCase());
+  const r=REVL[S.fase];const hoy=new Date().toLocaleDateString('es-CL');
+  const p={id,tag,ent:ent||'laz',key:key||tag,est:est||VIN.plano.find(o=>o.id===S.vin.plano).est,v,tit:'',revs:[{n:r==='0'?'A':r,fecha:hoy,por:ini(v.diseno),rev:ini(v.jdisc),apr:ini(v.jproy),desc:REVD[r==='0'?'A':r]}]};
+  if(r==='0')p.revs.push({n:'B',fecha:hoy,por:'',rev:'',apr:'',desc:REVD.B},{n:'0',fecha:hoy,por:'',rev:'',apr:'',desc:REVD[0]});
+  S.planos.push(p);return p;}
+
+V.planos=M=>{const rows=S.planos.map(p=>({p,d:docPlano(p,M),e:ENTI[p.ent||'laz']}));
+  const fal=M.docs.filter(d=>ENTI[d.ent].g==='PLA'&&ENTI[d.ent].f[fi()]>0&&d.key&&!tienePlano(d));
+  return `${cab('10 En Trabajo\\12 PLA IN','Planos del proyecto',`${S.planos.length} planos dibujados; ${fal.length} planos de esta fase todavía sin dibujar.`)}
+  <div class="row"><button class="btn pri" data-accion="crear-fase">Dibujar todos los planos de la fase (${fal.length})</button><button class="btn" data-v="nuevo">Nuevo plano</button></div>
+  ${tabla([{h:'Carpeta',f:r=>`<span class="mono">${esc(r.e.car)}</span>`},{h:'N° plano',f:r=>`<span class="mono">${esc(r.d?r.d.code:'—')}</span>`},{h:'Título',f:r=>esc(r.d?r.d.title:'(sin documento de origen)')},{h:'Rev',f:r=>`<span class="mono">${esc((r.p.revs[r.p.revs.length-1]||{}).n||'')}</span>`},{h:'Pendientes',f:r=>{const n=pendientes(r.p,M).length;return n?`<span class="chip nv">${n}</span>`:'<span class="chip c">0</span>'}},{h:'',f:r=>`<button class="btn mini" data-v="plano:${r.p.id}">Abrir</button>`}],rows.sort((a,b)=>(a.d?a.d.code:'').localeCompare(b.d?b.d.code:'')))}
+  ${fal.length?`<div class="card"><h2>Por dibujar</h2>${tabla([{h:'N° plano',f:d=>`<span class="mono">${esc(d.code)}</span>`},{h:'Título',k:'title'},{h:'',f:d=>`<button class="btn mini" data-creardoc="${d.ent}|${esc(d.key)}">Dibujar</button>`}],fal)}</div>`:''}`;};
+/* ---- Vistas que vienen de la versión anterior ---- */
+function svgArq(M){
+  const cols=Object.keys(CONEX).filter(k=>M.grupos[k]);
+  const NW=92,NH=40,G=22;let x=30;
+  const pos=cols.map(k=>{const n=M.grupos[k].length,w=Math.max(1,n)*(NW+10)-10;const o={k,x,w};x+=w+G;return o;});
+  const Wd=Math.max(x+10,720),cx=Wd/2;const Y={scada:20,plc:110,rio:200,con:300,ins:410};
+  let s=`<svg viewBox="0 0 ${Wd} 470" width="${Wd}" height="470" role="img" aria-label="Arquitectura de control" class="arq">`;
+  const box=(x,y,w,h,t,sub,cls='',attr='')=>`<g ${attr}><rect class="nd ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"></rect><text class="tg" x="${x+w/2}" y="${y+(sub?17:h/2+4)}" text-anchor="middle">${esc(t)}</text>${sub?`<text class="sm" x="${x+w/2}" y="${y+31}" text-anchor="middle">${esc(sub)}</text>`:''}</g>`;
+  const l=(x1,y1,x2,y2,c)=>{const m=(y1+y2)/2;return `<path class="l-${c}" d="M${x1} ${y1} V${m} H${x2} V${y2}"></path>`};
+  s+=l(cx,Y.scada+NH,cx,Y.plc,'fo')+l(cx,Y.plc+NH,cx,Y.rio,'fo');
+  s+=`<text class="sm" x="${cx+8}" y="${Y.plc-14}">${esc(foTxt(1))}</text><text class="sm" x="${cx+8}" y="${Y.rio-14}">${esc(foTxt(0))}</text>`;
+  pos.forEach(p=>{const cls=CONEX[p.k].cls;const c=p.x+p.w/2;s+=l(cx,Y.rio+NH,c,Y.con,cls==='loc'?'hw':cls);M.grupos[p.k].forEach((i,j)=>{s+=l(c,Y.con+NH,p.x+j*(NW+10)+NW/2,Y.ins,cls);});});
+  s+=box(cx-110,Y.scada,220,NH,'Sala de control','SCADA / HMI / servidor','ctl')+box(cx-90,Y.plc,180,NH,'PLC-01','Sala eléctrica','ctl')+box(cx-90,Y.rio,180,NH,'RIO-01','Gabinete de E/S','ctl');
+  pos.forEach(p=>{const c=p.x+p.w/2,w=Math.min(Math.max(p.w,NW),170);s+=box(c-w/2,Y.con,w,NH,p.k,CONEX[p.k].proto.split(' / ')[0]);
+    M.grupos[p.k].forEach((i,j)=>{s+=box(p.x+j*(NW+10),Y.ins,NW,NH,i.tag,i.t.n.split(' ')[0],i.tag===S.sel?'sel':'',`class="hit" data-tag="${esc(i.tag)}" tabindex="0" role="button" aria-label="${esc(i.tag)}"`);});});
+  return s+'</svg>';}
+const leyenda=`<div class="legend"><span>${protoDot('hw')}Cableado 4-20 mA / 24 VDC / 120 VAC</span><span>${protoDot('ff')}Foundation Fieldbus H1</span><span>${protoDot('dp')}Profibus DP</span><span>${protoDot('eth')}EtherNet/IP / Modbus TCP</span><span>${protoDot('fo')}Fibra óptica</span></div>`;
+V['arq-v']=M=>`${cab('10 En Trabajo\\12 PLA IN\\21 ARQUITECTURAS','Arquitectura de control','Se dibuja sola desde la base de instrumentos; haz clic en un tag para ver todos sus documentos.')}${leyenda}<div class="svgw">${svgArq(M)}</div>`;
+V.red=M=>{const segs=Object.keys(M.grupos).filter(k=>!['hw','loc'].includes(CONEX[k].cls));
+  return `${cab('10 En Trabajo\\12 PLA IN\\08 DIAG SEGMENT','Redes y segmentos','Ocupación contra el máximo del criterio base (FF: 8 equipos por segmento; Profibus DP: 30 nodos).')}
+  ${tabla([{h:'Red',f:r=>protoDot(CONEX[r].cls)+`<span class="mono">${esc(r)}</span>`},{h:'Protocolo',f:r=>esc(CONEX[r].proto)},{h:'Equipos',f:r=>M.grupos[r].map(i=>tagChip(i.tag)).join(' ')},{h:'Ocupación',f:r=>`${M.grupos[r].length} / ${CONEX[r].max}`,num:1},{h:'Consumo estimado',f:r=>CONEX[r].cls==='ff'?`${M.grupos[r].length*20} mA`:'—',num:1}],segs)}`;};
+const colsCab=[{h:'Circuito',k:'id',mono:1},{h:'Uso',k:'uso'},{h:'Desde',k:'de',mono:1},{h:'Hasta',k:'a',mono:1},{h:'Especificación',k:'spec'},{h:'Largo (m)',k:'len',num:1},{h:'Conduit',f:r=>r.cd?`<span class="mono">${r.cd}</span>`:'<span class="note">escalerilla</span>'}];
+V.cab=M=>`${cab('10 En Trabajo\\14 DOC IN\\53 LIST CIRCUITOS','Cables y circuitos','Los circuitos nacen del típico de cada lazo (J01 señal, J02 alimentación 24 VDC, F01 alimentación 120 VAC, C01/C02 discretas, X01 proveedor). Son los mismos tags que aparecen en los planos.')}${tabla(colsCab,M.cab)}`;
+const colsCon=[{h:'Conduit',k:'id',mono:1},{h:'Diámetro',k:'dia',mono:1},{h:'Circuito',k:'cab',mono:1},{h:'Desde',k:'de',mono:1},{h:'Hasta',k:'a',mono:1},{h:'Largo (m)',k:'len',num:1}];
+V.con=M=>`${cab('10 En Trabajo\\14 DOC IN\\55 LIST CONDUITS','Conduits',`Un conduit por circuito de terreno; diámetro mínimo ${esc(CR().dmin)} según el criterio base.`)}${tabla(colsCon,M.cond)}`;
+function contenido(id,M){switch(id){
+  case 'lin':return tabla([{h:'Fila',k:'fila',num:1},{h:'Tag',f:r=>tagChip(r.tag)},{h:'Servicio',k:'desc'},{h:'Tipo',f:r=>esc(r.t.n)},{h:'Marca / modelo',f:r=>vv(r.marca)?esc(r.marca+' '+(r.modelo||'')):'<span class="chip nv">pendiente</span>'},{h:'Rango',k:'rango'},{h:'P&ID',k:'pid',mono:1},{h:'Conexión',k:'con',mono:1}],M.ins);
+  case 'lio':return tabla([{h:'Señal',k:'tag',mono:1},{h:'Instrumento',f:r=>tagChip(r.inst)},{h:'Tipo',k:'ty',mono:1},{h:'Tarjeta',f:r=>r.card?esc(CARDS[r.card][S.plat][0].split(' ·')[0]):'—'},{h:'Dirección',k:'dir',mono:1},{h:'Bornera',f:r=>r.tb?`<span class="mono">${r.tb}:${r.tbn}</span>`:'—'},{h:'Protocolo',k:'proto'}],M.io);
+  case 'lci':return tabla(colsCab,M.cab);case 'lco':return tabla(colsCon,M.cond);
+  case 'lmt':return tabla([{h:'Ítem',k:0},{h:'Unidad',k:1},{h:'Cantidad',k:2,num:1},{h:'Origen',k:3}],M.mto)+'<p class="note">Largos de ejemplo hasta tener la canalización dibujada.</p>';
+  case 'arq':case 'blq':return leyenda+`<div class="svgw">${svgArq(M)}</div>`;
+  case 'crt':return `<p>El contenido sale de <button class="cd" data-v="crit">Bases típicas › Criterio de diseño I&C</button> (${CRIT.length} requisitos consolidados).</p>`;
+  case 'laz':return tabla([{h:'Tag',f:r=>tagChip(r.tag)},{h:'Típico',f:r=>`<span class="mono">${esc(r.tip.c)}</span> ${esc(r.tip.n)}`},{h:'Plano',f:r=>{const p=S.planos.find(q=>q.tag===r.tag);return p?`<button class="btn mini" data-v="plano:${p.id}">Abrir</button>`:`<button class="btn mini" data-crear="${esc(r.tag)}">Dibujar</button>`}}],M.ins.filter(i=>i.kind));
+  case 'cap':return `<p>Clase de estimación en esta fase: <b>${CLASE[fi()]}</b>.</p>`;
+  case 'det':return tabla([{h:'Carpeta de biblioteca',f:r=>`<span class="mono">02 ESTANDARES\\06 DETALLES MONTAJE\\${esc(r[0])}</span>`},{h:'Tags que lo usan',f:r=>r[1].map(tagChip).join(' ')}],[...new Set(M.ins.map(i=>i.t.det))].map(d=>[d,M.ins.filter(i=>i.t.det===d).map(i=>i.tag)]));
+  default:return '';}}
+function vistaEnt(id,M){const e=ENTI[id],f=fi(),ds=M.docs.filter(d=>d.ent===id);
+  const ruta=e.g==='PLA'?'10 En Trabajo\\12 PLA IN\\'+e.car:e.g==='DOC'?'10 En Trabajo\\14 DOC IN\\'+e.car:'10 En Trabajo\\'+e.car;
+  const tip=TIPPLA[id]?`<p class="note">Típicos de partida: 02 ESTANDARES\\05 TIPICOS\\${esc(TIPPLA[id])}</p>`:'';const ext=contenido(id,M);
+  return `${cab(ruta,e.n,`Se alimenta de: <b>${esc(e.src)}</b>.${e.nuevo?' Carpeta nueva propuesta: hoy no existe en tu estándar de 14 DOC IN.':''}`)}
+   <div class="row">${FASES.map((p,j)=>`<span class="chip${j===f?' nv':''}">${p[1]}</span>${chipF(e.f[j])}`).join('<span class="note">·</span>')}</div>
+   ${e.f[f]===0?`<div class="card"><p>No se emite en ingeniería de <b>${esc(FASES[f][1].toLowerCase())}</b>. Los datos ya están cargados.</p></div>`:''}
+   ${ext?`<div class="card"><h2>Contenido generado</h2>${ext}</div>`:''}
+   ${tabla([{h:'N° documento',f:r=>`<span class="mono">${esc(r.code)}</span>`},{h:'Rev',f:()=>`<span class="mono">${e.f[f]?REV[S.fase]:'—'}</span>`},{h:'Título',k:'title'},{h:'Tags vinculados',f:r=>r.refs.length?r.refs.slice(0,8).map(x=>tagChip(x[0])).join(' ')+(r.refs.length>8?` <span class="note">+${r.refs.length-8}</span>`:''):'<span class="note">general</span>'},...(e.g==='PLA'?[{h:'Plano',f:r=>{const pl=S.planos.find(p=>(p.ent||'laz')===r.ent&&(r.ent==='laz'?p.tag===r.key:p.key===r.key));return pl?`<button class="btn mini" data-v="plano:${pl.id}">Abrir</button>`:(r.key?`<button class="btn mini" data-creardoc="${r.ent}|${esc(r.key)}">Dibujar</button>`:'')}}]:[])],ds)}${tip}`;}
+V.traza=M=>{const i=M.ins.find(x=>x.tag===S.sel)||M.ins[0];if(!i)return cab('','Trazabilidad por tag','');const f=fi();const lst=(M.traza[i.tag]||[]);
+  return `${cab('','Trazabilidad por tag','Todos los planos y documentos donde aparece un instrumento. Si cambias el tag desde un plano, estos son los documentos que se actualizan.')}
+  <div class="row"><label for="t-sel">Instrumento<select id="t-sel">${M.ins.map(x=>`<option ${x.tag===i.tag?'selected':''}>${esc(x.tag)}</option>`).join('')}</select></label>
+  <div><b class="mono">${esc(i.tag)}</b> · ${esc(i.desc)}<br><span class="note">${esc(i.t.n)} · ${protoDot(i.cx.cls)}${esc(i.con)} · típico ${esc(i.tip?i.tip.c:'—')}</span></div></div>
+  <div class="stats"><div class="stat"><b>${lst.length}</b><span>documentos vinculados</span></div><div class="stat"><b>${i.cab.length}</b><span>circuitos</span></div><div class="stat"><b>${i.io.length}</b><span>señales</span></div></div>
+  <div class="card"><ul class="chain">${lst.map(x=>{const e=ENTI[x.d.ent];return `<li><span class="g">${esc(e.n)} ${x.plano?'':chipF(e.f[f])}</span><span class="d"><button class="cd" data-v="${x.plano?'plano:'+x.plano:'ent:'+e.id}">${esc(x.d.code)}</button> · ${esc(x.d.title)}<br><span class="note">${esc(x.x)}</span></span></li>`}).join('')}</ul></div>`;};
+V.mat=M=>{const f=fi();return `${cab('02 ESTANDARES\\09 GESTION\\Entregables por fase','Entregables por fase','Qué se emite en cada tipo de ingeniería.')}
+  ${tabla([{h:'Carpeta',f:r=>`<span class="mono">${esc(r.car)}</span>`},{h:'Entregable',f:r=>`<button class="cd" data-v="ent:${r.id}">${esc(r.n)}</button>`},...FASES.map((p,j)=>({h:p[1]+(j===f?' ◂':''),f:r=>chipF(r.f[j])})),{h:'Hojas',f:r=>M.docs.filter(d=>d.ent===r.id).length,num:1}],ENT)}`;};
+V.rev=M=>{const f=fi();const vis=M.docs.filter(d=>ENTI[d.ent].f[f]>0);
+  return `${cab('','Revisiones y emisiones','Ciclo de tus carpetas de proyecto.')}<div class="flow">
+   <div class="st"><b>INFO-BASE</b><span>Antecedentes del cliente</span><span class="mono">30 Recibidos\\31 Antecedentes</span></div><div class="st"><b>RA</b><span>Revisión interna</span><span class="mono">10 En Trabajo\\…\\RA</span></div>
+   <div class="st"><b>RB</b><span>Revisión del cliente</span><span class="mono">20 Emitidos → 30 Recibidos\\33</span></div><div class="st"><b>R0</b><span>Aprobado para construcción</span><span class="mono">20 Emitidos\\22 PLA IN</span></div></div>
+  <div class="stats"><div class="stat"><b>${vis.length}</b><span>documentos a emitir</span></div><div class="stat"><b class="mono">${REV[S.fase]}</b><span>revisión de emisión de esta fase</span></div></div>`;};
+V.bib=M=>{const used=new Set(M.ins.map(i=>i.t.det));
+  return `${cab('','Biblioteca de estándares','Lo que ya ordenaste en 02 ESTANDARES queda como base seleccionable.','BIBLIOTECA DE PROYECTOS\\02 ESTANDARES')}
+  <div class="grid2"><div class="card"><h2>06 Detalles de montaje</h2>${tabla([{h:'Carpeta',f:r=>`<span class="mono">${esc(r)}</span>`},{h:'En el proyecto',f:r=>used.has(r)?`<span class="chip c">${M.ins.filter(i=>i.t.det===r).length} tag(s)</span>`:'<span class="chip n">—</span>'}],BIB.det)}</div>
+  <div class="card"><h2>05 Típicos por tipo de plano</h2>${tabla([{h:'Carpeta',f:r=>`<span class="mono">${esc(r)}</span>`}],BIB.tip)}<h2>07 HD y ET</h2>${tabla([{h:'Carpeta',f:r=>`<span class="mono">${esc(r)}</span>`}],BIB.hdet)}</div></div>`;};
+
+const FDESC={pre:'Alternativas y orden de magnitud: criterios generales, arquitectura preliminar, materiales paramétricos y estimación clase 5.',con:'Alternativa seleccionada: P&ID preliminares, índice de instrumentos y E/S estimados, filosofía y arquitectura conceptual.',bas:'Definición para compra: índice y E/S firmes, hojas de datos, especificaciones, segmentos, interconexionados preliminares y requisiciones.',det:'Ingeniería para construcción: todos los lazos, interconexionados, segmentos, fibra, lógicos, canalizaciones, montajes y materiales.'};
+V.fase=M=>{const f=fi(),G=arbol(M).filter(g=>g.c!=='BIB'),lbl=v=>v===2?'Completo':v===1?'Preliminar':'—';
+  const filas=G.map(g=>{const es=g.items.filter(it=>it.v.startsWith('ent:'));if(!es.length)return '';return `<tr class="grph"><td colspan="${3+FASES.length}">${esc(g.c+' · '+g.h)}</td></tr>`+es.map(it=>{const e=ENTI[it.v.slice(4)];return `<tr><td class="mono">${esc(e.car)}</td><td><button class="cd" data-v="${esc(it.v)}">${esc(e.n)}</button></td>${FASES.map((p,j)=>`<td style="${j===f?'background:var(--hotS)':''}">${chipF(e.f[j])}</td>`).join('')}<td class="num">${M.docs.filter(d=>d.ent===e.id).length}</td></tr>`;}).join('');}).join('');
+  const nAp=ENT.filter(e=>e.f[f]>0).length,nC=ENT.filter(e=>e.f[f]===2).length;
+  return `${cab('02 ESTANDARES\\09 GESTION\\Entregables por fase','Fase y alcance','La fase define qué entregables aplican y con qué alcance. Al cambiarla, el árbol marca lo que no aplica, las revisiones de emisión cambian (RA / RB / R0) y la estimación de costos cambia de clase. No se borra ningún dato.')}
+  <div class="fcards">${FASES.map(([k,nm],j)=>`<button class="fcard" data-f="${k}" aria-pressed="${S.fase===k}"><b>${esc(nm)}</b><span>${esc(FDESC[k])}</span><em>${ENT.filter(e=>e.f[j]>0).length} entregables · emisión ${REV[k]} · ${esc(CLASE[j].split(' (')[0])}</em></button>`).join('')}</div>
+  <div class="stats"><div class="stat"><b>${nAp}</b><span>entregables aplican</span></div><div class="stat"><b>${nC}</b><span>con alcance completo</span></div><div class="stat"><b>${ENT.length-nAp}</b><span>no se emiten en esta fase</span></div><div class="stat"><b class="mono">${REV[S.fase]}</b><span>revisión de emisión</span></div></div>
+  <div class="tw"><table><thead><tr><th>Carpeta</th><th>Entregable</th>${FASES.map((p,j)=>`<th${j===f?' style="color:var(--hot)"':''}>${p[1]}${j===f?' ◂':''}</th>`).join('')}<th class="num">Hojas</th></tr></thead><tbody>${filas}</tbody></table></div>`;};
+V.mat=V.fase;
+V.codif=M=>{const c=S.codif,ej=M.docs.filter((d,j,a)=>a.findIndex(x=>x.ent===d.ent)===j).slice(0,10);
+  return `${cab('','Codificación de documentos','Estructura de numeración de todos los planos y documentos. Variables: {PROY} código del proyecto, {AREA} área, {DISC} disciplina, {TIPO} tipo de documento (PL, LI, HD, ET, RQ…), {NUM} correlativo.')}
+  <div class="card"><div class="form"><label for="cf-p" style="grid-column:span 2">Patrón<input id="cf-p" data-cf="patron" value="${esc(c.patron)}"></label><label for="cf-d">Disciplina<input id="cf-d" data-cf="disc" value="${esc(c.disc)}"></label><label for="cf-n">Dígitos del correlativo<input id="cf-n" data-cf="dig" type="number" min="1" max="5" value="${esc(c.dig)}"></label></div>
+  <p class="note">Formato de tus emitidos: <span class="mono">P919D-000-IN-PL-022 R0</span>. El código y el área se editan en la ficha del proyecto.</p></div>
+  <div class="card"><h2>Así quedan los documentos</h2>${tabla([{h:'Entregable',f:d=>esc(ENTI[d.ent].n)},{h:'Código',f:d=>`<span class="mono">${esc(d.code)}</span>`},{h:'Título',k:'title'}],ej)}</div>`;};
+V.pidreg=M=>{const pids=[...new Set(M.ins.map(i=>i.pid))].sort();
+  return `${cab('30 Recibidos\\31 Antecedentes','P&ID e instrumentos','Los P&ID del proyecto y los instrumentos incorporados desde cada uno. Cada hoja genera su plano de aporte I&C; los instrumentos se agregan en 02 › Instrumentos.')}
+  <div class="row"><button class="btn pri" data-v="ins">Incorporar instrumentos</button></div>
+  ${pids.map(p=>{const ins=M.ins.filter(i=>i.pid===p),d=docDe(M,'pid',x=>x.key===p),pl=d&&S.planos.find(q=>q.ent==='pid'&&q.key===p);
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h2>${esc(p)} <span class="chip">${ins.length} instrumentos</span></h2>${d?`<span class="row"><span class="mono note">${esc(d.code)}</span>${pl?`<button class="btn mini" data-v="plano:${pl.id}">Abrir aporte</button>`:`<button class="btn mini" data-creardoc="pid|${esc(p)}">Dibujar aporte</button>`}</span>`:''}</div>
+    <div class="row">${ins.map(i=>tagChip(i.tag)+`<span class="note">${esc(i.desc)}</span>`).join('<span class="note">·</span>')}</div></div>`;}).join('')||'<div class="card"><p class="note">Sin instrumentos todavía.</p></div>'}`;};
+V['fo-v']=M=>{const F=[['id','Enlace',70],['de','Desde',110],['a','Hasta',130],['hilos','Hilos',50],['tipo','Tipo de fibra',170],['conector','Conector',70],['odfDe','ODF origen',120],['odfA','ODF destino',140],['jumper','Jumpers',140],['conv','Conversor de medios',170],['len','Largo (m)',70]];
+  return `${cab('10 En Trabajo\\12 PLA IN\\09 DIAG CABLES FO','Enlaces de fibra óptica','Datos de diseño de cada enlace: tipo y cantidad de hilos, conectores, cabeceras (ODF), jumpers y conversores de medios. Alimentan el diagrama de fibra óptica, la arquitectura, el listado de circuitos y el MTO.')}
+  <div class="tw"><table><thead><tr>${F.map(x=>`<th>${x[1]}</th>`).join('')}<th></th></tr></thead><tbody>${S.fo.map((f,j)=>`<tr>${F.map(x=>`<td style="min-width:${x[2]}px"><input data-fo="${j}|${x[0]}" value="${esc(f[x[0]]??'')}" aria-label="${esc(x[1])} ${esc(f.id)}"></td>`).join('')}<td><button class="btn mini" data-fodel="${j}" aria-label="Quitar ${esc(f.id)}">Quitar</button></td></tr>`).join('')}</tbody></table></div>
+  <div class="row"><button class="btn" data-accion="fo-add">+ Agregar enlace</button>${(()=>{const d=docDe(M,'fo');if(!d)return '';const pl=S.planos.find(q=>q.ent==='fo');return pl?`<button class="btn pri" data-v="plano:${pl.id}">Abrir diagrama de fibra</button>`:`<button class="btn pri" data-creardoc="fo|U">Dibujar diagrama de fibra</button>`;})()}<span class="note">Tipos usuales: MULTIMODO OM3 / OM4 dentro del área, MONOMODO OS2 entre salas. Conectores LC, SC, ST o MTP.</span></div>`;};
+/* ---------- Render y eventos ---------- */
+function codigoDoc(tp,n){const c=S.codif;return String(c.patron||'{PROY}-{AREA}-{DISC}-{TIPO}-{NUM}').replace('{PROY}',S.proy.cod).replace('{AREA}',S.proy.area).replace('{DISC}',c.disc||'IN').replace('{TIPO}',tp).replace('{NUM}',pad(n,Math.max(1,Math.min(5,+c.dig||3))));}
+const foTxt=(j,up)=>{const f=S.fo[j];if(!f)return '';const t=`${f.id} · FO ${f.hilos}F ${f.tipo}`;return up?t.toUpperCase():t;};
+/* ---------- DXF R12 desde la lámina dibujada (mm 1:1): líneas unidas en polilíneas, capas por tipo ---------- */
+  /* Une los tramos de línea antes de escribir el DXF: quita repetidos y tramos mínimos, fusiona los colineales que se tocan o se
+   * traslapan (o que quedan separados por menos de «gap»), encadena los que comparten extremo en polilíneas (cerradas si vuelven
+   * al inicio) y quita los vértices intermedios alineados. Entrada: [[x1, y1, x2, y2], ...] en mm. Salida: [{ p: [[x, y], ...], c: cerrada }]. */
+  function unirLineas(segs, o) {
+    o = o || {}; var tol = o.tol || 0.01, gap = o.gap == null ? tol : o.gap, simp = o.simp == null ? 0.02 : o.simp;
+    var G = {}, orden = [], i, j;
+    for (i = 0; i < segs.length; i++) {
+      var s = segs[i], dx = s[2] - s[0], dy = s[3] - s[1], L = Math.sqrt(dx * dx + dy * dy); if (!(L >= tol)) continue;
+      var ux = dx / L, uy = dy / L; if (ux < -1e-9 || (Math.abs(ux) <= 1e-9 && uy < 0)) { ux = -ux; uy = -uy; }
+      var off = -uy * s[0] + ux * s[1], t1 = ux * s[0] + uy * s[1], t2 = ux * s[2] + uy * s[3];
+      var k = Math.round(Math.atan2(uy, ux) * 720 / Math.PI) + '|' + Math.round(off / (tol * 4));
+      if (!G[k]) { G[k] = { ux: ux, uy: uy, off: off, r: [] }; orden.push(k); }
+      G[k].r.push([Math.min(t1, t2), Math.max(t1, t2)]);
+    }
+    var S = [];
+    orden.forEach(function (k) {
+      var g = G[k], r = g.r.sort(function (a, b) { return a[0] - b[0]; }), cur = r[0].slice();
+      var pt = function (t) { return [g.ux * t - g.uy * g.off, g.uy * t + g.ux * g.off]; };
+      for (var m = 1; m <= r.length; m++) {
+        if (m < r.length && r[m][0] <= cur[1] + gap) { if (r[m][1] > cur[1]) cur[1] = r[m][1]; continue; }
+        if (cur[1] - cur[0] >= tol) { var a = pt(cur[0]), b = pt(cur[1]); S.push([a[0], a[1], b[0], b[1]]); }
+        if (m < r.length) cur = r[m].slice();
+      }
+    });
+    if (o.snap) {                                       // extremos a menos de «snap» se juntan en un mismo punto (aristas curvas muestreadas)
+      var R = o.snap, C = {}, rep = function (x, y) {
+        var cx = Math.floor(x / R), cy = Math.floor(y / R), best = null, bd = R * R;
+        for (var a = -1; a <= 1; a++) for (var b = -1; b <= 1; b++) { var L2 = C[(cx + a) + ',' + (cy + b)]; if (L2) L2.forEach(function (p) { var d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y); if (d <= bd) { bd = d; best = p; } }); }
+        if (!best) { best = [x, y]; (C[cx + ',' + cy] = C[cx + ',' + cy] || []).push(best); }
+        return best;
+      };
+      S = S.map(function (s) { var a = rep(s[0], s[1]), b = rep(s[2], s[3]); return [a[0], a[1], b[0], b[1]]; }).filter(function (s) { return Math.abs(s[0] - s[2]) + Math.abs(s[1] - s[3]) > tol; });
+    }
+    var q = Math.max(tol, 0.005), key = function (x, y) { return Math.round(x / q) + ',' + Math.round(y / q); }, N = {}, used = [];
+    S.forEach(function (s, n) { s.ka = key(s[0], s[1]); s.kb = key(s[2], s[3]); (N[s.ka] = N[s.ka] || []).push(n); (N[s.kb] = N[s.kb] || []).push(n); });
+    var deg = function (k) { return N[k] ? N[k].length : 0; }, out = [];
+    function camino(k0, n0) {
+      var p = [S[n0].ka === k0 ? [S[n0][0], S[n0][1]] : [S[n0][2], S[n0][3]]], cur = k0, n = n0;
+      for (;;) {
+        used[n] = 1; var s = S[n], fin = s.ka === cur ? s.kb : s.ka; p.push(s.ka === cur ? [s[2], s[3]] : [s[0], s[1]]);
+        if (fin === k0 && deg(k0) === 2) return { p: p.slice(0, -1), c: true };
+        if (deg(fin) !== 2) break;
+        var sig = N[fin].filter(function (x) { return !used[x]; })[0]; if (sig == null) break; cur = fin; n = sig;
+      }
+      return { p: p, c: false };
+    }
+    Object.keys(N).forEach(function (k) { if (deg(k) !== 2) N[k].forEach(function (n) { if (!used[n]) out.push(camino(k, n)); }); });
+    S.forEach(function (s, n) { if (!used[n]) out.push(camino(s.ka, n)); });
+    out.forEach(function (c) {                          // vértices intermedios alineados
+      var p = c.p; if (p.length < 3) return; var r = [p[0]];
+      for (j = 1; j < p.length - 1; j++) {
+        var a = r[r.length - 1], b = p[j + 1], x = p[j], ex = b[0] - a[0], ey = b[1] - a[1], LL = Math.sqrt(ex * ex + ey * ey) || 1;
+        if (Math.abs((x[0] - a[0]) * ey - (x[1] - a[1]) * ex) / LL > simp) r.push(x);
+      }
+      r.push(p[p.length - 1]); c.p = r;
+    });
+    return out;
+  }
+function dxfDeHoja(svg,nombre){const W0=W,H0=H,L={},O=[],T=[],C=[];const add=(lay,a,b)=>{(L[lay]=L[lay]||[]).push([a[0],H0-a[1],b[0],H0-b[1]]);};
+  const lay=el=>el.getAttribute('stroke-dasharray')?'DIB-SEGMENTADA':(el.closest('[class*="ink"]')||el).classList.contains('fillp')?'DIB-RELLENO':'DIBUJO';
+  const num=(el,a)=>parseFloat(el.getAttribute(a)||0);
+  svg.querySelectorAll('line,polyline,polygon,rect,circle,path,text').forEach(el=>{const t=el.tagName.toLowerCase();if(el.classList.contains('papel')&&t==='rect')return;const ly=lay(el);
+    if(t==='line')add(ly,[num(el,'x1'),num(el,'y1')],[num(el,'x2'),num(el,'y2')]);
+    else if(t==='polyline'||t==='polygon'){const p=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);for(let i=2;i+1<p.length;i+=2)add(ly,[p[i-2],p[i-1]],[p[i],p[i+1]]);if(t==='polygon'&&p.length>4)add(ly,[p[p.length-2],p[p.length-1]],[p[0],p[1]]);}
+    else if(t==='rect'){const x=num(el,'x'),y=num(el,'y'),w=num(el,'width'),h=num(el,'height');if(!w||!h)return;[[x,y,x+w,y],[x+w,y,x+w,y+h],[x+w,y+h,x,y+h],[x,y+h,x,y]].forEach(q=>add(ly,[q[0],q[1]],[q[2],q[3]]));}
+    else if(t==='circle')C.push([num(el,'cx'),H0-num(el,'cy'),num(el,'r'),ly]);
+    else if(t==='path'){try{const n=el.getTotalLength(),k=Math.max(2,Math.ceil(n/1.5));let a=el.getPointAtLength(0);for(let j=1;j<=k;j++){const b=el.getPointAtLength(n*j/k);add(ly,[a.x,a.y],[b.x,b.y]);a=b;}}catch(e){}}
+    else if(t==='text'){const s=el.textContent;if(!s.trim())return;const fs=num(el,'font-size')||9,an=el.getAttribute('text-anchor'),tr=el.getAttribute('transform')||'',rot=/rotate\(\s*(-?[\d.]+)/.exec(tr);
+      T.push({s,x:num(el,'x'),y:H0-num(el,'y'),h:+(fs*0.72).toFixed(2),al:an==='middle'?1:an==='end'?2:0,r:rot?-parseFloat(rot[1]):0,ly:el.classList.contains('pend')||el.classList.contains('pendt')?'PENDIENTE':'TEXTO'});}});
+  const o=[],n=(c,v)=>o.push(c,v),f=v=>+(+v).toFixed(3),txt=s=>String(s).replace(/[^\x20-\x7E]/g,ch=>'\\U+'+ch.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0'));
+  const CAP=[['DIBUJO',7,'CONTINUOUS'],['DIB-SEGMENTADA',8,'DASHED'],['DIB-RELLENO',5,'CONTINUOUS'],['TEXTO',7,'CONTINUOUS'],['PENDIENTE',30,'CONTINUOUS']];
+  n(0,'SECTION');n(2,'HEADER');n(9,'$ACADVER');n(1,'AC1009');n(9,'$INSUNITS');n(70,4);n(9,'$DWGCODEPAGE');n(3,'ANSI_1252');n(9,'$EXTMIN');n(10,0);n(20,0);n(30,0);n(9,'$EXTMAX');n(10,W0);n(20,H0);n(30,0);n(9,'$LTSCALE');n(40,4);n(0,'ENDSEC');
+  n(0,'SECTION');n(2,'TABLES');n(0,'TABLE');n(2,'LTYPE');n(70,2);n(0,'LTYPE');n(2,'CONTINUOUS');n(70,0);n(3,'Solid line');n(72,65);n(73,0);n(40,0);
+  n(0,'LTYPE');n(2,'DASHED');n(70,0);n(3,'__ __ __');n(72,65);n(73,2);n(40,2.4);n(49,1.6);n(49,-0.8);n(0,'ENDTAB');
+  n(0,'TABLE');n(2,'LAYER');n(70,CAP.length);CAP.forEach(c=>{n(0,'LAYER');n(2,c[0]);n(70,0);n(62,c[1]);n(6,c[2]);});n(0,'ENDTAB');
+  n(0,'TABLE');n(2,'STYLE');n(70,1);n(0,'STYLE');n(2,'STANDARD');n(70,0);n(40,0);n(41,0.85);n(50,0);n(71,0);n(42,2.5);n(3,'romans.shx');n(4,'');n(0,'ENDTAB');n(0,'ENDSEC');
+  n(0,'SECTION');n(2,'ENTITIES');
+  Object.keys(L).forEach(ly=>unirLineas(L[ly],{tol:0.01,gap:0.01,simp:0.005}).forEach(ch=>{const p=ch.p;
+    if(p.length===2&&!ch.c){n(0,'LINE');n(8,ly);n(10,f(p[0][0]));n(20,f(p[0][1]));n(30,0);n(11,f(p[1][0]));n(21,f(p[1][1]));n(31,0);return;}
+    n(0,'POLYLINE');n(8,ly);n(66,1);n(10,0);n(20,0);n(30,0);n(70,(ch.c?1:0)|(ly==='DIB-SEGMENTADA'?128:0));p.forEach(v=>{n(0,'VERTEX');n(8,ly);n(10,f(v[0]));n(20,f(v[1]));n(30,0);});n(0,'SEQEND');n(8,ly);}));
+  C.forEach(c=>{n(0,'CIRCLE');n(8,c[3]);n(10,f(c[0]));n(20,f(c[1]));n(30,0);n(40,f(c[2]));});
+  T.forEach(t=>{n(0,'TEXT');n(8,t.ly);n(10,f(t.x));n(20,f(t.y));n(30,0);n(40,t.h);n(1,txt(t.s));if(t.r)n(50,t.r);n(41,0.85);n(7,'STANDARD');if(t.al){n(72,t.al);n(11,f(t.x));n(21,f(t.y));n(31,0);}});
+  n(0,'ENDSEC');n(0,'EOF');const out=[];for(let i=0;i<o.length;i+=2)out.push(o[i],o[i+1]);
+  const b=new Blob([out.join('\r\n')+'\r\n'],{type:'application/dxf'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nombre.replace(/[\\/:*?"<>|]+/g,'-')+'.dxf';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);}
+function render(){
+  const M=modelo();
+  document.getElementById('pc').textContent=`${S.proy.cod} · ${S.proy.cliente}`;document.getElementById('pn').textContent=S.proy.nombre;
+  document.getElementById('fases').innerHTML=FASES.map(([k,n])=>`<button data-f="${k}" aria-pressed="${S.fase===k}">${n}</button>`).join('');
+  pintaArbol(M);const v=S.vista;
+  const html=v.startsWith('ent:')?vistaEnt(v.slice(4),M):v.startsWith('plano:')?V.plano(M,v.slice(6)):(V[v]||V.ficha)(M);
+  const main=document.getElementById('main');main.innerHTML=`<div class="vw${v.startsWith('plano:')?' ancho':''}">${html}${pasosHtml(M)}</div>`;
+  if(v==='ins')llenaIns();}
+function llenaIns(){const t=document.getElementById('i-tipo'),c=document.getElementById('i-con'),a=document.getElementById('i-alim');if(!t)return;
+  c.innerHTML=TIPOS[t.value].ok.map(k=>`<option value="${k}">${k} · ${esc(CONEX[k].proto)}</option>`).join('');a.innerHTML=TIPOS[t.value].alims.map(k=>`<option value="${k}">${esc(ALIMN[k]||k)}</option>`).join('');}
+function ir(v){S.vista=v;save();render();document.getElementById('main').scrollIntoView({block:'start'});}
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,4200);}
+const planoAct=()=>S.vista.startsWith('plano:')?S.planos.find(p=>p.id===S.vista.slice(6)):null;
+const insDe=tag=>S.ins.find(x=>x.tag===tag);
+function crearPlano(tag,est){const ex=S.planos.find(p=>(p.ent||'laz')==='laz'&&p.tag===tag);if(ex)return ex;return nuevoPlano(tag,est);}
+function crearDoc(ent,key,est){if(ent==='laz')return crearPlano(key,est);const ex=S.planos.find(p=>p.ent===ent&&p.key===key);if(ex)return ex;return nuevoPlano(null,est,ent,key);}
+const tienePlano=d=>S.planos.some(p=>(p.ent||'laz')===d.ent&&(d.ent==='laz'?p.tag===d.key:p.key===d.key));
+function crearTodos(est){const M=modelo();let n=0;M.docs.filter(d=>ENTI[d.ent].g==='PLA'&&ENTI[d.ent].f[fi()]>0&&d.key).forEach(d=>{if(!tienePlano(d)){crearDoc(d.ent,d.key,est);n++;}});return n;}
+
+document.addEventListener('click',e=>{const q=s=>e.target.closest(s);let el;
+  if((el=q('button[data-f]'))&&FASES.some(f=>f[0]===el.dataset.f)){S.fase=el.dataset.f;save();render();return;}
+  if(el=q('[data-fodel]')){S.fo.splice(+el.dataset.fodel,1);save();render();toast('Enlace quitado: diagrama de fibra, arquitectura y circuitos recalculados.');return;}
+  if(el=q('[data-tab]')){PT=el.dataset.tab;render();return;}
+  if(el=q('[data-ir]')){const [t,k]=el.dataset.ir.split(':');PT=t==='v'?'vin':'ins';render();const inp=document.getElementById((t==='v'?'pv-':'pi-')+k);if(inp){inp.focus();inp.scrollIntoView({block:'center'});}return;}
+  if(el=q('svg.hoja .pend[data-f]')){PT='vin';S.cajonOff=false;render();const inp=document.getElementById('pv-'+el.dataset.f);if(inp)inp.focus();return;}
+  if(el=q('[data-del]')){S.ins=S.ins.filter(i=>i.tag!==el.dataset.del);save();render();toast(`${el.dataset.del} quitado. Planos y listados recalculados.`);return;}
+  if(el=q('[data-borrarplano]')){S.planos=S.planos.filter(p=>p.id!==el.dataset.borrarplano);ir('nuevo');return;}
+  if(el=q('[data-creardoc]')){const [en,ke]=el.dataset.creardoc.split('|');const p=crearDoc(en,ke);save();ir('plano:'+p.id);toast('Plano creado.');return;}
+  if(el=q('[data-crear]')){const p=crearPlano(el.dataset.crear);save();ir('plano:'+p.id);toast(`Plano de ${p.tag} creado.`);return;}
+  if(el=q('[data-prop]')){const p=planoAct(),k=el.dataset.prop;S.planos.forEach(x=>x.v[k]=p.v[k]);S.vinG[k]=p.v[k];save();render();toast(`«${VF.find(f=>f[0]===k)[1]}» actualizado en ${S.planos.length} viñetas.`);return;}
+  if(el=q('[data-accion]')){const a=el.dataset.accion,p=planoAct();
+    if(a==='dxf'){const sv=document.querySelector('svg.hoja');if(sv&&p){const M=modelo(),d=docPlano(p,M);dxfDeHoja(sv,(d?d.code:'plano')+'_'+((p.revs[p.revs.length-1]||{}).n||''));toast('DXF R12 en mm, escala 1:1 de la lámina, con líneas unidas en polilíneas.');}return;}
+    if(a==='fo-add'){const n=S.fo.length+1;S.fo.push({id:'CF-'+pad(n),de:'RIO-01',a:'PLC-01',hilos:6,tipo:'MULTIMODO OM3',conector:'LC',odfDe:'ODF RIO-01',odfA:'ODF PLC-01',jumper:'LC-LC DÚPLEX 2 m',conv:'—',len:100});save();render();return;}
+    if(a==='crear'){const pl=crearPlano(W8.tag,W8.est);pl.est=W8.est;save();ir('plano:'+pl.id);toast(`Plano de ${pl.tag} creado con la viñeta ${W8.est}.`);}
+    if(a==='crear-fase'){const n=crearTodos(W8.est);save();render();toast(`${n} planos dibujados con la viñeta del proyecto.`);}
+    if(a==='crear-otro'){const sel=document.getElementById('w-doc');if(sel){const [en,ke]=sel.value.split('|');const pl=crearDoc(en,ke,W8.est);pl.est=W8.est;save();ir('plano:'+pl.id);toast('Plano creado.');}}
+    if(a==='crear-todos'){const M=modelo();let n=0;M.ins.filter(i=>i.kind).forEach(i=>{if(!S.planos.some(p=>p.tag===i.tag)){nuevoPlano(i.tag,W8.est);n++;}});save();render();toast(`${n} planos de lazo creados.`);}
+    if(a==='cajon'){S.cajonOff=!S.cajonOff;save();render();}
+    if(a==='prop-todo'){VF.forEach(([k])=>{S.planos.forEach(x=>x.v[k]=p.v[k]);S.vinG[k]=p.v[k];});save();render();toast(`Viñeta aplicada a los ${S.planos.length} planos del proyecto.`);}
+    if(a==='impacto'){const nv=document.getElementById('pi-tag').value.trim().toUpperCase();if(!/^[A-Z]{1,5}-\d{2,5}[A-Z]?$/.test(nv)){toast('Escribe el tag con formato ISA, por ejemplo PIT-1650.');return;}
+      if(nv===p.tag)return;if(S.ins.some(i=>i.tag===nv)){toast(`${nv} ya existe en la base.`);return;}
+      const M=modelo();RN={old:p.tag,nuevo:nv,docs:(M.traza[p.tag]||[]).filter(x=>!x.plano),planos:S.planos.filter(x=>x.tag===p.tag).length};render();}
+    if(a==='cancelar-rn'){RN=null;render();}
+    if(a==='renombrar'&&RN){const o=RN.old,nv=RN.nuevo;S.ins.forEach(i=>{if(i.tag===o)i.tag=nv;});S.planos.forEach(x=>{if(x.tag===o)x.tag=nv;});if(S.sel===o)S.sel=nv;const n=RN.docs.length;RN=null;save();render();toast(`${o} → ${nv}: ${n} documentos y sus planos actualizados.`);}
+    if(a==='nueva-rev'||a==='rev-todos'){const g=id=>document.getElementById(id).value.trim();const r={n:g('nr-n'),fecha:new Date().toLocaleDateString('es-CL'),por:g('nr-por'),rev:g('nr-rev'),apr:g('nr-apr'),desc:g('nr-desc').toUpperCase()};
+      (a==='rev-todos'?S.planos:[p]).forEach(x=>x.revs.push({...r}));save();render();toast(a==='rev-todos'?`Revisión ${r.n} agregada a ${S.planos.length} lazos.`:`Revisión ${r.n} agregada.`);}
+    return;}
+  if(el=q('[data-tag]')){S.sel=el.dataset.tag;ir('traza');return;}
+  if(el=q('[data-v]')){ir(el.dataset.v);return;}
+  if(el=q('input[type=radio][name^="vin-"]')){S.vin[el.name.slice(4)]=el.value;save();render();return;}
+  if(el=q('input[name="w-est"]')){W8.est=el.value;return;}
+  if(el=q('input[name="w-tip"]')){const i=insDe(W8.tag);if(i&&el.value){i.alim=el.value;save();render();}return;}
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('svg [data-tag]')){e.preventDefault();S.sel=e.target.dataset.tag;ir('traza');}});
+document.addEventListener('change',e=>{const t=e.target,p=planoAct();
+  if(t.id==='i-tipo'){llenaIns();return;}
+  if(t.dataset.fo){const [j,k]=t.dataset.fo.split('|');S.fo[+j][k]=k==='hilos'||k==='len'?(+t.value||0):t.value.trim();save();render();return;}
+  if(t.dataset.cf){S.codif[t.dataset.cf]=t.dataset.cf==='dig'?(+t.value||3):t.value.trim()||(t.dataset.cf==='disc'?'IN':S.codif[t.dataset.cf]);save();render();return;}
+  if(t.id==='t-sel'){S.sel=t.value;save();render();return;}
+  if(t.id==='w-tag'){W8.tag=t.value;render();return;}
+  if(t.id==='w-ent'){W8.ent=t.value;render();return;}
+  if(t.dataset.wcard){const i=insDe(W8.tag);i.cards={...(i.cards||{}),[t.dataset.wcard]:t.value};save();render();return;}
+  if(t.dataset.pcard&&p){const i=insDe(p.tag);i.cards={...(i.cards||{}),[t.dataset.pcard]:t.value};save();render();toast('Tarjeta cambiada: listado de E/S, bornes y MTO recalculados.');return;}
+  if(t.id==='pt-alim'&&p){const i=insDe(p.tag);if(t.value)i.alim=t.value;save();render();toast('Típico cambiado: plano, circuitos y conduits recalculados.');return;}
+  if(t.id==='pt-con'&&p){insDe(p.tag).con=t.value;save();render();return;}
+  if(t.id==='r-plat'){S.plat=t.value;save();render();return;}
+  if(t.id==='r-res'){S.reglas.res=Math.max(0,Math.min(50,+t.value||0));save();render();return;}
+  if(t.id==='r-do'){S.reglas.do=t.value;save();render();return;}
+  if(t.dataset.p){S.proy[t.dataset.p]=t.value.trim()||DEF.proy[t.dataset.p];save();render();return;}
+  if(t.dataset.g){S.vinG[t.dataset.g]=t.value.trim();save();render();return;}
+  if(t.dataset.pv&&p){p.v[t.dataset.pv]=t.value.trim();save();render();const n=document.getElementById('pv-'+t.dataset.pv);return;}
+  if(t.dataset.ptit&&p){p.tit=t.value.trim();save();render();return;}
+  if(t.dataset.pi&&p){insDe(p.tag)[t.dataset.pi]=t.value.trim();save();render();return;}
+});
+document.addEventListener('submit',e=>{if(e.target.id!=='fins')return;e.preventDefault();
+  const g=id=>document.getElementById(id).value.trim();const tag=g('i-tag').toUpperCase(),err=document.getElementById('ierr');
+  if(!/^[A-Z]{1,5}-\d{2,5}[A-Z]?$/.test(tag)){err.textContent='Escribe el tag con formato ISA: letras, guion y número (por ejemplo FIT-1640).';err.hidden=false;return;}
+  if(S.ins.some(i=>i.tag===tag)){err.textContent=`${tag} ya está en el proyecto.`;err.hidden=false;return;}
+  const antes=modelo().docs.length;S.ins.push({tag,desc:g('i-desc')||'Sin servicio',tipo:g('i-tipo'),con:g('i-con'),alim:g('i-alim'),pid:(g('i-pid')||'PID-01').toUpperCase()});
+  S.sel=tag;save();render();const M=modelo();toast(`${tag} incorporado: aparece en ${(M.traza[tag]||[]).length} documentos (${M.docs.length-antes} nuevos).`);});
+if(!S.planos.length){const p0=nuevoPlano("PIT-1610");S.vista="plano:"+p0.id;}
+render();
+</script>
+
+</body></html>

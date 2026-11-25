@@ -336,6 +336,64 @@
   }
 
   // ── DXF R12 (AC1009), unidades en mm, capas por tipo de elemento ──
+  /* Une los tramos de línea antes de escribir el DXF: quita repetidos y tramos mínimos, fusiona los colineales que se tocan o se
+   * traslapan (o que quedan separados por menos de «gap»), encadena los que comparten extremo en polilíneas (cerradas si vuelven
+   * al inicio) y quita los vértices intermedios alineados. Entrada: [[x1, y1, x2, y2], ...] en mm. Salida: [{ p: [[x, y], ...], c: cerrada }]. */
+  function unirLineas(segs, o) {
+    o = o || {}; var tol = o.tol || 0.01, gap = o.gap == null ? tol : o.gap, simp = o.simp == null ? 0.02 : o.simp;
+    var G = {}, orden = [], i, j;
+    for (i = 0; i < segs.length; i++) {
+      var s = segs[i], dx = s[2] - s[0], dy = s[3] - s[1], L = Math.sqrt(dx * dx + dy * dy); if (!(L >= tol)) continue;
+      var ux = dx / L, uy = dy / L; if (ux < -1e-9 || (Math.abs(ux) <= 1e-9 && uy < 0)) { ux = -ux; uy = -uy; }
+      var off = -uy * s[0] + ux * s[1], t1 = ux * s[0] + uy * s[1], t2 = ux * s[2] + uy * s[3];
+      var k = Math.round(Math.atan2(uy, ux) * 720 / Math.PI) + '|' + Math.round(off / (tol * 4));
+      if (!G[k]) { G[k] = { ux: ux, uy: uy, off: off, r: [] }; orden.push(k); }
+      G[k].r.push([Math.min(t1, t2), Math.max(t1, t2)]);
+    }
+    var S = [];
+    orden.forEach(function (k) {
+      var g = G[k], r = g.r.sort(function (a, b) { return a[0] - b[0]; }), cur = r[0].slice();
+      var pt = function (t) { return [g.ux * t - g.uy * g.off, g.uy * t + g.ux * g.off]; };
+      for (var m = 1; m <= r.length; m++) {
+        if (m < r.length && r[m][0] <= cur[1] + gap) { if (r[m][1] > cur[1]) cur[1] = r[m][1]; continue; }
+        if (cur[1] - cur[0] >= tol) { var a = pt(cur[0]), b = pt(cur[1]); S.push([a[0], a[1], b[0], b[1]]); }
+        if (m < r.length) cur = r[m].slice();
+      }
+    });
+    if (o.snap) {                                       // extremos a menos de «snap» se juntan en un mismo punto (aristas curvas muestreadas)
+      var R = o.snap, C = {}, rep = function (x, y) {
+        var cx = Math.floor(x / R), cy = Math.floor(y / R), best = null, bd = R * R;
+        for (var a = -1; a <= 1; a++) for (var b = -1; b <= 1; b++) { var L2 = C[(cx + a) + ',' + (cy + b)]; if (L2) L2.forEach(function (p) { var d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y); if (d <= bd) { bd = d; best = p; } }); }
+        if (!best) { best = [x, y]; (C[cx + ',' + cy] = C[cx + ',' + cy] || []).push(best); }
+        return best;
+      };
+      S = S.map(function (s) { var a = rep(s[0], s[1]), b = rep(s[2], s[3]); return [a[0], a[1], b[0], b[1]]; }).filter(function (s) { return Math.abs(s[0] - s[2]) + Math.abs(s[1] - s[3]) > tol; });
+    }
+    var q = Math.max(tol, 0.005), key = function (x, y) { return Math.round(x / q) + ',' + Math.round(y / q); }, N = {}, used = [];
+    S.forEach(function (s, n) { s.ka = key(s[0], s[1]); s.kb = key(s[2], s[3]); (N[s.ka] = N[s.ka] || []).push(n); (N[s.kb] = N[s.kb] || []).push(n); });
+    var deg = function (k) { return N[k] ? N[k].length : 0; }, out = [];
+    function camino(k0, n0) {
+      var p = [S[n0].ka === k0 ? [S[n0][0], S[n0][1]] : [S[n0][2], S[n0][3]]], cur = k0, n = n0;
+      for (;;) {
+        used[n] = 1; var s = S[n], fin = s.ka === cur ? s.kb : s.ka; p.push(s.ka === cur ? [s[2], s[3]] : [s[0], s[1]]);
+        if (fin === k0 && deg(k0) === 2) return { p: p.slice(0, -1), c: true };
+        if (deg(fin) !== 2) break;
+        var sig = N[fin].filter(function (x) { return !used[x]; })[0]; if (sig == null) break; cur = fin; n = sig;
+      }
+      return { p: p, c: false };
+    }
+    Object.keys(N).forEach(function (k) { if (deg(k) !== 2) N[k].forEach(function (n) { if (!used[n]) out.push(camino(k, n)); }); });
+    S.forEach(function (s, n) { if (!used[n]) out.push(camino(s.ka, n)); });
+    out.forEach(function (c) {                          // vértices intermedios alineados
+      var p = c.p; if (p.length < 3) return; var r = [p[0]];
+      for (j = 1; j < p.length - 1; j++) {
+        var a = r[r.length - 1], b = p[j + 1], x = p[j], ex = b[0] - a[0], ey = b[1] - a[1], LL = Math.sqrt(ex * ex + ey * ey) || 1;
+        if (Math.abs((x[0] - a[0]) * ey - (x[1] - a[1]) * ex) / LL > simp) r.push(x);
+      }
+      r.push(p[p.length - 1]); c.p = r;
+    });
+    return out;
+  }
   function dxfTexto(s) {
     return String(s).replace(/−/g, '-').replace(/[^\x20-\x7E]/g, function (ch) { var c = ch.charCodeAt(0).toString(16).toUpperCase(); while (c.length < 4) c = '0' + c; return '\\U+' + c; });
   }
@@ -361,7 +419,21 @@
     n(0, 'SECTION'); n(2, 'ENTITIES');
     lista.forEach(function (h) {
       function X(x) { return +(x + ox).toFixed(3); } function Y(y) { return +(H - y).toFixed(3); }
-      function linea(x1, y1, x2, y2, c, d) { n(0, 'LINE'); n(8, capa(c)); if (d) n(6, BD ? 'HIDDEN2' : 'DASHED'); n(10, X(x1)); n(20, Y(y1)); n(30, 0); n(11, X(x2)); n(21, Y(y2)); n(31, 0); }
+      // Las líneas se juntan por capa y tipo de línea y se escriben al final de la hoja como polilíneas unidas (ver unirLineas)
+      var LB = {}, LBo = [];
+      function linea(x1, y1, x2, y2, c, d) { var k = c + '|' + (d ? 1 : 0); if (!LB[k]) { LB[k] = { c: c, d: d, s: [] }; LBo.push(k); } LB[k].s.push([X(x1), Y(y1), X(x2), Y(y2)]); }
+      function volcarLineas() {
+        LBo.forEach(function (k) {
+          var g = LB[k], lt = g.d ? (BD ? 'HIDDEN2' : 'DASHED') : null;
+          unirLineas(g.s, { tol: 0.01, gap: 0.01, simp: 0.005 }).forEach(function (ch) {
+            var p = ch.p;
+            if (p.length === 2 && !ch.c) { n(0, 'LINE'); n(8, capa(g.c)); if (lt) n(6, lt); n(10, +p[0][0].toFixed(3)); n(20, +p[0][1].toFixed(3)); n(30, 0); n(11, +p[1][0].toFixed(3)); n(21, +p[1][1].toFixed(3)); n(31, 0); return; }
+            n(0, 'POLYLINE'); n(8, capa(g.c)); if (lt) n(6, lt); n(66, 1); n(10, 0); n(20, 0); n(30, 0); n(70, (ch.c ? 1 : 0) | (lt ? 128 : 0));
+            p.forEach(function (v) { n(0, 'VERTEX'); n(8, capa(g.c)); n(10, +v[0].toFixed(3)); n(20, +v[1].toFixed(3)); n(30, 0); });
+            n(0, 'SEQEND'); n(8, capa(g.c));
+          });
+        });
+      }
       h.prims.forEach(function (p) {
         if (p.t === 'l') linea(p.x1, p.y1, p.x2, p.y2, p.c, p.d);
         else if (p.t === 'r') { linea(p.x, p.y, p.x + p.w, p.y, p.c, p.d); linea(p.x + p.w, p.y, p.x + p.w, p.y + p.h, p.c, p.d); linea(p.x + p.w, p.y + p.h, p.x, p.y + p.h, p.c, p.d); linea(p.x, p.y + p.h, p.x, p.y, p.c, p.d); }
@@ -382,6 +454,7 @@
           if (ha) { n(72, ha); n(11, X(p.x)); n(21, Y(p.y)); n(31, 0); }
         }
       });
+      volcarLineas();
       ox += W + 20;
     });
     n(0, 'ENDSEC'); n(0, 'EOF');

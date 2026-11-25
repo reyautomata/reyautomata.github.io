@@ -604,7 +604,7 @@
       f('Clase de presión', '', 'ASME Clase 150 / PN 10'),
       f('Tipo de conexión', '', 'Wafer / lug / bridada (EPV)'),
       f('Material del cuerpo', '', 'Hierro dúctil ASTM A536'),
-      f('Material de cuchilla / disco', '', 'AISI 316 / Dúplex (pulpa)'),
+      f('Material de cuchilla / disco / bola / macho', '', 'AISI 316 / Dúplex (pulpa)'),
       f('Asiento', '', 'Elastómero (caucho natural / EPDM)'),
       f('Sentido de flujo', '', 'Bidireccional'),
       f('Estanqueidad', '', 'Cierre hermético (MSS SP-81 / API 598)')
@@ -619,7 +619,7 @@
     secciones: [
       GENERAL(), SITIO(), PROCESO_VALVULA(), CUERPO_ONOFF(),
       { s: 'ACTUADOR', r: [
-        f('Tipo', '', 'Neumático (cilindro para cuchilla / piñón-cremallera para mariposa)'),
+        f('Tipo', '', 'Neumático (cilindro para cuchilla / piñón-cremallera para mariposa, bola y macho cónico)'),
         f('Acción', '', 'Doble efecto / simple efecto con resorte (EPV)'),
         f('Posición de falla', '', TA),
         f('Presión de aire de suministro', 'kPa g', '550 – 700 (mínimo 400)'),
@@ -637,9 +637,11 @@
     ],
     aplicacion: { columnas: APL_VALV, filas: [
       ['2200-XV-0180', 'Descarga cajón de bombas', 'Pulpa', 'Cuchilla', '16', '150', '200', 'FC', '—', '12-A'],
-      ['4100-XV-0280', 'Entrada agua fresca', 'Agua', 'Mariposa', '10', '400', '600', 'FC', '—', '12-C']
+      ['4100-XV-0280', 'Entrada agua fresca', 'Agua', 'Mariposa', '10', '400', '600', 'FC', '—', '12-C'],
+      ['3200-XV-0310', 'Aislamiento aire de planta', 'Aire', 'Bola', '4', '700', '700', 'FC', '—', '12-E'],
+      ['2300-XV-0415', 'Descarga espesador a bombas', 'Pulpa', 'Cono (macho cónico)', '8', '350', '450', 'FC', '—', '12-F']
     ] },
-    notas: ['FC: falla cerrada · FO: falla abierta · FL: falla en última posición.']
+    notas: ['FC: falla cerrada · FO: falla abierta · FL: falla en última posición.', 'Tipos de válvula on/off neumática: cuchilla (12-A a 12-C), mariposa (12-D), bola (12-E) y cono o macho cónico (12-F).']
   });
 
   // ── 14. Válvula on/off hidráulica ────────────────────────────────────────────────────

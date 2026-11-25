@@ -17,7 +17,7 @@
   function dev(id, nom) { var s = REG ? REG.subcategorias.filter(function (x) { return x.id === id; })[0] : null; if (s && s.status === 'AVAILABLE') return null; return [id, s ? s.name : nom, null, 'dev']; }
   function filas(a) { return a.filter(Boolean); }
   var GRUPOS = [
-    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio']]],
+    ['ini', 'Inicio', [['IN', 'Inicio y tablero del proyecto', '#inicio'], ['S4', 'Suite 4.0 · motor de planos', 'suite-4/']]],
     ['p00', 'Proyecto', [['00', 'Datos del proyecto', 'proyectos/'], ['FA', 'Fase y alcance', 'fase/'], ['FL', 'Flujo de ingeniería', 'flujo/']], '00'],
     ['p01', 'P&ID', filas([gen('01', 'Análisis de P&ID', 'pid/'), ['H1', 'Piping para leer P&ID', 'piping/#aprender']]), '01'],
     ['p02', 'Base de datos I&C', [['E1', 'Señales de E/S e índice de tags', 'lazos/#io'], ['E2', 'Tarjetas y canales', 'lazos/#mod']], '02'],

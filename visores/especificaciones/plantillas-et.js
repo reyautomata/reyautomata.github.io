@@ -269,7 +269,8 @@
     rango: [p('Las válvulas de control se dimensionarán para operar entre 20 % y 80 % de apertura en el rango de flujo indicado en la hoja de datos. El proveedor entregará la memoria de cálculo de Cv y del nivel de ruido (máximo 85 dB(A) a 1 m).')],
     instrumentos: [
       { id: 'xv-neu', t: 'Válvula on/off con actuador neumático', das: ['xv-neu'], b: [
-        p('Las válvulas serán de cuchilla o mariposa según la hoja de datos, de cuerpo de hierro dúctil, con cuchilla o disco de acero inoxidable o dúplex y asiento elastomérico en servicio de pulpa.'),
+        p('Las válvulas serán de cuchilla, mariposa, bola o macho cónico (tipo cono) según la hoja de datos, de cuerpo de hierro dúctil o acero al carbono, con cuchilla, disco, bola o macho de acero inoxidable o dúplex y asiento elastomérico o metálico según el servicio.'),
+        p('Las válvulas de bola serán de paso total con vástago a prueba de expulsión; las de macho cónico tendrán macho lubricado o con camisa, autoajustable, aptas para pulpa con sólidos.'),
         p('El actuador será neumático (cilindro o piñón-cremallera), de doble efecto o simple efecto con resorte para la posición de falla indicada.'),
         p('Incluirá electroválvula 24 VDC con montaje NAMUR, caja de interruptores de posición abierta/cerrada, filtro regulador con manómetro y tubing de acero inoxidable.'),
         p('La presión de aire de diseño será la indicada en la hoja de datos; el actuador operará correctamente con la presión mínima de suministro.')
